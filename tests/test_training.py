@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import collections
 import json
 from pathlib import Path
 
@@ -56,6 +57,23 @@ def test_node_floor_is_beatable_but_not_trivial(episodes):
     floor = make_task("node", max_nodes=64).floor(episodes, tok, episodes)
     assert floor["type_acc"] > floor["label_acc"]
     assert floor["label_acc"] < 0.5, "labels should not be dominated by one class"
+
+
+def test_type_floor_reflects_how_structural_node_type_is(episodes):
+    """A majority-class floor would badly overstate the type result.
+
+    Node type is very nearly a function of tree shape, so the floor has to be a
+    structural baseline; if it were the most common type, a model that had
+    learned less than a lookup table would still show a large lift.
+    """
+    cfg = small_config(Path("."))
+    tok = build_tokenizer(cfg, episodes)
+    floor = make_task("node", max_nodes=64).floor(episodes, tok, episodes)
+    majority = max(collections.Counter(
+        t for ep in episodes for t in ep.graph.types).values())
+    total = sum(len(ep.graph.types) for ep in episodes)
+    assert floor["type_acc"] > majority / total + 0.2, \
+        "the type floor should be far above the most common type"
 
 
 def test_vocabulary_reserves_room_for_whole_node_labels(episodes):

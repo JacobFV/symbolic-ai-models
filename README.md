@@ -96,7 +96,11 @@ lift = (score - floor) / (1 - floor)
 
 `lift` is the number to compare. Zero is the prior; one is perfect. Floors are **fitted on train and scored on eval** — a floor that gets to look at the answers isn't a floor.
 
-Type and label are reported separately and never averaged. Type is the structural question (what kind of thing sits here) and term trees have strong shape regularities; label is the symbolic one (*which* predicate, *which* variable), and it is hard because the curriculum invents its vocabulary per episode — the answer is very often a name the model has never seen and can only get from how the node sits among its neighbours.
+Type and label are reported separately and never averaged. Type is the structural question (what kind of thing sits here); label is the symbolic one (*which* predicate, *which* variable), and it is the hard one, because the curriculum invents its vocabulary per episode — the answer is very often a name the model has never seen and can only get from how the node sits among its neighbours.
+
+The masked-node floor is a **structure-only baseline**, not a majority-class one, and the difference matters more than it sounds. Node type is very nearly a function of tree shape — a `field` is always a record's child, a `char` always a string's — and a lookup table keyed on nothing but `(parent type, slot, depth, has children)` scores **0.96** on the curriculum's graphs. Against a majority-class floor of 0.33, a model that had learned strictly *less* than that table would still report a lift near 0.9. So the floor is the table. What remains above it is the part of the score that is actually about reference rather than about shape.
+
+The practical consequence: treat **label lift** as the number that separates architectures, and read a high type score as confirmation the model parses the tree, not as evidence it understands it.
 
 ## Contamination
 
@@ -125,10 +129,15 @@ uv run symmodels eval runs/rgt --curriculum
 ```
 lesson                                    n     acc   floor    lift
 -------------------------------------------------------------------
-unification                              40   0.725   0.167   0.670
-symbol_grounding                         40   0.550   0.325   0.333
-...
+context_free_language                    40   0.550   0.550   0.000
+palindrome                               40   0.525   0.525   0.000
+center_embedding                         40   0.300   0.327  -0.040
+unification                              40   0.175   0.275  -0.138
+-------------------------------------------------------------------
+macro-average                           240   0.367   0.412  -0.078
 ```
+
+That output is real, and it is what a 400-step wiring check actually produces: a model that has learned the shape of the prose and cannot yet answer anything. Negative lift is the report working. Nothing in this repo ships with a result — `configs/full.toml` is where a run that could support one starts.
 
 `symmodels.agent.as_text_agent(model, tok)` returns a `Callable[[str], str]` for `langcurriculum.evaluate` directly, if you want the library's own report instead.
 

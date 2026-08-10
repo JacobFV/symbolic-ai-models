@@ -180,18 +180,15 @@ def cmd_sweep(args: argparse.Namespace) -> int:
 
 def cmd_eval(args: argparse.Namespace) -> int:
     from .agent import evaluate_choices
-    from .data.curriculum import generate, read_jsonl, resolve_lessons
-    from .train import evaluate_model, load_data, load_run
+    from .data.curriculum import resolve_lessons
     from .tasks import make_task
-    from .train import _task_kwargs
+    from .train import _add_lift, _task_kwargs, evaluate_model, load_data, load_run
 
     device = args.device or ("cuda" if _cuda() else "cpu")
     model, tok, cfg = load_run(args.run, device=device)
     if args.data:
-        episodes = read_jsonl(Path(args.data) / "eval.jsonl")
-    else:
-        cfg.data = args.data or cfg.data
-        _, episodes = load_data(cfg)
+        cfg.data = args.data
+    train_eps, episodes = load_data(cfg)
     if args.lessons:
         keep = set(resolve_lessons(args.lessons))
         episodes = [e for e in episodes if e.lesson_id in keep]
@@ -202,7 +199,10 @@ def cmd_eval(args: argparse.Namespace) -> int:
     metrics = evaluate_model(model, tasks, episodes, tok,
                              batch_size=cfg.batch_size,
                              device=_device(device), amp=cfg.amp)
-    print(json.dumps(metrics, indent=2))
+    # A score without its floor is not a result; the floor is refitted on the
+    # training episodes and scored on exactly the eval slice being reported.
+    floors = {n: t.floor(episodes, tok, train_eps) for n, t in tasks.items()}
+    print(json.dumps(_add_lift(metrics, floors), indent=2))
 
     if args.curriculum:
         print("\n=== curriculum: choose the answer from the episode's options ===")

@@ -68,41 +68,78 @@ class MaskedNode(Task):
 
     def floor(self, episodes: Sequence[Episode], tok: SymbolTokenizer,
               train: Sequence[Episode]) -> dict[str, float]:
-        """Most-frequent-class, fitted on training graphs, scored on eval ones.
+        """A **structure-only** baseline, fitted on train, scored on eval.
 
-        Deliberately *not* measured on a masked sample: the floor is a property
-        of the label distribution, and estimating it from a 15% sample would add
-        variance to the one number that is supposed to be the fixed point the
-        model is compared against. Every scorable node is counted instead.
+        A constant guess is far too weak a floor here, and reporting one would
+        badly overstate the result. Node type is very nearly determined by the
+        shape of the tree: a ``field`` node is always the child of a record, a
+        ``char`` always the child of a string. On the curriculum's graphs, a
+        lookup table keyed on nothing but ``(parent type, slot, depth)`` gets
+        about 0.96 — so a model scoring 0.95 against a majority-class floor of
+        0.33 has not learned something worth 0.9 lift, it has learned less than
+        the table.
+
+        So the floor is that table: the most common answer for each structural
+        context, backing off to the global majority for a context the training
+        graphs never showed. It knows the shape of the tree and nothing about
+        any symbol in it, which makes the lift above it the part of the score
+        that is actually about reference.
+
+        Fitted on train and scored on eval, and computed over every scorable
+        node rather than over a masked sample — estimating it from 15% of nodes
+        would put variance into the one number that is meant to be the fixed
+        point the model is compared against.
         """
-        train_types: collections.Counter[str] = collections.Counter()
-        train_labels: collections.Counter[int] = collections.Counter()
+        type_rule, label_rule = _ContextRule(), _ContextRule()
         for ep in train:
-            for label, type_ in zip(ep.graph.labels[:self.max_nodes],
-                                    ep.graph.types[:self.max_nodes]):
-                train_types[type_] += 1
-                if self._scorable(label, type_, tok):
-                    train_labels[tok.label_id(label)] += 1
+            for ctx, label, type_ in self._nodes(ep, tok):
+                type_rule.observe(ctx, type_)
+                if label is not None:
+                    label_rule.observe(ctx, label)
 
+        type_hits = type_n = label_hits = label_n = 0
         eval_types: collections.Counter[str] = collections.Counter()
         eval_labels: collections.Counter[int] = collections.Counter()
         for ep in episodes:
-            for label, type_ in zip(ep.graph.labels[:self.max_nodes],
-                                    ep.graph.types[:self.max_nodes]):
+            for ctx, label, type_ in self._nodes(ep, tok):
+                type_hits += type_rule.predict(ctx) == type_
+                type_n += 1
                 eval_types[type_] += 1
-                if self._scorable(label, type_, tok):
-                    eval_labels[tok.label_id(label)] += 1
+                if label is not None:
+                    label_hits += label_rule.predict(ctx) == label
+                    label_n += 1
+                    eval_labels[label] += 1
 
         _, type_bits = empirical_floor(dict(eval_types))
         _, label_bits = empirical_floor(dict(eval_labels))
         return {
-            "type_acc": _const_acc(train_types, eval_types),
-            "type_bits": type_bits,
-            "type_n": float(sum(eval_types.values())),
-            "label_acc": _const_acc(train_labels, eval_labels),
-            "label_bits": label_bits,
-            "label_n": float(sum(eval_labels.values())),
+            "type_acc": type_hits / type_n if type_n else float("nan"),
+            "type_bits": type_bits, "type_n": float(type_n),
+            "label_acc": label_hits / label_n if label_n else float("nan"),
+            "label_bits": label_bits, "label_n": float(label_n),
         }
+
+    def _nodes(self, ep: Episode, tok: SymbolTokenizer):
+        """``(structural context, label id or None, type)`` per scorable node.
+
+        The context is exactly what a model can read off the relations without
+        seeing a single symbol: what kind of node the parent is, which slot this
+        one sits in, how deep it is, and whether it has children of its own.
+        """
+        g = ep.graph
+        n = min(len(g), self.max_nodes)
+        has_children = [False] * n
+        for i in range(n):
+            p = g.parent[i]
+            if 0 <= p < n:
+                has_children[p] = True
+        for i in range(n):
+            p = g.parent[i]
+            ctx = (g.types[p] if 0 <= p < n else "ROOT",
+                   min(g.slot[i], 8), min(g.depth[i], 8), has_children[i])
+            label = (tok.label_id(g.labels[i])
+                     if self._scorable(g.labels[i], g.types[i], tok) else None)
+            yield ctx, label, g.types[i]
 
     @staticmethod
     def _scorable(label: str, type_: str, tok: SymbolTokenizer) -> bool:
@@ -112,14 +149,26 @@ class MaskedNode(Task):
             and tok.label_id(label) != tok.unk_id
 
 
-def _const_acc(train: collections.Counter, evaluation: collections.Counter) -> float:
-    """Accuracy of always answering whatever was commonest in training.
+class _ContextRule:
+    """Most common answer per structural context, backing off to the global one.
 
-    Fitted on train and scored on eval, rather than scored on its own argmax,
-    because a floor that gets to look at the answers is not a floor.
+    A lookup table, deliberately. The floor is supposed to be the score of
+    something that has the tree's shape and no idea what any symbol means, and a
+    table is exactly that — there is nothing in it that could be mistaken for
+    understanding.
     """
-    n = sum(evaluation.values())
-    if not n or not train:
-        return float("nan")
-    best = max(train, key=lambda k: train[k])
-    return evaluation.get(best, 0) / n
+
+    def __init__(self) -> None:
+        self.by_context: dict[tuple, collections.Counter] = collections.defaultdict(
+            collections.Counter)
+        self.overall: collections.Counter = collections.Counter()
+
+    def observe(self, context: tuple, answer) -> None:
+        self.by_context[context][answer] += 1
+        self.overall[answer] += 1
+
+    def predict(self, context: tuple):
+        counts = self.by_context.get(context)
+        if counts:
+            return counts.most_common(1)[0][0]
+        return self.overall.most_common(1)[0][0] if self.overall else None
