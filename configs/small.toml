@@ -1,0 +1,29 @@
+# A run that finishes in a couple of minutes on one GPU.
+# Use it to check the wiring, not to draw a conclusion.
+#
+#   uv run symmodels train --config configs/small.toml --model rgt --out runs/small-rgt
+
+model = "rgt"
+tasks = "lm,node"
+lessons = "unification,symbol_grounding,center_embedding,context_free_language,palindrome,quantification"
+
+n_train = 256
+n_eval = 48
+vocab_size = 2048
+max_len = 384
+max_nodes = 128
+mask_rate = 0.15
+
+d_model = 192
+n_layers = 4
+n_heads = 6
+d_ff = 768
+dropout = 0.1
+
+steps = 1500
+batch_size = 32
+lr = 0.0006
+warmup = 100
+eval_every = 250
+log_every = 100
+out = "runs/small"

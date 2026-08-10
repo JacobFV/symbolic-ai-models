@@ -1,0 +1,31 @@
+# The whole curriculum: all 179 generatable lessons, both tasks.
+#
+#   uv run symmodels data --out data/full --n-train 256 --n-eval 32
+#   uv run symmodels sweep --config configs/full.toml --models all --out runs/full
+#
+# Building the cache first is worth it for a sweep: episode generation is pure
+# Python and would otherwise be repeated identically for every architecture.
+
+tasks = "lm,node"
+lessons = "all"
+data = "data/full"
+
+vocab_size = 8192
+max_len = 512
+max_nodes = 256
+mask_rate = 0.15
+type_weight = 0.5
+
+d_model = 384
+n_layers = 8
+n_heads = 8
+d_ff = 1536
+dropout = 0.1
+
+steps = 20000
+batch_size = 32
+lr = 0.0004
+warmup = 500
+eval_every = 1000
+log_every = 200
+out = "runs/full"
