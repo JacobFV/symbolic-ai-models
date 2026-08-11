@@ -6,7 +6,11 @@
 
 **Rule-based**, fitted by counting, parsing, searching and proving::
 
-    ngram  syllogism  symbolalg  synth  ruleinduce  evidence
+    ngram  ctw          counting and Bayesian context mixing
+    syllogism  symbolalg   parsing into logical form
+    synth  ilp          search over programs and over clauses
+    ruleinduce  brill    rule induction, by partition and by correction
+    evidence  analogy    retrieval, by concept and by structure
 
 Both answer to :class:`~symbolic_ai_models.models.base.Model`: a batch in, logits over
 the shared vocabulary out. A decision list and a transformer are therefore
@@ -26,6 +30,7 @@ from .symbolic import ABSTAIN, GraphView, RuleBasedModel, Votes
 # only thing these imports are for.
 from . import gru, hrr, ndr, rgt, tpr, transformer            # noqa: F401
 from . import evidence, ngram, ruleinduce, syllogism, symbolalg, synth  # noqa: F401
+from . import analogy, brill, ctw, ilp                                  # noqa: F401
 
 __all__ = ["Model", "NeuralModel", "RuleBasedModel", "SymbolicModel",
            "ModelConfig", "ModelOutput", "GraphView", "Votes", "ABSTAIN",
