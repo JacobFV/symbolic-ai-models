@@ -36,7 +36,7 @@ from typing import Sequence
 
 import numpy as np
 
-from ..data.batch import collate_graph
+from ..data.batch import IGNORE, collate_graph
 from ..data.curriculum import Episode
 from ..data.graph import STRUCTURAL, TYPE_TO_ID
 from ..data.tokenizer import SymbolTokenizer
@@ -44,6 +44,32 @@ from ..models.base import ModelOutput
 from .base import Task, TaskOutput, Totals, empirical_floor, ratio, score_block
 
 __all__ = ["MaskedNode"]
+
+
+def _copy_counts(batch) -> dict[str, float]:
+    """How much of the answer is already sitting in the graph, in plain sight.
+
+    The label head is scored as a choice among 8,192 symbols, but the task is
+    mostly *binding*: the generator picks names arbitrarily and reuses them, so
+    the question is usually "which node do I corefer with", not "which symbol is
+    this". On the full curriculum 71.9% of scored answers already appear on a
+    visible node of the same episode, while the best model in the table sits
+    near 0.36 accuracy -- roughly half the reachable signal is untouched, and
+    none of the models has a pointer.
+
+    ``copy_censored`` counts the positions that are copyable but excluded from
+    the label score because the vocabulary cannot name them. Those are 88.5%
+    invented ``ident`` names on the full curriculum, and they are exactly where
+    copying is the *only* available route, so a metric that drops them rewards
+    naming and hides binding.
+    """
+    src = getattr(batch, "target_source", None)
+    if src is None or batch.target_tokens is None:
+        return {}
+    has_source = src != IGNORE
+    scored = batch.target_tokens != IGNORE
+    return {"copy_reachable": float((has_source & scored).sum()),
+            "copy_censored": float((has_source & ~scored).sum())}
 
 
 class MaskedNode(Task):
@@ -68,7 +94,8 @@ class MaskedNode(Task):
         type_loss, type_counts = score_block(
             out.type_logits, batch.target_types, "type")
         return TaskOutput(loss=label_loss + self.type_weight * type_loss,
-                          counts={**label_counts, **type_counts})
+                          counts={**label_counts, **type_counts,
+                                  **_copy_counts(batch)})
 
     def summarize(self, totals: Totals) -> dict[str, float]:
         """Both heads, plus how much of the masked set the label score covers.
@@ -84,6 +111,13 @@ class MaskedNode(Task):
         out = {**ratio(totals, "label"), **ratio(totals, "type")}
         scored, masked = out.get("label_n", 0.0), out.get("type_n", 0.0)
         out["label_coverage"] = scored / masked if masked else float("nan")
+
+        # The ceiling, reported next to the score so the gap is visible in every
+        # run rather than in a scratch script somebody has to rediscover.
+        reachable = totals.get("copy_reachable", 0.0)
+        out["copy_ceiling"] = reachable / scored if scored else float("nan")
+        censored = totals.get("copy_censored", 0.0)
+        out["copy_censored"] = censored
         return out
 
     def floor(self, episodes: Sequence[Episode], tok: SymbolTokenizer,

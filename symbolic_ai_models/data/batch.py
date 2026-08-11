@@ -69,6 +69,14 @@ class SymbolicBatch:
     rel: torch.Tensor | None = None   # [B, L, L] uint8 — relation ids, graphs only
     target_tokens: torch.Tensor | None = None   # [B, L] long, IGNORE where none
     target_types: torch.Tensor | None = None    # [B, L] long, IGNORE where none
+    #: [B, L] long — for each masked node, the index of a **visible** node of the
+    #: same graph carrying the same label, or IGNORE if the answer appears
+    #: nowhere else. The label task is largely a binding problem: on the full
+    #: curriculum 71.9% of scored answers are already present on a visible node,
+    #: so they want copying rather than naming. Several sources are usually
+    #: valid, and only the first is stored — a pointer must therefore be scored
+    #: by the *label* of the node it picks, never by the index matching this one.
+    target_source: torch.Tensor | None = None
     #: [B, L] bool — positions whose target is a token of the answer itself.
     #: Text batches only; used for reporting, never for the input or the loss.
     answer_mask: torch.Tensor | None = None
@@ -90,6 +98,7 @@ class SymbolicBatch:
             causal=self.causal, rel=move(self.rel),
             target_tokens=move(self.target_tokens),
             target_types=move(self.target_types),
+            target_source=move(self.target_source),
             answer_mask=move(self.answer_mask), meta=self.meta)
 
 
@@ -269,6 +278,7 @@ def collate_graph(episodes: Sequence[Episode], tok: SymbolTokenizer, *,
     rel = torch.zeros((B, L, L), dtype=torch.uint8)
     tgt_tok = torch.full((B, L), IGNORE, dtype=torch.long)
     tgt_typ = torch.full((B, L), IGNORE, dtype=torch.long)
+    tgt_src = torch.full((B, L), IGNORE, dtype=torch.long)
 
     n_masked = 0
     for b, (g, n) in enumerate(zip(graphs, lens)):
@@ -293,6 +303,22 @@ def collate_graph(episodes: Sequence[Episode], tok: SymbolTokenizer, *,
              and label_ids[i] >= 0 for i in chosen], dtype=torch.bool)
         if scored.any():
             tgt_tok[b, sel[scored]] = tokens[b, sel[scored]]
+        # Where else does this answer appear, in plain sight? Computed over
+        # every masked node with a label, including the ones the vocabulary
+        # cannot name -- those are 88.5% invented `ident` names on the full
+        # curriculum and 80.7% of them are copyable, so excluding them from this
+        # is excluding the clearest case of the thing being measured.
+        hidden_set = set(int(i) for i in chosen)
+        for i in chosen:
+            i = int(i)
+            label = g.labels[i]
+            if not label or g.types[i] in STRUCTURAL:
+                continue
+            for j in range(n):
+                if j not in hidden_set and g.labels[j] == label:
+                    tgt_src[b, i] = j
+                    break
+
         tokens[b, sel] = tok.mask_id
         types[b, sel] = TYPE_TO_ID["mask"]
         n_masked += len(chosen)
@@ -300,5 +326,6 @@ def collate_graph(episodes: Sequence[Episode], tok: SymbolTokenizer, *,
     return SymbolicBatch(
         tokens=tokens, types=types, pad_mask=pad_mask, depth=depth,
         causal=False, rel=rel, target_tokens=tgt_tok, target_types=tgt_typ,
+        target_source=tgt_src,
         meta={"task": "node", "n_masked": n_masked,
               "lesson_ids": [ep.lesson_id for ep in episodes]})

@@ -226,3 +226,73 @@ def test_lesson_selectors_resolve():
         "unification", "quantification"}
     with pytest.raises(ValueError):
         resolve_lessons("no_such_lesson")
+
+
+# ---- the copy target ------------------------------------------------------
+def test_target_source_points_at_a_visible_node_with_the_same_label():
+    """The label task is mostly binding, so the batch carries where to look.
+
+    On the full curriculum 71.9% of scored answers already appear on a visible
+    node of the same episode. `target_source` is that node. Three properties
+    matter and are easy to get wrong: it must never point at a hidden node
+    (which would leak the answer), the node it points at must really carry the
+    same label, and a structural node must not get one.
+    """
+    import numpy as np
+
+    from symbolic_ai_models.data.batch import IGNORE, collate_graph
+    from symbolic_ai_models.data.curriculum import generate, lesson_ids
+    from symbolic_ai_models.data.graph import STRUCTURAL, TYPE_TO_ID
+    from symbolic_ai_models.train import TrainConfig, build_tokenizer
+
+    eps = list(generate(lesson_ids()[:6], n=6))
+    tok = build_tokenizer(TrainConfig(model="ilp", vocab_size=2000,
+                                      max_nodes=128, max_len=320,
+                                      out="/tmp/unused"), eps)
+    batch = collate_graph(eps, tok, max_nodes=128, mask_rate=0.15,
+                          rng=np.random.default_rng(3))
+    mask_id = TYPE_TO_ID["mask"]
+
+    checked = 0
+    for b, ep in enumerate(eps):
+        g = ep.graph
+        for i in range(batch.tokens.shape[1]):
+            j = int(batch.target_source[b, i])
+            if j == IGNORE:
+                continue
+            checked += 1
+            assert int(batch.types[b, j]) != mask_id, \
+                "a copy source must be visible, not another masked node"
+            assert g.labels[j] == g.labels[i], \
+                "the source must carry the label being asked for"
+            assert g.types[i] not in STRUCTURAL, \
+                "structural nodes carry no label and need no source"
+    assert checked > 0, "no copy targets were produced at all"
+
+
+def test_the_copy_ceiling_is_reported_and_bounded():
+    """A ceiling nobody prints is a ceiling nobody checks against."""
+    import numpy as np
+
+    from symbolic_ai_models.data.batch import collate_graph
+    from symbolic_ai_models.data.curriculum import generate, lesson_ids
+    from symbolic_ai_models.tasks import make_task
+    from symbolic_ai_models.tasks.base import Totals
+    from symbolic_ai_models.train import TrainConfig, build_tokenizer
+
+    eps = list(generate(lesson_ids()[:6], n=6))
+    tok = build_tokenizer(TrainConfig(model="ilp", vocab_size=2000,
+                                      max_nodes=128, max_len=320,
+                                      out="/tmp/unused"), eps)
+    task = make_task("node", max_nodes=128)
+    batch = collate_graph(eps, tok, max_nodes=128, mask_rate=0.15,
+                          rng=np.random.default_rng(3))
+
+    from symbolic_ai_models.tasks.masked_node import _copy_counts
+    totals: Totals = dict(_copy_counts(batch))
+    totals["label_n"] = float((batch.target_tokens >= 0).sum())
+    totals["type_n"] = float((batch.target_types >= 0).sum())
+    out = task.summarize(totals)
+    assert 0.0 <= out["copy_ceiling"] <= 1.0
+    assert out["copy_ceiling"] > 0.5, \
+        "most answers should be reachable by copying; if not, the premise moved"
