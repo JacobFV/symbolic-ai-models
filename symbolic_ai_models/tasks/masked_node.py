@@ -324,6 +324,11 @@ class MaskedNode(Task):
         if not hidden:
             hidden = {int(rng.integers(0, n))}
 
+        children: dict[int, list[int]] = {}
+        for k in range(n):
+            pk = g.parent[k]
+            if 0 <= pk < n:
+                children.setdefault(pk, []).append(k)
         has_children = [False] * n
         for i in range(n):
             p = g.parent[i]
@@ -333,8 +338,26 @@ class MaskedNode(Task):
             p = g.parent[i]
             parent_type = ("ROOT" if not 0 <= p < n
                            else ("mask" if p in hidden else g.types[p]))
-            ctx = (parent_type, min(g.slot[i], 8), min(g.depth[i], 8),
-                   has_children[i])
+            # A ladder of contexts, most specific first, not one context. The
+            # old floor was a single four-feature key and it was measurably too
+            # weak: a backed-off lookup over the same *kind* of information --
+            # still structure only, still no symbol anywhere in it -- reaches
+            # 0.946 type accuracy against its 0.795, and beat `rgt` at 0.915.
+            # A floor that a counting baseline clears by 15 points is not a
+            # floor, it is a number every lift above it was borrowing from.
+            arity = min(len(children.get(i, ())), 4)
+            sibs = [g.types[k] for k in children.get(g.parent[i], ())
+                    if k != i and k not in hidden]
+            sib = collections.Counter(sibs).most_common(1)[0][0] if sibs else None
+            slot, depth = min(g.slot[i], 8), min(g.depth[i], 8)
+            ctx = (
+                (parent_type, slot, depth, arity, sib),
+                (parent_type, slot, depth, arity),
+                (parent_type, slot, depth, has_children[i]),
+                (parent_type, slot, depth),
+                (parent_type, slot),
+                (parent_type,),
+            )
             label = (tok.label_id(g.labels[i])
                      if self._scorable(g.labels[i], g.types[i], tok) else None)
             yield ctx, label, g.types[i]
@@ -350,6 +373,11 @@ class MaskedNode(Task):
 class _ContextRule:
     """Most common answer per structural context, backing off to the global one.
 
+    ``observe``/``predict`` take a *ladder* of contexts, most specific first, and
+    the most specific one with enough support answers. A single key cannot both
+    be specific enough to be sharp and general enough to be seen, which is why
+    the four-feature version of this floor sat 15 points under a counting model.
+
     A lookup table, deliberately. The floor is supposed to be the score of
     something that has the tree's shape and no idea what any symbol means, and a
     table is exactly that — there is nothing in it that could be mistaken for
@@ -361,12 +389,17 @@ class _ContextRule:
             collections.Counter)
         self.overall: collections.Counter = collections.Counter()
 
-    def observe(self, context: tuple, answer) -> None:
-        self.by_context[context][answer] += 1
+    #: Support a key needs before it is trusted over a more general one.
+    MIN_SUPPORT = 5
+
+    def observe(self, contexts: tuple, answer) -> None:
+        for context in contexts:
+            self.by_context[context][answer] += 1
         self.overall[answer] += 1
 
-    def predict(self, context: tuple):
-        counts = self.by_context.get(context)
-        if counts:
-            return counts.most_common(1)[0][0]
+    def predict(self, contexts: tuple):
+        for context in contexts:
+            counts = self.by_context.get(context)
+            if counts and sum(counts.values()) >= self.MIN_SUPPORT:
+                return counts.most_common(1)[0][0]
         return self.overall.most_common(1)[0][0] if self.overall else None

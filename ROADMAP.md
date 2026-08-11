@@ -569,7 +569,29 @@ Everything defaults to CPU now, including `TrainConfig.device`, which used to be
       memorise — `analogy`, `ruleinduce` — to gain most, since the reason they
       were handicapped was a metric that never scored what they were built for.
 
-- [ ] **Strengthen the type floor. It is now known to be weak, not suspected.**
+- [x] **Strengthen the type floor.** Done. The floor is now a backed-off ladder
+      of six structural contexts rather than one four-feature key, still
+      content-blind — sibling *types* and child counts are structure, and no
+      symbol appears anywhere in it.
+
+      | floor | old | new |
+      |---|---:|---:|
+      | type | 0.795 | **0.860** |
+      | label | 0.105 | **0.143** |
+      | copy | 0.266 | 0.266 (separate rule, unchanged) |
+
+      Every lift in the repo was measured against the old numbers and shrinks.
+      `rgt`'s 0.915 type accuracy is +0.587 against the old floor and **+0.393**
+      against this one; `corefer`'s 0.946 is +0.736 and **+0.613**. The ranking
+      is unchanged, which is worth saying plainly — the floor was inflating all
+      the type lifts by roughly the same amount rather than favouring anyone.
+
+      What the model still has that the floor does not is the pointer: `corefer`
+      reaches 0.946 where the same lookup without the pointed node's type as a
+      conjunct reaches 0.860, so the binding is worth about 0.086 of type
+      accuracy on top of the strongest content-blind baseline.
+
+- [ ] (superseded) Strengthen the type floor. It is now known to be weak.
       A backed-off conjunctive lookup inside `corefer` -- counting, no tensors,
       6 back-off levels, sibling types and arity added to the floor's four
       features -- reaches **type accuracy 0.946** where the floor reaches 0.795

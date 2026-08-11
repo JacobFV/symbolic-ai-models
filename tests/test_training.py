@@ -651,3 +651,25 @@ def test_the_copy_head_reports_a_floor(episodes):
     floor = make_task("node", max_nodes=64).floor(episodes[6:], tok, episodes[:6])
     assert 0.0 <= floor["copy_acc"] <= 1.0
     assert floor["copy_acc"] == floor["copy_acc"], "floor must not be nan"
+
+
+def test_config_drift_flags_rows_scored_against_different_floors():
+    """A lift has two halves and the guard only watched one.
+
+    Strengthening the type floor moved it 0.795 -> 0.860. Every row not re-run
+    against the new floor keeps a lift computed from the old one, and the rows
+    print side by side looking comparable -- the stale-step-budget failure again,
+    this time in the denominator rather than the numerator.
+    """
+    from symbolic_ai_models.report import config_drift
+
+    old = {"model": "gru", "family": "neural", "config": {},
+           "floors": {"node": {"label_acc": 0.105, "type_acc": 0.795}}}
+    new = {"model": "ilp", "family": "rule-based", "config": {},
+           "floors": {"node": {"label_acc": 0.143, "type_acc": 0.860}}}
+    warned = config_drift([old, new])
+    assert any("floors" in l for l in warned), warned
+
+    same = {"model": "brill", "family": "rule-based", "config": {},
+            "floors": {"node": {"label_acc": 0.143, "type_acc": 0.860}}}
+    assert config_drift([new, same]) == []

@@ -145,6 +145,22 @@ def config_drift(summaries: Sequence[dict[str, Any]]) -> list[str]:
     # Read from the summary's own `steps`, not `config.steps`: the config records
     # what was asked for and this records what ran, and a run killed part-way is
     # precisely the case worth catching.
+    # The floor is the other half of every lift, and it changes when the floor
+    # *code* changes, not just when a config does. Strengthening the type floor
+    # moved it 0.795 -> 0.860, which silently rescales every row not re-run
+    # against it -- the same failure as a stale step budget, in the denominator.
+    floors: dict[str, list[str]] = {}
+    for s in summaries:
+        node = (s.get("floors") or {}).get("node") or {}
+        if node:
+            key = repr(tuple(round(float(node.get(k, float("nan"))), 6)
+                             for k in ("label_acc", "type_acc")))
+            floors.setdefault(key, []).append(str(s.get("model", "?")))
+    if len(floors) > 1:
+        groups = "; ".join(f"{v}={', '.join(sorted(m))}"
+                           for v, m in sorted(floors.items()))
+        drifted.append(f"  floors: {groups}")
+
     budgets: dict[str, list[str]] = {}
     for s in neural:
         if "steps" in s:
