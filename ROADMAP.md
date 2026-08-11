@@ -92,17 +92,29 @@ Everything defaults to CPU now, including `TrainConfig.device`, which used to be
       so the interpretation is fixed in advance rather than chosen afterwards.
       The in-flight `gru` curve (label lift by step) is:
 
-      | 100 | 200 | 300 | 400 | 500 | 600 |
-      |----:|----:|----:|----:|----:|----:|
-      | -0.101 | -0.051 | -0.045 | -0.041 | -0.035 | -0.031 |
+      | 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900 | 1000 |
+      |----:|----:|----:|----:|----:|----:|----:|----:|----:|-----:|
+      | -0.101 | -0.051 | -0.045 | -0.041 | -0.035 | -0.031 | -0.023 | -0.011 | -0.011 | -0.002 |
 
       It reproduces the old 300-step figure of -0.050 at step 300, so the re-run
-      is measuring the same thing the baseline did. Gains per 100 steps after
-      the first are +0.006, +0.004, +0.006, +0.004 -- an order of magnitude
-      below the +0.050 of the opening hundred, flat rather than decaying, and
-      still 1,400 steps from the budget. Type lift is the livelier half:
-      -0.998 -> -0.030 over the same span, so the structural head is close to
-      the lookup table while the label head is not.
+      is measuring the same thing the baseline did.
+
+      **Correction.** At step 600 the per-100 gains looked flat at about +0.005
+      and I recorded them that way. They were not: +0.006, +0.004, +0.006,
+      +0.004, +0.008, +0.012, +0.000, +0.009. The last four are the largest
+      since the opening hundred. Six points of a noisy curve were not enough to
+      call its shape, and the reading that fitted them was the one that agreed
+      with the result already written up.
+
+      Over the last 500 steps (500 -> 1000) label lift moved +0.033, which is
+      three times the +0.01 threshold set below for "still climbing". The type
+      head crossed the floor at step 700 and has stayed there (+0.007, +0.008,
+      +0.009, +0.006), and the label head is at -0.002 -- level with a
+      structure-only lookup at 4.5 passes, having been -0.050 at 1.3.
+
+      So the third branch below is the live one, and the first is now plausible
+      too. What is already settled: **-0.050 at 300 steps was an undertraining
+      artefact**, and no claim resting on it survives.
 
       - If the 2000-step lift is **>= 0**: the 300-step number was an
         undertraining artefact. Every claim about the families separating comes
