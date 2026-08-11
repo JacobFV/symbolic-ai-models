@@ -328,3 +328,22 @@ def test_fitting_is_stable_across_processes(name, fixtures, cfg, tmp_path):
         return out.stdout.strip().splitlines()[-1]
 
     assert run("1") == run("999"), f"{name}: output depends on hash seed"
+
+
+@pytest.mark.parametrize("name", RULE_BASED)
+def test_rule_based_survives_a_non_cpu_buffer(name, fixtures, cfg):
+    """A rule-based model must work wherever its buffers were loaded to.
+
+    These models compute in Python on the CPU, but `load_run` puts their
+    buffers on whatever device was asked for, so on a machine with a GPU the
+    back-off sat on cuda while the confidences were built on cpu. Every
+    `eval --curriculum` on a rule-based run died on that mismatch. Simulated
+    here with a dtype change rather than a device — the failure was a mixed
+    `to()` on the back-off buffer, and this reproduces that shape on any host.
+    """
+    episodes, tok = fixtures
+    model = make(name, fixtures, cfg)
+    model.symbol_backoff = model.symbol_backoff.to(torch.float64)
+    model.type_backoff = model.type_backoff.to(torch.float64)
+    out = model(collate_text(episodes[:2], tok))
+    assert torch.isfinite(out.symbol_logits).all()

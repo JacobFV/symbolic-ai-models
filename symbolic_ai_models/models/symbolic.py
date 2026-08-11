@@ -368,12 +368,21 @@ class RuleBasedModel(Model):
         """
         B, L = shape
         V = backoff.shape[0]
-        c = torch.from_numpy(conf).to(backoff.dtype)
-        probs = backoff.exp()[None, None, :] * (1.0 - c)[:, :, None]
-        probs = probs.contiguous()
+        # Everything is built to land on the back-off's device. These models
+        # compute in Python on the CPU, but the buffer follows whatever device
+        # the checkpoint was loaded onto — so `eval` on a machine with a GPU put
+        # the back-off on cuda and the confidences on cpu, and every rule-based
+        # run failed at this line. The arithmetic is unchanged; only the
+        # placement was ever wrong.
+        device = backoff.device
+        c = torch.from_numpy(conf).to(device=device, dtype=backoff.dtype)
+        probs = (backoff.exp()[None, None, :] * (1.0 - c)[:, :, None]).contiguous()
         if rows:
-            idx = (torch.tensor(rows), torch.tensor(cols), torch.tensor(syms))
-            add = c[idx[0], idx[1]] * torch.tensor(weights, dtype=backoff.dtype)
+            idx = (torch.tensor(rows, device=device),
+                   torch.tensor(cols, device=device),
+                   torch.tensor(syms, device=device))
+            add = c[idx[0], idx[1]] * torch.tensor(weights, dtype=backoff.dtype,
+                                                   device=device)
             probs.index_put_(idx, add, accumulate=True)
         return probs.clamp_min(1e-12).log()
 
