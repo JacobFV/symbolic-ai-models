@@ -231,6 +231,33 @@ class RuleInductionModel(RuleBasedModel):
             out[i] = (self._label_vote(wrapped, i, fs), self._type_vote(fs))
         return out
 
+    def source_votes(self, view: GraphView) -> dict[int, Votes]:
+        """The binding the induced rule already names, kept as a node.
+
+        `ruleinduce`'s actions are pointers by construction — parent, previous,
+        sibling k, peer — and the README has long described it as "predicting
+        pointers rather than symbols". It was not: `_resolve` turned each one
+        into a label before voting, so the pointer existed only inside the
+        model. A `const` action names no node and stays silent here.
+        """
+        out: dict[int, Votes] = {}
+        if self.label_rules is None:
+            return out
+        wrapped = _View.from_graph_view(view)
+        for i in view.hidden:
+            fs = _node_facts(wrapped, i, anchor=self.anchor_features)
+            action, rule = self.label_rules.explain(fs)
+            if action is None:
+                continue
+            node = _resolve_node(wrapped, i, action)
+            if node is None or not 0 <= node < len(view):
+                continue
+            raw = _confidence(rule)
+            out[i] = ({int(node): 1.0},
+                      self.confidence_map(raw) if self.confidence_map.fitted
+                      else raw)
+        return out
+
     def _label_vote(self, view: "_View", i: int, fs: FactSet) -> Votes:
         if self.label_rules is None:
             return ABSTAIN
@@ -270,6 +297,48 @@ _ACTIONS: tuple = (
     ("peer",), ("parent",), ("prev",),
     *[("sibling", k) for k in range(MAX_SIBLING)],
 )
+
+
+def _resolve_node(view: "_View", i: int, action: Any) -> int | None:
+    """Which *node* an action names, or None if it names no node.
+
+    `_resolve` computes exactly this and then reads a label off it, throwing the
+    node away — the same lossy projection `evidence` was making. A `const`
+    action genuinely names no node and returns None here; everything else is a
+    binding the model already knew and was not saying out loud.
+    """
+    if not isinstance(action, tuple) or not action:
+        return None
+    kind = action[0]
+    if kind == "parent":
+        p = view.parent[i]
+        return p if p >= 0 else None
+    if kind == "prev":
+        for j in range(i - 1, -1, -1):
+            if view.labels[j] is not None:
+                return j
+        return None
+    if kind == "sibling":
+        sibs = view.siblings(i)
+        return sibs[action[1]] if action[1] < len(sibs) else None
+    if kind == "peer":
+        return _peer_node(view, i)
+    return None
+
+
+def _peer_node(view: "_View", i: int) -> int | None:
+    """The node `_peer` reads its label from."""
+    p = view.parent[i]
+    if p < 0 or view.labels[p] is None:
+        return None
+    head, slot = view.labels[p], view.slot[i]
+    for other in range(len(view)):
+        if other == p or view.labels[other] != head:
+            continue
+        kids = view.children(other)
+        if slot < len(kids) and view.labels[kids[slot]] is not None:
+            return kids[slot]
+    return None
 
 
 def _resolve(view: "_View", i: int, action: Any) -> int | None:

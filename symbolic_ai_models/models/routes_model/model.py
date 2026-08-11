@@ -190,6 +190,47 @@ class RouteModel(RuleBasedModel):
             best = max(best, here)
         return dict(votes), best
 
+    def _vote_nodes(self, view: GraphView, node: int,
+                    endorsed: dict[tuple, float]) -> tuple[dict, float]:
+        """The same walk, accumulated on the *node* each route lands on.
+
+        `_vote` computes `target` and then immediately reads `labels[target]`,
+        so the binding was there and the label was a projection of it. Two
+        routes that land on different nodes carrying the same symbol are one
+        vote in `_vote` and two here, which is the honest shape: they are two
+        pieces of evidence for the same answer, not one.
+        """
+        local = self.context_prior.get(_context(view, node)) or self.prior
+        if not local:
+            return {}, 0.0
+        total = sum(local.values()) or 1
+        votes: collections.Counter = collections.Counter()
+        best = 0.0
+        for route in ROUTES:
+            target = follow(view.labels, view.parent, view.slot, node, route)
+            if target is None or view.labels[target] is None:
+                continue
+            here = endorsed.get(route, 0.0)
+            weight = (local.get(route, 0) / total) * (here + 0.1)
+            if weight <= 0.0:
+                continue
+            votes[int(target)] += weight
+            best = max(best, here)
+        return dict(votes), best
+
+    def source_votes(self, view: GraphView) -> dict[int, Votes]:
+        endorsed = self._episode_fit(view)
+        out: dict[int, Votes] = {}
+        for i in view.hidden:
+            votes, score = self._vote_nodes(view, i, endorsed)
+            if not votes:
+                continue
+            confidence = (self.confidence_map(score)
+                          if self.confidence_map.fitted
+                          else min(0.15 + 0.7 * score, 0.9))
+            out[i] = (votes, confidence)
+        return out
+
     def node_votes(self, view: GraphView) -> dict[int, tuple[Votes, Votes]]:
         endorsed = self._episode_fit(view)
         out: dict[int, tuple[Votes, Votes]] = {}
