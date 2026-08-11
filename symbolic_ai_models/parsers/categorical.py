@@ -91,7 +91,7 @@ class CategoricalParser(Parser):
         classes = {i: "other" for i in range(len(result.tokens))}
         facts: list[tuple] = []
         at = 0
-        for index, (raw, statement) in enumerate(zip(raws, statements)):
+        for raw, statement in zip(raws, statements):
             found = _locate(result.tokens, split_words(raw), at)
             if found is None:
                 continue

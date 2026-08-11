@@ -43,8 +43,7 @@ from ..data.curriculum import Episode
 from ..data.tokenizer import SymbolTokenizer, split_words
 from .base import ParseResult, Parser
 
-__all__ = ["ParserReport", "true_roles", "evaluate_parser", "class_agreement",
-           "coverage"]
+__all__ = ["ParserReport", "true_roles", "evaluate_parser", "class_agreement"]
 
 
 @dataclass
@@ -60,6 +59,10 @@ class ParserReport:
     recall: float
     f1: float
     floor_f1: float
+    #: share of the words it saw that it actually assigned a class to. A parser
+    #: with a fine score over 5% of its input is not a good parser, and an F1
+    #: computed only over what it answered would not say so.
+    coverage: float
     bracket_rate: float
     fact_rate: float
     parameters: int = 0
@@ -78,15 +81,16 @@ class ParserReport:
     def row(self) -> str:
         flag = "learned" if self.learned else "written"
         return (f"{self.parser:<14}{flag:<9}{self.parameters:>9,}"
-                f"{self.n_classes:>9}{self.precision:>9.3f}{self.recall:>9.3f}"
+                f"{self.n_classes:>9}{self.coverage:>9.2f}"
+                f"{self.precision:>9.3f}{self.recall:>9.3f}"
                 f"{self.f1:>9.3f}{self.floor_f1:>9.3f}{self.lift:>9.3f}"
                 f"{self.bracket_rate:>9.2f}{self.fact_rate:>9.2f}")
 
     @staticmethod
     def header() -> str:
         head = (f"{'parser':<14}{'kind':<9}{'params':>9}{'classes':>9}"
-                f"{'prec':>9}{'recall':>9}{'F1':>9}{'floor':>9}{'lift':>9}"
-                f"{'brackets':>9}{'facts':>9}")
+                f"{'cover':>9}{'prec':>9}{'recall':>9}{'F1':>9}{'floor':>9}"
+                f"{'lift':>9}{'brackets':>9}{'facts':>9}")
         return head + "\n" + "-" * len(head)
 
 
@@ -163,12 +167,22 @@ def evaluate_parser(parser: Parser, episodes: Sequence[Episode],
     roles = true_roles(episodes)
     votes: dict[str, collections.Counter] = collections.defaultdict(
         collections.Counter)
+    seen: set[str] = set()
     bracketed = with_facts = 0
 
     for ep in episodes:
         result = parser.parse(ep.prompt)
         for i, token in enumerate(result.tokens):
-            votes[token][result.class_of(i)] += 1
+            seen.add(token)
+            # Scored on what the parser actually *assigned*, not on
+            # `class_of`'s convenience fallback to the token itself. The
+            # fallback is right for a consumer — it means "no opinion, here is
+            # the word" — but reading it as a class makes a parser that assigns
+            # nothing indistinguishable from one that put every word in its own
+            # class, and silently gives it a coverage of 1.0.
+            assigned = result.classes.get(i)
+            if assigned:
+                votes[token][assigned] += 1
         bracketed += bool(result.constituents)
         with_facts += bool(result.facts)
 
@@ -176,29 +190,18 @@ def evaluate_parser(parser: Parser, episodes: Sequence[Episode],
                   for word, counter in votes.items() if counter}
     precision, recall, f1 = class_agreement(assignment, roles)
     n = max(len(episodes), 1)
+    scorable = seen & set(roles)
     return ParserReport(
         parser=parser.name, learned=parser.learned, n_episodes=len(episodes),
         n_words=len(set(assignment) & set(roles)),
         n_classes=len(set(assignment.values())),
         precision=precision, recall=recall, f1=f1,
-        floor_f1=_floor(roles, list(assignment)),
+        # The floor is measured over every word the parser *saw*, not only the
+        # ones it chose to classify, so a parser cannot raise its own floor by
+        # declining to answer for the hard words.
+        floor_f1=_floor(roles, list(scorable)),
+        coverage=len(set(assignment) & set(roles)) / max(len(scorable), 1),
         bracket_rate=bracketed / n, fact_rate=with_facts / n,
         parameters=parser.n_parameters())
 
 
-def coverage(parser: Parser, episodes: Sequence[Episode]) -> dict[str, float]:
-    """How much of the text the parser actually accounts for.
-
-    A parser that recovers a beautiful structure over 5% of its input and drops
-    the rest is not a good parser, and an F1 over what it *did* return would not
-    say so. Reported next to the score for that reason.
-    """
-    seen = covered = 0
-    for ep in episodes:
-        words = split_words(ep.prompt)
-        result = parser.parse(ep.prompt)
-        seen += len(words)
-        covered += sum(1 for i in range(len(result.tokens))
-                       if result.class_of(i))
-    return {"tokens": float(seen),
-            "classified": covered / seen if seen else 0.0}

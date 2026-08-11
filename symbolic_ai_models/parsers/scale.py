@@ -56,6 +56,9 @@ def curve_table(curves: dict[str, list[ParserReport]]) -> str:
     """F1 by training size, one row per parser."""
     if not curves:
         return "no parsers evaluated"
+    # `n_episodes` is the size of the training set the parser was fitted on,
+    # which is the per-lesson size times the number of lessons. Labelling the
+    # columns per-lesson would misstate the x-axis by that factor.
     sizes = [r.n_episodes for r in next(iter(curves.values()))]
     head = f"{'parser':<14}{'kind':<9}" + "".join(f"{s:>9}" for s in sizes)
     lines = [head + f"{'floor':>9}", "-" * (len(head) + 9)]
@@ -68,7 +71,7 @@ def curve_table(curves: dict[str, list[ParserReport]]) -> str:
         lines.append(row + f"{reports[-1].floor_f1:>9.3f}")
     lines.append("-" * (len(head) + 9))
     lines.append("F1 against the roles the generator actually used; columns are "
-                 "training episodes per lesson.")
+                 "total training episodes.")
     lines.append("A written parser is flat by construction — it does not read "
                  "the training set at all.")
     return "\n".join(lines)
