@@ -138,8 +138,8 @@ class RuleBasedModel(Model):
         # ignores `self.parser` is unaffected; one that uses it must still work
         # when handed `none`.
         self.parser = build_parser(str(cfg.get("parser", "none")))
-        #: structural context -> commonest label, used when a model abstains
-        self.context_prior: dict[tuple, int] = {}
+        #: structural context -> (commonest label, how pure that context is)
+        self.context_prior: dict[tuple, tuple[int, float]] = {}
         # Registered as buffers so a fitted model saves and reloads like any
         # other, through the same `torch.save(state_dict())` path.
         self.register_buffer("symbol_backoff", torch.zeros(cfg.vocab_size))
@@ -243,15 +243,50 @@ class RuleBasedModel(Model):
         is that the old one was needlessly weak, not that the families should be
         levelled.
         """
+        cut = max(int(len(episodes) * 0.8), 1)
         counts: dict[tuple, collections.Counter] = collections.defaultdict(
             collections.Counter)
-        for view, targets in self.training_views(episodes, tok, repeats=2,
+        for view, targets in self.training_views(episodes[:cut], tok, repeats=2,
                                                  max_nodes=self.cfg.max_len):
             for node, (label_id, type_id) in targets.items():
                 if label_id >= 0:
                     counts[_node_context(view, node)][label_id] += 1
-        self.context_prior = {k: c.most_common(1)[0][0]
-                              for k, c in counts.items()}
+        # How much mass the prior takes is the context's own **purity** — how
+        # often its commonest label was the right one in training — not a fixed
+        # constant. A flat weight was tried first and it cost the two best
+        # models (`ilp` 0.349 -> 0.308) while helping the weak ones, because a
+        # confident-but-ambiguous context outranked a good vote. Purity settles
+        # it with data: a near-deterministic context speaks loudly, an
+        # ambiguous one steps aside and lets the model's reasoning decide.
+        chosen = {key: table.most_common(1)[0][0]
+                  for key, table in counts.items() if sum(table.values()) >= 3}
+
+        # Purity measured on episodes the counts were *not* taken from. The
+        # in-sample version is a maximum over labels fitted on the same data, so
+        # it overstates — and since this mass is the back-off's own confidence,
+        # overstating it made a well-calibrated model overconfident (`workspace`
+        # ECE 0.094 -> 0.258) without changing a single prediction.
+        hit: collections.Counter = collections.Counter()
+        seen: collections.Counter = collections.Counter()
+        for view, targets in self.training_views(episodes[cut:] or episodes, tok,
+                                                 repeats=2, seed=31,
+                                                 max_nodes=self.cfg.max_len):
+            for node, (label_id, _) in targets.items():
+                if label_id < 0:
+                    continue
+                key = _node_context(view, node)
+                if key in chosen:
+                    seen[key] += 1
+                    hit[key] += chosen[key] == label_id
+        overall = sum(hit.values()) / max(sum(seen.values()), 1)
+
+        self.context_prior = {}
+        for key, symbol in chosen.items():
+            n = seen.get(key, 0)
+            # Shrunk towards the global rate, so a context seen twice in the
+            # held-out slice does not get to claim certainty.
+            purity = (hit.get(key, 0) + 3.0 * overall) / (n + 3.0)
+            self.context_prior[key] = (symbol, min(max(purity, 0.0), 0.9))
 
     def training_views(self, episodes: Sequence[Episode], tok: SymbolTokenizer, *,
                        mask_rate: float = 0.15, max_nodes: int = 256,
@@ -366,6 +401,7 @@ class RuleBasedModel(Model):
         B, L = batch.tokens.shape
         s_rows, s_cols, s_syms, s_w = [], [], [], []
         t_rows, t_cols, t_syms, t_w = [], [], [], []
+        p_rows, p_cols, p_syms, p_mass = [], [], [], []
         s_conf = np.zeros((B, L), dtype=np.float64)
         t_conf = np.zeros((B, L), dtype=np.float64)
 
@@ -375,14 +411,22 @@ class RuleBasedModel(Model):
                 continue
             votes = self.node_votes(view)
             if self.structural_fallback:
+                # What a model degrades *to* has to be one thing. Treating only
+                # abstentions left a second path untreated: a model that votes
+                # with low confidence keeps most of its mass on the back-off,
+                # and that back-off was the global unigram — so declining to
+                # answer degraded to the structural prior while merely being
+                # unsure degraded to something strictly worse. `ruleinduce`
+                # votes on every node at 0.192 and scored 0.076 for exactly
+                # that reason. The context prior is part of the back-off now, so
+                # both paths land in the same place.
                 for node in view.hidden:
-                    label_votes = votes.get(node, (ABSTAIN, ABSTAIN))[0]
-                    if label_votes[0] and label_votes[1] > 0.0:
-                        continue
-                    symbol = self.context_prior.get(_node_context(view, node))
-                    if symbol is not None:
-                        types_vote = votes.get(node, (ABSTAIN, ABSTAIN))[1]
-                        votes[node] = (({symbol: 1.0}, 0.30), types_vote)
+                    entry = self.context_prior.get(_node_context(view, node))
+                    if entry is not None:
+                        p_rows.append(b)
+                        p_cols.append(node)
+                        p_syms.append(int(entry[0]))
+                        p_mass.append(float(entry[1]))
             for node, (label_votes, type_votes) in votes.items():
                 if not (0 <= node < L):
                     continue
@@ -391,7 +435,8 @@ class RuleBasedModel(Model):
 
         return ModelOutput(
             symbol_logits=self._mix(self.symbol_backoff, (B, L), s_conf,
-                                    s_rows, s_cols, s_syms, s_w),
+                                    s_rows, s_cols, s_syms, s_w,
+                                    prior=(p_rows, p_cols, p_syms, p_mass)),
             type_logits=self._mix(self.type_backoff, (B, L), t_conf,
                                   t_rows, t_cols, t_syms, t_w),
             hidden=torch.zeros((B, L, 1)))
@@ -415,7 +460,9 @@ class RuleBasedModel(Model):
     @staticmethod
     def _mix(backoff: torch.Tensor, shape: tuple[int, int], conf: np.ndarray,
              rows: list[int], cols: list[int], syms: list[int],
-             weights: list[float]) -> torch.Tensor:
+             weights: list[float],
+             prior: tuple[list[int], list[int], list[int], list[float]] | None = None
+             ) -> torch.Tensor:
         """``log[(1 - c)·backoff + c·votes]``, built without a Python loop over
         the vocabulary.
 
@@ -424,18 +471,36 @@ class RuleBasedModel(Model):
         and they are written in one scatter. The result is the log of a proper
         distribution, so feeding it to ``cross_entropy`` is exact rather than
         approximately normalised.
+
+        ``prior`` names one symbol per position that the structural context
+        expects, together with how much of the back-off mass it should take —
+        the context's purity, measured in training. That makes the back-off
+        itself structure-aware: a model with no opinion, or an unsure one, falls
+        to what usually stands in that slot rather than to the corpus-wide
+        unigram, and by an amount the data justifies.
         """
         B, L = shape
-        V = backoff.shape[0]
-        # Everything is built to land on the back-off's device. These models
-        # compute in Python on the CPU, but the buffer follows whatever device
-        # the checkpoint was loaded onto — so `eval` on a machine with a GPU put
-        # the back-off on cuda and the confidences on cpu, and every rule-based
-        # run failed at this line. The arithmetic is unchanged; only the
-        # placement was ever wrong.
         device = backoff.device
         c = torch.from_numpy(conf).to(device=device, dtype=backoff.dtype)
-        probs = (backoff.exp()[None, None, :] * (1.0 - c)[:, :, None]).contiguous()
+
+        share = torch.zeros((B, L), device=device, dtype=backoff.dtype)
+        if prior and prior[0]:
+            idx = (torch.tensor(prior[0], device=device),
+                   torch.tensor(prior[1], device=device))
+            share.index_put_(idx, torch.tensor(prior[3], device=device,
+                                               dtype=backoff.dtype))
+
+        # (1 - c) of the mass is the back-off; of that, `share` goes to the
+        # structural prior and the rest keeps the unigram shape.
+        probs = (backoff.exp()[None, None, :]
+                 * ((1.0 - c) * (1.0 - share))[:, :, None]).contiguous()
+        if prior and prior[0]:
+            idx = (torch.tensor(prior[0], device=device),
+                   torch.tensor(prior[1], device=device),
+                   torch.tensor(prior[2], device=device))
+            mass = torch.tensor(prior[3], device=device, dtype=backoff.dtype)
+            probs.index_put_(idx, (1.0 - c[idx[0], idx[1]]) * mass,
+                             accumulate=True)
         if rows:
             idx = (torch.tensor(rows, device=device),
                    torch.tensor(cols, device=device),
@@ -447,7 +512,11 @@ class RuleBasedModel(Model):
 
 
 def _node_context(view: GraphView, node: int) -> tuple:
-    """The structural situation, symbol-free, as the floor reads it."""
+    """The structural situation, symbol-free, keyed exactly as the floor keys it.
+
+    Deliberately the same tuple the floor uses. The back-off a model falls to
+    should be the baseline it is measured against, not some near-miss of it.
+    """
     p = view.parent[node]
     return ((view.types[p] or "mask") if p >= 0 else "ROOT",
             min(view.slot[node], 8), min(view.depth[node], 8),
