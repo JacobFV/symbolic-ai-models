@@ -61,9 +61,13 @@ Everything defaults to CPU now, including `TrainConfig.device`, which used to be
 - [x] **Finish the full-curriculum sweep and rewrite the conclusions.** Eleven
       of thirteen are in and the conclusion reversed completely; README
       rewritten. `synth` and `workspace` are resuming.
-- [ ] **Re-run the neural half on the full curriculum**, once a GPU is free, to
-      find out whether the family separation was also an artifact of the
-      six-lesson slice. It is currently untested rather than confirmed.
+- [ ] **Re-run the neural half with a step budget matched to the data.** A
+      first attempt on CPU gave the networks 300 steps at batch 16 against 3,580
+      training episodes — about 1.3 passes — while every rule-based model sees
+      the training set in full. `gru` came out at -0.050 lift, which is an
+      undertrained model rather than a beaten one and must not be reported as
+      the family separation inverting. Needs enough steps for several passes,
+      and a free GPU to make that affordable.
 - [x] (superseded) Finish the full-curriculum sweep and rewrite the conclusions. Running
       via `configs/full179.toml --tasks node`. Nothing in the README should be
       trusted until the complete table is in. Run it with `--resume` so an

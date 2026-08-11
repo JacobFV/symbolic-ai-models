@@ -349,6 +349,7 @@ analogy       6,000        0.334    +0.256      0.82     +0.079
 ruleinduce       76        0.329    +0.250      0.82     +0.048
 routes          599        0.324    +0.244      0.82     -0.467
 ilp              74        0.312    +0.231      0.82     -0.615
+workspace     1,521        0.276    +0.190      0.82     -0.100
 brill           537        0.244    +0.155      0.82     +0.295
 evidence      5,819        0.219    +0.128      0.82     -0.467
 grammar      65,125        0.187    +0.092      0.82     +0.017
@@ -371,11 +372,21 @@ ctw         819,990        0.109    +0.004      0.82     +0.120
   `ilp` is fourth on labels and last but one on types. Averaging them would
   describe neither, which is why they are never averaged here.
 
-**What is not established.** The neural models are disabled by default (they are
-the only thing here that wants a GPU) so they were *not* run on the full
-curriculum. The family comparison in earlier versions of this README — all
-neural above the floor, no rule-based above it — is now known to be wrong on its
-second half and untested on its first. Do not quote it.
+**What is not established: the family comparison.** Earlier versions of this
+README said all neural models were above the label floor and no rule-based model
+was. The second half is now known to be wrong. The first half is *not* retested
+here, and the one attempt at it does not count:
+
+```
+gru          neural  995,537   0.061    -0.050    (300 steps ~ 1.3 passes)
+```
+
+That is below the floor, and it would be cheap and wrong to report it as the
+separation inverting. The neural models were given 300 steps at batch 16 against
+3,580 training episodes — barely more than one pass — while every rule-based
+model sees the training set in full. It is an undertrained model, not a beaten
+one. A fair comparison needs a step budget matched to the data, which is on the
+roadmap and needs a free GPU.
 
 ## Notes
 
