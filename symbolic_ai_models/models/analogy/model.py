@@ -61,6 +61,7 @@ from ...data.tokenizer import SymbolTokenizer
 from ..base import ModelConfig
 from ..registry import register
 from ...calibration import ScoreCalibrator
+from ..routes import explaining_routes, follow
 from ..symbolic import ABSTAIN, GraphView, RuleBasedModel, Votes
 
 __all__ = ["AnalogyModel"]
@@ -304,66 +305,6 @@ def _align(view: GraphView, node: int, case: _Case) -> float:
     return score
 
 
-#: Structural paths from a node to somewhere else in the same episode. A route
-#: is the *answer to* "where does the answer live, relative to me" — and it is
-#: the only thing an analogy is allowed to carry across, because it is the only
-#: part of a remembered case that survives the vocabulary being reinvented.
-MAX_STEP = 4
-
-
-def _follow(labels, parent, slot, node: int, route: tuple) -> int | None:
-    """Walk one structural route from ``node``; ``None`` if it does not exist."""
-    kind = route[0]
-    if kind == "parent":
-        p = parent[node]
-        return p if p >= 0 else None
-    if kind == "grandparent":
-        p = parent[node]
-        return parent[p] if p >= 0 and parent[p] >= 0 else None
-    if kind == "sibling":
-        p = parent[node]
-        if p < 0:
-            return None
-        sibs = [j for j, q in enumerate(parent) if q == p and j != node]
-        return sibs[route[1]] if route[1] < len(sibs) else None
-    if kind == "child":
-        kids = [j for j, q in enumerate(parent) if q == node]
-        return kids[route[1]] if route[1] < len(kids) else None
-    if kind == "aunt":
-        p = parent[node]
-        g = parent[p] if p >= 0 else -1
-        if g < 0:
-            return None
-        aunts = [j for j, q in enumerate(parent) if q == g and j != p]
-        return aunts[route[1]] if route[1] < len(aunts) else None
-    if kind == "prev":
-        for j in range(node - 1, -1, -1):
-            if labels[j] is not None:
-                return j
-        return None
-    if kind == "peer":
-        # the same slot of another subtree whose head matches: coreference
-        # *within* the episode, which is structure, not a remembered symbol
-        p = parent[node]
-        if p < 0 or labels[p] is None:
-            return None
-        head = labels[p]
-        for other, other_label in enumerate(labels):
-            if other != p and other_label == head:
-                kids = [j for j, q in enumerate(parent) if q == other]
-                if slot[node] < len(kids):
-                    return kids[slot[node]]
-        return None
-    return None
-
-
-def _routes() -> tuple:
-    return (("peer",), ("parent",), ("grandparent",), ("prev",),
-            *[("sibling", k) for k in range(MAX_STEP)],
-            *[("child", k) for k in range(MAX_STEP)],
-            *[("aunt", k) for k in range(MAX_STEP)])
-
-
 def _explaining_routes(case: _Case) -> list[tuple]:
     """The routes that would have produced this case's answer from its own node.
 
@@ -371,12 +312,8 @@ def _explaining_routes(case: _Case) -> list[tuple]:
     worthless — the next episode will not contain it — but "the answer was my
     slot-0 sibling" is a fact about shape and travels intact.
     """
-    out = []
-    for route in _routes():
-        target = _follow(case.labels, case.parent, case.slot, case.node, route)
-        if target is not None and case.labels[target] == case.label:
-            out.append(route)
-    return out
+    return explaining_routes(case.labels, case.parent, case.slot, case.node,
+                             case.label)
 
 
 def _transfer(view: GraphView, node: int, case: _Case) -> int | None:
@@ -392,7 +329,7 @@ def _transfer(view: GraphView, node: int, case: _Case) -> int | None:
     if case.label < 0:
         return None
     for route in _explaining_routes(case):
-        target = _follow(view.labels, view.parent, view.slot, node, route)
+        target = follow(view.labels, view.parent, view.slot, node, route)
         if target is not None and view.labels[target] is not None:
             return view.labels[target]
     return None

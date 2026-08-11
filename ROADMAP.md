@@ -105,11 +105,10 @@ Cheap and high-value first; each is exactly measurable under this harness.
       `grammar` do not select on training: `synth` fits each program on the
       prefix it is about to predict from, and `grammar`'s threshold is a fixed
       knob rather than a choice made against outcomes.
-- [ ] **Per-episode parameter fitting.** Induce the hypothesis *family* across
-      training episodes, then choose the member per episode by consistency with
-      what that episode states. This is the direct answer to the curriculum
-      inventing vocabulary per episode, which is what holds `label_coverage` at
-      0.92 and label lift near the floor.
+- [x] **Per-episode parameter fitting.** Built and ablated; it contributes
+      exactly 0.000 here — see below. The route machinery it was built on was
+      worth keeping and ships as the `routes` model; the per-episode refit is
+      off by default with a knob to reproduce the null.
 - [ ] **Anchor-relative features.** Re-express structural features relative to
       the masked node or the query subtree — relative depth, sibling offset,
       path-from-query — so a hypothesis learned on one episode is *identical*
@@ -258,6 +257,34 @@ to come first.
 The first `brill` attempt failed for a reason worth recording: it held out the
 last fifth of the flat example list, which is not held out at all, because
 examples come from repeated masked passes over the same episodes.
+
+### Measured: per-episode fitting buys nothing on this task
+
+The plan was to split the hypothesis *family* (which structural routes exist,
+induced across training) from the *member* (which route is in force here, fitted
+inside each episode from its own visible nodes). An episode carries dozens of
+worked examples, so whichever route explains the five visible objects in a scene
+ought to explain the sixth.
+
+    use_episode_fit=True    acc 0.173   ECE 0.106
+    use_episode_fit=False   acc 0.173   ECE 0.043
+
+Identical accuracy, worse calibration. The likely reason is that the context
+prior already conditions on `(parent type, slot, arity)` and episodes within a
+lesson are structurally homogeneous, so what an episode demonstrates about its
+own routes the prior already knew. Off by default; the knob stays so the null is
+reproducible.
+
+The first implementation counted route successes without counting failures,
+making the endorsement uninformative for a stupider reason. Fixing it to a rate
+moved the contribution from +0.007 to +0.000 — so the mechanism is genuinely
+neutral here rather than merely mis-implemented, which is the version of the
+result worth trusting.
+
+What survived is the route vocabulary itself, now shared in `models/routes.py`
+between `analogy` (which replays the route a remembered case used) and `routes`
+(which follows the route its context expects). Both are exactly equivariant
+under renaming.
 
 ## Open questions
 

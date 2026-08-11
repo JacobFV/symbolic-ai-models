@@ -30,7 +30,7 @@ from .symbolic import ABSTAIN, GraphView, RuleBasedModel, Votes
 # only thing these imports are for.
 from . import gru, hrr, ndr, rgt, tpr, transformer            # noqa: F401
 from . import evidence, ngram, ruleinduce, syllogism, symbolalg, synth  # noqa: F401
-from . import analogy, brill, ctw, grammar, ilp, workspace             # noqa: F401
+from . import analogy, brill, ctw, grammar, ilp, routes_model, workspace  # noqa: F401
 
 __all__ = ["Model", "NeuralModel", "RuleBasedModel", "SymbolicModel",
            "ModelConfig", "ModelOutput", "GraphView", "Votes", "ABSTAIN",

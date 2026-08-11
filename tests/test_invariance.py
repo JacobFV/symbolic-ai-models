@@ -24,7 +24,7 @@ LESSONS = ["symbol_grounding", "unification", "center_embedding"]
 #: have actually been checked, not the list of models that sound structural.
 #: `analogy` earned its place by having its memorising readout removed — it
 #: failed this test when it was first written, which is why the test exists.
-STRUCTURE_ONLY = ["ilp", "evidence", "analogy"]
+STRUCTURE_ONLY = ["ilp", "evidence", "analogy", "routes"]
 
 
 @pytest.fixture(scope="module")
