@@ -408,28 +408,38 @@ it means the budget asymmetry ran in *both* directions at once. They are
 defaults in `extra`, not constants; nobody has measured what these models do
 when raised.
 
-**The fair comparison is running now**, at 2000 steps (8.9 passes) on CPU — it
-did not need a GPU, only the patience to let it finish, and `train --resume` so
-an interrupted run resumes instead of restarting. `gru` is partway through and
-the 300-step figure has already fallen over:
+**`gru` has finished. It clears the floor, and it had not converged.**
 
 | steps | passes | label acc | label lift |
 |------:|-------:|----------:|-----------:|
 |   300 |    1.3 |     0.061 |     -0.050 |
-|  1000 |    4.5 |     0.103 |     -0.002 |
 |  1100 |    4.9 |     0.107 |     +0.002 |
+|  2000 |    8.9 |     0.176 |     **+0.079** |
 
-`gru` crossed the label floor at step 1100 and its type head crossed at 700, so
-**-0.050 was an artefact of the budget**. Nothing that rested on it survives,
-in either direction.
+`-0.050` was an artefact of the budget. Nothing that rested on it survives, in
+either direction — including any reading of the rule-based models as beating the
+neural half. `gru` at +0.079 sits ninth of nineteen, above `ngram`, `symbolalg`,
+`syllogism`, `ctw` and `synth`, below the other eight rule-based models.
 
-What this does *not* yet establish is where the families land. One model is not
-a family, `gru` is only just above a lookup table, five architectures have not
-started, and the curve was still climbing when this was written — over the last
-500 steps it moved +0.033. The interpretation of the endpoint was written down
-in `ROADMAP.md` before the number arrived, deliberately: an earlier reading of
-this same curve as "flat" was wrong in the direction that flattered the
-write-up. Numbers here are replaced when the run completes, not before.
+Two things that number is not. It is **a lower bound**, not a converged score:
+lift rose +0.030 over the last 500 steps and was still climbing when the budget
+ran out. And it is **one model**, not a family — the other five networks in the
+table are still at 300 steps and must not be read as results. `compare` says so
+itself now, and refusing to read those rows is the whole point of the warning:
+
+```
+!! these rows were NOT produced under one config, so the comparison is not like-for-like:
+  steps: 2000=gru; 300=hrr, ndr, rgt, tpr, transformer
+```
+
+**The rest of the comparison is still running**, at 2000 steps (8.9 passes) on CPU — it
+did not need a GPU, only the patience to let it finish, and `train --resume` so
+an interrupted run resumes instead of restarting. One model takes about an hour.
+
+The interpretation of each endpoint was written into `ROADMAP.md` before the
+numbers arrived, deliberately: an earlier reading of this same curve as "flat"
+was wrong in the direction that flattered the write-up. Numbers here are
+replaced as each model completes, not before.
 
 ## Notes
 
