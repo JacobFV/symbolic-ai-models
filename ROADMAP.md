@@ -96,9 +96,9 @@ Cheap and high-value first; each is exactly measurable under this harness.
       now as well calibrated as `ngram` (0.048). Accuracy and the renaming
       delta are untouched, so this bought honesty and cost nothing.
       Bucket by it, report accuracy per bucket and ECE. Free.
-- [ ] **Cross-language transfer.** Fit on English, evaluate on Chinese/Turkish;
-      the graph is identical across renderings. The README claims the data
-      supports this and nothing measures it.
+- [x] **Cross-language transfer.** Measured, and the claim needed correcting
+      rather than confirming — see below. The node task cannot test it at all;
+      the text task can and shows nothing transferring.
 - [ ] **Held-out-slice selection.** Any reasoner that fits parameters and then
       selects among them on the same episodes is selecting on its own training
       signal. Affects `synth`, `ruleinduce`, `grammar`, `analogy`.
@@ -207,6 +207,33 @@ structure was correct, and both are badly overconfident.
 delivers 0.338. Note this is *after* the route fix — that repair made it
 equivariant under renaming without making its confidence honest, so the two
 defects were independent.
+
+### Measured: cross-language transfer, and why the node task cannot test it
+
+`Lesson.structured` takes no language, so the term graph is byte-identical
+whatever the prose says. A cross-language masked-node experiment therefore hands
+the model the graphs it trained on and would report perfect transfer while
+measuring nothing. Pinned in `tests/test_language.py`.
+
+On the text surface, fitting on English and evaluating elsewhere:
+
+    model     lang       bits/tok  ans_acc  choice   floor    lift
+    ngram     english       1.415    0.240   0.350   0.425  -0.130
+    ngram     chinese      23.527    0.015   0.325   0.400  -0.125
+    ngram     turkish      20.459    0.022   0.325   0.425  -0.174
+    grammar   english       1.258    0.040   0.350   0.425  -0.130
+    grammar   chinese      13.826    0.015   0.325   0.400  -0.125
+    analogy   english       6.367    0.000   0.400   0.425  -0.043
+
+Language modelling collapses -- 1.4 bits/token to 23.5 -- which is the byte
+fallback doing its job of staying lossless without being affordable. Choice
+accuracy barely moves, but it is *below floor in all three languages including
+English*, so there is nothing to transfer and the small drop is noise around
+chance. `analogy` abstains on text entirely, so its flat line across languages
+is vacuous rather than impressive.
+
+The honest reading: this experiment cannot say anything until some model is
+above floor in its source language. Worth re-running once one is.
 
 ## Open questions
 

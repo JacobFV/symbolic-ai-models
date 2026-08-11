@@ -395,5 +395,17 @@ sequence, useless on prose. Averaging those halves tells you nothing, so read
   position it has not already explained. Its budget (`max_size`, `max_refits`,
   `window`) is in `extra`; lower it if a sweep is dragging.
 - `tpr` and `hrr` sum over edge types, so they cost roughly `N_RELATIONS` times a transformer's aggregation. That's the price of an explicit role algebra; it's stated here so nobody has to discover it from a training curve.
-- Episodes render in any language `langcurriculum` supports (`--language chinese`), and the graph is identical across all of them. Training on one and evaluating on another is a structure-versus-surface probe the data supports directly.
+- Episodes render in any language `langcurriculum` supports (`--language
+  chinese`), and the graph is byte-identical across all of them — which makes a
+  cross-language *node* experiment vacuous rather than probing, since the model
+  is handed the same graphs it trained on. This README previously offered
+  train-on-one-evaluate-on-another as a structure-versus-surface probe; on the
+  node task it is not one, and `tests/test_language.py` pins the property so
+  nobody builds on the misreading.
+
+  On the text surface it is a real question, and measured, nothing transfers.
+  An English-fitted model spends 1.4 bits/token on English and **23.5 on
+  Chinese** — the byte fallback keeps encoding lossless but not affordable.
+  Choice accuracy sits below floor in *all three* languages including English,
+  so there is no transfer to measure yet: you cannot lose what you never had.
 - The one lesson of the 180 that the curriculum's author declined to grade is excluded rather than left to fail a run halfway through.
