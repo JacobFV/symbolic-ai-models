@@ -78,10 +78,16 @@ Cheap and high-value first; each is exactly measurable under this harness.
       lesson is shortcut-solvable (nothing at or above 0.9), and the worst is
       `compiler_construction` at 0.467 against a uniform 0.250. This curriculum
       holds up better than the source work's did.
-- [ ] **Renaming invariance.** Rename every symbol in an eval episode; a
-      structure-only model must be bit-identical. Same shape as the two existing
-      leak tests. `analogy` should pass by construction; anything that does not
-      is leaning on vocabulary it claimed not to need.
+- [x] **Renaming invariance.** Done, and it refuted the repo's headline claim
+      (see below). Note the test is for *equivariance*, not invariance: renaming
+      moves the correct answer too, so accuracy is the quantity that must hold
+      and logits are the wrong one to compare.
+- [ ] **Make `analogy`'s transfer structure-only.** `_transfer` falls back to
+      `case.label` — the symbol memorised from the training case — whenever the
+      peer route does not apply, and that fallback is where most of its score
+      comes from. Drop it, prefer the aligned position, and re-measure both the
+      label accuracy and the renaming delta. Expect the headline number to fall;
+      the point is to find out how far.
 - [ ] **Calibration.** `RuleBasedModel` already emits a confidence in [0,1].
       Bucket by it, report accuracy per bucket and ECE. Free.
 - [ ] **Cross-language transfer.** Fit on English, evaluate on Chinese/Turkish;
@@ -136,6 +142,36 @@ resolved ties on the option string, so with no signal they all chose the
 lexicographically largest option, agreed with each other by accident, and posted
 inflated scores that the `max` then picked up. Ties now fall to position, which
 is neutral and uncorrelated across cheats. The "leaks" were mostly in the audit.
+
+### Measured: renaming refutes the repo's headline claim
+
+Fitted on the original episodes, scored on episodes where every in-vocabulary
+symbol is permuted (graph and prose together, a derangement, so nothing can pass
+by accident). Masked-node label accuracy:
+
+    model         orig  renamed    delta
+    analogy      0.417    0.036   -0.381
+    grammar      0.302    0.000   -0.302
+    ngram        0.252    0.014   -0.237
+    ctw          0.230    0.007   -0.223
+    brill        0.266    0.086   -0.180
+    ruleinduce   0.230    0.151   -0.079
+    symbolalg    0.108    0.036   -0.072
+    workspace    0.194    0.137   -0.058
+    syllogism    0.043    0.036   -0.007
+    evidence     0.151    0.151   +0.000
+    ilp          0.129    0.129   +0.000
+
+`analogy` was reported as the best label predictor in the repo and as the
+strongest case that structure beats gradients. It loses more to a pure renaming
+than any other model. Its retrieval and alignment are genuinely structural, but
+its *readout* memorises, so most of that score was vocabulary. `evidence` and
+`ilp` are the only models that lose nothing.
+
+The measurement itself was wrong on the first attempt: it used `mask_all=True`,
+which hides every label, so any model answering by copying a visible neighbour
+scored 0.000 on both sides. Implausible baselines are what exposed it; the mask
+rate is now the one evaluation uses.
 
 ## Open questions
 

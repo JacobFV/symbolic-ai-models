@@ -20,12 +20,23 @@ So this model stores training graphs and, when asked about a hidden node:
 3. **Transfer** — the label standing at the corresponding position in the best
    analogue, carried across.
 
-The contrast with ``evidence`` is the point of having both. That one retrieves
-by *shared concepts*, within one episode, and is a bag-of-words method wearing a
-symbolic hat. This one retrieves by *isomorphism*, across the training set, and
-would work identically if every symbol in the corpus were replaced by a fresh
-one — which is the strongest available statement of what "symbolic" is supposed
-to buy.
+The contrast with ``evidence`` was meant to be the point of having both: that
+one retrieves by *shared concepts* within an episode, this one by *isomorphism*
+across the training set.
+
+**Measured, and the claim does not hold.** This docstring used to say the model
+"would work identically if every symbol in the corpus were replaced by a fresh
+one". Under the renaming test in :mod:`symbolic_ai_models.invariance` its
+masked-node label accuracy falls from 0.417 to 0.036, while ``evidence`` and
+``ilp`` lose nothing at all. Retrieval and alignment really are structural — the
+MAC signature and the FAC alignment read types and slots and never a label — but
+:func:`_transfer` then falls back to ``case.label``, the symbol remembered from
+the training case, whenever the peer route does not apply. That fallback is
+where most of the score came from, and it is memorisation.
+
+So the honest description is: a structural retriever with a memorising readout.
+Making the transfer structure-only, and paying whatever accuracy that costs, is
+on the roadmap.
 
 A case base is a model with no compression at all, so the size reported is the
 number of stored cases: the honest count for a method whose hypothesis is its
