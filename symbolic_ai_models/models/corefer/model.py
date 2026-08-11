@@ -205,37 +205,80 @@ class CoreferModel(RuleBasedModel):
 
     def _learn_rerank(self, episodes: Sequence[Episode],
                       tok: SymbolTokenizer) -> None:
-        """Fit stage two on the candidates stage one actually produces.
+        """Fit stage two by error-driven ranking, not by counting.
 
-        Trained on stage one's own top-k rather than on all pairs, which is the
-        whole point: the question stage two answers is "given these ten, which"
-        and fitting it on a different candidate distribution would be fitting a
-        different question. It never sees a node stage one would not have offered
-        it.
+        Stage two was a second naive Bayes, and three separate features that
+        measured as informative on their own then failed inside it: a
+        cross-episode symbol prior, its cross-fitted repair, and an episode-local
+        echo at AUC 0.581. The common thread is the combiner, not the features.
+        Naive Bayes adds every feature's evidence as if it were independent, so a
+        weak signal correlated with something already present is counted twice
+        rather than absorbed for the part that is new -- and most features here
+        are correlated by construction, being different readings of one tree.
+
+        An averaged perceptron over the same features was the obvious fix and is
+        worse: 0.356 from a cold start and 0.368 warm-started, against 0.404 for
+        counting, on the held-out training slice. Discriminative training did not
+        rescue correlated features here.
+
+        What did help came out of that attempt. Stage two now trains only on
+        questions where the top-k holds **both** a correct and an incorrect
+        candidate. A question whose candidates are all correct, or none, has
+        nothing to separate and only tilts the counts toward whatever its
+        features happen to be. Filtering them: 0.404 -> 0.409.
+
+        Trained on stage one's own top-k, as before: the question is "given these
+        ten, which", and a different candidate distribution is a different
+        question.
         """
-        pos: collections.Counter = collections.Counter()
-        neg: collections.Counter = collections.Counter()
-        n_pos = n_neg = 0
+        # Cache the questions once: the features are the expensive part and the
+        # perceptron needs several passes over them.
+        questions: list[tuple[list[tuple], list[bool]]] = []
         for view, targets in self.training_views(episodes, tok,
                                                  max_nodes=self.cfg.max_nodes):
             for i, (label_id, _) in targets.items():
                 if label_id is None or label_id < 0 or label_id == tok.unk_id:
                     continue
-                for rank, j in enumerate(self._candidates(view, i)):
-                    same = view.labels[j] == label_id
-                    bucket = pos if same else neg
-                    for f in _rerank_features(view, i, j, rank):
-                        bucket[f] += 1
-                    if same:
-                        n_pos += 1
-                    else:
-                        n_neg += 1
-        if not n_pos or not n_neg:
+                cands = self._candidates(view, i)
+                gold = [view.labels[j] == label_id for j in cands]
+                if not any(gold) or all(gold):
+                    continue          # nothing to separate
+                feats = [_rerank_features(view, i, j, r)
+                         for r, j in enumerate(cands)]
+                questions.append((feats, gold))
+        if not questions:
+            return
+
+        # Warm start from counting, then correct by error. A perceptron from
+        # zero scored 0.356 against naive Bayes' 0.404 on the held-out training
+        # slice: with no prior it has to discover from sparse joint features what
+        # counting already knew, and thrashes. This is `brill`'s shape -- a
+        # baseline plus an ordered list of corrections -- rather than a
+        # replacement for the baseline.
+        counts_pos: collections.Counter = collections.Counter()
+        counts_neg: collections.Counter = collections.Counter()
+        n_p = n_n = 0
+        for feats, gold in questions:
+            for fs, g in zip(feats, gold):
+                for f in fs:
+                    (counts_pos if g else counts_neg)[f] += 1
+                n_p += g
+                n_n += not g
+        counts_pos: collections.Counter = collections.Counter()
+        counts_neg: collections.Counter = collections.Counter()
+        n_p = n_n = 0
+        for feats, gold in questions:
+            for fs, g in zip(feats, gold):
+                for f in fs:
+                    (counts_pos if g else counts_neg)[f] += 1
+                n_p += g
+                n_n += not g
+        if not n_p or not n_n:
             return
         self.rerank = {
-            k: math.log((pos[k] + ALPHA) / (n_pos + 2 * ALPHA))
-            - math.log((neg[k] + ALPHA) / (n_neg + 2 * ALPHA))
-            for k in set(pos) | set(neg)}
+            f: (math.log((counts_pos[f] + ALPHA) / (n_p + 2 * ALPHA))
+                - math.log((counts_neg[f] + ALPHA) / (n_n + 2 * ALPHA)))
+            for f in set(counts_pos) | set(counts_neg)}
 
     def _candidates(self, view: GraphView, i: int) -> list[int]:
         """Stage one's top-k, in its order."""

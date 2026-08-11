@@ -345,8 +345,8 @@ evaluation seeds a million away, CPU:
 
 ```
 model          params      lbl acc  lbl lift   typ lift  copy lift
+corefer         4,115        0.357    +0.282     +0.174     +0.096
 omegaclaw_rank     872        0.356    +0.280     +0.308          -
-corefer         4,908        0.350    +0.274     +0.174     +0.093
 omegaclaw_ctx     872        0.344    +0.267     +0.270          -
 analogy         6,000        0.334    +0.256     +0.079          -
 ruleinduce         76        0.329    +0.250     +0.048     +0.030
