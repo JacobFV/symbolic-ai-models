@@ -408,38 +408,47 @@ it means the budget asymmetry ran in *both* directions at once. They are
 defaults in `extra`, not constants; nobody has measured what these models do
 when raised.
 
-**Two of six have finished. Both clear the floor; neither had converged.**
+**Three of six have finished. All clear the label floor; none had converged.**
 
 | model | 300 steps | 2000 steps | gain over last 500 | type lift | train time |
 |---|---:|---:|---:|---:|---:|
+| `rgt` | -0.058 | **+0.152** | +0.019 | **+0.587** | 11 min |
 | `gru` | -0.050 | **+0.079** | +0.030 | +0.052 | 60 min |
 | `transformer` | -0.065 | **+0.044** | +0.015 | -0.079 | 9 min |
 
 The 300-step figures were artefacts of the budget. Nothing that rested on them
 survives, in either direction — including any reading of the rule-based models
-as beating the neural half. `gru` at +0.079 sits ninth of nineteen and
-`transformer` at +0.044 twelfth, both above `ngram`, `symbolalg`, `syllogism`,
-`ctw` and `synth`, both below the eight best rule-based models.
+as beating the neural half.
 
-These are **lower bounds, not converged scores** — both were still gaining more
-than +0.01 over their last 500 steps when the budget ran out, though
+**`rgt` is first of nineteen on node type, by a factor of two.** Its +0.587
+against `brill`'s +0.295 is the largest margin anywhere in this table, and it is
+the one architecture here built to read the relation algebra rather than a
+linearisation — it aggregates over parent/child/sibling/ancestor edges directly.
+The structure-aware model being the one that predicts structure is the least
+surprising result in the repo and the first time it has actually been measured.
+On *labels* it is seventh at +0.152, below `analogy`, `ruleinduce`, `routes`,
+`ilp`, `workspace` and a hair under `brill`.
+
+These are **lower bounds, not converged scores** — all three were still gaining
+more than +0.01 over their last 500 steps when the budget ran out, though
 `transformer` is decelerating hard (+0.0096 then +0.0049 over its last two
 intervals) where `gru` was not.
 
-Two things worth noticing already. The heads come apart by architecture:
-`gru` clears the *type* floor and `transformer` sits well below it, on the same
-data and the same budget. And the cost is wildly uneven — `transformer` reached
-its score in **9 minutes against `gru`'s 60**, because a recurrence cannot be
-parallelised over the sequence and an attention stack can. On a CPU that is the
-dominant term, not parameter count.
+The heads come apart by architecture, sharply. On identical data and budget the
+type lift runs `rgt` +0.587, `gru` +0.052, `transformer` -0.079. Averaging the
+two heads would erase exactly this, which is why they are never averaged here.
 
-Four networks are still at 300 steps and **must not be read as results**.
+The cost is also wildly uneven: 9, 11 and 60 minutes for models within 15% on
+parameter count. A recurrence cannot be parallelised over the sequence and an
+attention stack can, and on a CPU that dominates everything else.
+
+Three networks are still at 300 steps and **must not be read as results**.
 `compare` says so itself, and refusing to read those rows is the whole point of
 the warning:
 
 ```
 !! these rows were NOT produced under one config, so the comparison is not like-for-like:
-  steps: 2000=gru, transformer; 300=hrr, ndr, rgt, tpr
+  steps: 2000=gru, rgt, transformer; 300=hrr, ndr, tpr
 ```
 
 **The rest of the comparison is still running**, at 2000 steps (8.9 passes) on CPU — it
