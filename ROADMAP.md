@@ -66,9 +66,12 @@ occupies in the term graph.
 
 Cheap and high-value first; each is exactly measurable under this harness.
 
-- [ ] **Report shape, not the average.** Three separate documents warn that a
-      macro-average hides the finding. Replace it with two integers: lessons
-      solved (lift >= 0.90) and lessons above floor (lift >= 0.15).
+- [x] **Report shape, not the average.** `CurriculumReport` now leads with
+      `solved` (lift >= 0.90) and `above_floor` (>= 0.15) over the lesson count;
+      the macro-average is kept below them, labelled as describing neither mode.
+      Still to do: the same treatment for the per-lesson breakdown of the `lm`
+      and `node` tasks, which currently aggregate over all episodes at once and
+      so cannot report a shape at all.
 - [ ] **Shortcut audits as extra floors.** Simulate the unthinking heuristic —
       longest option, option sharing most words with the prompt, most variables,
       distractor-name suffix — and report each as its own floor. In the source

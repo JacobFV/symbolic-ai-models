@@ -49,9 +49,27 @@ class ChoiceResult:
     n_choices: int
 
 
+#: A lesson counts as solved at this much of the headroom above its own floor.
+SOLVED = 0.90
+#: ...and as showing signs of life at this much.
+ABOVE_FLOOR = 0.15
+
+
 @dataclass
 class CurriculumReport:
-    """Per-lesson accuracy against the floor the episodes themselves define."""
+    """Per-lesson accuracy against the floor the episodes themselves define.
+
+    Read the **shape**, not the average. A curriculum result is characteristically
+    bimodal — a handful of lessons a model genuinely does, and a long tail it is
+    at chance on — and a macro-average over the two is a number describing
+    neither. Two models with the same average can be "solves nine lessons,
+    hopeless on the rest" and "mediocre at everything", which are entirely
+    different things to know and call for entirely different next steps.
+
+    So :attr:`solved` and :attr:`above_floor` are the headline, and the average
+    is kept below them because it is what everyone looks for, not because it is
+    what anyone should conclude from.
+    """
 
     results: list[ChoiceResult] = field(default_factory=list)
 
@@ -84,6 +102,26 @@ class CurriculumReport:
     def lift(self) -> float:
         return lift(self.accuracy, self.floor)
 
+    @property
+    def n_lessons(self) -> int:
+        return len({r.lesson_id for r in self.results})
+
+    @property
+    def solved(self) -> int:
+        """Lessons taking at least ``SOLVED`` of the headroom above their floor."""
+        return sum(1 for v in self.by_lesson().values() if v["lift"] >= SOLVED)
+
+    @property
+    def above_floor(self) -> int:
+        """Lessons doing measurably better than knowing nothing."""
+        return sum(1 for v in self.by_lesson().values() if v["lift"] >= ABOVE_FLOOR)
+
+    def shape(self) -> dict[str, float]:
+        """The two integers worth quoting, plus the average for completeness."""
+        return {"lessons": self.n_lessons, "solved": self.solved,
+                "above_floor": self.above_floor, "macro_acc": self.accuracy,
+                "macro_floor": self.floor, "macro_lift": self.lift}
+
     def by_lesson(self) -> dict[str, dict[str, float]]:
         out: dict[str, dict[str, float]] = {}
         groups: dict[str, list[ChoiceResult]] = collections.defaultdict(list)
@@ -103,9 +141,16 @@ class CurriculumReport:
                 for k, v in rows[:limit]]
         if len(rows) > limit:
             body.append(f"... {len(rows) - limit} more lessons")
-        total = (f"{'macro-average':<38}{len(self.results):>5}"
-                 f"{self.accuracy:>8.3f}{self.floor:>8.3f}{self.lift:>8.3f}")
-        return "\n".join([head, line, *body, line, total])
+
+        n = self.n_lessons
+        shape = (f"solved (lift >= {SOLVED:.2f}): {self.solved}/{n}"
+                 f"    above floor (>= {ABOVE_FLOOR:.2f}): {self.above_floor}/{n}")
+        average = (f"{'macro-average':<38}{len(self.results):>5}"
+                   f"{self.accuracy:>8.3f}{self.floor:>8.3f}{self.lift:>8.3f}")
+        return "\n".join([
+            head, line, *body, line, shape, average,
+            "the two counts are the result; the average is over a bimodal "
+            "distribution and describes neither mode."])
 
 
 @torch.no_grad()
