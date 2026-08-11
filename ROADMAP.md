@@ -58,6 +58,11 @@ Everything defaults to CPU now, including `TrainConfig.device`, which used to be
 
 ## Task list
 
+- [ ] **Finish the full-curriculum sweep and rewrite the conclusions.** Running
+      now via `configs/full179.toml`. The first two models out of it already
+      disagree with everything this repo has reported — see below. Nothing in
+      the README should be trusted until the complete table is in.
+
 - [x] **Re-run the full sweep and correct the README.** Done, and it refuted
       the claim that prompted it: three rule-based models did *not* clear the
       floor. Those measurements were taken at 50 training episodes per lesson
@@ -591,6 +596,31 @@ and cut more of them the more data there was. Both now subsample.
 It changed nothing at sweep scale: `workspace` 0.291 before and after,
 `analogy` 0.286 -> 0.281. Worth fixing because order-dependence is a defect
 whatever it scores, and worth recording that fixing it bought nothing.
+
+### Partial: the six-lesson slice may have been unrepresentative
+
+Every headline number in this repo was measured on six lessons chosen early and
+never revisited, out of 179 available. The full sweep is running. Two models are
+out of it so far, and both reverse:
+
+    model      lessons  lbl acc  lbl lift  lbl cov
+    analogy          6    0.281    -0.045     0.92
+    analogy        179    0.334    +0.256     0.82
+    brill            6    0.267    -0.065     0.92
+    brill          179    0.244    +0.155     0.82
+
+Both clear the label floor comfortably on the full curriculum and both sat below
+it on the slice. If that holds across the remaining eleven, then "no rule-based
+model clears the label floor" — reported here many times and written into the
+README — is an artifact of lesson selection rather than a fact about the models.
+
+Two of thirteen is not a result and this is recorded as a partial reading, not a
+conclusion. But it is enough to stop quoting the six-lesson numbers.
+
+Note `lbl cov` falls 0.92 -> 0.82: the wider curriculum has more
+out-of-vocabulary labels, so the label score covers less of it. That is worth
+holding in mind when the full table arrives — the two runs are not scoring quite
+the same population of nodes.
 
 ## Open questions
 

@@ -1,0 +1,24 @@
+# Every generatable lesson, symbolic models only, CPU.
+#
+#   uv run symbolic-ai-models sweep --config configs/full179.toml --out runs/full179
+#
+# The point of this config is external validity. Every headline number in this
+# repo up to now was measured on six hand-picked lessons — chosen early, never
+# revisited — and 179 are available. A conclusion drawn from 3% of the
+# curriculum is a conclusion about those six lessons.
+#
+# Smaller `n_train` than the six-lesson sweep on purpose: 179 lessons at 20
+# episodes is 3,580 training episodes, which already exceeds the 1,200 that
+# sweep used. Breadth is what is being bought here, not depth.
+
+tasks = "lm,node"
+lessons = "all"
+n_train = 20
+n_eval = 4
+
+vocab_size = 8192
+max_len = 320
+max_nodes = 128
+batch_size = 16
+device = "cpu"
+out = "runs/full179"
