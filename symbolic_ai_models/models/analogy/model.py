@@ -109,21 +109,32 @@ class AnalogyModel(RuleBasedModel):
     def learn(self, episodes: Sequence[Episode], tok: SymbolTokenizer) -> None:
         self.cases = []
         self.index = collections.defaultdict(list)
+        # Gathered then thinned by a stride, not cut off at the cap. Breaking
+        # out once `max_cases` is reached is truncation: episodes arrive grouped
+        # by lesson, so the case base filled up on the early lessons and held
+        # nothing from the late ones — and held less of them the more data there
+        # was, which is the opposite of what a case base should do.
+        candidates: list[tuple] = []
         for view, targets, episode in self.training_views(
                 episodes, tok, max_nodes=self.cfg.max_len, repeats=2,
                 with_index=True):
             for node, (label_id, type_id) in targets.items():
-                if len(self.cases) >= self.max_cases:
-                    break
-                case = _Case(
-                    labels=tuple(view.labels), types=tuple(view.types),
-                    parent=tuple(view.parent), slot=tuple(view.slot),
-                    node=node, label=label_id, type_id=type_id,
-                    signature=_signature(view, node), episode=episode)
-                # The MAC index is keyed on structure only, so retrieval never
-                # depends on a symbol that will not exist next episode.
-                self.index[_coarse(view, node)].append(len(self.cases))
-                self.cases.append(case)
+                candidates.append((view, node, label_id, type_id, episode))
+        if len(candidates) > self.max_cases:
+            step = len(candidates) / self.max_cases
+            candidates = [candidates[int(i * step)]
+                          for i in range(self.max_cases)]
+
+        for view, node, label_id, type_id, episode in candidates:
+            case = _Case(
+                labels=tuple(view.labels), types=tuple(view.types),
+                parent=tuple(view.parent), slot=tuple(view.slot),
+                node=node, label=label_id, type_id=type_id,
+                signature=_signature(view, node), episode=episode)
+            # The MAC index is keyed on structure only, so retrieval never
+            # depends on a symbol that will not exist next episode.
+            self.index[_coarse(view, node)].append(len(self.cases))
+            self.cases.append(case)
         self.index = dict(self.index)
         self._calibrate(episodes, tok)
 

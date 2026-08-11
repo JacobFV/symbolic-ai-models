@@ -62,11 +62,10 @@ Everything defaults to CPU now, including `TrainConfig.device`, which used to be
       the claim that prompted it: three rule-based models did *not* clear the
       floor. Those measurements were taken at 50 training episodes per lesson
       and do not survive the sweep's 200 — see below.
-- [ ] **Why do the rule-based models degrade with more data?** `workspace`
-      scores 0.316 at n_train=50 and 0.291 at 200, while the floor rises 0.298
-      -> 0.312. A model getting worse with four times the evidence is a defect,
-      not a property, and it is the most likely reason none of them clears the
-      floor at sweep scale.
+- [x] **Why do the rule-based models degrade with more data?** They do not.
+      The premise was noise from a 12-episode evaluation set; at 240 episodes
+      every curve is flat. A real truncation bug was found and fixed on the way
+      and changed nothing measurable. See below.
 
 - [x] `parsers/base.py` — Parser, ParseResult, registry
 - [x] `parsers/evaluate.py` — gold roles from the graph, clustering F1
@@ -568,6 +567,31 @@ ad-hoc measurement at a convenient scale agreed with what I wanted and was
 reported as a result for several commits before the authoritative path
 contradicted it.
 
+### Measured: no degradation with data, and a real bug that did not matter
+
+The premise — `workspace` 0.316 at n_train=50 falling to 0.291 at 200 while the
+floor rose — came from a 12-episode evaluation set. At 240 episodes:
+
+    n_train   floor  workspace  analogy    ilp   ngram
+         25   0.308      0.308    0.321  0.333   0.238
+         50   0.321      0.329    0.340  0.336   0.267
+        100   0.311      0.289    0.326  0.298   0.247
+        200   0.316      0.326    0.338  0.332   0.259
+
+Every column is flat. The floor does not improve with data and the models do not
+degrade; the original two points were both inside the noise of a measurement
+twenty times too small.
+
+The investigation did find a real defect. `workspace` and `analogy` enforced
+their example caps by *stopping* once the cap was reached, while `ruleinduce`
+and `ilp` subsample with a stride. Episodes arrive grouped by lesson, so
+truncation cut the later lessons out of the policy and the case base entirely,
+and cut more of them the more data there was. Both now subsample.
+
+It changed nothing at sweep scale: `workspace` 0.291 before and after,
+`analogy` 0.286 -> 0.281. Worth fixing because order-dependence is a defect
+whatever it scores, and worth recording that fixing it bought nothing.
+
 ## Open questions
 
 - The design docs report counting losing to gradients by ~3.5x perplexity on
@@ -582,6 +606,11 @@ contradicted it.
   is a scope boundary worth stating rather than quietly working around.
 
 ## Rules for autonomous work
+
+0. **The sweep is the authority.** Ad-hoc measurement scripts have now
+   contradicted `symbolic-ai-models sweep` twice, both times in the direction
+   that flattered the result being written up. Quote sweep numbers; use scratch
+   scripts to form hypotheses, never to report.
 
 1. Never commit with tests failing. `uv run pytest tests/ -q`.
 2. One coherent change per commit, with a message saying what was learned.
