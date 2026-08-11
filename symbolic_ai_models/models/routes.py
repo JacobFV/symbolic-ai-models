@@ -1,10 +1,15 @@
 """Where an answer lives, relative to the node being asked about.
 
 A *route* is a structural path — "my slot-0 sibling", "the same slot of another
-subtree with my parent's head" — and it is the only thing worth carrying between
-two episodes of this curriculum. A remembered symbol is worthless because the
-next episode will not contain it; a route is a fact about shape and survives
-intact.
+subtree with my parent's head" — and it is a fact about shape rather than about
+vocabulary.
+
+It was introduced on the argument that a remembered symbol is worthless because
+the next episode will not contain it. That argument is measured false here:
+every scored label recurs in training. A route is still worth having, because it
+is what makes a model equivariant under renaming and that is a real robustness
+property — but it buys robustness, not accuracy, and on this curriculum the two
+pull in opposite directions.
 
 The vocabulary lives here rather than inside one model because two of them need
 it for different reasons. :mod:`symbolic_ai_models.models.analogy` recovers the

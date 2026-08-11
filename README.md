@@ -245,7 +245,11 @@ lift = (score - floor) / (1 - floor)
 
 `lift` is the number to compare. Zero is the prior; one is perfect. Floors are **fitted on train and scored on eval** — a floor that gets to look at the answers isn't a floor.
 
-Type and label are reported separately and never averaged. Type is the structural question (what kind of thing sits here); label is the symbolic one (*which* predicate, *which* variable), and it is the hard one, because the curriculum invents its vocabulary per episode — the answer is very often a name the model has never seen and can only get from how the node sits among its neighbours.
+Type and label are reported separately and never averaged. Type is the structural question (what kind of thing sits here); label is the symbolic one (*which* predicate, *which* variable) and the harder of the two.
+
+**One correction worth reading before the rest.** This README claimed for a long time that label is hard *because the curriculum invents its vocabulary per episode*, so the answer is usually a name the model has never seen. Measured across all 179 lessons: **100.0% of scored labels are symbols that appear in training.** The generator varies which name fills a slot, not the pool it draws from. Label is hard because choosing among familiar symbols is hard — not because the symbols are unfamiliar.
+
+That premise was load-bearing for several design decisions here, and they should be read in its light: `analogy` gave up 0.463 accuracy for 0.186 to become renaming-equivariant, and `ruleinduce` predicts pointers rather than symbols. Equivariance is a real robustness property and those models genuinely have it. It is simply not what this task rewards, and on this curriculum robustness and accuracy pull in opposite directions.
 
 The masked-node floor is a **structure-only baseline**, not a majority-class one, and the difference matters more than it sounds. Node type is very nearly a function of tree shape — a `field` is always a record's child, a `char` always a string's — and a lookup table keyed on nothing but `(parent type, slot, depth, has children)` scores **0.96** on the curriculum's graphs. Against a majority-class floor of 0.33, a model that had learned strictly *less* than that table would still report a lift near 0.9. So the floor is the table. What remains above it is the part of the score that is actually about reference rather than about shape.
 

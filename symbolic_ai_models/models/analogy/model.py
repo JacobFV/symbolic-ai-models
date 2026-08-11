@@ -3,10 +3,13 @@
 Gentner's structure-mapping theory, and Forbus's MAC/FAC retrieval, as a
 predictor. The claim behind them is that analogy runs on *relational structure*
 rather than on shared features: what makes two situations analogous is that the
-relations line up, not that the objects look alike. On a curriculum whose
-vocabulary is reinvented every episode, that is not a philosophical position but
-the only thing that could possibly work — no symbol survives from one episode to
-the next, and the shape of the term does.
+relations line up, not that the objects look alike.
+
+That was argued here as the only thing that could possibly work, on the grounds
+that no symbol survives from one episode to the next. Measured, that is false:
+100.0% of scored labels recur in training. Structure mapping is therefore a
+choice rather than a necessity on this curriculum, and an expensive one — see
+the note below on what it cost.
 
 So this model stores training graphs and, when asked about a hidden node:
 

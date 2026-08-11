@@ -8,10 +8,16 @@ it and argue with it::
     ELSE IF parent_type(record) THEN const:query
     ELSE ...
 
-The design decision that makes this work at all is what the rules *predict*. The
-curriculum invents its vocabulary every episode, so a rule of the form "in this
-context the answer is ``o2``" is worthless — ``o2`` will not exist in the next
-episode. The rules therefore predict **actions**, not symbols:
+The design decision that shapes this model is what the rules *predict*: not
+symbols but **actions**, resolved against the graph at prediction time.
+
+The original justification was that the curriculum invents its vocabulary every
+episode, making a rule like "the answer here is ``o2``" worthless. That
+justification is measured false — every scored label recurs in training — so the
+pointer design is not *required*, and a ``const`` action naming a symbol
+outright is a legitimate competitor rather than a mistake. The list below still
+earns its place by generalising across contexts; it is no longer defended on
+grounds that do not hold.
 
 ===================  ==================================================
 ``copy:parent``      whatever the parent node is called

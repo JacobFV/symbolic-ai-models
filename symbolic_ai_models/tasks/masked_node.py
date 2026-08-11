@@ -14,9 +14,16 @@ Two heads, reported separately and never averaged into one number:
   understanding nothing about reference, because term trees have strong shape
   regularities.
 * **label** — *which* predicate, *which* variable, *which* field name. The
-  symbolic question, and the hard one, because the curriculum invents its
-  vocabulary per episode: the answer is very often a name the model has never
-  seen and can only get from how the node sits among its neighbours.
+  symbolic question, and the harder of the two.
+
+  It is harder for a *different reason* than this docstring claimed for a long
+  time. The claim was that the curriculum invents its vocabulary per episode, so
+  the answer is usually a name the model has never seen. Measured across all 179
+  lessons, **100.0%** of scored labels are symbols that appear in training: the
+  generator varies which name fills a slot, not the pool it draws from. What
+  makes the label hard is choosing among familiar symbols, not naming unfamiliar
+  ones — and a model that refuses to memorise is handicapping itself for a
+  benefit this task does not pay.
 
 Structural nodes carry no label and are scored on type alone, so that predicting
 the empty label of a list — which is free — cannot inflate the score.

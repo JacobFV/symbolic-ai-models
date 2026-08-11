@@ -361,6 +361,36 @@ favour. So the family separation is not an artifact of an unfair floor: the gap
 between the neural and rule-based models on label prediction is real, and it is
 now measured against a floor that is actually comparable.
 
+### Measured: the repo's core premise about vocabulary is false
+
+Across all 179 lessons, 537 evaluation episodes, 29,501 scored labels:
+
+    seen in training:  29,494  (100.0%)
+    genuinely novel:        7  (0.0%)
+
+The claim that "the curriculum invents its vocabulary per episode, so the answer
+is often a name the model has never seen" is false. The generator varies *which*
+symbol fills a slot; the pool it draws from is fixed and small — alice/bob/carol,
+o0..o9, the colours, the shapes. It appeared in the README, in
+`tasks/masked_node.py`, and in the docstrings of `analogy`, `routes` and
+`ruleinduce`, where it justified design decisions. All corrected.
+
+The second recorded lead is dead too. `label_coverage` 0.92 was described as
+excluding "precisely the invented names where a pointer method should win". The
+excluded labels are six whole bracket strings — `'(()())'`, `'((())(()'` — the
+un-exploded contents of `str` nodes. Not invented names; an artifact of a `str`
+node carrying its whole content as a label while also exploding into char
+children.
+
+**What this implies for the priority item.** The floor memorises the most common
+label per structural context, and on a fixed symbol pool memorisation is a
+winning strategy. Several rule-based models here were deliberately built not to
+memorise — `analogy` paid 0.463 -> 0.186 for renaming equivariance, `ruleinduce`
+predicts pointers rather than symbols — on the strength of a premise that does
+not hold. Equivariance is real and worth having; it is simply not what this task
+rewards. A rule-based model that clears the floor most likely has to do both:
+memorise the recurring pool where it pays, and use structure where it does not.
+
 ## Open questions
 
 - The design docs report counting losing to gradients by ~3.5x perplexity on
