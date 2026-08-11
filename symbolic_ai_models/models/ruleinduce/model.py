@@ -67,7 +67,13 @@ class RuleInductionModel(RuleBasedModel):
 
     def __init__(self, cfg: ModelConfig) -> None:
         super().__init__(cfg)
-        self.max_examples = int(cfg.get("max_examples", 4000))
+        # Set from measured wall clock, never from eval lift. The cap bounds
+        # runtime and nothing else, so the rule is "the largest value fitting
+        # 300s on the full curriculum", well under synth's 1,500s which this
+        # sweep already tolerates. The old value was a guessed constant.
+        # Uncapped: 279s. This curve is flat, so it changes almost nothing and is set
+        # this way for consistency rather than for score.
+        self.max_examples = int(cfg.get("max_examples", 200_000))
         self.max_conditions = int(cfg.get("max_conditions", 3))
         self.n_constants = int(cfg.get("n_constants", 24))
         self.label_rules: DecisionList | None = None

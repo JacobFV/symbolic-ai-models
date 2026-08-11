@@ -115,7 +115,13 @@ class WorkspaceModel(RuleBasedModel):
     def __init__(self, cfg: ModelConfig) -> None:
         super().__init__(cfg)
         self.rounds = int(cfg.get("rounds", 3))
-        self.max_examples = int(cfg.get("max_examples", 4000))
+        # Set from measured wall clock, never from eval lift. The cap bounds
+        # runtime and nothing else, so the rule is "the largest value fitting
+        # 300s on the full curriculum", well under synth's 1,500s which this
+        # sweep already tolerates. The old value was a guessed constant.
+        # Uncapped: 26s over all 179 lessons against 17s at the old 4,000. The cap was
+        # buying four seconds and costing 0.095 of label lift.
+        self.max_examples = int(cfg.get("max_examples", 200_000))
         #: ``goal signature -> {codelet: how often it was right}``
         self.policy: dict[tuple, collections.Counter] = {}
         #: ``goal signature -> how many times it was seen``

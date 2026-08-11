@@ -642,7 +642,32 @@ Everything defaults to CPU now, including `TrainConfig.device`, which used to be
       on it. Fit a decision tree or gradient boosting on the same structural
       features — still content-blind, so still a floor — and see what survives.
 
-- [ ] **Set the example caps from runtime, not from a guessed constant, and
+- [x] **Set the example caps from runtime, not from a guessed constant.** Done,
+      and the choice was made from wall clock alone so that no cap was picked by
+      the score it produced. Budget: the largest value fitting 300s on the full
+      curriculum, well under `synth`'s 1,500s which the sweep already tolerates.
+
+      | model | uncapped runtime | cap now | label lift |
+      |---|---:|---:|---:|
+      | `workspace` | 26s | none | +0.154 -> **+0.249** |
+      | `brill` | 200s | none | +0.117 -> **+0.172** |
+      | `ruleinduce` | 279s | none | +0.217 -> +0.217 |
+      | `ilp` | **timed out past 900s** | 24,000 | +0.197 -> +0.198 |
+
+      `workspace` moves from eighth to joint first on labels, and its old cap of
+      4,000 was buying **four seconds**. `brill` gains 0.055 for 176s. The two
+      whose curves were already flat do not move, exactly as the ladder
+      predicted, which is the useful confirmation: raising a cap is not a free
+      win, it is a win precisely where the curve was still climbing.
+
+      `ilp` is the one model that cannot be uncapped at all — it ran past a 900s
+      timeout, and 48,000 costs 462s. That is not a tuning decision, it is what
+      its search costs.
+
+      `analogy` uses `max_cases` rather than `max_examples` and was left alone;
+      a different knob wants its own measurement.
+
+- [ ] (superseded) Set the example caps from runtime, not from a guessed constant, and
       re-run the four affected models.** The curve above says `workspace` and
       `brill` are held back by theirs and `ilp` and `ruleinduce` are not. The
       cap must be chosen *without* reference to eval lift, or the whole table

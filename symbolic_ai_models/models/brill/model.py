@@ -73,7 +73,12 @@ class BrillModel(RuleBasedModel):
         super().__init__(cfg)
         self.max_rules = int(cfg.get("max_rules", 20))
         self.min_net = int(cfg.get("min_net", 3))
-        self.max_examples = int(cfg.get("max_examples", 3000))
+        # Set from measured wall clock, never from eval lift. The cap bounds
+        # runtime and nothing else, so the rule is "the largest value fitting
+        # 300s on the full curriculum", well under synth's 1,500s which this
+        # sweep already tolerates. The old value was a guessed constant.
+        # Uncapped: 200s over all 179 lessons, comfortably inside budget.
+        self.max_examples = int(cfg.get("max_examples", 200_000))
         self.transformations: list[Transformation] = []
         self.type_transformations: list[Transformation] = []
         self.baseline_type: dict[str, int] = {}

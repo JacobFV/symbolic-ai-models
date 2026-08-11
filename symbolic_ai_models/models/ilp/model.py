@@ -103,7 +103,13 @@ class ILPModel(RuleBasedModel):
         self.max_body = int(cfg.get("max_body", 3))
         self.max_vars = int(cfg.get("max_vars", 4))
         self.max_clauses = int(cfg.get("max_clauses", 12))
-        self.max_examples = int(cfg.get("max_examples", 1500))
+        # Set from measured wall clock, never from eval lift. The cap bounds
+        # runtime and nothing else, so the rule is "the largest value fitting
+        # 300s on the full curriculum", well under synth's 1,500s which this
+        # sweep already tolerates. The old value was a guessed constant.
+        # The one model that cannot be uncapped: it ran past a 900s timeout, and 48,000
+        # costs 462s. 24,000 costs 240s and fits. Its curve is flat too.
+        self.max_examples = int(cfg.get("max_examples", 24_000))
         self.min_confidence = float(cfg.get("min_confidence", 0.15))
         self.clauses: list[Clause] = []
         self.type_clauses: list[tuple[Clause, int]] = []

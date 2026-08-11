@@ -346,14 +346,14 @@ evaluation seeds a million away, CPU:
 ```
 model         family        params  lbl acc  lbl lift  typ lift    copy
 corefer       rule-based     4,115    0.357    +0.250    +0.612  +0.096
+workspace     rule-based    10,472    0.357    +0.249    -0.576       -
 omegaclaw_rankrule-based       872    0.356    +0.248    -0.016       -
 omegaclaw_ctx rule-based       872    0.344    +0.234    -0.071       -
 analogy       rule-based     6,000    0.334    +0.222    -0.351       -
-ruleinduce    rule-based        76    0.329    +0.217    -0.396  +0.030
+ruleinduce    rule-based        80    0.329    +0.217    -0.377  +0.032
 routes        rule-based       599    0.324    +0.210    -1.152  +0.051
-ilp           rule-based        74    0.312    +0.197    -1.369       -
-workspace     rule-based     1,521    0.276    +0.154    -1.364       -
-brill         rule-based       537    0.244    +0.117    -0.034       -
+ilp           rule-based        73    0.312    +0.198    -1.037       -
+brill         rule-based     1,200    0.290    +0.172    -0.026       -
 rgt           neural     1,125,053    0.241    +0.115    +0.395       -  *
 omegaclaw_flatrule-based       872    0.234    +0.106    -0.282       -
 evidence      rule-based     5,819    0.219    +0.089    -1.152  +0.023
