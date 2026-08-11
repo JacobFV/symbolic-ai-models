@@ -467,3 +467,47 @@ def test_comparison_table_flags_config_drift():
     split = [{"model": "gru", "family": "neural", "config": {"n_train": 20}},
              {"model": "ilp", "family": "rule-based", "config": {"n_train": 50}}]
     assert any("n_train" in l for l in config_drift(split))
+
+
+@pytest.mark.skipif(
+    "gru" not in __import__("symbolic_ai_models.models",
+                            fromlist=["model_names"]).model_names(),
+    reason="neural models not registered")
+def test_resuming_keeps_the_vocabulary_it_was_trained_with(tmp_path):
+    """Resume rebuilds the tokenizer from scratch. It must rebuild the same one.
+
+    A checkpoint's embedding is a table indexed by token id. `train --resume`
+    does not reload the tokenizer, it regenerates the episodes and refits the
+    vocabulary, then loads weights into whatever model that produced. If the
+    vocabulary came back in a different order, every embedding row would now
+    belong to a different symbol -- and nothing would raise, because the shapes
+    still match. Training would simply continue from scrambled weights, and the
+    only visible sign would be a loss that jumped and then recovered, which is
+    indistinguishable from an ordinary bad batch.
+
+    Six hours of CPU training are about to be assembled out of resumed pieces,
+    so this is the assumption that matters most and the one no test covered.
+    """
+    out = tmp_path / "vocab_stable"
+    first = train(small_config(out, model="gru", tasks=("node",),
+                               task_weights={"node": 1.0}, steps=6,
+                               eval_every=3))
+    before = (out / "tokenizer.json").read_text(encoding="utf-8")
+    loss_before = first["final"]["node"]["label_bits"]
+
+    second = train(small_config(out, model="gru", tasks=("node",),
+                                task_weights={"node": 1.0}, steps=12,
+                                eval_every=3, resume=True))
+    assert (out / "tokenizer.json").read_text(encoding="utf-8") == before, \
+        "the resumed run refitted a different vocabulary"
+    assert second["vocab_size"] == first["vocab_size"]
+
+    # Continuing, not restarting: six more steps from a warm model must not land
+    # further from the answer than the cold model already was.
+    cold = train(small_config(tmp_path / "cold", model="gru", tasks=("node",),
+                              task_weights={"node": 1.0}, steps=6,
+                              eval_every=3))["final"]["node"]["label_bits"]
+    resumed = second["final"]["node"]["label_bits"]
+    assert resumed <= max(loss_before, cold) + 0.5, (
+        f"resumed loss {resumed:.3f} vs {loss_before:.3f} before the break "
+        f"and {cold:.3f} cold -- weights and vocabulary may have desynchronised")
