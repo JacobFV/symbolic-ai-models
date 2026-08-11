@@ -57,7 +57,7 @@ class RuleInductionModel(RuleBasedModel):
     """Induce ordered rules mapping structural context to a copy action."""
 
     LEARNED = ("label_rules", "type_rules", "text_rules", "frequent",
-               "confidence_map")
+               "confidence_map", "anchor_features")
 
     def __init__(self, cfg: ModelConfig) -> None:
         super().__init__(cfg)
@@ -69,6 +69,12 @@ class RuleInductionModel(RuleBasedModel):
         self.text_rules: DecisionList | None = None
         self.frequent: list[int] = []
         self.confidence_map = ScoreCalibrator()
+        #: Anchor-relative features: depth and region measured from the
+        #: top-level region the node sits in rather than from the whole graph.
+        #: Off by default because it was measured neutral-to-negative here
+        #: (-0.011 node accuracy, worse ECE); the knob stays so that is
+        #: reproducible rather than asserted.
+        self.anchor_features = bool(cfg.get("anchor_features", False))
 
     # ---- fitting ------------------------------------------------------
     def learn(self, episodes: Sequence[Episode], tok: SymbolTokenizer) -> None:
@@ -86,7 +92,7 @@ class RuleInductionModel(RuleBasedModel):
                                                  max_nodes=self.cfg.max_len):
             wrapped = _View.from_graph_view(view)
             for node, (label_id, type_id) in targets.items():
-                fs = _node_facts(wrapped, node)
+                fs = _node_facts(wrapped, node, anchor=self.anchor_features)
                 if type_id >= 0:
                     type_ex.append((fs, type_id))
                 if label_id >= 0:
@@ -132,7 +138,7 @@ class RuleInductionModel(RuleBasedModel):
             for node, (label_id, _) in targets.items():
                 if label_id < 0:
                     continue
-                action, rule = probe.explain(_node_facts(wrapped, node))
+                action, rule = probe.explain(_node_facts(wrapped, node, anchor=self.anchor_features))
                 symbol = _resolve(wrapped, node, action) if action else None
                 if symbol is None:
                     continue
@@ -150,7 +156,7 @@ class RuleInductionModel(RuleBasedModel):
                 if label_id >= 0:
                     action = self._best_action(wrapped, node, label_id)
                     if action is not None:
-                        examples.append((_node_facts(wrapped, node), action))
+                        examples.append((_node_facts(wrapped, node, anchor=self.anchor_features), action))
         return self._induce(examples)
 
     def _induce(self, examples: list) -> DecisionList | None:
@@ -215,7 +221,7 @@ class RuleInductionModel(RuleBasedModel):
         out: dict[int, tuple[Votes, Votes]] = {}
         wrapped = _View.from_graph_view(view)
         for i in view.hidden:
-            fs = _node_facts(wrapped, i)
+            fs = _node_facts(wrapped, i, anchor=self.anchor_features)
             out[i] = (self._label_vote(wrapped, i, fs), self._type_vote(fs))
         return out
 
@@ -308,14 +314,28 @@ def _confidence(rule) -> float:
 # ---------------------------------------------------------------------------
 # features
 # ---------------------------------------------------------------------------
-def _node_facts(view: "_View", i: int) -> FactSet:
+def _node_facts(view: "_View", i: int, *, anchor: bool = True) -> FactSet:
     """Structural context of a node — never its own label or type.
 
     Everything here is readable off the tree with the node itself redacted, so
     the same function serves training and prediction and there is no way for the
     answer to enter through the features.
+
+    Half of these are **anchor-relative**: expressed against the top-level
+    region the node sits in rather than against the whole graph. Absolute depth
+    means different things in a three-object scene and a nine-object one, so a
+    rule keyed on it is a rule about episode size; depth measured from the
+    region root means the same thing in both, which is what lets a rule induced
+    on one episode be *the same rule* on another rather than a similar one.
+
+    The anchor is found by geometry, never by the word ``query``. Every episode
+    in this curriculum has a top-level ``query`` field, so keying on that string
+    was tempting and would have been wrong: the renaming test permutes field
+    names along with everything else, and a lexical anchor would have quietly
+    cost the model its equivariance.
     """
     p = view.parent[i]
+    region, rank, size = view.region_of(i)
     facts = {
         ("slot", view.slot[i]),
         ("depth", min(view.depth[i], 6)),
@@ -324,6 +344,15 @@ def _node_facts(view: "_View", i: int) -> FactSet:
         ("n_siblings", len(view.siblings(i))),
         ("is_leaf", len(view.children(i)) == 0),
     }
+    if anchor:
+        # anchor-relative: same meaning whatever size the episode is
+        facts |= {
+            ("rel_depth", min(view.depth[i] - view.depth[region], 6)
+             if region >= 0 else -1),
+            ("region_rank", rank),
+            ("region_size", min(size, 12)),
+            ("smallest_region", rank == 0),
+        }
     if p >= 0 and view.labels[p] is not None:
         facts.add(("parent_head", view.labels[p]))
     if _peer(view, i) is not None:
@@ -360,6 +389,33 @@ class _View:
         for i, p in enumerate(parent):
             if p >= 0:
                 self._kids[p].append(i)
+        self._regions = self._build_regions()
+
+    def _build_regions(self) -> dict[int, tuple[int, int, int]]:
+        """``node -> (region root, size rank, region size)``.
+
+        A region is a top-level field and everything under it. The rank is by
+        size, smallest first, which is the symbol-free stand-in for "this is the
+        question rather than the evidence" — a query subtree is almost always
+        the smallest thing hanging off the record.
+        """
+        roots = [i for i in range(len(self.parent)) if self.parent[i] >= 0
+                 and self.parent[self.parent[i]] < 0]
+        owner: dict[int, int] = {}
+        for i in range(len(self.parent)):
+            node, guard = i, 0
+            while node >= 0 and node not in roots and guard < len(self.parent):
+                node = self.parent[node]
+                guard += 1
+            if node in roots:
+                owner[i] = node
+        sizes = collections.Counter(owner.values())
+        order = {root: rank for rank, (root, _) in
+                 enumerate(sorted(sizes.items(), key=lambda kv: (kv[1], kv[0])))}
+        return {i: (root, order[root], sizes[root]) for i, root in owner.items()}
+
+    def region_of(self, i: int) -> tuple[int, int, int]:
+        return self._regions.get(i, (-1, -1, 0))
 
     def __len__(self) -> int:
         return len(self.labels)

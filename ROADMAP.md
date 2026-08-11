@@ -109,7 +109,14 @@ Cheap and high-value first; each is exactly measurable under this harness.
       exactly 0.000 here — see below. The route machinery it was built on was
       worth keeping and ships as the `routes` model; the per-episode refit is
       off by default with a knob to reproduce the null.
-- [ ] **Anchor-relative features.** Re-express structural features relative to
+- [x] **Anchor-relative features.** Built, ablated, measured neutral-to-negative
+      (-0.011 accuracy, worse calibration) and shipped off by default. Third
+      null in a row, and the pattern is the real finding — see the note on
+      priority below.
+- [ ] **PRIORITY: get any rule-based model above the label floor.** The last
+      three items refined mechanisms inside models that are all below it, where
+      there is no headroom to refine into. See "the family separation" below.
+- [ ] (done, kept for the record) Anchor-relative: re-express features relative to
       the masked node or the query subtree — relative depth, sibling offset,
       path-from-query — so a hypothesis learned on one episode is *identical*
       rather than merely similar on another.
@@ -285,6 +292,48 @@ What survived is the route vocabulary itself, now shared in `models/routes.py`
 between `analogy` (which replays the route a remembered case used) and `routes`
 (which follows the route its context expects). Both are exactly equivariant
 under renaming.
+
+### Measured: the family separation, and why the last three items were nulls
+
+Sorted by label lift on the full sweep:
+
+    hrr          neural       +0.144
+    rgt          neural       +0.097
+    tpr          neural       +0.069
+    transformer  neural       +0.051
+    gru          neural       +0.039
+    ndr          neural       +0.029
+    grammar      rule-based   -0.081
+    ngram        rule-based   -0.116
+    ...
+    synth        rule-based   -0.475
+
+The split is perfect and it is by family. Every neural model clears the
+masked-node label floor; **no rule-based model does**, including the ones whose
+mechanisms are demonstrably sound — `analogy` and `routes` are exactly
+equivariant under renaming, `ilp` induces first-order clauses that fire, and all
+of them are now well calibrated.
+
+That reframes the last three roadmap items. Per-episode fitting (+0.000),
+anchor-relative features (-0.011) and the parser abstraction (~1% of a bit) were
+all refinements applied to models sitting at or below their floor, where there
+is no headroom for a refinement to show up in. The mechanisms may be fine; the
+experiment could not have detected it.
+
+The productive question is not "which refinement helps" but "what would put any
+rule-based model above the floor at all". Candidates worth trying before more
+refinement:
+
+- The floor is a structure-only lookup table conditioned on `(parent type, slot,
+  depth, has children)`. The rule-based models mostly *are* structure-only
+  lookups of one kind or another, so they are competing with the floor on its
+  own terms and the tie is unsurprising. Something that reads content — a route
+  chosen by what the episode *says*, not only by where the node sits — is the
+  obvious missing ingredient.
+- `label_coverage` is 0.92: the 8% excluded are out-of-vocabulary invented
+  names, which is exactly where a pointer method should win and where it is
+  currently not scored at all. Scoring copy-style predictions against the
+  excluded set would change what the metric rewards.
 
 ## Open questions
 
