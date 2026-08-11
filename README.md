@@ -125,6 +125,8 @@ orders, corrects its own errors, or reasons by structural analogy:
 | `ctw` | Willems, Shtarkov & Tjalkens 1995 | **Context Tree Weighting** — a Bayesian mixture over *every* context tree at once, KT estimators, the ½/½ recursion. Where `ngram` picks the longest context it has seen and calls that a confidence, CTW never chooses; the two see identical counts and differ only in how they combine them |
 | `ilp` | Quinlan's FOIL | **First-order clause induction.** Everything else here is propositional. A hypothesis is `answer(X,L) :- peer(X,V), label(V,L)` — the relational *chain* is learned, not enumerated, and the head binds a variable rather than naming a symbol, so a clause induced over `o0`/`o1` episodes applies unchanged where everything is called `w7` |
 | `brill` | Brill 1995 | **Transformation-based error-driven learning.** A weak baseline plus an ordered list of corrections, each chosen to repair more than it breaks *on the output of every rule before it*. The hypothesis is a program over its own predictions, and reads as a narrative about what the baseline got wrong |
+| `grammar` | Harris 1954; ADIOS; SEQUITUR | **Grammar induction — the only parser here that was learned.** Symbols sharing enough contexts are merged into equivalence classes by union-find, then frequent class digrams are promoted to nonterminals. Prediction happens at the class level, so a context never seen with a given word still resolves if the *kind* was seen there |
+| `workspace` | Hofstadter & Mitchell's Copycat; Hearsay-II; SOAR | **Infers its own objective, partitions memory to fit, then runs competing codelets.** Derives a goal signature from the tree, carves the episode's top-level fields into regions, and lets operators (mirror a parallel region, copy a peer, echo the frame) compete; agreement lowers a temperature that governs commitment. What it learns is a *policy over strategies*, keyed by problems it discovered for itself |
 | `analogy` | Gentner's structure mapping; Forbus's MAC/FAC | **Retrieve an isomorphic case and transfer its answer.** Two-stage: a cheap symbol-free structural signature filters the case base, then a real greedy alignment grows a node correspondence outward. It would work identically if every symbol in the corpus were replaced by a fresh one — the strongest available statement of what "symbolic" buys |
 
 ### No cheating
@@ -343,6 +345,29 @@ a result), three things are worth knowing before running anything big:
   bits/token against the best network's 1.722, on ~19k counts versus 495k
   weights — and `ngram` beats them both. On this data the neural models are not
   yet earning their parameters at the token level.
+- **An induced grammar is the most parameter-efficient thing here.** `grammar`
+  reaches 1.118 bits/token on **945** discrete parameters, against 1.722 on
+  495k for the best network. It gets there by recovering the generator's own
+  hidden categories from distribution alone — nothing was written down:
+
+  ```
+  { ' watched', ' avoided', ' praised', ' followed', ' chased', ' greeted' }
+  { ' purple', ' green', ' blue', ' red', ' yellow', ' orange' }
+  { ' prism', ' sphere', ' cone', ' cube', ' rod', ' disc' }
+  ```
+
+- **The workspace engine infers what it is being asked.** On `unification` it
+  discovers unprompted that `fact` and `pattern` are structurally parallel
+  regions and learns that mirroring between them is the strategy — arriving at
+  the content of the lesson without the word appearing anywhere:
+
+  ```
+  ('fact',    field, slot=0, par=True, peer=False, n=3) -> mirror:0.89   [61x]
+  ('pattern', field, slot=0, par=True, peer=False, n=3) -> mirror:0.86   [59x]
+  ```
+
+  Its accuracy is mid-pack; the artifact is the policy table, which is a
+  readable account of how it decided to carve up the task.
 - **The masked-node floor is brutal, and rightly so.** A structure-only lookup
   table scores 0.96 on types, and most models — both families — sit below it
   after a short run. Negative lift is the report working.
