@@ -56,6 +56,7 @@ from ...data.graph import TYPE_TO_ID
 from ...data.tokenizer import SymbolTokenizer
 from ..base import ModelConfig
 from ..registry import register
+from ...calibration import ScoreCalibrator
 from ..symbolic import ABSTAIN, GraphView, RuleBasedModel, Votes
 
 __all__ = ["WorkspaceModel", "Region", "Proposal"]
@@ -109,7 +110,7 @@ class Goal:
 class WorkspaceModel(RuleBasedModel):
     """Infer the objective, carve the workspace, let codelets compete."""
 
-    LEARNED = ("policy", "prior", "rounds")
+    LEARNED = ("policy", "prior", "rounds", "confidence_map")
 
     def __init__(self, cfg: ModelConfig) -> None:
         super().__init__(cfg)
@@ -119,6 +120,7 @@ class WorkspaceModel(RuleBasedModel):
         self.policy: dict[tuple, collections.Counter] = {}
         #: ``goal signature -> how many times it was seen``
         self.prior: collections.Counter = collections.Counter()
+        self.confidence_map = ScoreCalibrator()
 
     # ---- the codelets ---------------------------------------------------
     def _codelets(self) -> dict[str, Callable]:
@@ -134,8 +136,24 @@ class WorkspaceModel(RuleBasedModel):
         itself, which is what lets it transfer to an episode whose vocabulary it
         has never seen.
         """
-        self.policy = collections.defaultdict(collections.Counter)
-        self.prior = collections.Counter()
+        # The policy is fitted twice: once on a four-fifths slice, whose
+        # predictions on the held-out fifth are what the confidence map is
+        # measured against, and once on everything, which is what actually
+        # ships. Calibrating on the episodes the policy was fitted from would
+        # certify the overconfidence rather than remove it. Fitting the final
+        # policy on more data than the map was measured with biases the
+        # confidence *down*, which is the safe direction.
+        cut = max(int(len(episodes) * 0.8), 1)
+        held_out_policy, held_out_prior = self._fit_policy(episodes[:cut], tok)
+        self.policy, self.prior = self._fit_policy(episodes, tok)
+        self._calibrate(episodes[cut:] or episodes, tok,
+                        held_out_policy, held_out_prior)
+
+    def _fit_policy(self, episodes: Sequence[Episode], tok: SymbolTokenizer
+                    ) -> tuple[dict, collections.Counter]:
+        """Which codelet pays off for which inferred goal."""
+        policy: dict = collections.defaultdict(collections.Counter)
+        prior: collections.Counter = collections.Counter()
         seen = 0
         for view, targets in self.training_views(episodes, tok,
                                                  max_nodes=self.cfg.max_len):
@@ -146,12 +164,37 @@ class WorkspaceModel(RuleBasedModel):
                 seen += 1
                 goal = _infer_goal(view, node, regions)
                 key = goal.signature()
-                self.prior[key] += 1
+                prior[key] += 1
                 for name, codelet in self._codelets().items():
                     proposal = codelet(view, node, regions, goal)
                     if proposal is not None and proposal.symbol == label_id:
-                        self.policy[key][name] += 1
-        self.policy = {k: v for k, v in self.policy.items()}
+                        policy[key][name] += 1
+        return {k: v for k, v in policy.items()}, prior
+
+    def _calibrate(self, episodes: Sequence[Episode], tok: SymbolTokenizer,
+                   policy: dict, prior: collections.Counter) -> None:
+        """Learn what a settled workspace is actually worth.
+
+        The old confidence was ``0.15 + 0.75 * (1 - temperature)``: it rose as
+        the codelets agreed. Agreement and correctness are not the same thing,
+        and measured, the gap was large — 0.534 stated against 0.216 delivered.
+        """
+        scores: list[float] = []
+        correct: list[bool] = []
+        for view, targets in self.training_views(episodes, tok,
+                                                 max_nodes=self.cfg.max_len,
+                                                 repeats=1, seed=7):
+            regions = _partition(view)
+            for node, (label_id, _) in targets.items():
+                if label_id < 0:
+                    continue
+                support, settled = self._support(view, node, regions,
+                                                 policy, prior)
+                if not support:
+                    continue
+                scores.append(settled)
+                correct.append(max(support, key=lambda k: support[k]) == label_id)
+        self.confidence_map = ScoreCalibrator().fit(scores, correct)
 
     # ---- running the workspace -------------------------------------------
     def node_votes(self, view: GraphView) -> dict[int, tuple[Votes, Votes]]:
@@ -160,6 +203,27 @@ class WorkspaceModel(RuleBasedModel):
         for i in view.hidden:
             out[i] = self._run(view, i, regions)
         return out
+
+    def _support(self, view: GraphView, node: int, regions: list[Region],
+                 policy: dict, prior: collections.Counter
+                 ) -> tuple[collections.Counter, float]:
+        """Run the codelets and return their weighted support and how settled it is."""
+        goal = _infer_goal(view, node, regions)
+        key = goal.signature()
+        learned = policy.get(key) or collections.Counter()
+        seen = max(prior.get(key, 0), 1)
+        support: collections.Counter = collections.Counter()
+        proposals: list[Proposal] = []
+        for name, codelet in self._codelets().items():
+            proposal = codelet(view, node, regions, goal)
+            if proposal is None:
+                continue
+            trust = (learned.get(name, 0) + 0.5) / (seen + 1.0)
+            proposals.append(proposal)
+            support[proposal.symbol] += proposal.strength * trust
+        if not support:
+            return support, 0.0
+        return support, 1.0 - _temperature(proposals, support)
 
     def _run(self, view: GraphView, node: int,
              regions: list[Region]) -> tuple[Votes, Votes]:
@@ -192,7 +256,9 @@ class WorkspaceModel(RuleBasedModel):
         # A cold workspace commits: sharpen the distribution as it settles.
         sharpened = {s: w ** (1.0 / max(temperature, 0.15))
                      for s, w in support.items()}
-        confidence = min(0.15 + 0.75 * (1.0 - temperature), 0.9)
+        settled = 1.0 - temperature
+        confidence = (self.confidence_map(settled) if self.confidence_map.fitted
+                      else min(0.15 + 0.75 * settled, 0.9))
         for _ in range(self.rounds - 1):
             temperature *= 0.8                    # further settling, bounded
         type_votes = ((dict(types), min(confidence, 0.85)) if types else ABSTAIN)

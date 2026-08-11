@@ -60,6 +60,7 @@ from ...data.graph import TYPE_TO_ID
 from ...data.tokenizer import SymbolTokenizer
 from ..base import ModelConfig
 from ..registry import register
+from ...calibration import ScoreCalibrator
 from ..symbolic import ABSTAIN, GraphView, RuleBasedModel, Votes
 
 __all__ = ["AnalogyModel"]
@@ -77,6 +78,9 @@ class _Case:
     label: int
     type_id: int
     signature: frozenset
+    #: which training episode this case came from, so calibration can exclude
+    #: it and measure retrieval rather than memory
+    episode: int = -1
 
     def children(self, i: int) -> list[int]:
         return [j for j, p in enumerate(self.parent) if p == i]
@@ -86,7 +90,7 @@ class _Case:
 class AnalogyModel(RuleBasedModel):
     """MAC/FAC over stored graphs; the answer comes from the aligned position."""
 
-    LEARNED = ("cases", "index", "max_cases", "candidates")
+    LEARNED = ("cases", "index", "max_cases", "candidates", "confidence_map")
 
     def __init__(self, cfg: ModelConfig) -> None:
         super().__init__(cfg)
@@ -95,14 +99,15 @@ class AnalogyModel(RuleBasedModel):
         self.min_overlap = int(cfg.get("min_overlap", 3))
         self.cases: list[_Case] = []
         self.index: dict[tuple, list[int]] = {}
+        self.confidence_map = ScoreCalibrator()
 
     # ---- the case base -------------------------------------------------
     def learn(self, episodes: Sequence[Episode], tok: SymbolTokenizer) -> None:
         self.cases = []
         self.index = collections.defaultdict(list)
-        for view, targets in self.training_views(episodes, tok,
-                                                 max_nodes=self.cfg.max_len,
-                                                 repeats=2):
+        for view, targets, episode in self.training_views(
+                episodes, tok, max_nodes=self.cfg.max_len, repeats=2,
+                with_index=True):
             for node, (label_id, type_id) in targets.items():
                 if len(self.cases) >= self.max_cases:
                     break
@@ -110,12 +115,44 @@ class AnalogyModel(RuleBasedModel):
                     labels=tuple(view.labels), types=tuple(view.types),
                     parent=tuple(view.parent), slot=tuple(view.slot),
                     node=node, label=label_id, type_id=type_id,
-                    signature=_signature(view, node))
+                    signature=_signature(view, node), episode=episode)
                 # The MAC index is keyed on structure only, so retrieval never
                 # depends on a symbol that will not exist next episode.
                 self.index[_coarse(view, node)].append(len(self.cases))
                 self.cases.append(case)
         self.index = dict(self.index)
+        self._calibrate(episodes, tok)
+
+    def _calibrate(self, episodes: Sequence[Episode],
+                   tok: SymbolTokenizer) -> None:
+        """Learn what an alignment score is actually worth.
+
+        The old confidence was ``0.2 + 0.6 * alignment_score``, which asserts
+        that finding more structure means being more often right. Measured, that
+        assertion was badly wrong: the model stated 0.586 and delivered 0.219,
+        an ECE of 0.368 and the worst in the repo.
+
+        So the map is fitted rather than assumed, on predictions made with the
+        answering episode's own cases **excluded**. Without that exclusion the
+        case base contains the very node being asked about, every alignment
+        looks perfect, and the calibration would certify exactly the
+        overconfidence it is meant to remove.
+        """
+        scores: list[float] = []
+        correct: list[bool] = []
+        for view, targets, episode in self.training_views(
+                episodes, tok, max_nodes=self.cfg.max_len, repeats=1,
+                with_index=True, seed=7):
+            for node, (label_id, _) in targets.items():
+                if label_id < 0:
+                    continue
+                votes, score = self._retrieve(view, node, exclude=episode)
+                if not votes or score <= 0.0:
+                    continue
+                predicted = max(votes, key=lambda k: votes[k])
+                scores.append(score)
+                correct.append(predicted == label_id)
+        self.confidence_map = ScoreCalibrator().fit(scores, correct)
 
     # ---- prediction ----------------------------------------------------
     def node_votes(self, view: GraphView) -> dict[int, tuple[Votes, Votes]]:
@@ -126,9 +163,24 @@ class AnalogyModel(RuleBasedModel):
         return out
 
     def _map(self, view: GraphView, node: int) -> tuple[Votes, Votes]:
+        labels, best = self._retrieve(view, node)
+        types = self._types(view, node)
+        if not labels:
+            return ABSTAIN, (types if types else ABSTAIN)
+        confidence = (self.confidence_map(best) if self.confidence_map.fitted
+                      else min(0.2 + 0.6 * best, 0.88))
+        return (dict(labels), confidence), (types if types else ABSTAIN)
+
+    def _types(self, view: GraphView, node: int) -> Votes | None:
+        types = self._retrieve_types(view, node)
+        return types
+
+    def _retrieve(self, view: GraphView, node: int, *, exclude: int = -2
+                  ) -> tuple[dict, float]:
+        """Vote for labels by aligned route transfer; also return the best score."""
         pool = self.index.get(_coarse(view, node))
         if not pool:
-            return ABSTAIN, ABSTAIN
+            return {}, 0.0
         signature = _signature(view, node)
 
         # MAC: rank the pool by cheap signature overlap and keep a few.
@@ -137,12 +189,13 @@ class AnalogyModel(RuleBasedModel):
             key=lambda t: -t[0])[:self.candidates]
 
         labels: collections.Counter = collections.Counter()
-        types: collections.Counter = collections.Counter()
         best = 0.0
         for overlap, index in scored:
             if overlap < self.min_overlap:
                 break
             case = self.cases[index]
+            if case.episode == exclude:
+                continue
             # FAC: a real alignment on the survivors, which is where the
             # structural claim is actually tested.
             score = _align(view, node, case)
@@ -151,15 +204,30 @@ class AnalogyModel(RuleBasedModel):
             transferred = _transfer(view, node, case)
             if transferred is not None:
                 labels[transferred] += score
-            if case.type_id >= 0:
-                types[case.type_id] += score
-            best = max(best, score)
+                best = max(best, score)
+        return dict(labels), best
 
-        label_votes = ((dict(labels), min(0.2 + 0.6 * best, 0.88))
-                       if labels else ABSTAIN)
-        type_votes = ((dict(types), min(0.2 + 0.6 * best, 0.85))
-                      if types else ABSTAIN)
-        return label_votes, type_votes
+    def _retrieve_types(self, view: GraphView, node: int) -> Votes | None:
+        pool = self.index.get(_coarse(view, node))
+        if not pool:
+            return None
+        signature = _signature(view, node)
+        scored = sorted(
+            ((len(signature & self.cases[c].signature), c) for c in pool),
+            key=lambda t: -t[0])[:self.candidates]
+        types: collections.Counter = collections.Counter()
+        best = 0.0
+        for overlap, index in scored:
+            if overlap < self.min_overlap:
+                break
+            case = self.cases[index]
+            score = _align(view, node, case)
+            if score > 0.0 and case.type_id >= 0:
+                types[case.type_id] += score
+                best = max(best, score)
+        if not types:
+            return None
+        return dict(types), min(0.2 + 0.6 * best, 0.85)
 
     def n_symbolic_parameters(self) -> int:
         """A case base does not compress; its size is its memory."""

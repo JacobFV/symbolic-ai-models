@@ -211,8 +211,8 @@ class RuleBasedModel(Model):
 
     def training_views(self, episodes: Sequence[Episode], tok: SymbolTokenizer, *,
                        mask_rate: float = 0.15, max_nodes: int = 256,
-                       repeats: int = 4, seed: int = 0
-                       ) -> Iterable[tuple[GraphView, dict[int, tuple[int, int]]]]:
+                       repeats: int = 4, seed: int = 0, with_index: bool = False
+                       ) -> Iterable[tuple]:
         """Masked views of the training graphs, with the answers alongside.
 
         A model that fits its context statistics on *whole* graphs and is then
@@ -244,7 +244,12 @@ class RuleBasedModel(Model):
                             int(batch.target_types[b, i]))
                         for i in view.hidden
                     }
-                    yield view, targets
+                    # `with_index` names the episode a view came from, which a
+                    # model needs to calibrate itself honestly: scoring a
+                    # retrieval against a case base containing that very episode
+                    # measures memory, not method.
+                    yield ((view, targets, start + b) if with_index
+                           else (view, targets))
 
     # ---- subclass hooks ----------------------------------------------
     def learn(self, episodes: Sequence[Episode], tok: SymbolTokenizer) -> None:

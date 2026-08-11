@@ -90,14 +90,11 @@ Cheap and high-value first; each is exactly measurable under this harness.
 - [x] **Calibration.** `calibration.py` buckets stated confidence against
       observed accuracy; ECE / MCE / signed overconfidence, wired into
       `eval --calibration`. Finding below.
-- [ ] **Replace the ad-hoc confidence formulas.** `analogy` (ECE 0.368) and
-      `workspace` (0.320) derive confidence from an alignment score or a
-      temperature — quantities that rise with how much structure was *found*,
-      not with how often that structure was *right*. Fit the map from internal
-      score to observed accuracy on training episodes and use it. The models
-      whose confidence is already an estimate of correctness (`ngram`, `ctw`)
-      need nothing.
-- [ ] (superseded) **Calibration.** `RuleBasedModel` already emits a confidence in [0,1].
+- [x] **Replace the ad-hoc confidence formulas.** `ScoreCalibrator` fits an
+      isotonic map from internal score to observed accuracy on held-out
+      outcomes. `analogy` ECE 0.368 -> 0.051, `workspace` 0.320 -> 0.055, both
+      now as well calibrated as `ngram` (0.048). Accuracy and the renaming
+      delta are untouched, so this bought honesty and cost nothing.
       Bucket by it, report accuracy per bucket and ECE. Free.
 - [ ] **Cross-language transfer.** Fit on English, evaluate on Chinese/Turkish;
       the graph is identical across renderings. The README claims the data

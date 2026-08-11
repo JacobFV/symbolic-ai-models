@@ -64,3 +64,57 @@ def test_a_real_model_reports_a_usable_curve():
     assert 0.0 <= report.ece <= 1.0
     assert 0.0 <= report.accuracy <= 1.0
     assert "ECE" in report.table()
+
+
+def test_the_isotonic_map_is_monotone_and_the_right_length():
+    """A higher internal score must never map to a lower stated accuracy."""
+    from symbolic_ai_models.calibration import ScoreCalibrator, _pava
+
+    assert _pava([0.4, 0.1, 0.9], [1.0, 1.0, 1.0]) == pytest.approx(
+        [0.25, 0.25, 0.9])
+    assert len(_pava([0.5] * 7, [1.0] * 7)) == 7
+
+    rng = np.random.default_rng(1)
+    scores = rng.uniform(size=2000)
+    calibrator = ScoreCalibrator().fit(scores, rng.uniform(size=2000) < scores)
+    assert calibrator.fitted
+    assert all(a <= b + 1e-9 for a, b in zip(calibrator.values,
+                                             calibrator.values[1:]))
+    assert calibrator(0.01) < calibrator(0.99)
+
+
+def test_the_map_never_promises_certainty():
+    """A confidence of 1.0 would let the mixture stake everything on one symbol."""
+    from symbolic_ai_models.calibration import ScoreCalibrator
+
+    calibrator = ScoreCalibrator().fit(np.linspace(0, 1, 200), np.ones(200, bool))
+    assert calibrator(1.0) <= 0.95
+
+
+def test_too_little_data_leaves_the_map_unfitted():
+    """And the model must then fall back rather than trust three examples."""
+    from symbolic_ai_models.calibration import ScoreCalibrator
+
+    assert not ScoreCalibrator().fit([0.1, 0.9], [False, True]).fitted
+
+
+@pytest.mark.parametrize("name", ["analogy", "workspace"])
+def test_the_fitted_confidence_beats_the_formula_it_replaced(name):
+    """These two derived confidence from how much structure they found.
+
+    Finding structure and being right are different things, and measured, the
+    gap was the worst in the repo: `analogy` stated 0.586 against 0.219
+    delivered. The map is fitted on held-out outcomes, so this asserts the
+    result, not the mechanism.
+    """
+    train = list(generate(["symbol_grounding", "unification"], n=30))
+    evaluation = list(generate(["symbol_grounding", "unification"], n=8,
+                               seed0=1_000_000))
+    tok = build_tokenizer(TrainConfig(vocab_size=1200), train)
+    model = build(name, ModelConfig(vocab_size=len(tok), max_len=96))
+    model.fit_on(train, tok)
+    assert model.confidence_map.fitted, f"{name} did not calibrate"
+    report = calibrate_model(model, make_task("node", max_nodes=96),
+                             evaluation, tok)
+    assert report.ece < 0.20, f"{name} ECE {report.ece:.3f}"
+    assert report.overconfidence < 0.15, f"{name} still overconfident"
