@@ -60,6 +60,14 @@ class RouteModel(RuleBasedModel):
     LEARNED = ("prior", "context_prior", "confidence_map", "min_evidence",
                "use_episode_fit")
 
+    #: The one model that keeps the structural guarantee. Every other
+    #: rule-based model now falls back on a memorised label when it abstains,
+    #: which buys accuracy and costs renaming equivariance — a real trade, made
+    #: knowingly, on a curriculum where every scored label recurs in training.
+    #: This model opts out so the property is still demonstrated by something
+    #: and the invariance test still has a subject.
+    structural_fallback = False
+
     def __init__(self, cfg: ModelConfig) -> None:
         super().__init__(cfg)
         self.min_evidence = int(cfg.get("min_evidence", 2))

@@ -117,11 +117,15 @@ Cheap and high-value first; each is exactly measurable under this harness.
       barely: `analogy` at +0.008 lift, by pairing route transfer with a
       memorising fallback. See below — the margin is thin and the interesting
       part is what it took.
-- [ ] **Widen the margin.** +0.008 is one model scraping over the line. The
-      diagnostic that got it there — accuracy *where a model commits* versus
-      coverage — applies to every rule-based model and has only been used on
-      one. `grammar` commits on 94% at 0.273; `routes` on 100% at 0.233. Find
-      the ones whose mechanism is good but whose coverage is low.
+- [x] **Widen the margin.** The diagnostic run across all twelve found `ilp`
+      answering 35% of nodes at 0.525 and `synth` 1% at 1.000 — mechanisms well
+      above the floor, buried under abstention. The fallback moved into
+      `RuleBasedModel`, so `ilp` is now the best rule-based model at +0.025 lift.
+- [ ] **`ruleinduce` loses 0.116 to the mixture, not to coverage.** It votes on
+      100% of nodes at 0.192 but its argmax scores 0.076: its calibrated
+      confidence is low enough that the back-off wins the argmax. That is
+      correct probabilistic behaviour and wrong point-prediction behaviour, and
+      the two cannot both be right — decide which `label_acc` should measure.
 - [ ] (done, kept for the record) Anchor-relative: re-express features relative to
       the masked node or the query subtree — relative depth, sibling offset,
       path-from-query — so a hypothesis learned on one episode is *identical*
@@ -424,6 +428,41 @@ that premise is measured false, so the memorisation it was refusing is free
 accuracy. Equivariance is a real property and `routes` still has it — but it is
 not what this task rewards, and `analogy` has been removed from the
 structure-only list rather than pretending it can have both.
+
+### Measured: abstention, not reasoning, was costing most of the score
+
+Accuracy where a model commits, against coverage, floor 0.332:
+
+    model        argmax  cover  acc|voted
+    synth         0.006     1%      1.000
+    ilp           0.186    35%      0.525
+    analogy       0.337   100%      0.337
+    grammar       0.267    94%      0.273
+    ruleinduce    0.076   100%      0.192
+    syllogism     0.070    41%      0.186
+
+Two mechanisms are far above the floor and were scoring far below it purely by
+declining to answer. So the fallback `analogy` was given last tick moved into
+`RuleBasedModel`: an abstention now lands on the commonest label for the node's
+structural context rather than on the unigram prior.
+
+    model        before   after    lift
+    ilp           0.186   0.349  +0.025
+    syllogism     0.070   0.314  -0.027
+    synth         0.006   0.302  -0.044
+    grammar       0.267   0.297  -0.053
+    symbolalg     0.134   0.244  -0.131
+    ruleinduce    0.076   0.076  -0.384
+
+`ilp` is now the best rule-based model in the repo and above the floor. Nothing
+else clears it, but everything that abstained improved sharply.
+
+Two costs, both real. Only rule-based models have a back-off, so strengthening
+it moves them relative to the networks — the justification is that the old one
+was needlessly weak, not that the families should be levelled. And the fallback
+memorises, so it breaks renaming equivariance for every model that takes it;
+`routes` opts out via `structural_fallback = False` and remains the model that
+demonstrates the property.
 
 ## Open questions
 

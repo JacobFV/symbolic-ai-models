@@ -138,6 +138,8 @@ class RuleBasedModel(Model):
         # ignores `self.parser` is unaffected; one that uses it must still work
         # when handed `none`.
         self.parser = build_parser(str(cfg.get("parser", "none")))
+        #: structural context -> commonest label, used when a model abstains
+        self.context_prior: dict[tuple, int] = {}
         # Registered as buffers so a fitted model saves and reloads like any
         # other, through the same `torch.save(state_dict())` path.
         self.register_buffer("symbol_backoff", torch.zeros(cfg.vocab_size))
@@ -145,6 +147,12 @@ class RuleBasedModel(Model):
         self._fitted = False
 
     # ---- fitting -----------------------------------------------------
+    #: Whether an abstention falls back on the structural lookup rather than on
+    #: the unigram prior. On by default: the unigram ignores structure that is
+    #: free to read, and a model that declines to answer should not be dropped
+    #: to a worse baseline than the one it is scored against.
+    structural_fallback = True
+
     def fit(self, ctx: FitContext) -> None:
         """Fit the shared back-off, then whatever the subclass learns.
 
@@ -160,6 +168,7 @@ class RuleBasedModel(Model):
         # evaluation rather than an unfitted one.
         self.parser.fit(ctx.episodes, ctx.tok)
         self._fit_backoff(ctx.episodes, ctx.tok)
+        self._fit_context_prior(ctx.episodes, ctx.tok)
         self.learn(ctx.episodes, ctx.tok)
         self._fitted = True
 
@@ -178,6 +187,7 @@ class RuleBasedModel(Model):
     def symbolic_state(self) -> dict[str, Any]:
         """Everything ``state_dict`` would miss — the parser included."""
         return {"_fitted": self._fitted, "_parser": self.parser,
+                "_context_prior": self.context_prior,
                 **{name: getattr(self, name, None) for name in self.LEARNED}}
 
     def load_symbolic_state(self, state: Mapping[str, Any],
@@ -189,6 +199,8 @@ class RuleBasedModel(Model):
             elif name == "_parser":
                 if value is not None:
                     self.parser = value
+            elif name == "_context_prior":
+                self.context_prior = value or {}
             else:
                 setattr(self, name, value)
 
@@ -208,6 +220,38 @@ class RuleBasedModel(Model):
                     counts[tok.label_id(label)] += 1
         self.symbol_backoff.copy_(_log_dirichlet(counts, len(tok)))
         self.type_backoff.copy_(_log_dirichlet(types, N_TYPES))
+
+    def _fit_context_prior(self, episodes: Sequence[Episode],
+                           tok: SymbolTokenizer) -> None:
+        """The commonest label per structural context — the floor's own strategy.
+
+        This is what an abstention now falls back on, and it matters more than
+        it sounds. The unigram back-off ignores the shape of the tree, which is
+        free to read and is exactly what the floor uses, so a model that
+        declined to answer was being dropped below the baseline it is compared
+        against — and the diagnostic showed several models whose *mechanism*
+        beats the floor comfortably while their score does not, purely because
+        they abstain. ``ilp`` answers 35% of nodes at 0.525 against a floor of
+        0.332; ``synth`` answers 1% at 1.000.
+
+        Shared here rather than bolted onto each model so every one of them
+        falls back on the same thing, which is what keeps the comparison between
+        them about their mechanisms.
+
+        Worth stating plainly: only rule-based models have a back-off, so
+        strengthening it moves them relative to the networks. The justification
+        is that the old one was needlessly weak, not that the families should be
+        levelled.
+        """
+        counts: dict[tuple, collections.Counter] = collections.defaultdict(
+            collections.Counter)
+        for view, targets in self.training_views(episodes, tok, repeats=2,
+                                                 max_nodes=self.cfg.max_len):
+            for node, (label_id, type_id) in targets.items():
+                if label_id >= 0:
+                    counts[_node_context(view, node)][label_id] += 1
+        self.context_prior = {k: c.most_common(1)[0][0]
+                              for k, c in counts.items()}
 
     def training_views(self, episodes: Sequence[Episode], tok: SymbolTokenizer, *,
                        mask_rate: float = 0.15, max_nodes: int = 256,
@@ -329,7 +373,17 @@ class RuleBasedModel(Model):
             view = self._view(batch, b)
             if not len(view):
                 continue
-            for node, (label_votes, type_votes) in self.node_votes(view).items():
+            votes = self.node_votes(view)
+            if self.structural_fallback:
+                for node in view.hidden:
+                    label_votes = votes.get(node, (ABSTAIN, ABSTAIN))[0]
+                    if label_votes[0] and label_votes[1] > 0.0:
+                        continue
+                    symbol = self.context_prior.get(_node_context(view, node))
+                    if symbol is not None:
+                        types_vote = votes.get(node, (ABSTAIN, ABSTAIN))[1]
+                        votes[node] = (({symbol: 1.0}, 0.30), types_vote)
+            for node, (label_votes, type_votes) in votes.items():
                 if not (0 <= node < L):
                     continue
                 _collect(label_votes, b, node, s_rows, s_cols, s_syms, s_w, s_conf)
@@ -390,6 +444,14 @@ class RuleBasedModel(Model):
                                                    device=device)
             probs.index_put_(idx, add, accumulate=True)
         return probs.clamp_min(1e-12).log()
+
+
+def _node_context(view: GraphView, node: int) -> tuple:
+    """The structural situation, symbol-free, as the floor reads it."""
+    p = view.parent[node]
+    return ((view.types[p] or "mask") if p >= 0 else "ROOT",
+            min(view.slot[node], 8), min(view.depth[node], 8),
+            bool(view.children(node)))
 
 
 def _collect(votes: Votes, b: int, node: int, rows: list, cols: list,

@@ -22,6 +22,11 @@ LESSONS = ["symbol_grounding", "unification", "center_embedding"]
 #: Models whose method reads structure only, and which must therefore keep
 #: their accuracy exactly. Deliberately short: it is the list of claims that
 #: have actually been checked, not the list of models that sound structural.
+#: `ilp` and `evidence` have since been removed too, for the same reason: the
+#: structural fallback in `RuleBasedModel` answers an abstention with a
+#: memorised label, which is worth a great deal of accuracy (`ilp` 0.186 ->
+#: 0.349) and costs the guarantee. `routes` opts out and remains the subject.
+#:
 #: `analogy` was on this list and has been removed on purpose. It gained a
 #: memorising fallback for the contexts where route transfer finds nothing,
 #: which took it from 0.221 to 0.337 and above the label floor for the first
@@ -29,7 +34,7 @@ LESSONS = ["symbol_grounding", "unification", "center_embedding"]
 #: curriculum — where every scored label recurs in training — the accuracy is
 #: worth more. `routes` remains the model that keeps the guarantee, so the
 #: property is still demonstrated by something.
-STRUCTURE_ONLY = ["ilp", "evidence", "routes"]
+STRUCTURE_ONLY = ["routes"]
 
 
 @pytest.fixture(scope="module")
