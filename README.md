@@ -344,31 +344,61 @@ Masked-node task, all 179 generatable lessons, 20 training episodes each,
 evaluation seeds a million away, CPU:
 
 ```
-model          params      lbl acc  lbl lift   typ lift  copy lift
-corefer         4,115        0.357    +0.282     +0.736     +0.096
-omegaclaw_rank     872        0.356    +0.280     +0.308          -
-omegaclaw_ctx     872        0.344    +0.267     +0.270          -
-analogy         6,000        0.334    +0.256     +0.079          -
-ruleinduce         76        0.329    +0.250     +0.048     +0.030
-routes            599        0.324    +0.244     -0.467     +0.051
-ilp                74        0.312    +0.231     -0.615          -
-workspace       1,521        0.276    +0.190     -0.612          -
-brill             537        0.244    +0.155     +0.295          -
-omegaclaw_flat     872        0.234    +0.144     +0.126          -
-evidence        5,819        0.219    +0.128     -0.467     +0.023
-grammar        65,125        0.187    +0.092     +0.017          -
-ngram         358,167        0.170    +0.072     -0.383          -
-symbolalg     157,793        0.149    +0.049     -0.467          -
-syllogism          26        0.146    +0.046     -0.695          -
-ctw           819,990        0.109    +0.004     +0.120          -
-synth               6        0.077    -0.031     -1.950          -
+model         family        params  lbl acc  lbl lift  typ lift    copy
+corefer       rule-based     4,115    0.357    +0.250    +0.612  +0.096
+omegaclaw_rankrule-based       872    0.356    +0.248    -0.016       -
+omegaclaw_ctx rule-based       872    0.344    +0.234    -0.071       -
+analogy       rule-based     6,000    0.334    +0.222    -0.351       -
+ruleinduce    rule-based        76    0.329    +0.217    -0.396  +0.030
+routes        rule-based       599    0.324    +0.210    -1.152  +0.051
+ilp           rule-based        74    0.312    +0.197    -1.369       -
+workspace     rule-based     1,521    0.276    +0.154    -1.364       -
+brill         rule-based       537    0.244    +0.117    -0.034       -
+rgt           neural     1,125,053    0.241    +0.115    +0.395       -  *
+omegaclaw_flatrule-based       872    0.234    +0.106    -0.282       -
+evidence      rule-based     5,819    0.219    +0.089    -1.152  +0.023
+grammar       rule-based    65,125    0.187    +0.051    -0.442       -
+gru           neural       995,537    0.176    +0.038    -0.390       -  *
+ngram         rule-based   358,167    0.170    +0.031    -1.029       -
+symbolalg     rule-based   157,793    0.149    +0.007    -1.152       -
+syllogism     rule-based        26    0.146    +0.003    -1.486       -
+tpr           neural     1,159,085    0.145    +0.002    -0.505       -  *
+transformer   neural     1,089,917    0.145    +0.002    -0.582       -  *
+ctw           rule-based   819,990    0.109    -0.040    -0.291       -
+synth         rule-based         6    0.077    -0.077    -3.326       -
+hrr           neural     1,272,305    0.057    -0.100    -0.959       -  *
+ndr           neural       939,893    0.048    -0.112    -1.070       -  *
 ```
 
 `copy lift` is the pointer head, over the structure-only floor of 0.266; a dash
 means the model states no bindings and is not scored on copying. `lbl cov` is
-0.82 for every row and is dropped from the table for space.
+0.82 for every row and is dropped from the table for space. Rows marked `*` are
+the neural control, whose lift is recomputed from its stored accuracy against
+the current floor rather than re-run — accuracy does not depend on the floor, so
+that is exact, not an estimate.
 
-- **Every rule-based model clears the label floor.** On the six-lesson slice not
+**All lifts here are against the strengthened floor** (label 0.143, type 0.860),
+which replaced a four-feature lookup that a counting model beat by 15 points.
+Every published number in this repo before that change was measured against a
+floor 0.065 too low on type and 0.038 too low on labels. Two claims did not
+survive it:
+
+- **"Every rule-based model clears the label floor" is no longer true.** `ctw`
+  (-0.040) and `synth` (-0.077) fall below it. Fifteen of seventeen still clear
+  it.
+- **The type column is almost entirely negative.** Against the old floor eight
+  models were positive on type; against this one, two are: `corefer` at +0.612
+  and `rgt` at +0.395. `omegaclaw_rank` goes +0.308 -> **-0.016** and `brill`
+  +0.295 -> **-0.034**. Neither model changed. What changed is that a
+  content-blind lookup now does what they were being credited for.
+
+  That is the real result about node type on this curriculum: it is almost
+  entirely determined by tree shape, and nearly every model that looked good at
+  it was reproducing a lookup table. The two exceptions read something else —
+  `corefer` a learned binding, `rgt` a learned attention over typed edges.
+
+- **Fifteen of seventeen rule-based models clear the label floor.** On the
+  six-lesson slice not
   one of them did, and this README said so repeatedly. The claim was an artifact
   of which lessons were picked.
 - **The ranking reverses too, not just the level.** `ruleinduce` was *last* on
