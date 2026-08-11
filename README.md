@@ -344,20 +344,29 @@ Masked-node task, all 179 generatable lessons, 20 training episodes each,
 evaluation seeds a million away, CPU:
 
 ```
-model        params      lbl acc  lbl lift   lbl cov   typ lift
-analogy       6,000        0.334    +0.256      0.82     +0.079
-ruleinduce       76        0.329    +0.250      0.82     +0.048
-routes          599        0.324    +0.244      0.82     -0.467
-ilp              74        0.312    +0.231      0.82     -0.615
-workspace     1,521        0.276    +0.190      0.82     -0.100
-brill           537        0.244    +0.155      0.82     +0.295
-evidence      5,819        0.219    +0.128      0.82     -0.467
-grammar      65,125        0.187    +0.092      0.82     +0.017
-ngram       358,167        0.170    +0.072      0.82     -0.383
-symbolalg   157,793        0.149    +0.049      0.82     -0.467
-syllogism        26        0.146    +0.046      0.82     -0.695
-ctw         819,990        0.109    +0.004      0.82     +0.120
+model          params      lbl acc  lbl lift   typ lift  copy lift
+omegaclaw_rank     872        0.356    +0.280     +0.308          -
+omegaclaw_ctx     872        0.344    +0.267     +0.270          -
+analogy         6,000        0.334    +0.256     +0.079          -
+ruleinduce         76        0.329    +0.250     +0.048          -
+corefer           310        0.327    +0.248     +0.174     +0.053
+routes            599        0.324    +0.244     -0.467          -
+ilp                74        0.312    +0.231     -0.615          -
+workspace       1,521        0.276    +0.190     -0.612          -
+brill             537        0.244    +0.155     +0.295          -
+omegaclaw_flat     872        0.234    +0.144     +0.126          -
+evidence        5,819        0.219    +0.128     -0.467     +0.023
+grammar        65,125        0.187    +0.092     +0.017          -
+ngram         358,167        0.170    +0.072     -0.383          -
+symbolalg     157,793        0.149    +0.049     -0.467          -
+syllogism          26        0.146    +0.046     -0.695          -
+ctw           819,990        0.109    +0.004     +0.120          -
+synth               6        0.077    -0.031     -1.950          -
 ```
+
+`copy lift` is the pointer head, over the structure-only floor of 0.266; a dash
+means the model states no bindings and is not scored on copying. `lbl cov` is
+0.82 for every row and is dropped from the table for space.
 
 - **Every rule-based model clears the label floor.** On the six-lesson slice not
   one of them did, and this README said so repeatedly. The claim was an artifact

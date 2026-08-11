@@ -28,6 +28,7 @@ import math
 from typing import Sequence
 
 from ...data.curriculum import Episode
+from ...data.graph import TYPE_TO_ID
 from ...data.tokenizer import SymbolTokenizer
 from ..base import ModelConfig
 from ..registry import register
@@ -180,11 +181,19 @@ class CoreferModel(RuleBasedModel):
         return out
 
     def node_votes(self, view: GraphView) -> dict[int, tuple[Votes, Votes]]:
-        """The symbol head reads the pointer: copy whatever it points at.
+        """Both heads read the pointer: copy whatever it points at.
 
         Kept deliberately thin. This model's claim is about *where* to look, and
         giving it a separate symbol-side rule would make the copy result
         impossible to attribute.
+
+        The type head was `ABSTAIN` in the first version and that was a bug, not
+        a design choice: it scored **-1.950 type lift**, the same as a model with
+        no type opinion at all, because an abstaining model falls through to the
+        global type marginal rather than to the structural one. A node that
+        corefers with another has the same *type* as it at least as reliably as
+        it has the same label, so there was an answer available and the model was
+        declining to give it.
         """
         out: dict[int, tuple[Votes, Votes]] = {}
         pointers = self.source_votes(view)
@@ -195,11 +204,16 @@ class CoreferModel(RuleBasedModel):
                 continue
             weights, confidence = vote
             labels: dict[int, float] = collections.defaultdict(float)
+            types: dict[int, float] = collections.defaultdict(float)
             for j, w in weights.items():
                 label = view.labels[j]
                 if label is not None:
                     labels[int(label)] += w
-            out[i] = ((dict(labels), confidence) if labels else ABSTAIN, ABSTAIN)
+                kind = view.types[j]
+                if kind:
+                    types[TYPE_TO_ID[kind]] += w
+            out[i] = ((dict(labels), confidence) if labels else ABSTAIN,
+                      (dict(types), confidence) if types else ABSTAIN)
         return out
 
     def n_symbolic_parameters(self) -> int:
