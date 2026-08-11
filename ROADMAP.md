@@ -138,6 +138,31 @@ occupies in the term graph.
 
 ## Open questions
 
+## Design rules, learned the expensive way
+
+1. **The label head and the type head do not share machinery.** Discovered four
+   times now, each time by paying for it:
+
+   | what was shared | cost |
+   |---|---|
+   | omegaclaw's calibrator, priced the type head with the label head's confidence | **-1.96 type lift**, on three models at once |
+   | `corefer` abstained on type, falling through to the global marginal | **-1.950**, identical to a model with no type opinion |
+   | `corefer` pointed both heads with one prose-informed pointer | **0.174 -> 0.004** |
+   | seven rule-based models below the type floor while clearing the label floor | the standing shape of the table |
+
+   The reason is not incidental. The label question is *which thing is this* and
+   the type question is *what kind of thing sits here*; evidence for one is
+   routinely evidence against the other. Prompt frequency is a fact about a
+   symbol's identity, so it helps the label head and actively misleads the type
+   head. Anything shared between them — a calibrator, a confidence, a pointer —
+   should be justified before it is written, not after it costs a lift.
+
+2. **A technique that worked once is not a technique that works.** Interacting a
+   feature with the query context took `corefer` from -0.036 to +0.053. The same
+   move applied to the prose feature made every head worse. `(query, rel)` is
+   dense and `(query, said)` is sparse, and naive Bayes has nothing to smooth
+   the second with.
+
 ## Scope
 
 The **symbolic models are the subject**. The neural half exists as a control and
