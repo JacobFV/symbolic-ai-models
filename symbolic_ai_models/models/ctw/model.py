@@ -103,6 +103,47 @@ class _Tree:
             if depth:                       # tell the parent its child moved
                 nodes[depth - 1].child_logsum += node.log_w - before
 
+    def prune(self, min_count: int, min_depth: int = 2) -> None:
+        """Drop thinly-evidenced branches, then rebuild the weights above them.
+
+        A context tree grows with distinct contexts — about 1.4 nodes per token
+        on this data, so a large corpus wants tens of millions and several
+        gigabytes. The deep nodes are where nearly all of them are and where
+        almost none of the evidence is: a context seen once contributes a KT
+        estimate that is barely distinguishable from its parent's.
+
+        The weights *must* be rebuilt afterwards. ``log_w`` and
+        ``child_logsum`` are maintained incrementally, so deleting a child
+        leaves its parent claiming mass from a subtree that no longer exists,
+        and the weighted probabilities would quietly stop being probabilities.
+        """
+        self._prune_node(self.root, 0, min_count, min_depth)
+        self._rebuild(self.root, 0)
+
+    def _prune_node(self, node: _Node, depth: int, min_count: int,
+                    min_depth: int) -> None:
+        if depth >= min_depth:
+            for symbol in [s for s, c in node.children.items()
+                           if c.total < min_count]:
+                del node.children[symbol]
+        for child in node.children.values():
+            self._prune_node(child, depth + 1, min_count, min_depth)
+
+    def _rebuild(self, node: _Node, depth: int) -> float:
+        """Recompute ``log_w`` bottom-up; returns this node's weighted value."""
+        if not node.children or depth >= self.depth:
+            node.child_logsum = 0.0
+            node.log_w = node.log_kt
+            return node.log_w
+        node.child_logsum = sum(self._rebuild(c, depth + 1)
+                                for c in node.children.values())
+        node.log_w = _logaddexp(LOG_HALF + node.log_kt,
+                                LOG_HALF + node.child_logsum)
+        return node.log_w
+
+    def size(self) -> int:
+        return _size(self.root)
+
     def predict(self, context: Sequence[int]) -> dict[int, float]:
         """``{symbol: P(symbol | context)}`` for the symbols the path has seen.
 
@@ -153,6 +194,15 @@ class CTWModel(RuleBasedModel):
     def __init__(self, cfg: ModelConfig) -> None:
         super().__init__(cfg)
         self.depth = int(cfg.get("depth", 5))
+        #: Drop context-tree nodes below this many observations. Off by
+        #: default, unlike the cutoff in `ngram`, and the difference is the
+        #: point: pruning `ngram` *improves* it (4.029 -> 3.857 bits/token,
+        #: because a singleton context makes a confident claim on no evidence),
+        #: while pruning here costs 0.4 bits for 31% of the memory. CTW's deep
+        #: nodes are not a long tail of noise — mixing over them is the
+        #: algorithm. Raise this only when memory is the binding constraint,
+        #: and know what it buys.
+        self.min_count = int(cfg.get("min_count", 1))
         self.text_tree: _Tree | None = None
         self.node_tree: _Tree | None = None
         self.type_tree: _Tree | None = None
@@ -181,6 +231,9 @@ class CTWModel(RuleBasedModel):
                     self.node_tree.update(context, label_id)
                 if type_id >= 0:
                     self.type_tree.update(context, type_id)
+        if self.min_count > 1:
+            for tree in (self.text_tree, self.node_tree, self.type_tree):
+                tree.prune(self.min_count)
 
     def text_votes(self, ids: Sequence[int]) -> list[Votes]:
         if self.text_tree is None:

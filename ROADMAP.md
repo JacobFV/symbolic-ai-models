@@ -131,11 +131,14 @@ Cheap and high-value first; each is exactly measurable under this harness.
       every model, i.e. there was nothing to rescale. The elevated ECE is a
       top-1 artifact, not a mis-scaled distribution; see below. The suspended
       assertion is replaced with a stronger one on the temperature itself.
-- [ ] (done, kept for the record) Anchor-relative: re-express features relative to
+- [x] (done, kept for the record) Anchor-relative: re-express features relative to
       the masked node or the query subtree — relative depth, sibling offset,
       path-from-query — so a hypothesis learned on one episode is *identical*
       rather than merely similar on another.
-- [ ] **Cap the counting models' memory.** The source work reports a
+- [x] **Cap the counting models' memory.** Done, and the two models want
+      opposite defaults — see below. `ngram` and `grammar` take a count cutoff
+      and a hard cap; `ctw` has tree pruning available but off.
+- [ ] (superseded) Cap the counting models' memory. The source work reports a
       count-based model taking the host down at 40M tokens. `ngram`, `ctw` and
       `grammar` grow with distinct contexts and have no bound.
 
@@ -490,6 +493,40 @@ the repo reports for a diagnostic — so it is not done.
 The machinery stays in place at T=1 as a no-op, because a future change that
 genuinely mis-scales the output should be caught rather than argued about, and
 the test now asserts the temperature rather than an ECE bound.
+
+### Measured: pruning helps one counting model and hurts the other
+
+Growth with data, all 179 lessons:
+
+    episodes    tokens     ngram       ctw   grammar
+         358    60,486   117,318   180,495    17,340
+        1074   179,657   232,032   374,421    29,535
+        3222   538,254   471,803   771,750    62,644
+
+About 0.9 stored entries per token for `ngram` and 1.4 for `ctw`, so a 40M-token
+corpus wants tens of millions and several gigabytes of Python dict — which is
+the failure the source work reports and nothing here bounded.
+
+The remedy is the standard count cutoff, and its effect splits:
+
+    ngram  uncapped  232,032 entries  4.029 bits/token
+    ngram  capped    170,318 entries  3.857 bits/token   <- better *and* smaller
+    ctw    min_count=1  374,421       6.532
+    ctw    min_count=2  256,547       6.951               <- 31% smaller, 0.4 worse
+
+Pruning `ngram` improves it: a context seen once makes a confident claim on no
+evidence, and dropping it lets the model back off to something better supported.
+Pruning `ctw` costs real accuracy, because its deep nodes are not a noisy tail —
+mixing over them *is* the algorithm. So the defaults differ: cutoff on by
+default for `ngram`, off for `ctw` with the knob documented.
+
+`grammar` needs neither at this scale (0.12 entries per token; the induced
+classes are what compress it) but takes the same cap for safety.
+
+CTW's pruning had to rebuild `log_w` and `child_logsum` bottom-up afterwards.
+Those are maintained incrementally, so deleting a child leaves its parent
+claiming mass from a subtree that no longer exists and the weighted values
+quietly stop being probabilities — checked, and they still sum to 1.
 
 ## Open questions
 

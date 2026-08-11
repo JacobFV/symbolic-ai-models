@@ -582,6 +582,30 @@ class RuleBasedModel(Model):
         return probs.clamp_min(1e-12).log()
 
 
+def prune_tables(tables: Mapping[Any, "collections.Counter"], *,
+                 max_entries: int, min_count: int = 1) -> dict:
+    """Bound a context table's size, dropping the least-evidenced contexts.
+
+    Count tables grow with distinct contexts, which on this data is close to
+    linear in tokens — about 0.9 entries per token for `ngram` and 1.4 for
+    `ctw`, so a 40M-token corpus would want tens of millions of entries and
+    several gigabytes of Python dict. The source work these models come from
+    reports exactly that failure, and nothing here bounded it.
+
+    The remedy is the standard one for count-based language models: a count
+    cutoff first, dropping contexts seen fewer than ``min_count`` times, then a
+    hard cap keeping the most-observed. Both prune the *long tail*, which is
+    where the entries are and where the evidence is not — a context seen once
+    supports a prediction worth almost nothing, and dropping it costs a back-off
+    rather than an answer.
+    """
+    kept = {k: c for k, c in tables.items() if sum(c.values()) >= min_count}
+    if len(kept) <= max_entries:
+        return kept
+    ranked = sorted(kept.items(), key=lambda kv: (-sum(kv[1].values()), str(kv[0])))
+    return dict(ranked[:max_entries])
+
+
 def _node_context(view: GraphView, node: int) -> tuple:
     """The structural situation, symbol-free, keyed exactly as the floor keys it.
 

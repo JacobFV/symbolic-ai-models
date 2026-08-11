@@ -24,7 +24,8 @@ from ...data.graph import TYPE_TO_ID
 from ...data.tokenizer import SymbolTokenizer
 from ..base import ModelConfig
 from ..registry import register
-from ..symbolic import ABSTAIN, GraphView, RuleBasedModel, Votes
+from ..symbolic import (ABSTAIN, GraphView, RuleBasedModel, Votes,
+                        prune_tables)
 
 __all__ = ["NGramModel"]
 
@@ -41,6 +42,10 @@ class NGramModel(RuleBasedModel):
     def __init__(self, cfg: ModelConfig) -> None:
         super().__init__(cfg)
         self.order = int(cfg.get("order", 4))
+        #: Bound on stored contexts per table. Counting models grow with
+        #: distinct contexts and had no limit; see `prune_tables`.
+        self.max_entries = int(cfg.get("max_entries", 400_000))
+        self.min_count = int(cfg.get("min_count", 1))
         #: ``context -> Counter(next symbol)``, one table per order
         self.text: list[dict[tuple, collections.Counter]] = []
         self.label: dict[tuple, collections.Counter] = {}
@@ -76,6 +81,7 @@ class NGramModel(RuleBasedModel):
                         self.type[key][type_id] += 1
                     if label_id >= 0:
                         self.label[key][label_id] += 1
+        self._prune()
 
     # ---- prediction ---------------------------------------------------
     def _learn_classes(self, episodes: Sequence[Episode],
@@ -129,6 +135,25 @@ class NGramModel(RuleBasedModel):
                     if all(window):
                         table[tuple(window)][ids[t + 1]] += 1
         self.class_next = dict(table)
+
+    def _prune(self) -> None:
+        """Bound every table, so memory stops growing with distinct contexts.
+
+        The cutoff applies only above order 1. Short contexts are few and carry
+        the back-off, so pruning them would cost far more than it saves, while
+        the long contexts are where both the entries and the singletons are.
+        """
+        for k in range(2, len(self.text)):
+            self.text[k] = prune_tables(self.text[k],
+                                        max_entries=self.max_entries,
+                                        min_count=self.min_count + 1)
+        self.label = prune_tables(self.label, max_entries=self.max_entries,
+                                  min_count=self.min_count)
+        self.type = prune_tables(self.type, max_entries=self.max_entries,
+                                 min_count=self.min_count)
+        self.class_next = prune_tables(self.class_next,
+                                       max_entries=self.max_entries,
+                                       min_count=self.min_count)
 
     def text_votes(self, ids: Sequence[int]) -> list[Votes]:
         out: list[Votes] = []

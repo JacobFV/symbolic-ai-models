@@ -45,7 +45,8 @@ from ...data.curriculum import Episode
 from ...data.tokenizer import SymbolTokenizer
 from ..base import ModelConfig
 from ..registry import register
-from ..symbolic import ABSTAIN, GraphView, RuleBasedModel, Votes
+from ..symbolic import (ABSTAIN, GraphView, RuleBasedModel, Votes,
+                        prune_tables)
 
 __all__ = ["GrammarModel"]
 
@@ -97,6 +98,7 @@ class GrammarModel(RuleBasedModel):
         self.max_fillers = int(cfg.get("max_fillers", 10))
         self.order = int(cfg.get("order", 2))
         self.n_patterns = int(cfg.get("n_patterns", 24))
+        self.max_entries = int(cfg.get("max_entries", 400_000))
         self.classes = _Classes()
         self.node_classes = _Classes()
         self.class_members: dict[int, collections.Counter] = {}
@@ -114,6 +116,9 @@ class GrammarModel(RuleBasedModel):
         self._count_transitions(streams)
         self.patterns = self._induce_patterns(streams)
         self._learn_graph(episodes, tok)
+        for name in ("token_next", "class_next", "node_next", "node_types"):
+            setattr(self, name, prune_tables(getattr(self, name),
+                                             max_entries=self.max_entries))
 
     @staticmethod
     def _context_fillers(streams: Sequence[Sequence[int]]
