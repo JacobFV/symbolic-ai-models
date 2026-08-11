@@ -253,6 +253,34 @@ occupies in the term graph.
   pointer knows where to look and not what is plausible; the label head knows
   what is plausible and not where to look.
 
+- **The copy floor resists the treatment that fixed the type floor, and the
+  reason generalises.** The type floor went 0.795 -> 0.860 by replacing one
+  four-feature key with a backed-off ladder of richer structural contexts. The
+  copy floor is a single fixed relative offset per context at 0.266, so the same
+  move looked obviously right. It is not:
+
+  | content-blind copy baseline | accuracy |
+  |---|---:|
+  | **commonest offset per context** (kept) | **0.266** |
+  | signature: sibling, slot, depth delta, type | 0.253 |
+  | the same signature with the offset added back | 0.250 |
+
+  Adding structure made it worse, and adding *more* structure made it worse
+  again. The type question has about nine answers and thousands of observations
+  per key, so a specific key is both sharp and well-supported. The pointing
+  question has a median of 55 candidates and a signature space in the thousands,
+  so specific keys are seen a handful of times and the argmax over candidates
+  turns to noise. Exact relative position generalises where a conjunction of
+  five structural facts does not.
+
+  This is the same sparsity boundary that killed the reranker's `(query, said)`
+  feature over a hundred candidates and left it useful over ten. Richer keys pay
+  when the answer space is small and the data per key is large, and cost when
+  either fails. Neither the type floor's success nor this failure is about the
+  features being right; both are about that ratio.
+
+  The copy floor stays at 0.266 and `corefer`'s +0.096 stands.
+
 ## Design rules, learned the expensive way
 
 1. **The label head and the type head do not share machinery.** Discovered four
