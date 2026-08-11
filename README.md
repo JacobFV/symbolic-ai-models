@@ -385,8 +385,30 @@ That is below the floor, and it would be cheap and wrong to report it as the
 separation inverting. The neural models were given 300 steps at batch 16 against
 3,580 training episodes — barely more than one pass — while every rule-based
 model sees the training set in full. It is an undertrained model, not a beaten
-one. A fair comparison needs a step budget matched to the data, which is on the
-roadmap and needs a free GPU.
+one.
+
+**The fair comparison is running now**, at 2000 steps (8.9 passes) on CPU — it
+did not need a GPU, only the patience to let it finish, and `train --resume` so
+an interrupted run resumes instead of restarting. `gru` is partway through and
+the 300-step figure has already fallen over:
+
+| steps | passes | label acc | label lift |
+|------:|-------:|----------:|-----------:|
+|   300 |    1.3 |     0.061 |     -0.050 |
+|  1000 |    4.5 |     0.103 |     -0.002 |
+|  1100 |    4.9 |     0.107 |     +0.002 |
+
+`gru` crossed the label floor at step 1100 and its type head crossed at 700, so
+**-0.050 was an artefact of the budget**. Nothing that rested on it survives,
+in either direction.
+
+What this does *not* yet establish is where the families land. One model is not
+a family, `gru` is only just above a lookup table, five architectures have not
+started, and the curve was still climbing when this was written — over the last
+500 steps it moved +0.033. The interpretation of the endpoint was written down
+in `ROADMAP.md` before the number arrived, deliberately: an earlier reading of
+this same curve as "flat" was wrong in the direction that flattered the
+write-up. Numbers here are replaced when the run completes, not before.
 
 ## Notes
 
