@@ -299,6 +299,33 @@ Everything defaults to CPU now, including `TrainConfig.device`, which used to be
       `unk`, so two different invented names would compare equal and a pointer
       that copied the wrong one would score as correct.
 
+      **First pointer measured, and it is a weak positive.** `evidence` already
+      retrieved the best-supported node and then threw the node away, summing
+      its overlap into a vote for that node's *label*. Kept as a node instead:
+
+      | | value |
+      |---|---:|
+      | `evidence` copy accuracy | 0.283 |
+      | structure-only floor | 0.266 |
+      | **copy lift** | **+0.023** |
+      | its own label accuracy | 0.219 |
+      | positions scored (copy vs label) | 5,785 vs 5,233 |
+
+      Two things worth separating. The same retrieval scores **better as a
+      pointer than as a symbol** (0.283 vs 0.219) while answering 552 *more*
+      questions, including the invented names the symbol head cannot express —
+      so the projection to vocabulary was lossy, as predicted. But +0.023 over a
+      fixed-offset rule means generic structural similarity is barely better
+      than "copy from the usual place", and 0.44 of headroom to the 0.722
+      ceiling is still untouched.
+
+      What that suggests: retrieval keyed on *generic* structural similarity is
+      the wrong key. Coreference is the relation that matters, and the harness
+      already computes `same_label` edges and withholds them for hidden nodes.
+      A pointer keyed on what predicts coreference — shared parent head, same
+      argument position across two occurrences of a predicate — is the next
+      thing to try, not a better similarity metric.
+
       Two parts, and the second is the one that changes what is being measured:
 
       1. A vote over *nodes* rather than symbols, mixed with the existing

@@ -500,6 +500,8 @@ class RuleBasedModel(Model):
                 _collect(label_votes, b, node, s_rows, s_cols, s_syms, s_w, s_conf)
                 _collect(type_votes, b, node, t_rows, t_cols, t_syms, t_w, t_conf)
 
+        source_logits = self._source_logits(batch, (B, L))
+
         symbol_logits = self._mix(self.symbol_backoff, (B, L), s_conf,
                                   s_rows, s_cols, s_syms, s_w,
                                   prior=(p_rows, p_cols, p_syms, p_mass))
@@ -510,7 +512,54 @@ class RuleBasedModel(Model):
             symbol_logits=symbol_logits,
             type_logits=self._mix(self.type_backoff, (B, L), t_conf,
                                   t_rows, t_cols, t_syms, t_w),
+            source_logits=source_logits,
             hidden=torch.zeros((B, L, 1)))
+
+    def source_votes(self, view: GraphView) -> dict[int, Votes]:
+        """``{hidden node: votes over *node indices* of this episode}``.
+
+        The optional third head. A model that answers "the label here is
+        whatever node 7 says" states a binding; a model that answers with a
+        symbol states a guess about vocabulary. On this curriculum 71.9% of
+        scored answers already sit on a visible node, so the binding is usually
+        available and the vocabulary usually is not — 88.5% of the labels the
+        symbol head cannot even score are invented `ident` names.
+
+        Default is no pointer, which leaves ``source_logits`` unset and the
+        model simply unscored on copying rather than scored as zero.
+        """
+        return {}
+
+    def _source_logits(self, batch: SymbolicBatch,
+                       shape: tuple[int, int]) -> torch.Tensor | None:
+        """Assemble the pointer head, or ``None`` if this model has no pointer.
+
+        The back-off is flat over the visible nodes rather than learned. A
+        pointer's floor is already a structure-only rule scoring 0.266, so
+        giving the back-off structural knowledge here would quietly move the
+        thing every pointer is measured against.
+        """
+        B, L = shape
+        votes: list[tuple[int, int, dict[int, float], float]] = []
+        for b in range(B):
+            for node, v in self.source_votes(self._view(batch, b)).items():
+                if v is ABSTAIN or not 0 <= node < L:
+                    continue
+                weights, confidence = v
+                if weights and confidence > 0.0:
+                    votes.append((b, node, weights, float(confidence)))
+        if not votes:
+            return None
+
+        logits = torch.full((B, L, L), -1e9)
+        visible = batch.pad_mask
+        logits[visible[:, None, :].expand(B, L, L)] = 0.0
+        for b, node, weights, confidence in votes:
+            total = sum(weights.values()) or 1.0
+            for j, w in weights.items():
+                if 0 <= j < L and bool(visible[b, j]):
+                    logits[b, node, j] += 1.0 + 9.0 * confidence * (w / total)
+        return logits
 
     def _view(self, batch: SymbolicBatch, b: int) -> GraphView:
         """Build the redacted view of sample ``b``. Hidden values are dropped."""

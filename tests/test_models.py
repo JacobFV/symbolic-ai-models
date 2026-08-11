@@ -361,3 +361,32 @@ def test_rule_based_survives_a_non_cpu_buffer(name, fixtures, cfg):
     model.type_backoff = model.type_backoff.to(torch.float64)
     out = model(collate_text(episodes[:2], tok))
     assert torch.isfinite(out.symbol_logits).all()
+
+
+def test_a_model_with_a_pointer_is_scored_on_copying(fixtures, cfg):
+    """`evidence` states a binding; models without a pointer stay unscored.
+
+    The pointer must be additive: exposing the retrieval as a node must not
+    disturb the symbol head it was already feeding.
+    """
+    import numpy as np
+
+    from symbolic_ai_models.data.batch import collate_graph
+    from symbolic_ai_models.tasks import make_task
+
+    episodes, tok = fixtures
+    task = make_task("node", max_nodes=64)
+    batch = collate_graph(episodes, tok, max_nodes=64, mask_rate=0.15,
+                          rng=np.random.default_rng(5))
+    B, L = batch.tokens.shape
+
+    pointed = make("evidence", fixtures, cfg)
+    out = pointed(batch)
+    assert out.source_logits is not None, "evidence should state bindings"
+    assert out.source_logits.shape == (B, L, L)
+    assert task.compute(out, batch).counts.get("copy_n", 0) > 0
+
+    # A model with no pointer is left unscored rather than scored as zero.
+    plain = make("syllogism", fixtures, cfg)
+    assert plain(batch).source_logits is None
+    assert "copy_n" not in task.compute(plain(batch), batch).counts

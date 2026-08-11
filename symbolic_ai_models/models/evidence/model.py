@@ -154,6 +154,30 @@ class EvidenceModel(RuleBasedModel):
             out[i] = (votes, self._type_vote(view, i))
         return out
 
+    def source_votes(self, view: GraphView) -> dict[int, Votes]:
+        """The same retrieval, kept as *which node* rather than which symbol.
+
+        `_retrieve` already finds the best-supported node and then throws the
+        node away, summing its overlap into a vote for that node's label. The
+        binding is what was computed; the symbol was a lossy projection of it,
+        and one that cannot express an answer the vocabulary has no id for.
+        """
+        out: dict[int, Votes] = {}
+        for i in view.hidden:
+            signature = self._signature(view, i)
+            scored: dict[int, float] = {}
+            best = 0.0
+            for j in range(len(view)):
+                if j == i or view.labels[j] is None:
+                    continue
+                overlap = len(signature & self._signature(view, j))
+                if overlap >= 2:
+                    scored[j] = float(overlap)
+                    best = max(best, float(overlap))
+            if scored and best >= 2.0:
+                out[i] = (scored, min(0.2 + 0.15 * best, 0.8))
+        return out
+
     def _retrieve(self, view: GraphView, i: int) -> Votes:
         signature = self._signature(view, i)
         scored: collections.Counter = collections.Counter()
