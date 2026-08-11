@@ -569,7 +569,23 @@ Everything defaults to CPU now, including `TrainConfig.device`, which used to be
       memorise — `analogy`, `ruleinduce` — to gain most, since the reason they
       were handicapped was a metric that never scored what they were built for.
 
-- [ ] **Strengthen the type floor before trusting `rgt`'s +0.587.** The floor is
+- [ ] **Strengthen the type floor. It is now known to be weak, not suspected.**
+      A backed-off conjunctive lookup inside `corefer` -- counting, no tensors,
+      6 back-off levels, sibling types and arity added to the floor's four
+      features -- reaches **type accuracy 0.946** where the floor reaches 0.795
+      and `rgt`, the structure-aware network, reaches 0.915.
+
+      So the headline of the neural control, `rgt` first of nineteen on node
+      type at +0.587, is **below a counting baseline**. That does not make the
+      neural number wrong, it makes the floor too low, and every type lift in
+      the table is inflated by the same amount. The label floor has no such
+      problem: it is 0.105 and the best model reaches 0.357.
+
+      The fix is the one already written here -- fit the floor with the richer
+      structural features, still content-blind so it stays a floor -- and it now
+      has to happen before any type number is quoted again.
+
+- [ ] (superseded) Strengthen the type floor before trusting `rgt`'s +0.587. The floor is
       a lookup on four structural features and reaches 0.795; `rgt` reaches
       0.915. How much of that margin is the model and how much is a weak
       baseline is unknown, and the headline result of the neural control rests

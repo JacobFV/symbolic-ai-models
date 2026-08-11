@@ -142,11 +142,42 @@ def _rerank_features(view: GraphView, i: int, j: int, rank: int) -> tuple:
     )
 
 
+def _type_keys(view: GraphView, i: int, pointed: str | None) -> list[tuple]:
+    """Structural descriptions of node ``i``, most specific first.
+
+    The type question is not a binding question. Copying the type of whichever
+    node the pointer chose answers "which thing is this" when what was asked is
+    "what kind of thing sits here", and the two come apart -- 86% of the time the
+    pointer's mistaken pick had the *right* type anyway, so type carries almost
+    no information about identity and identity carries little about type.
+
+    So the type head gets its own estimator: a backed-off conjunctive lookup,
+    the shape the structure-only floor already proves is strong here (0.795 from
+    four features). The pointed node's type enters as one conjunct in the most
+    specific key rather than as the answer, which is the only thing the pointer
+    is contributing that the floor does not have.
+    """
+    p = view.parent[i]
+    ptype = (view.types[p] if p >= 0 and view.types[p] else "ROOT")
+    slot, depth = min(view.slot[i], 8), min(view.depth[i], 8)
+    arity = min(len(view.children(i)), 4)
+    sibs = [view.types[j] for j in view.siblings(i) if view.types[j]]
+    sib = collections.Counter(sibs).most_common(1)[0][0] if sibs else None
+    return [
+        (ptype, slot, depth, arity, sib, pointed),
+        (ptype, slot, depth, arity, sib),
+        (ptype, slot, depth, arity),
+        (ptype, slot, depth),
+        (ptype, slot),
+        (ptype,),
+    ]
+
+
 @register("corefer", doc="Pointer over nodes, keyed on learned coreference evidence.")
 class CoreferModel(RuleBasedModel):
     """Point at the node most likely to be the same symbol."""
 
-    LEARNED = ("weights", "prior", "rerank")
+    LEARNED = ("weights", "prior", "rerank", "type_rules")
 
     def __init__(self, cfg: ModelConfig) -> None:
         super().__init__(cfg)
@@ -159,6 +190,11 @@ class CoreferModel(RuleBasedModel):
         self.weights: dict[tuple, float] = {}
         self.prior: float = 0.0
         self.rerank: dict[tuple, float] = {}
+        self.type_rules: dict[tuple, collections.Counter] = {}
+        #: A key must have been seen this often before it is trusted over a more
+        #: general one. Without it the longest key wins on a single observation,
+        #: which is memorising the training graphs rather than describing them.
+        self.min_support = int(cfg.get("min_support", 5))
 
     # ---- fitting ------------------------------------------------------
     def learn(self, episodes: Sequence[Episode], tok: SymbolTokenizer) -> None:
@@ -202,6 +238,36 @@ class CoreferModel(RuleBasedModel):
             for k in keys}
         self.prior = math.log(n_pos / n_neg)
         self._learn_rerank(episodes, tok)
+        self._learn_types(episodes, tok)
+
+    def _learn_types(self, episodes: Sequence[Episode],
+                     tok: SymbolTokenizer) -> None:
+        counts: dict[tuple, collections.Counter] = collections.defaultdict(
+            collections.Counter)
+        for view, targets in self.training_views(episodes, tok,
+                                                 max_nodes=self.cfg.max_nodes):
+            pointers = self.source_votes(view, prose=False)
+            for i, (_, type_id) in targets.items():
+                if type_id is None or type_id < 0:
+                    continue
+                vote = pointers.get(i)
+                pointed = None
+                if vote:
+                    best = max(vote[0], key=lambda j: vote[0][j])
+                    pointed = view.types[best]
+                for key in _type_keys(view, i, pointed):
+                    counts[key][int(type_id)] += 1
+        self.type_rules = dict(counts)
+
+    def _type_vote(self, view: GraphView, i: int, pointed: str | None) -> Votes:
+        """Most specific key with enough support wins; back off until one has."""
+        for key in _type_keys(view, i, pointed):
+            counts = self.type_rules.get(key)
+            if counts and sum(counts.values()) >= self.min_support:
+                total = sum(counts.values())
+                top, n = counts.most_common(1)[0]
+                return {int(top): 1.0}, min(0.15 + 0.8 * n / total, 0.95)
+        return ABSTAIN
 
     def _learn_rerank(self, episodes: Sequence[Episode],
                       tok: SymbolTokenizer) -> None:
@@ -361,20 +427,18 @@ class CoreferModel(RuleBasedModel):
                 label = view.labels[j]
                 if label is not None:
                     labels[int(label)] += w
-            types: dict[int, float] = collections.defaultdict(float)
             type_vote = type_pointers.get(i)
-            for j, w in (type_vote[0].items() if type_vote else ()):
-                kind = view.types[j]
-                if kind:
-                    types[TYPE_TO_ID[kind]] += w
+            pointed = None
+            if type_vote:
+                best = max(type_vote[0], key=lambda j: type_vote[0][j])
+                pointed = view.types[best]
             # Each head carries its own pointer's confidence. Using the label
             # pointer's for both is the failure this repo has now paid for four
             # times (design rule 1) -- and I wrote it here anyway, one tick after
             # writing the rule. It is not a subtle bug to introduce: the two
             # votes are right there on adjacent lines.
-            type_confidence = type_vote[1] if type_vote else 0.0
             out[i] = ((dict(labels), confidence) if labels else ABSTAIN,
-                      (dict(types), type_confidence) if types else ABSTAIN)
+                      self._type_vote(view, i, pointed))
         return out
 
     def n_symbolic_parameters(self) -> int:
