@@ -66,8 +66,35 @@ Everything defaults to CPU now, including `TrainConfig.device`, which used to be
       training episodes — about 1.3 passes — while every rule-based model sees
       the training set in full. `gru` came out at -0.050 lift, which is an
       undertrained model rather than a beaten one and must not be reported as
-      the family separation inverting. Needs enough steps for several passes,
-      and a free GPU to make that affordable.
+      the family separation inverting.
+
+      **The confound is real and does not account for the gap.** `gru` at four
+      times the steps, everything else held fixed:
+
+      | steps | passes | label acc | label lift |
+      |------:|-------:|----------:|-----------:|
+      |   300 |    1.3 |     0.061 |     -0.050 |
+      |  1200 |    5.4 |     0.092 |     -0.015 |
+
+      So the budget was indeed doing damage — 4x the steps closes about 70% of
+      the distance to the floor — and it is still below it at 5.4 passes. That
+      is one model and does not settle the family question, but it does mean the
+      answer is not simply "they were undertrained".
+
+      `runs/full179` currently holds all 19 summaries, and **the six neural ones
+      are the 300-step runs**, while every rule-based entry carries the config's
+      intended 2000. The table is complete and not yet comparable. Re-running
+      the six at 2000 steps (8.9 passes) on CPU, `--resume` so it can be
+      assembled across interruptions; ~50 min per model, no GPU taken.
+
+      **`sweep --resume` would not do this and said nothing.** Its completeness
+      test was "a `summary.json` exists", so raising `--steps` over a directory
+      of finished 300-step runs skipped all six and reprinted the stale table.
+      A no-op that looks like a successful re-run is the most expensive kind of
+      wrong answer here, and the only reason it was caught is that the sweep
+      returned in seconds instead of hours. Fixed: a run counts as complete only
+      if it ran at least the budget being asked for, and a rule-based model
+      (0 steps, fits in one pass) is always complete.
 - [x] (superseded) Finish the full-curriculum sweep and rewrite the conclusions. Running
       via `configs/full179.toml --tasks node`. Nothing in the README should be
       trusted until the complete table is in. Run it with `--resume` so an

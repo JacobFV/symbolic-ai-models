@@ -391,3 +391,33 @@ def test_resuming_a_finished_run_is_a_no_op(tmp_path):
                                eval_every=2, resume=True))
     assert torch.load(out / "checkpoint.pt", weights_only=False)["step"] == 4
     assert again["steps"] == 4
+
+
+# ---- what "already ran" means ---------------------------------------------
+def test_resume_reruns_a_model_that_ran_a_smaller_budget(tmp_path):
+    """A finished run at a smaller budget is not finished for a larger one.
+
+    Raising `--steps` over a directory of 300-step runs and passing `--resume`
+    silently skipped every model and reprinted the stale table. It looked like a
+    successful re-run, which is worse than a visible failure.
+    """
+    import argparse
+
+    from symbolic_ai_models.cli import _already_ran
+
+    out = tmp_path / "gru"
+    out.mkdir()
+    (out / "summary.json").write_text(json.dumps({"steps": 300}))
+
+    assert _already_ran(out, argparse.Namespace(steps=300))
+    assert _already_ran(out, argparse.Namespace(steps=200))
+    assert not _already_ran(out, argparse.Namespace(steps=2000))
+    # No budget asked for: any finished run counts.
+    assert _already_ran(out, argparse.Namespace(steps=None))
+    # A rule-based model reports 0 steps and never wants re-running.
+    (out / "summary.json").write_text(json.dumps({"steps": 0}))
+    assert _already_ran(out, argparse.Namespace(steps=2000))
+    # Nothing there at all, and unreadable, both mean run it.
+    assert not _already_ran(tmp_path / "absent", argparse.Namespace(steps=10))
+    (out / "summary.json").write_text("{not json")
+    assert not _already_ran(out, argparse.Namespace(steps=10))

@@ -158,6 +158,30 @@ def cmd_train(args: argparse.Namespace) -> int:
     return 0
 
 
+def _already_ran(out: Path, args: argparse.Namespace) -> bool:
+    """Did this directory finish *the budget being asked for*?
+
+    Only the step budget is compared. It is the one knob a re-run routinely
+    raises, and it is the one whose staleness is invisible in the printed table
+    -- every other config change (different lessons, a different mask rate)
+    produces numbers that obviously do not belong next to the others, whereas a
+    stale 300-step row sits in the table looking exactly like a 2000-step one.
+
+    A rule-based model reports `steps` as 0 because it fits in a single pass and
+    never consumed a budget, so it is complete whatever is asked of it.
+    """
+    summary = out / "summary.json"
+    if not summary.exists():
+        return False
+    if getattr(args, "steps", None) is None:
+        return True
+    try:
+        ran = int(json.loads(summary.read_text()).get("steps", 0))
+    except (ValueError, OSError):
+        return False                     # unreadable: re-run rather than trust
+    return ran == 0 or ran >= int(args.steps)
+
+
 def cmd_sweep(args: argparse.Namespace) -> int:
     """Train several architectures under one identical config."""
     from .models import model_names
@@ -171,9 +195,14 @@ def cmd_sweep(args: argparse.Namespace) -> int:
         # A sweep over the whole curriculum takes long enough that it will not
         # always survive the session that started it, and losing eleven finished
         # models because the twelfth was interrupted is the kind of waste that
-        # quietly discourages running the honest experiment at all. A model that
-        # already wrote `summary.json` is complete; skip it.
-        finished = [n for n in names if (root / n / "summary.json").exists()]
+        # quietly discourages running the honest experiment at all.
+        #
+        # "Complete" has to mean *the requested budget was run*, not merely that
+        # a summary file exists. Raising `--steps` on a directory of finished
+        # 300-step runs and asking to resume skipped all six and reprinted the
+        # old table -- it looked like a successful re-run and was a no-op, which
+        # is the most expensive kind of wrong answer this repo can produce.
+        finished = [n for n in names if _already_ran(root / n, args)]
         if finished:
             print(f"resuming: {len(finished)} already complete "
                   f"({', '.join(finished)})", flush=True)
