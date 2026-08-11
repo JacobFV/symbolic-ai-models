@@ -346,3 +346,48 @@ def test_samples_export_as_json_for_a_reviewer(finished_run, episodes, tmp_path)
         for key in ("lesson_id", "prompt", "gold", "generated",
                     "exact_match", "in_answer_set", "choices"):
             assert key in record
+
+
+# ---- resuming a long run --------------------------------------------------
+@pytest.mark.skipif(
+    "gru" not in __import__("symbolic_ai_models.models",
+                            fromlist=["model_names"]).model_names(),
+    reason="neural models not registered")
+def test_training_resumes_where_it_stopped(tmp_path, episodes):
+    """A five-hour run must be assemblable from pieces.
+
+    Four attempts at the full-curriculum neural sweep have been killed part-way,
+    twice leaving a directory holding a tokenizer and no summary. Without this
+    the whole run is lost each time, which is why it never finished.
+    """
+    out = tmp_path / "resumable"
+    first = train(small_config(out, model="gru", tasks=("node",),
+                               task_weights={"node": 1.0}, steps=4,
+                               eval_every=2))
+    assert (out / "checkpoint.pt").exists()
+    step = torch.load(out / "checkpoint.pt", weights_only=False)["step"]
+    assert step == 4
+
+    # Asking for more steps continues rather than starting over.
+    second = train(small_config(out, model="gru", tasks=("node",),
+                                task_weights={"node": 1.0}, steps=8,
+                                eval_every=2, resume=True))
+    assert torch.load(out / "checkpoint.pt", weights_only=False)["step"] == 8
+    assert second["steps"] == 8
+    assert first["parameters"] == second["parameters"]
+
+
+@pytest.mark.skipif(
+    "gru" not in __import__("symbolic_ai_models.models",
+                            fromlist=["model_names"]).model_names(),
+    reason="neural models not registered")
+def test_resuming_a_finished_run_is_a_no_op(tmp_path):
+    """Re-running a completed budget must not train it further."""
+    out = tmp_path / "finished"
+    train(small_config(out, model="gru", tasks=("node",),
+                       task_weights={"node": 1.0}, steps=4, eval_every=2))
+    again = train(small_config(out, model="gru", tasks=("node",),
+                               task_weights={"node": 1.0}, steps=4,
+                               eval_every=2, resume=True))
+    assert torch.load(out / "checkpoint.pt", weights_only=False)["step"] == 4
+    assert again["steps"] == 4

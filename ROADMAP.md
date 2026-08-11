@@ -703,8 +703,10 @@ equivalent, so a single long run still loses everything.
 **What would unblock it**, in preference order:
 
 1. A free GPU: six models at 2000 steps is minutes, not hours.
-2. Failing that, `train --resume` from a checkpoint, so a five-hour CPU run can
-   be assembled from tick-sized pieces.
+2. ~~`train --resume`~~ — **done.** Training now checkpoints on the evaluation
+   cadence and `--resume` continues from it, optimiser state included, so a
+   five-hour CPU run can be assembled from tick-sized pieces. `sweep --resume`
+   now resumes each model's partial training as well as skipping finished ones.
 3. Failing both, state plainly in the README that the family comparison is
    untested on the full curriculum. That is already what it says.
 

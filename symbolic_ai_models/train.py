@@ -82,6 +82,8 @@ class TrainConfig:
     eval_every: int = 250
     log_every: int = 50
     seed: int = 0
+    #: Continue a partially trained run from `out/checkpoint.pt` if present.
+    resume: bool = False
     device: str = "cpu"
     amp: bool = True
     out: str = "runs/run"
@@ -259,6 +261,7 @@ def train(cfg: TrainConfig, *, progress=None) -> dict[str, Any]:
         weight_decay=cfg.weight_decay, grad_clip=cfg.grad_clip,
         eval_every=cfg.eval_every, log_every=cfg.log_every, seed=cfg.seed,
         amp=cfg.amp and not is_rule_based, device=run_device,
+        checkpoint=str(out / "checkpoint.pt"), resume=cfg.resume,
         on_step=note, on_eval=record))
 
     if not history:                       # a learner that reported nothing

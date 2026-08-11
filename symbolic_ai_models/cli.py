@@ -183,6 +183,9 @@ def cmd_sweep(args: argparse.Namespace) -> int:
         cfg = _config_from_args(args)
         cfg.model = name
         cfg.out = str(root / name)
+        # A sweep asked to resume also resumes each model's partial training,
+        # not merely skipping the ones that finished.
+        cfg.resume = bool(args.resume)
         print(f"\n=== {name} ===", flush=True)
         try:
             train(cfg, progress=_progress)
@@ -383,6 +386,8 @@ def build_parser() -> argparse.ArgumentParser:
 
     t = sub.add_parser("train", help="train one architecture")
     _add_train_flags(t)
+    t.add_argument("--resume", action="store_true",
+                   help="continue from out/checkpoint.pt if it exists")
     t.set_defaults(fn=cmd_train)
 
     s = sub.add_parser("sweep", help="train several architectures identically")

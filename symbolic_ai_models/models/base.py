@@ -260,6 +260,12 @@ class FitContext:
     amp: bool = True
     device: torch.device = field(default_factory=lambda: torch.device("cpu"))
 
+    #: Where to write periodic training state, so a long run can be assembled
+    #: from pieces rather than lost when the process is interrupted.
+    checkpoint: str | None = None
+    #: Continue from that checkpoint if it exists.
+    resume: bool = False
+
     #: ``(step, total, losses, grad_norm) -> None``
     on_step: Callable[..., None] | None = None
     #: ``(step) -> None`` — the trainer evaluates and records history
@@ -368,6 +374,8 @@ class NeuralModel(Model):
         which shows up as a sawtooth in whichever metric was not updated last
         and makes two runs with different task orders incomparable.
         """
+        import os
+
         from ..data.sampler import cycle
 
         self.to(ctx.device).train()
@@ -378,7 +386,24 @@ class NeuralModel(Model):
                             batch_size=ctx.batch_size, rng=rng)
                    for n, t in ctx.tasks.items()}
 
-        for step in range(ctx.steps):
+        # A full-curriculum neural run is hours on a CPU, and a run that loses
+        # everything when it is interrupted is a run that never finishes. The
+        # optimiser state travels with the weights: resuming with a fresh AdamW
+        # would restart its moment estimates and put a visible dent in the loss
+        # exactly at the join.
+        start = 0
+        if ctx.resume and ctx.checkpoint and os.path.exists(ctx.checkpoint):
+            state = torch.load(ctx.checkpoint, map_location=ctx.device,
+                               weights_only=False)
+            self.load_state_dict(state["model"])
+            opt.load_state_dict(state["optimizer"])
+            start = int(state["step"])
+            if ctx.on_step:
+                ctx.on_step(start - 1, ctx.steps, {"resumed": float(start)}, 0.0)
+            if start >= ctx.steps:
+                return
+
+        for step in range(start, ctx.steps):
             for group in opt.param_groups:
                 group["lr"] = _lr_at(step, ctx)
 
@@ -400,6 +425,13 @@ class NeuralModel(Model):
             if ctx.on_eval and ((step + 1) % ctx.eval_every == 0 or last):
                 ctx.on_eval(step + 1)
                 self.train()
+            if ctx.checkpoint and ((step + 1) % ctx.eval_every == 0 or last):
+                # Written next to the run's other artefacts, and only on the
+                # same cadence as evaluation: checkpointing every step would
+                # cost more than the training on a small model.
+                torch.save({"model": self.state_dict(),
+                            "optimizer": opt.state_dict(), "step": step + 1},
+                           ctx.checkpoint)
 
 
 #: The old name for :class:`NeuralModel`, kept because "symbolic model" now
