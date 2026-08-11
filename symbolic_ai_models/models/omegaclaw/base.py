@@ -54,8 +54,9 @@ subclasses:
   fiddly, it is invisible when wrong, and it is exactly what ``workspace`` got
   wrong on its own.
 * **The type head.** A claim names the node it was read off, so the same claw
-  that argues for a label argues for that node's type at no extra cost.
-  Abstaining on type would have scored the abstention rather than the model.
+  that argues for a label argues for that node's type at no extra cost. It gets
+  its *own* calibrator rather than borrowing the label head's — which it did at
+  first, at a cost of up to 1.96 lift; see :meth:`OmegaClaw._type_votes`.
 
 Why the claws are pointer-valued
 --------------------------------
@@ -69,15 +70,54 @@ task does not pay. The OmegaClaw family accepts that handicap on purpose, so its
 numbers should be read as the ceiling of *structure-only* reasoning under this
 control policy, not as the best achievable score.
 
+What the family measured
+------------------------
+Masked-node task, twelve lessons taken as every fifteenth id of the 179 so the
+slice could not be chosen to flatter anything, 50 training and 10 evaluation
+episodes each, evaluation seeds a million away, CPU (``runs/omegaclaw``)::
+
+    model            lbl acc   lbl lift   typ lift
+    omegaclaw_ctx      0.418     +0.245     +0.048
+    omegaclaw_rank     0.409     +0.233     +0.041
+    workspace          0.398     +0.219     -1.086
+    routes             0.388     +0.206     -0.823
+    ilp                0.387     +0.205     -0.526
+    brill              0.384     +0.201     -0.289
+    ruleinduce         0.377     +0.192     +0.311
+    omegaclaw_flat     0.335     +0.138     -0.060
+
+Two readings, and the second matters more than the first.
+
+* **Control is worth more than reach.** ``flat`` and ``ctx`` run the same eleven
+  claws over the same evidence and differ in one line; learning which claw to
+  trust in which context is worth **+0.107 lift**, which is most of the distance
+  between the bottom of this table and the top. Mixing versus committing to the
+  best single claw (``ctx`` against ``rank``) is worth +0.012 — inside the noise
+  of a twelve-lesson slice, and the honest reading is that the two aggregation
+  rules are the same model.
+* **Do not over-read the ranking.** The README records that a six-lesson slice
+  ranked this repo's models close to backwards against the full curriculum.
+  Twelve lessons is better and is still 7% of it. That ``omegaclaw_ctx`` leads
+  is not a claim that it is the best reasoner here; the claim this table
+  supports is the *within-family* contrast, where every other variable is held
+  fixed by construction rather than by care.
+
 Negative results recorded here rather than hidden
 -------------------------------------------------
+* **The shared type head was worth −1.96 lift.** The single largest thing this
+  file got wrong, and it was an ABC-shaped mistake: one convenience method
+  handed every subclass the same broken assumption at once. Written up in full
+  in :meth:`OmegaClaw._type_votes`, with the before and after.
 * ``models/routes.follow`` was the obvious thing to reuse for the route-shaped
   claws, and it is not reused. It takes plain arrays and rescans the whole
-  ``parent`` list on every call, so a single node costs eleven claws times
-  ``O(n)`` scans; with eleven claws over four masking passes that dominated
-  fitting time. :class:`Scan` caches the child lists once per view instead. The
-  cost of that decision is a second implementation of ``peer`` and ``sibling``
-  in this repo, which is a real cost and is why it is written down.
+  ``parent`` list on every call, so a node costs eleven claws times an ``O(n)``
+  scan, over four masking passes, twice — and :class:`Scan` builds the child
+  lists once per view instead. **This was a judgement, not a measurement**: the
+  ``follow``-based version was never built and timed, so the speedup is an
+  argument rather than a number. What it certainly cost is a second
+  implementation of ``peer`` and ``sibling`` in this repo, which is the kind of
+  duplication that drifts, and it is written down here for whoever finds the two
+  copies disagreeing.
 * The base class originally let a subclass override ``learn`` to gather its own
   statistics. Nothing needed it, and having it there meant two subclasses could
   silently be fitted on different evidence — which is the one failure this whole
@@ -393,7 +433,8 @@ class OmegaClaw(RuleBasedModel, ABC):
     docstring for what that buys and what it costs.
     """
 
-    LEARNED = ("claw_evidence", "claw_totals", "confidence_map")
+    LEARNED = ("claw_evidence", "claw_totals", "confidence_map",
+               "type_confidence_map")
 
     def __init__(self, cfg: ModelConfig) -> None:
         super().__init__(cfg)
@@ -403,6 +444,9 @@ class OmegaClaw(RuleBasedModel, ABC):
         #: ``claw -> [times it fired, times it was right]``, over all contexts
         self.claw_totals: dict[str, list[int]] = {}
         self.confidence_map = ScoreCalibrator()
+        #: The type head gets its **own** map. Borrowing the label head's was
+        #: the family's first measured defect; see :meth:`_type_votes`.
+        self.type_confidence_map = ScoreCalibrator()
 
     # ---- extension points ---------------------------------------------
     def claws(self) -> Mapping[str, Claw]:
@@ -501,29 +545,46 @@ class OmegaClaw(RuleBasedModel, ABC):
 
     def _calibrate(self, episodes: Sequence[Episode], tok: SymbolTokenizer,
                    evidence: dict, totals: dict) -> None:
-        """Learn what this model's raw score is actually worth, out of sample."""
+        """Learn what this model's raw score is actually worth, out of sample.
+
+        Both heads, separately, in one pass. Separately because the family's
+        first measured defect was assuming one number served both: see
+        :meth:`_type_votes`.
+        """
         held = (self.claw_evidence, self.claw_totals)
         self.claw_evidence, self.claw_totals = evidence, totals
         scores: list[float] = []
         correct: list[bool] = []
+        type_scores: list[float] = []
+        type_correct: list[bool] = []
         try:
             for view, targets in self.training_views(episodes, tok, repeats=1,
                                                      seed=7,
                                                      max_nodes=self.cfg.max_nodes):
                 scan = Scan(view)
-                for node, (label_id, _) in targets.items():
-                    if label_id < 0:
-                        continue
+                for node, (label_id, type_id) in targets.items():
                     result = self._decide(view, scan, node)
                     if result is None:
                         continue
-                    support, raw, _ = result
-                    best = max(support, key=lambda s: (support[s], -s))
-                    scores.append(raw)
-                    correct.append(best == label_id)
+                    support, raw, weighted = result
+                    if label_id >= 0:
+                        best = max(support, key=lambda s: (support[s], -s))
+                        scores.append(raw)
+                        correct.append(best == label_id)
+                    # A structural node has no scorable label and still has a
+                    # type, so the type map is fitted on strictly more nodes
+                    # than the label map — which is the right way round, since
+                    # the type head is the one that was overconfident.
+                    if type_id >= 0:
+                        votes = self._type_support(view, weighted)
+                        if votes:
+                            top = max(votes, key=lambda t: (votes[t], -t))
+                            type_scores.append(raw)
+                            type_correct.append(top == type_id)
         finally:
             self.claw_evidence, self.claw_totals = held
         self.confidence_map = ScoreCalibrator().fit(scores, correct)
+        self.type_confidence_map = ScoreCalibrator().fit(type_scores, type_correct)
 
     # ---- reading the evidence ------------------------------------------
     def reliability(self, name: str, ctx: Hashable = None, *,
@@ -561,9 +622,8 @@ class OmegaClaw(RuleBasedModel, ABC):
                 out[i] = (ABSTAIN, ABSTAIN)
                 continue
             support, raw, weighted = result
-            confidence = self.confidence(raw)
-            out[i] = ((support, confidence), self._type_votes(view, weighted,
-                                                              confidence))
+            out[i] = ((support, self.confidence(raw)),
+                      self._type_votes(view, weighted, raw))
         return out
 
     def _decide(self, view: GraphView, scan: Scan, node: int
@@ -591,15 +651,9 @@ class OmegaClaw(RuleBasedModel, ABC):
             return None
         return support, min(max(float(raw), 0.0), 1.0), weighted
 
-    def _type_votes(self, view: GraphView, weighted: Sequence[Weighted],
-                    confidence: float) -> Votes:
-        """The types of the nodes the claws pointed at, weighted as they were.
-
-        Free, and better than abstaining: a claw that found the right place to
-        read a label from found the right kind of node too, and a claw that did
-        not is wrong about both in the same proportion — which is what makes
-        this an honest reuse of the label evidence rather than a second model.
-        """
+    def _type_support(self, view: GraphView,
+                      weighted: Sequence[Weighted]) -> collections.Counter:
+        """The types of the nodes the claws pointed at, weighted as they were."""
         votes: collections.Counter = collections.Counter()
         for _, claim, weight in weighted:
             if weight <= 0.0 or claim.source < 0:
@@ -607,8 +661,65 @@ class OmegaClaw(RuleBasedModel, ABC):
             type_ = view.types[claim.source]
             if type_ is not None:
                 votes[TYPE_TO_ID[type_]] += weight
+        return votes
+
+    def _type_votes(self, view: GraphView, weighted: Sequence[Weighted],
+                    raw: float) -> Votes:
+        """The same claims, read as a claim about *kind* — and priced separately.
+
+        **The family's first measured defect, kept here as the record of it.**
+        The original version reused the label head's confidence, on the argument
+        that a claw which found the right place to read a label from found the
+        right kind of node too. That argument is wrong, and expensively so. The
+        first twelve-lesson sweep read::
+
+            model            lbl lift    typ lift
+            omegaclaw_flat     +0.138      -1.964
+            omegaclaw_ctx      +0.245      -1.255
+            omegaclaw_rank     +0.233      -0.775
+
+        A type lift of −1.96 means the model was nearly three times as far below
+        the structure-only floor as the floor is above chance. The cause is not
+        that the type votes are worthless — it is that the type floor on this
+        curriculum is about 0.88, so a vote has to be *very* good before
+        overriding it pays, and these were being stated at up to 0.85
+        confidence on the strength of a number measured for a different
+        question. ``parent``, ``echo``, ``prev`` and ``slotmate`` all read a
+        label off a node of the wrong kind quite happily; only ``peer`` and
+        ``mirror`` land on a structural counterpart.
+
+        The repair is the one this repo keeps arriving at: measure the number
+        instead of asserting it. The type head gets its own calibrator, fitted
+        on held-out **training** episodes in the same pass as the label one, so
+        a claw-derived type vote now states what claw-derived type votes were
+        actually worth. Nothing about the evaluation set entered that decision —
+        the sweep is what revealed the defect, the training episodes are what
+        priced the repair. The same sweep afterwards::
+
+            model            lbl lift    typ lift
+            omegaclaw_flat     +0.138      -0.060   (was -1.964)
+            omegaclaw_ctx      +0.245      +0.048   (was -1.255)
+            omegaclaw_rank     +0.233      +0.041   (was -0.775)
+
+        Label lift is unchanged to three decimals, which is the check that the
+        repair went where it was aimed: the label path was not touched, and a
+        number that moved would have meant something else did.
+
+        The residual is worth stating too, because it is the honest size of the
+        win. Type lift is now barely above zero rather than far below it — the
+        claws have very little to add to a structure-only lookup that already
+        gets 0.88, and one fix to the confidence does not turn a label-shaped
+        operator set into a type-shaped one.
+        """
+        votes = self._type_support(view, weighted)
         if not votes:
             return ABSTAIN
+        if self.type_confidence_map.fitted:
+            confidence = float(self.type_confidence_map(raw))
+        else:
+            # Unfitted, be quiet: the back-off this defers to already knows the
+            # shape of the tree, which is most of what type prediction is.
+            confidence = min(0.1 + 0.4 * max(raw, 0.0), 0.5)
         return dict(votes), min(confidence, 0.85)
 
     # ---- reporting -------------------------------------------------------
@@ -626,6 +737,8 @@ class OmegaClaw(RuleBasedModel, ABC):
                          f"   rate {right / max(fired, 1):.3f}")
         if not rows:
             lines.append("  (nothing fired: the model was not fitted)")
-        lines.append(f"  confidence map: "
-                     f"{'fitted' if self.confidence_map.fitted else 'unfitted'}")
+        lines.append(
+            f"  confidence map: label "
+            f"{'fitted' if self.confidence_map.fitted else 'unfitted'}, type "
+            f"{'fitted' if self.type_confidence_map.fitted else 'unfitted'}")
         return "\n".join(lines)

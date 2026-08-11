@@ -372,6 +372,49 @@ ctw         819,990        0.109    +0.004      0.82     +0.120
   `ilp` is fourth on labels and last but one on types. Averaging them would
   describe neither, which is why they are never averaged here.
 
+### Does an ABC make new symbolic models cheap? — `omegaclaw`
+
+`symbolic_ai_models/models/omegaclaw/` is a base class rather than a model: it
+fixes the skeleton six of the reasoners above share — reach into a few
+structurally-defined places, decide what each is worth here, commit — and leaves
+subclasses one method, `weigh`. Three of them are registered, differing only in
+that method (`omegaclaw_flat`, `omegaclaw_ctx`) and in aggregation
+(`omegaclaw_rank`).
+
+Twelve lessons, taken as every fifteenth lesson id so the slice could not be
+chosen to flatter anything; 50 train / 10 eval episodes each; `runs/omegaclaw`:
+
+```
+model            params   lbl acc  lbl lift   typ lift
+omegaclaw_ctx       749     0.418    +0.245     +0.048
+omegaclaw_rank      749     0.409    +0.233     +0.041
+workspace           720     0.398    +0.219     -1.086
+routes              320     0.388    +0.206     -0.823
+ilp                  66     0.387    +0.205     -0.526
+brill               179     0.384    +0.201     -0.289
+ruleinduce           82     0.377    +0.192     +0.311
+omegaclaw_flat      749     0.335    +0.138     -0.060
+```
+
+- **Cheap, measurably.** A new member is 10 lines of code against 186–293 for
+  the standalone models it is being compared with, and it arrives with masked
+  training views, held-out calibration, a proper distribution and the abstention
+  contract already correct.
+- **Control beats reach.** `flat` and `ctx` run the same eleven operators over
+  the same evidence and differ in one line; learning which to trust in which
+  context is worth **+0.107 lift**. Mixing versus committing to the single best
+  operator is worth +0.012, which on twelve lessons is not a difference.
+- **The abstraction's own failure mode, measured.** The first sweep scored the
+  family at −1.96 to −0.78 type lift, because one shared convenience method
+  priced the type head with the label head's confidence. One mistake in the base
+  class was three models wrong at once — the cost of sharing, and the mirror
+  image of the benefit. Repaired by giving the type head its own calibrator
+  (fitted on training episodes; the label numbers are unchanged to three
+  decimals) and written up in `OmegaClaw._type_votes`.
+- **Read the ranking with the caution this README earned above.** Twelve lessons
+  is 7% of the curriculum, and 3% of it once ranked these models backwards. The
+  within-family contrasts are what this table supports.
+
 **What is not established: the family comparison.** Earlier versions of this
 README said all neural models were above the label floor and no rule-based model
 was. The second half is now known to be wrong. The first half is *not* retested
