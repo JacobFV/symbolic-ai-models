@@ -114,7 +114,14 @@ Everything defaults to CPU now, including `TrainConfig.device`, which used to be
 - [x] **Finish the full-curriculum sweep and rewrite the conclusions.** Eleven
       of thirteen are in and the conclusion reversed completely; README
       rewritten. `synth` and `workspace` are resuming.
-- [ ] **Re-run the neural half with a step budget matched to the data.** A
+- [x] **Re-run the neural half with a step budget matched to the data.** Done
+      for four of six; `hrr` and `ndr` deliberately left at 300 steps. Every
+      network re-run cleared the label floor, so the -0.050 that the family
+      claim rested on was an artefact. `rgt` is first of nineteen on node type
+      at +0.587. All four were still climbing at 2000, so every neural number
+      here is a lower bound. **The neural half is a control and this item is
+      closed**; further budget work on it is parked below and should stay
+      parked unless the symbolic side needs it. A
       first attempt on CPU gave the networks 300 steps at batch 16 against 3,580
       training episodes — about 1.3 passes — while every rule-based model sees
       the training set in full. `gru` came out at -0.050 lift, which is an
@@ -195,7 +202,8 @@ Everything defaults to CPU now, including `TrainConfig.device`, which used to be
       returned in seconds instead of hours. Fixed: a run counts as complete only
       if it ran at least the budget being asked for, and a rule-based model
       (0 steps, fits in one pass) is always complete.
-- [ ] **Run two networks past 2000 steps to find where the curve flattens.**
+- [ ] (parked — neural, not the subject) **Run two networks past 2000 steps to
+      find where the curve flattens.**
       Every network that has finished the re-run is a *lower bound*: all three
       gained more than the +0.01/500 threshold across their last 500 steps. So
       even when all six land, the pre-registered answer is "the budget is still

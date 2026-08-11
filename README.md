@@ -408,13 +408,21 @@ it means the budget asymmetry ran in *both* directions at once. They are
 defaults in `extra`, not constants; nobody has measured what these models do
 when raised.
 
-**Three of six have finished. All clear the label floor; none had converged.**
+**Four networks were re-run at 2000 steps. All four clear the label floor;
+none had converged.**
 
 | model | 300 steps | 2000 steps | gain over last 500 | type lift | train time |
 |---|---:|---:|---:|---:|---:|
 | `rgt` | -0.058 | **+0.152** | +0.019 | **+0.587** | 11 min |
 | `gru` | -0.050 | **+0.079** | +0.030 | +0.052 | 60 min |
+| `tpr` | -0.048 | **+0.045** | +0.022 | -0.026 | 47 min |
 | `transformer` | -0.065 | **+0.044** | +0.015 | -0.079 | 9 min |
+
+`hrr` and `ndr` were **deliberately not re-run** and their rows are still
+300-step runs. Four architectures spanning recurrence, attention, the relation
+algebra and the role algebra were enough to answer the question the re-run
+existed for, and the symbolic models are what this repo is about. `compare`
+flags the mixed budget rather than hiding it.
 
 The 300-step figures were artefacts of the budget. Nothing that rested on them
 survives, in either direction — including any reading of the rule-based models
@@ -435,20 +443,22 @@ more than +0.01 over their last 500 steps when the budget ran out, though
 intervals) where `gru` was not.
 
 The heads come apart by architecture, sharply. On identical data and budget the
-type lift runs `rgt` +0.587, `gru` +0.052, `transformer` -0.079. Averaging the
+type lift runs `rgt` +0.587, `gru` +0.052, `tpr` -0.026, `transformer` -0.079 —
+and note that `tpr` carries an explicit role algebra too, so reading the graph
+is not by itself what `rgt` is being paid for. Averaging the
 two heads would erase exactly this, which is why they are never averaged here.
 
 The cost is also wildly uneven: 9, 11 and 60 minutes for models within 15% on
 parameter count. A recurrence cannot be parallelised over the sequence and an
 attention stack can, and on a CPU that dominates everything else.
 
-Three networks are still at 300 steps and **must not be read as results**.
+`hrr` and `ndr` are still at 300 steps and **must not be read as results**.
 `compare` says so itself, and refusing to read those rows is the whole point of
 the warning:
 
 ```
 !! these rows were NOT produced under one config, so the comparison is not like-for-like:
-  steps: 2000=gru, rgt, transformer; 300=hrr, ndr, tpr
+  steps: 2000=gru, rgt, tpr, transformer; 300=hrr, ndr
 ```
 
 **The rest of the comparison is still running**, at 2000 steps (8.9 passes) on CPU — it
