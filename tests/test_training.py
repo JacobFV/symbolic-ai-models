@@ -585,3 +585,69 @@ def test_a_saved_run_can_rebuild_its_own_model(tmp_path, episodes):
     saved = torch.load(out / "model.pt", weights_only=False)
     assert saved["model_config"] == recorded
     model.load_state_dict(saved["model"])
+
+
+def test_the_copy_head_is_scored_by_what_it_picked_not_by_index(episodes):
+    """Several nodes carry the same label, so index equality is the wrong test.
+
+    A pointer that copies a different but equally valid source is correct. An
+    index check would mark it wrong, which would make the metric reward
+    memorising one canonical answer -- the opposite of what a pointer is for.
+    """
+    import numpy as np
+    import torch
+
+    from symbolic_ai_models.data.batch import IGNORE, collate_graph
+    from symbolic_ai_models.models.base import ModelOutput
+    from symbolic_ai_models.tasks.masked_node import _pointer_counts
+
+    cfg = small_config(Path("."))
+    tok = build_tokenizer(cfg, episodes)
+    batch = collate_graph(episodes, tok, max_nodes=64, mask_rate=0.15,
+                          rng=np.random.default_rng(3))
+    B, L = batch.tokens.shape
+
+    def out_with(source_logits):
+        return ModelOutput(symbol_logits=torch.zeros(B, L, len(tok)),
+                           type_logits=torch.zeros(B, L, 20),
+                           hidden=torch.zeros(B, L, 1),
+                           source_logits=source_logits)
+
+    # An oracle that points at the recorded source can only be right where one
+    # exists, so its accuracy is the copy ceiling itself.
+    oracle = torch.full((B, L, L), -1e9)
+    for b in range(B):
+        for i in range(L):
+            j = int(batch.target_source[b, i])
+            if j != IGNORE:
+                oracle[b, i, j] = 10.0
+    got = _pointer_counts(out_with(oracle), batch)
+    ceiling = got["copy_correct"] / got["copy_n"]
+
+    chance = _pointer_counts(out_with(torch.randn(B, L, L)), batch)
+    assert chance["copy_correct"] / chance["copy_n"] < ceiling, \
+        "a random pointer must not match an oracle"
+
+    # A model with no pointer is simply not scored, rather than scored as zero.
+    assert _pointer_counts(ModelOutput(
+        symbol_logits=torch.zeros(B, L, len(tok)),
+        type_logits=torch.zeros(B, L, 20),
+        hidden=torch.zeros(B, L, 1)), batch) == {}
+
+
+def test_the_copy_head_reports_a_floor(episodes):
+    """A copy accuracy quoted without a floor would repeat an old mistake.
+
+    Only that it exists and is a probability is asserted here. The fixture is
+    eight episodes over two lessons, and a rule that learns the commonest offset
+    per structural context has almost nothing to learn from that -- it scores
+    0.019 here against **0.266 on the full 179 lessons**, where a random pointer
+    gets 0.048 and an oracle 0.722. Asserting a threshold at this scale would be
+    asserting something the fixture cannot support, and the honest place for the
+    real number is the roadmap, measured by the sweep.
+    """
+    cfg = small_config(Path("."))
+    tok = build_tokenizer(cfg, episodes)
+    floor = make_task("node", max_nodes=64).floor(episodes[6:], tok, episodes[:6])
+    assert 0.0 <= floor["copy_acc"] <= 1.0
+    assert floor["copy_acc"] == floor["copy_acc"], "floor must not be nan"

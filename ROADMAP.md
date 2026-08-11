@@ -283,6 +283,22 @@ Everything defaults to CPU now, including `TrainConfig.device`, which used to be
       is the only route, which flatters vocabulary-based models and censors the
       capability this repo exists to study.
 
+      **Scoring is in place (harness half done).** The copy head is now bracketed
+      at both ends, measured on all 179 lessons through the sweep:
+
+      | | copy accuracy |
+      |---|---:|
+      | random pointer | 0.048 |
+      | **structure-only floor** (commonest offset per context) | **0.266** |
+      | best label-head model today (`ilp`, as label acc) | 0.312 |
+      | **oracle pointer** (the ceiling) | **0.722** |
+
+      So a pointer has to clear 0.266 to have read anything, and there is 0.46
+      of headroom above it. `label_group` gives label identity that survives
+      being out of vocabulary — vocabulary ids collapse every invented name to
+      `unk`, so two different invented names would compare equal and a pointer
+      that copied the wrong one would score as correct.
+
       Two parts, and the second is the one that changes what is being measured:
 
       1. A vote over *nodes* rather than symbols, mixed with the existing

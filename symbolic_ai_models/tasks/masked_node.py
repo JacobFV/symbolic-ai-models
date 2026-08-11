@@ -35,6 +35,7 @@ import collections
 from typing import Sequence
 
 import numpy as np
+import torch
 
 from ..data.batch import IGNORE, collate_graph
 from ..data.curriculum import Episode
@@ -44,6 +45,36 @@ from ..models.base import ModelOutput
 from .base import Task, TaskOutput, Totals, empirical_floor, ratio, score_block
 
 __all__ = ["MaskedNode"]
+
+
+def _pointer_counts(out: ModelOutput, batch) -> dict[str, float]:
+    """Score a pointer by *what it picked*, never by index.
+
+    Several nodes usually carry the same label, so an index-equality check would
+    mark a correct copy wrong whenever the model chose a different valid source.
+    Correctness is therefore ``label_group[picked] == label_group[asked]``.
+
+    Scored over every masked node that has a label, including the ones the
+    vocabulary cannot name. That is the point: those are 88.5% invented `ident`
+    names, they are 80.7% copyable, and the label head drops them.
+    """
+    logits = getattr(out, "source_logits", None)
+    if logits is None or batch.label_group is None:
+        return {}
+    asked = batch.label_group != IGNORE
+    masked = batch.target_types != IGNORE
+    scored = asked & masked
+    if not bool(scored.any()):
+        return {}
+    # A pointer may not choose a padded position, and must not choose itself --
+    # a node cannot be its own evidence when its label is what is hidden.
+    valid = batch.pad_mask.clone()
+    eye = torch.eye(valid.shape[1], dtype=torch.bool, device=valid.device)
+    allowed = valid[:, None, :] & ~eye[None]
+    picked = logits.masked_fill(~allowed, float("-inf")).argmax(-1)
+    picked_group = torch.gather(batch.label_group, 1, picked)
+    correct = (picked_group == batch.label_group) & scored
+    return {"copy_n": float(scored.sum()), "copy_correct": float(correct.sum())}
 
 
 def _copy_counts(batch) -> dict[str, float]:
@@ -95,7 +126,8 @@ class MaskedNode(Task):
             out.type_logits, batch.target_types, "type")
         return TaskOutput(loss=label_loss + self.type_weight * type_loss,
                           counts={**label_counts, **type_counts,
-                                  **_copy_counts(batch)})
+                                  **_copy_counts(batch),
+                                  **_pointer_counts(out, batch)})
 
     def summarize(self, totals: Totals) -> dict[str, float]:
         """Both heads, plus how much of the masked set the label score covers.
@@ -114,6 +146,10 @@ class MaskedNode(Task):
 
         # The ceiling, reported next to the score so the gap is visible in every
         # run rather than in a scratch script somebody has to rediscover.
+        if totals.get("copy_n"):
+            out["copy_acc"] = totals.get("copy_correct", 0.0) / totals["copy_n"]
+            out["copy_scored_n"] = totals["copy_n"]
+
         reachable = totals.get("copy_reachable", 0.0)
         out["copy_ceiling"] = reachable / scored if scored else float("nan")
         censored = totals.get("copy_censored", 0.0)
@@ -177,6 +213,8 @@ class MaskedNode(Task):
                         label_n += 1
                         eval_labels[label] += 1
 
+        copy_acc = self._copy_floor(episodes, train, tok)
+
         _, type_bits = empirical_floor(dict(eval_types))
         _, label_bits = empirical_floor(dict(eval_labels))
         return {
@@ -184,7 +222,75 @@ class MaskedNode(Task):
             "type_bits": type_bits, "type_n": float(type_n),
             "label_acc": label_hits / label_n if label_n else float("nan"),
             "label_bits": label_bits, "label_n": float(label_n),
+            "copy_acc": copy_acc,
         }
+
+    def _copy_floor(self, episodes: Sequence[Episode],
+                    train: Sequence[Episode], tok: SymbolTokenizer) -> float:
+        """What a structure-only pointer gets: copy from a fixed relative offset.
+
+        The copy head needs a floor for the same reason the other two do. A
+        random pointer scores about 0.05 and an oracle 0.73, and quoting a copy
+        accuracy between those without saying which end is cheap would be
+        exactly the mistake this repo keeps having to undo.
+
+        The rule knows the shape of the tree and nothing about any symbol: for
+        each structural context it learns the commonest *offset* to a node that
+        turned out to carry the same label, then applies that offset blind. It
+        cannot read what any node says, so whatever a real pointer scores above
+        this is the part that came from reading the episode.
+        """
+        rule: dict[tuple, collections.Counter] = collections.defaultdict(
+            collections.Counter)
+        rng = np.random.default_rng(4)
+        for _ in range(4):
+            for ep in train:
+                for ctx, i, source, _ in self._pointer_examples(ep, rng):
+                    if source is not None:
+                        rule[ctx][i - source] += 1
+
+        overall: collections.Counter = collections.Counter()
+        for counts in rule.values():
+            overall.update(counts)
+        fallback = overall.most_common(1)[0][0] if overall else 1
+
+        hits = total = 0
+        scoring = np.random.default_rng(12345)
+        for _ in range(8):
+            for ep in episodes:
+                for ctx, i, _, labels in self._pointer_examples(ep, scoring):
+                    counts = rule.get(ctx)
+                    offset = counts.most_common(1)[0][0] if counts else fallback
+                    j = i - offset
+                    total += 1
+                    hits += 0 <= j < len(labels) and j != i \
+                        and labels[j] == labels[i]
+        return hits / total if total else float("nan")
+
+    def _pointer_examples(self, ep: Episode, rng: np.random.Generator):
+        """``(context, node, a visible same-label node or None, labels)``.
+
+        Same masking regime as everything else here, and the same reason: a
+        floor measured under conditions the models do not face is not a floor.
+        """
+        g = ep.graph
+        n = min(len(g), self.max_nodes)
+        if not n:
+            return
+        hidden = set(np.flatnonzero(rng.random(n) < self.mask_rate).tolist())
+        if not hidden:
+            hidden = {int(rng.integers(0, n))}
+        labels = list(g.labels[:n])
+        for i in sorted(hidden):
+            if not labels[i] or g.types[i] in STRUCTURAL:
+                continue
+            p = g.parent[i]
+            parent_type = ("ROOT" if not 0 <= p < n
+                           else ("mask" if p in hidden else g.types[p]))
+            ctx = (parent_type, min(g.slot[i], 8), min(g.depth[i], 8))
+            source = next((j for j in range(n)
+                           if j not in hidden and labels[j] == labels[i]), None)
+            yield ctx, i, source, labels
 
     def _nodes(self, ep: Episode, tok: SymbolTokenizer,
                rng: np.random.Generator | None = None):

@@ -122,6 +122,13 @@ class ModelOutput:
     symbol_logits: torch.Tensor          # [B, L, V]
     type_logits: torch.Tensor            # [B, L, N_TYPES]
     hidden: torch.Tensor                 # [B, L, D]
+    #: [B, L, L] — optional. For each masked node, a score over the *nodes* of
+    #: its own episode: "the answer is whatever that one says". A model without
+    #: one leaves it None and is simply not scored on the copy head. Kept
+    #: separate from `symbol_logits` rather than folded into it, because a
+    #: pointer can name a symbol the vocabulary cannot, which is the whole
+    #: reason for having one.
+    source_logits: torch.Tensor | None = None
 
 
 # ---------------------------------------------------------------------------

@@ -77,6 +77,13 @@ class SymbolicBatch:
     #: valid, and only the first is stored — a pointer must therefore be scored
     #: by the *label* of the node it picks, never by the index matching this one.
     target_source: torch.Tensor | None = None
+    #: [B, L] long — a per-episode identifier for *which symbol* a node carries,
+    #: IGNORE where it carries none. Vocabulary ids cannot serve here: every
+    #: out-of-vocabulary label collapses to ``unk``, so two different invented
+    #: names compare equal and a pointer that copied the wrong one would score
+    #: as correct. These ids are assigned from the label strings themselves, so
+    #: equality means equality, and the censored 18% becomes scorable.
+    label_group: torch.Tensor | None = None
     #: [B, L] bool — positions whose target is a token of the answer itself.
     #: Text batches only; used for reporting, never for the input or the loss.
     answer_mask: torch.Tensor | None = None
@@ -99,6 +106,7 @@ class SymbolicBatch:
             target_tokens=move(self.target_tokens),
             target_types=move(self.target_types),
             target_source=move(self.target_source),
+            label_group=move(self.label_group),
             answer_mask=move(self.answer_mask), meta=self.meta)
 
 
@@ -279,6 +287,7 @@ def collate_graph(episodes: Sequence[Episode], tok: SymbolTokenizer, *,
     tgt_tok = torch.full((B, L), IGNORE, dtype=torch.long)
     tgt_typ = torch.full((B, L), IGNORE, dtype=torch.long)
     tgt_src = torch.full((B, L), IGNORE, dtype=torch.long)
+    lab_grp = torch.full((B, L), IGNORE, dtype=torch.long)
 
     n_masked = 0
     for b, (g, n) in enumerate(zip(graphs, lens)):
@@ -308,6 +317,12 @@ def collate_graph(episodes: Sequence[Episode], tok: SymbolTokenizer, *,
         # cannot name -- those are 88.5% invented `ident` names on the full
         # curriculum and 80.7% of them are copyable, so excluding them from this
         # is excluding the clearest case of the thing being measured.
+        groups: dict[str, int] = {}
+        for i in range(n):
+            label = g.labels[i]
+            if label and g.types[i] not in STRUCTURAL:
+                lab_grp[b, i] = groups.setdefault(label, len(groups))
+
         hidden_set = set(int(i) for i in chosen)
         for i in chosen:
             i = int(i)
@@ -326,6 +341,6 @@ def collate_graph(episodes: Sequence[Episode], tok: SymbolTokenizer, *,
     return SymbolicBatch(
         tokens=tokens, types=types, pad_mask=pad_mask, depth=depth,
         causal=False, rel=rel, target_tokens=tgt_tok, target_types=tgt_typ,
-        target_source=tgt_src,
+        target_source=tgt_src, label_group=lab_grp,
         meta={"task": "node", "n_masked": n_masked,
               "lesson_ids": [ep.lesson_id for ep in episodes]})
