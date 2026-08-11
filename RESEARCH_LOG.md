@@ -39,10 +39,26 @@ symbol fills which slot every episode, so parameters attached to symbol identity
 have to be unlearned at test time.
 
 **Renaming separates models the score cannot.** Permute all 2,105 symbols,
-without refitting: `corefer` loses 0.003 and `workspace` loses 0.130, from an
-identical 0.357 label accuracy. `ctw` falls to 0.000 and `grammar` to 0.002 —
-they are pure vocabulary models. This is now reported for every node run rather
-than probed by hand.
+without refitting. Every rule-based model, sorted by what it loses:
+
+| equivariant (≤0.03) | mostly structural | vocabulary-dependent |
+|---|---|---|
+| `routes` -0.000 | `syllogism` -0.024 | `symbolalg` -0.041 |
+| `corefer` -0.003 | `ruleinduce` -0.027 | `ctw` -0.088 |
+| `evidence` -0.003 | `omegaclaw_flat` -0.030 | `brill` **-0.130** |
+| `omegaclaw_rank` -0.017 | | `workspace` **-0.130** |
+| `omegaclaw_ctx` -0.018 | | `ngram` **-0.143** |
+| `analogy` -0.019 | | `grammar` **-0.159** |
+| `ilp` -0.021 | | |
+
+Thirteen of sixteen lose under 0.05 — the symbolic models really are mostly
+reading structure, which is the thesis of the repo and had never been measured
+across the board. The exceptions are informative: `grammar` and `ngram` are
+vocabulary methods by construction and behave that way, while `brill` and
+`workspace` were not expected to and do.
+
+`corefer` and `workspace` tie at 0.357 label accuracy and sit at -0.003 and
+-0.130. The score cannot tell them apart; this can.
 
 ## What is shaky
 

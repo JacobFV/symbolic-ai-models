@@ -344,30 +344,30 @@ Masked-node task, all 179 generatable lessons, 20 training episodes each,
 evaluation seeds a million away, CPU:
 
 ```
-model         family        params  lbl acc  lbl lift  typ lift    copy
-corefer       rule-based     4,115    0.357    +0.250    +0.612  +0.096
-workspace     rule-based    10,472    0.357    +0.249    -0.576       -
-omegaclaw_rankrule-based       872    0.356    +0.248    -0.016       -
-omegaclaw_ctx rule-based       872    0.344    +0.234    -0.071       -
-analogy       rule-based     6,000    0.334    +0.222    -0.351       -
-ruleinduce    rule-based        80    0.329    +0.217    -0.377  +0.032
-routes        rule-based       599    0.324    +0.210    -1.152  +0.051
-ilp           rule-based        73    0.312    +0.198    -1.037       -
-brill         rule-based     1,200    0.290    +0.172    -0.026       -
-rgt           neural     1,125,053    0.241    +0.115    +0.395       -  *
-omegaclaw_flatrule-based       872    0.234    +0.106    -0.282       -
-evidence      rule-based     5,819    0.219    +0.089    -1.152  +0.023
-grammar       rule-based    65,125    0.187    +0.051    -0.442       -
-gru           neural       995,537    0.176    +0.038    -0.390       -  *
-ngram         rule-based   358,167    0.170    +0.031    -1.029       -
-symbolalg     rule-based   157,793    0.149    +0.007    -1.152       -
-syllogism     rule-based        26    0.146    +0.003    -1.486       -
-tpr           neural     1,159,085    0.145    +0.002    -0.505       -  *
-transformer   neural     1,089,917    0.145    +0.002    -0.582       -  *
-ctw           rule-based   819,990    0.109    -0.040    -0.291       -
-synth         rule-based         6    0.077    -0.077    -3.326       -
-hrr           neural     1,272,305    0.057    -0.100    -0.959       -  *
-ndr           neural       939,893    0.048    -0.112    -1.070       -  *
+model          family        params  lbl acc lbl lift typ lift    copy  rename
+corefer        rule-based     4,115    0.357   +0.250   +0.612  +0.096  -0.003
+workspace      rule-based    10,472    0.357   +0.249   -0.576       -  -0.130
+omegaclaw_rank rule-based       872    0.356   +0.248   -0.016       -  -0.017
+omegaclaw_ctx  rule-based       872    0.344   +0.234   -0.071       -  -0.018
+analogy        rule-based     6,000    0.334   +0.222   -0.351       -  -0.019
+ruleinduce     rule-based        80    0.329   +0.217   -0.377  +0.032  -0.027
+routes         rule-based       599    0.324   +0.210   -1.152  +0.051  -0.000
+ilp            rule-based        73    0.312   +0.198   -1.037       -  -0.021
+brill          rule-based     1,200    0.290   +0.172   -0.026       -  -0.130
+rgt            neural     1,125,053    0.241   +0.115   +0.395       -       -  *
+omegaclaw_flat rule-based       872    0.234   +0.106   -0.282       -  -0.030
+evidence       rule-based     5,819    0.219   +0.089   -1.152  +0.023  -0.003
+grammar        rule-based    65,125    0.187   +0.051   -0.442       -  -0.159
+gru            neural       995,537    0.176   +0.038   -0.390       -       -  *
+ngram          rule-based   358,167    0.170   +0.031   -1.029       -  -0.143
+symbolalg      rule-based   157,793    0.149   +0.007   -1.152       -  -0.041
+syllogism      rule-based        26    0.146   +0.003   -1.486       -  -0.024
+tpr            neural     1,159,085    0.145   +0.002   -0.505       -       -  *
+transformer    neural     1,089,917    0.145   +0.002   -0.582       -       -  *
+ctw            rule-based   819,990    0.109   -0.040   -0.291       -  -0.088
+synth          rule-based         6    0.077   -0.077   -3.326       -       -
+hrr            neural     1,272,305    0.057   -0.100   -0.959       -       -  *
+ndr            neural       939,893    0.048   -0.112   -1.070       -       -  *
 ```
 
 **Rename every symbol and the table reorders.** Models are fitted on the
