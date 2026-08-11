@@ -99,3 +99,44 @@ def test_a_counting_model_is_hurt_by_renaming(fitted):
     before = label_accuracy(model, evaluation, tok)
     after = label_accuracy(model, renamed, tok)
     assert before - after > 0.05, "renaming should cost a counting model dearly"
+
+
+def test_the_sweep_reports_renaming_for_every_node_run():
+    """The table could not show the difference it most needs to show.
+
+    `corefer` and `workspace` tie at 0.357 label accuracy and are -0.003 and
+    -0.130 under renaming -- one is answering from structure and the other
+    substantially from vocabulary, and nothing in the printed table said so.
+    Renaming was a manual probe run once, by hand, on four models.
+    """
+    from pathlib import Path
+
+    from symbolic_ai_models.train import TrainConfig, train
+
+    out = Path("/tmp/claude-renaming-check")
+    summary = train(TrainConfig(
+        model="ilp", tasks=("node",), task_weights={"node": 1.0},
+        lessons=["unification", "symbol_grounding"], n_train=8, n_eval=4,
+        steps=0, vocab_size=400, max_nodes=64, max_len=192, batch_size=4,
+        device="cpu", amp=False, out=str(out)))
+
+    got = summary["renaming"]
+    assert 0.0 <= got["label_acc"] <= 1.0
+    assert 0.0 <= got["renamed_label_acc"] <= 1.0
+    assert got["drop"] == got["label_acc"] - got["renamed_label_acc"]
+    assert got["symbols"] >= 2, "a renaming of fewer than two symbols is not one"
+
+
+def test_renaming_is_not_reported_for_a_run_without_the_node_task():
+    """It is a property of the masked-node answer; there is nothing to permute
+    the answer of when only next-token prediction was scored."""
+    from pathlib import Path
+
+    from symbolic_ai_models.train import TrainConfig, train
+
+    summary = train(TrainConfig(
+        model="ngram", tasks=("lm",), task_weights={"lm": 1.0},
+        lessons=["unification"], n_train=6, n_eval=2, steps=0,
+        vocab_size=400, max_nodes=64, max_len=192, batch_size=4,
+        device="cpu", amp=False, out="/tmp/claude-renaming-lm"))
+    assert "renaming" not in summary

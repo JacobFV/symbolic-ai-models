@@ -303,6 +303,8 @@ def train(cfg: TrainConfig, *, progress=None) -> dict[str, Any]:
         checkpoint["symbolic_state"] = model.symbolic_state()
     torch.save(checkpoint, out / "model.pt")
     extra: dict[str, Any] = {}
+    if "node" in tasks:
+        extra["renaming"] = _renaming_check(model, eval_eps, tok, cfg)
     if hasattr(model, "abstention_rate"):
         extra["abstention_rate"] = float(model.abstention_rate)
     if hasattr(model, "render"):
@@ -325,6 +327,34 @@ def train(cfg: TrainConfig, *, progress=None) -> dict[str, Any]:
     }
     _write(out / "summary.json", summary)
     return summary
+
+
+def _renaming_check(model, eval_eps: Sequence[Episode], tok: SymbolTokenizer,
+                    cfg: TrainConfig) -> dict[str, float]:
+    """Score the fitted model again with every symbol permuted.
+
+    A model that answers from structure keeps its accuracy when `alice` becomes
+    `bob` throughout, because the correct answer renames with it. A model
+    answering from vocabulary does not. The table cannot show that difference
+    otherwise: `corefer` and `workspace` tie at 0.357 label accuracy and are
+    -0.003 and -0.130 under renaming, which is the difference between the
+    capability this repo is trying to measure and a different one.
+
+    Not a floor and not a lift -- just both accuracies, on the same fixed mask so
+    they are comparable to each other rather than to anything else. The model is
+    never refitted: refitting after the rename would ask whether the method can
+    learn a relabelled world, which is a much easier question.
+    """
+    from .invariance import build_renaming, label_accuracy, rename_episodes
+
+    renaming = build_renaming(eval_eps, tok)
+    if not len(renaming):
+        return {}
+    kw = {"max_nodes": cfg.max_nodes, "mask_rate": cfg.mask_rate}
+    plain = label_accuracy(model, eval_eps, tok, **kw)
+    renamed = label_accuracy(model, rename_episodes(eval_eps, renaming), tok, **kw)
+    return {"label_acc": plain, "renamed_label_acc": renamed,
+            "drop": plain - renamed, "symbols": float(len(renaming))}
 
 
 def build_tokenizer(cfg: TrainConfig, episodes: Sequence[Episode]) -> SymbolTokenizer:

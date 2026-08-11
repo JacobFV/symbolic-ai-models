@@ -100,6 +100,14 @@ def comparison_table(summaries: Sequence[dict[str, Any]], sort_by: str = "ans li
     lines.append("ans = the answer span alone (~1.4% of positions); tok = all of "
                  "them, so tok lift is mostly boilerplate. lbl cov = share of "
                  "masked labels the vocabulary can name and the score covers.")
+    rename = [(s.get("model", "?"), (s.get("renaming") or {}))
+              for s in summaries if (s.get("renaming") or {}).get("drop") is not None]
+    if rename:
+        lines.append("")
+        lines.append("renaming (fitted on the original episodes, scored on permuted ones):")
+        for name, r in sorted(rename, key=lambda t: t[1]["drop"]):
+            lines.append(f"  {name:<14}{r['label_acc']:.3f} -> "
+                         f"{r['renamed_label_acc']:.3f}   {-r['drop']:+.3f}")
     lines.extend(config_drift(summaries))
     return "\n".join(lines)
 
