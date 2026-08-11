@@ -238,7 +238,46 @@ Everything defaults to CPU now, including `TrainConfig.device`, which used to be
 
       Blocked behind the current sweep, which owns the CPU.
 
-- [ ] **A data-budget curve for the rule-based models, the mirror of the step
+- [x] **A data-budget curve for the rule-based models.** Done. The caps bind for
+      two of four and cost nothing for the other two, and the split changes the
+      leaderboard.
+
+      | model | baseline | 6,000 | 24,000 | 96,000 |
+      |---|---:|---:|---:|---:|
+      | `ilp` | +0.231 (1,500) | +0.224 | +0.232 | — |
+      | `ruleinduce` | +0.250 (4,000) | +0.247 | +0.250 | — |
+      | `brill` | +0.155 (3,000) | +0.179 | +0.198 | +0.205 |
+      | `workspace` | +0.191 (4,000) | +0.200 | +0.267 | **+0.280** |
+
+      Both pre-registered outcomes happened, to different models. `ilp` is flat
+      across a 16x increase, so **it really does reach fourth place on 1.1% of
+      the data** and that is the headline it earns. `ruleinduce` likewise.
+
+      `workspace` at +0.280 is **first of nineteen**, above `analogy` at +0.256,
+      and it was fifth at its default cap. The published ranking was partly an
+      artefact of an arbitrary constant. `brill` gains +0.05 and is decelerating.
+
+      The sharpest part is the cost: `workspace` takes **21 seconds at 96,000
+      examples against 17 at 4,000**. The cap was not buying speed. It was a
+      default nobody had measured.
+
+      **Do not pick the cap by eval lift** -- that is tuning on the evaluation
+      set, and this table is a sensitivity analysis, not a search. The defensible
+      change is to drop the caps to whatever runtime allows, chosen on runtime
+      grounds alone, and re-run the affected models. Recorded as the next item.
+
+- [ ] **Set the example caps from runtime, not from a guessed constant, and
+      re-run the four affected models.** The curve above says `workspace` and
+      `brill` are held back by theirs and `ilp` and `ruleinduce` are not. The
+      cap must be chosen *without* reference to eval lift, or the whole table
+      becomes tuned on its own test set: pick the largest value each model can
+      consume in a sensible wall-clock budget and use that. Runtimes measured
+      above: `workspace` 21 s and `brill` 136 s at 96,000; `ilp` 240 s at 24,000
+      and superlinear, `ruleinduce` 96 s. Then re-run those four in
+      `runs/full179` so the published table is not a mix of policies -- the
+      budget-drift warning will flag it until they all agree.
+
+- [ ] (superseded) A data-budget curve for the rule-based models, the mirror of the step
       curve for the networks.** Five of them cap their training examples:
       `ilp` 1,500, `brill` 3,000, `ruleinduce` 4,000, `workspace` 4,000, and
       `analogy` by `max_cases`. Measured against the ~130,800 masked-node
