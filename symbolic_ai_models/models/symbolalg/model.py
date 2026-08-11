@@ -33,7 +33,7 @@ from ...data.tokenizer import SymbolTokenizer
 from ..base import ModelConfig
 from ..registry import register
 from ..symbolic import ABSTAIN, GraphView, RuleBasedModel, Votes
-from .parse import clauses, facts_from_text, tokens
+from ...parsers.primitives.clauses import clauses, facts_from_text, tokens
 
 __all__ = ["SymbolAlgebraModel"]
 

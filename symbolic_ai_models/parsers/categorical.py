@@ -8,7 +8,7 @@ through that reasoner's accuracy, where a miss might be a parse failure or a bad
 inference and the number does not say which.
 
 Wrapping it here separates the two questions. The fragment stays in
-:mod:`symbolic_ai_models.models.syllogism.parser` and its lexicon and is
+:mod:`symbolic_ai_models.parsers.primitives.syllogistic` and its lexicon and is
 imported, not copied, so there is one definition of what counts as a quantifier.
 The work done here is the part the fused parser never needed: putting the logical
 form back onto token offsets.
@@ -32,8 +32,8 @@ from __future__ import annotations
 from typing import Any
 
 from ..data.tokenizer import split_words
-from ..models.syllogism import lexicon
-from ..models.syllogism.parser import (Categorical, Fact, Statement,
+from .primitives import lexicon
+from .primitives.syllogistic import (Categorical, Fact, Statement,
                                        parse_prompt, parse_statement)
 from .base import Constituent, ParseResult, Parser, register
 

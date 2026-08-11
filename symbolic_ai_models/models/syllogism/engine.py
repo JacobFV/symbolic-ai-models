@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from .parser import Categorical, Fact, Statement
+from ...parsers.primitives.syllogistic import Categorical, Fact, Statement
 
 YES, NO, UNKNOWN = "yes", "no", "unknown"
 

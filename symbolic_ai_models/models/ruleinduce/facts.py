@@ -29,7 +29,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Iterable, Iterator, Mapping, Sequence
 
-from ..symbolalg.symbols import Symbol, walk
+from ...parsers.primitives.symbols import Symbol, walk
 
 __all__ = ["Fact", "FactSet", "facts_of", "anchor_frame", "Literal", "Constraint",
            "candidate_literals", "ANY", "Eq", "Sign"]

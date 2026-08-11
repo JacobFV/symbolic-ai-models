@@ -54,11 +54,13 @@ occupies in the term graph.
       the abstraction level works and buys ~1% of a bit (see below)
 - [x] scale test: parser quality vs number of training episodes (the curriculum
       is unbounded, so this curve is free and is the point of the exercise)
-- [ ] **Move the shared parsing primitives down into `parsers/`.** `regex`
-      imports `models/symbolalg/parse.py` and `categorical` imports the
-      syllogism fragment, so `parsers` depends on `models` while `models`
-      depends on `parsers`. Nothing breaks today only because the model-side
-      import is function-local. Parsing code belongs in the parser layer.
+- [x] **Move the shared parsing primitives down into `parsers/`.** Done: the
+      symbol algebra, clause splitter, lexicon and categorical fragment now live
+      in `parsers/primitives/`, the model-side import is a plain top-level one,
+      and `tests/test_layering.py` asserts no file under `parsers/` imports a
+      model. The runtime version of that check does not work — the top-level
+      package imports everything, so it measures the convenience surface rather
+      than the layering — so the check reads the import statements instead.
 
 ### Next, from the design docs in `.old/docs` (ranked)
 

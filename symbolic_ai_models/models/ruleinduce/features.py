@@ -20,12 +20,12 @@ shared terms occupy.
 
 from __future__ import annotations
 
-from ..symbolalg import parse
+from ...parsers.primitives import clauses as parse
 from .facts import FactSet
 
 # The layout rule in practice: symbolic-ai-001 defined this morphology first, so
 # it is imported from there rather than copied or promoted into a shared utils.
-from ..syllogism.lexicon import singular
+from ...parsers.primitives.lexicon import singular
 
 STOP = frozenset(
     "a an the is are was were be been do does did not no-op of to in on at by for "

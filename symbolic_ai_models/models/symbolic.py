@@ -50,6 +50,7 @@ from ..data.batch import SymbolicBatch
 from ..data.curriculum import Episode
 from ..data.graph import NODE_TYPES, TYPE_TO_ID
 from ..data.tokenizer import SymbolTokenizer
+from ..parsers import build as build_parser
 from .base import FitContext, Model, ModelConfig, ModelOutput, N_TYPES
 
 __all__ = ["RuleBasedModel", "GraphView", "Votes", "ABSTAIN"]
@@ -136,7 +137,7 @@ class RuleBasedModel(Model):
         # parser cannot be dropped under an existing reasoner. A reasoner that
         # ignores `self.parser` is unaffected; one that uses it must still work
         # when handed `none`.
-        self.parser = _build_parser(str(cfg.get("parser", "none")))
+        self.parser = build_parser(str(cfg.get("parser", "none")))
         # Registered as buffers so a fitted model saves and reloads like any
         # other, through the same `torch.save(state_dict())` path.
         self.register_buffer("symbol_backoff", torch.zeros(cfg.vocab_size))
@@ -392,21 +393,6 @@ def _collect(votes: Votes, b: int, node: int, rows: list, cols: list,
         cols.append(node)
         syms.append(int(symbol))
         weights.append(float(weight) / total)
-
-
-def _build_parser(name: str):
-    """Resolve a parser by name, imported lazily because the layering is *not*
-    a DAG and this is what keeps it working.
-
-    Two parsers reuse parsing code that still lives under ``models/`` —
-    ``regex`` imports ``symbolalg.parse``, ``categorical`` imports the syllogism
-    fragment — because that code arrived welded to those models. So ``parsers``
-    imports ``models`` at module scope and ``models`` imports ``parsers`` here,
-    inside the function, which is the only reason the cycle does not bite. The
-    real fix is to move those primitives down into ``parsers/``; it is on the
-    roadmap and this comment should shrink when it lands."""
-    from ..parsers import build
-    return build(name)
 
 
 def _log_dirichlet(counts: Mapping[int, float], size: int,

@@ -7,7 +7,7 @@ the only evidence it worked was that ``symbolalg`` worked, which confounds the
 parse with the reasoning over it.
 
 This wraps it and nothing more. The heuristics stay in
-:mod:`symbolic_ai_models.models.symbolalg.parse` and are imported, not copied, so
+:mod:`symbolic_ai_models.parsers.primitives.clauses` and are imported, not copied, so
 there is exactly one clause splitter in the repo and the wrapper cannot drift
 away from the thing it claims to expose. What is new is only the translation into
 a :class:`ParseResult`:
@@ -29,7 +29,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from ..models.symbolalg.parse import (clauses, facts_from_text,
+from .primitives.clauses import (clauses, facts_from_text,
                                       options_from_text, question_of, tokens)
 from .base import Constituent, ParseResult, Parser, register
 

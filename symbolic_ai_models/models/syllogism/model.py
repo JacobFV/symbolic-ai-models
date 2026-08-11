@@ -40,9 +40,9 @@ from ...data.tokenizer import SymbolTokenizer, split_words
 from ..base import ModelConfig
 from ..registry import register
 from ..symbolic import ABSTAIN, GraphView, RuleBasedModel, Votes
-from . import lexicon
+from ...parsers.primitives import lexicon
 from .engine import NO, UNKNOWN, YES, Engine
-from .parser import parse_prompt
+from ...parsers.primitives.syllogistic import parse_prompt
 
 __all__ = ["SyllogismModel"]
 
