@@ -301,7 +301,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     c = sub.add_parser("compare", help="put finished runs side by side")
     c.add_argument("runs", nargs="+")
-    c.add_argument("--sort-by", dest="sort_by", default="lbl lift")
+    c.add_argument("--sort-by", dest="sort_by", default="ans lift")
     c.add_argument("--history", action="store_true",
                    help="show the eval curve of the first run instead")
     c.set_defaults(fn=cmd_compare)

@@ -50,7 +50,7 @@ from ..data.batch import SymbolicBatch
 from ..data.curriculum import Episode
 from ..data.graph import NODE_TYPES, TYPE_TO_ID
 from ..data.tokenizer import SymbolTokenizer
-from .base import Model, ModelConfig, ModelOutput, N_TYPES
+from .base import FitContext, Model, ModelConfig, ModelOutput, N_TYPES
 
 __all__ = ["RuleBasedModel", "GraphView", "Votes", "ABSTAIN"]
 
@@ -136,12 +136,23 @@ class RuleBasedModel(Model):
         self._fitted = False
 
     # ---- fitting -----------------------------------------------------
-    def fit(self, episodes: Sequence[Episode], tok: SymbolTokenizer) -> None:
-        """Fit the shared back-off, then whatever the subclass learns."""
-        self.tok = tok
-        self._fit_backoff(episodes, tok)
-        self.learn(episodes, tok)
+    def fit(self, ctx: FitContext) -> None:
+        """Fit the shared back-off, then whatever the subclass learns.
+
+        ``ctx.steps`` is ignored, and deliberately not reinterpreted as
+        something else: a decision list induced from these episodes is the same
+        list however long you leave it running. What the trainer records is
+        ``steps: 0``, so a row in a comparison table cannot be misread as a
+        model that trained as long as its neighbours.
+        """
+        self.tok = ctx.tok
+        self._fit_backoff(ctx.episodes, ctx.tok)
+        self.learn(ctx.episodes, ctx.tok)
         self._fitted = True
+
+    def fit_on(self, episodes: Sequence[Episode], tok: SymbolTokenizer) -> None:
+        """Fit straight from episodes, for callers with nothing else to say."""
+        self.fit(FitContext(episodes=episodes, tok=tok))
 
     def _fit_backoff(self, episodes: Sequence[Episode], tok: SymbolTokenizer) -> None:
         """A smoothed unigram over everything the training episodes contain.

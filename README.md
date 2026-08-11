@@ -133,6 +133,59 @@ IF slot(1) AND parent_head(parent) THEN copy:peer   [41/44]
 ELSE IF parent_type(record) THEN const:query        [30/38]
 ```
 
+## What is actually graded
+
+Everything is **open-vocabulary** and **teacher-forced**. A model outputs a
+distribution over the whole vocabulary at every position; nothing is ever a
+true/false question and nothing is confined to a list of options.
+
+| | what it predicts | over | reported |
+|---|---|---|---|
+| `lm` | the next token, given the true prefix | the full vocabulary | `token_*` (all positions) and `answer_*` (the answer span only) |
+| `node` | a masked node's label and type | the same vocabulary; 17 types | `label_*`, `type_*`, `label_coverage` |
+| `--curriculum` | which option is right | the episode's own answer set | per-lesson acc / floor / lift |
+
+The third is a *report*, not a separate path: each option is scored as a
+continuation with the same LM head and the best one wins. Nothing in the repo
+has a classifier over choices.
+
+**Read `answer_*`, not `token_*`.** Across the curriculum only **1.4%** of
+scored language-modelling positions are the answer; the other 98.6% is the
+question and the fixed scaffolding around it. The gap is not subtle — a
+back-off n-gram scores `token_lift` **0.77** and `answer_lift` **0.05** on the
+same run, and every network in the sweep holds `token_lift` above 0.65 while
+scoring *negative* `answer_lift`. Undifferentiated, the LM metric measures how well a model reproduces
+"Answer with exactly one of:".
+
+There is **no free generation**. Every number is teacher-forced scoring, which
+is how language models are trained and evaluated; it is not a measure of
+autoregressive decoding, and this repo does not claim to be one.
+
+## Where the vocabulary comes from
+
+Fitted on the **training episodes only** (seeds 0…n), by frequency, with
+nothing external and nothing pretrained:
+
+- 6 specials, 256 byte tokens, then the most frequent pieces;
+- 70% of the budget goes to text pieces, 30% is reserved for whole node labels,
+  because a label has to land on a single id or the masked-node head cannot ask
+  for it;
+- anything out of vocabulary falls back to its UTF-8 bytes, so encoding is
+  lossless in every language the curriculum renders — an English-fitted
+  vocabulary still round-trips Chinese, Turkish and Swahili exactly.
+
+It is neither character-level nor synthetic: it is empirical counts over real
+curriculum text. Two consequences follow from the curriculum inventing
+vocabulary per episode, and both are measured rather than assumed:
+
+- **24.5%** of evaluation text tokens fall back to bytes;
+- **16.2%** of evaluation node labels are out of vocabulary and are **excluded
+  from the label score** — so `label_acc` is an accuracy over the nameable 84%,
+  and the excluded ones are systematically the interesting cases. That share is
+  reported as `label_coverage`. The real fix is a copy/pointer head; `ruleinduce`
+  already has one in effect, since its rules predict pointers rather than
+  symbols.
+
 ## Floors
 
 `langcurriculum` refuses to report an accuracy without a floor, and the same argument applies harder here: masked-node accuracy is dominated by how often the answer was `ident`, and a number that doesn't say so isn't telling you anything. So every metric comes with the score of the best thing that knows only the training distribution, and:
@@ -220,22 +273,24 @@ symbolic-ai-models/
 
 ## What the two families are actually good at
 
-From the smoke sweep (six lessons, 400 steps, tiny models — a wiring check, not a
-result), two things showed up that are worth knowing before you run anything big:
+From the smoke sweep (six lessons, 400 steps, tiny models — a wiring check, not
+a result), three things are worth knowing before running anything big:
 
-- **Counting is a very strong language model here.** `ngram` reached **0.89
-  bits/token** where the best network managed 1.72. Curriculum prose is
-  generated from templates and repeats heavily within an episode, so a
-  back-off model eats it. Any claim that a network "learned the language" has
-  to clear this bar first.
+- **Nothing has learned to answer, and the old metric hid it completely.**
+  Every network holds `token_lift` between 0.65 and 0.73 while scoring
+  **negative** `answer_lift`; `ngram` reaches `token_lift` 0.77 on
+  `answer_lift` 0.05. They reproduce the scaffolding and know essentially
+  nothing. This is the single best argument for reading `answer_*`.
+- **Induced rules beat networks on structure.** `ruleinduce` reaches 0.996
+  node-type accuracy — 0.898 lift — on ~75 discrete parameters, against 1.78M
+  for the best network, and the model is fourteen readable rules.
 - **The masked-node floor is brutal, and rightly so.** A structure-only lookup
   table scores 0.96 on types, and most models — both families — sit below it
   after a short run. Negative lift is the report working.
 
-The symbolic models are also where the *shape* of a result is legible: `synth`
-is bimodal by construction, strong where a short program generates the sequence
-and useless on prose, and averaging those two halves into one number tells you
-nothing. Read `symbolic_ai_models eval <run> --curriculum` per lesson.
+`synth` is bimodal by construction: strong where a short program generates the
+sequence, useless on prose. Averaging those halves tells you nothing, so read
+`symbolic-ai-models eval <run> --curriculum` per lesson.
 
 ## Notes
 

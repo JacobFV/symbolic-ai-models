@@ -64,7 +64,20 @@ class MaskedNode(Task):
                           counts={**label_counts, **type_counts})
 
     def summarize(self, totals: Totals) -> dict[str, float]:
-        return {**ratio(totals, "label"), **ratio(totals, "type")}
+        """Both heads, plus how much of the masked set the label score covers.
+
+        Every masked node has a type target, but only a node whose label the
+        vocabulary can name has a label target — and the ones it cannot name are
+        systematically the *interesting* ones, the per-episode invented symbols.
+        About 16% of masked labels are dropped this way on the full curriculum,
+        so ``label_acc`` is an accuracy over the nameable 84% and is optimistic
+        for exactly that reason. Reporting the coverage is the least that can be
+        done about it short of giving the models a copy mechanism.
+        """
+        out = {**ratio(totals, "label"), **ratio(totals, "type")}
+        scored, masked = out.get("label_n", 0.0), out.get("type_n", 0.0)
+        out["label_coverage"] = scored / masked if masked else float("nan")
+        return out
 
     def floor(self, episodes: Sequence[Episode], tok: SymbolTokenizer,
               train: Sequence[Episode]) -> dict[str, float]:

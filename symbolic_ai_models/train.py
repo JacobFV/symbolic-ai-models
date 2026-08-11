@@ -26,9 +26,11 @@ import numpy as np
 import torch
 
 from .data.batch import SymbolicBatch
+from .data.sampler import batches
 from .data.curriculum import Episode, generate, read_jsonl, resolve_lessons
 from .data.tokenizer import SymbolTokenizer
 from .models import Model, ModelConfig, RuleBasedModel, build
+from .models.base import FitContext, autocast
 from .tasks import Task, Totals, make_task
 from .tasks.base import lift
 
@@ -124,31 +126,6 @@ def load_data(cfg: TrainConfig) -> tuple[list[Episode], list[Episode]]:
             list(generate(lessons, n=cfg.n_eval, seed0=1_000_000, **kw)))
 
 
-def batches(episodes: Sequence[Episode], task: Task, tok: SymbolTokenizer, *,
-            batch_size: int, rng: random.Random, shuffle: bool = True,
-            bucket: int = 8) -> Iterator[SymbolicBatch]:
-    """Yield batches, bucketed by length within a shuffled window.
-
-    Episode lengths across 179 lessons vary by more than an order of magnitude,
-    and batching them at random means most of a batch is padding. Sorting inside
-    a window of ``bucket`` batches keeps the sampling close to uniform while
-    cutting the padding sharply — it is a speed measure, and it changes which
-    episodes share a batch but not which episodes are seen.
-    """
-    order = list(range(len(episodes)))
-    if shuffle:
-        rng.shuffle(order)
-    window = batch_size * max(bucket, 1)
-    for start in range(0, len(order), window):
-        chunk = order[start:start + window]
-        chunk.sort(key=lambda i: len(episodes[i].graph) if task.name == "node"
-                   else len(episodes[i].text))
-        for b in range(0, len(chunk), batch_size):
-            picked = [episodes[i] for i in chunk[b:b + batch_size]]
-            if picked:
-                yield task.collate(picked, tok)
-
-
 def _task_kwargs(cfg: TrainConfig, name: str) -> dict[str, Any]:
     if name == "lm":
         return {"max_len": cfg.max_len}
@@ -186,26 +163,12 @@ def evaluate_model(model: Model, tasks: dict[str, Task],
         for batch in batches(episodes, task, tok, batch_size=batch_size,
                              rng=random.Random(0), shuffle=False):
             batch = batch.to(device)
-            with _autocast(device, amp):
+            with autocast(device, amp):
                 result = task.compute(model(batch), batch)
             totals.add(result.counts)
         out[name] = task.summarize(totals)
     model.train()
     return out
-
-
-def _autocast(device: torch.device, enabled: bool):
-    if device.type == "cuda" and enabled:
-        return torch.autocast("cuda", dtype=torch.bfloat16)
-    return torch.autocast("cpu", enabled=False)
-
-
-def _lr_at(step: int, cfg: TrainConfig) -> float:
-    if step < cfg.warmup:
-        return cfg.lr * (step + 1) / max(cfg.warmup, 1)
-    progress = (step - cfg.warmup) / max(cfg.steps - cfg.warmup, 1)
-    cosine = 0.5 * (1 + math.cos(math.pi * min(progress, 1.0)))
-    return cfg.lr * (cfg.min_lr_ratio + (1 - cfg.min_lr_ratio) * cosine)
 
 
 def _add_lift(metrics: dict[str, dict[str, float]],
@@ -252,127 +215,71 @@ def train(cfg: TrainConfig, *, progress=None) -> dict[str, Any]:
     floors = {n: t.floor(eval_eps, tok, train_eps) for n, t in tasks.items()}
 
     model = make_model(cfg, len(tok))
-    if isinstance(model, RuleBasedModel):
-        return _fit_rule_based(cfg, model, tasks, floors, train_eps, eval_eps,
-                               tok, out, progress)
-    model = model.to(device)
-    opt = torch.optim.AdamW(model.parameters(), lr=cfg.lr,
-                            weight_decay=cfg.weight_decay, betas=(0.9, 0.95))
-
+    is_rule_based = isinstance(model, RuleBasedModel)
+    run_device = torch.device("cpu") if is_rule_based else device
     history: list[dict[str, Any]] = []
-    rng = random.Random(cfg.seed)
-    streams = {n: _cycle(train_eps, tasks[n], tok, cfg, rng) for n in cfg.tasks}
     started = time.time()
 
-    for step in range(cfg.steps):
-        for group in opt.param_groups:
-            group["lr"] = _lr_at(step, cfg)
+    def record(step: int) -> None:
+        """Evaluate and append to the history. The model calls this when it has
+        something worth recording; a one-pass learner never does, and the final
+        evaluation below covers it either way."""
+        metrics = _add_lift(evaluate_model(model, tasks, eval_eps, tok,
+                                           batch_size=cfg.batch_size,
+                                           device=run_device,
+                                           amp=cfg.amp and not is_rule_based), floors)
+        history.append({"step": step, "train_loss": dict(last_losses),
+                        "eval": metrics, "seconds": time.time() - started})
+        _write(out / "history.json", history)
+        if progress:
+            progress(max(step - 1, 0), cfg.steps, dict(last_losses), 0.0, metrics)
 
-        opt.zero_grad(set_to_none=True)
-        losses: dict[str, float] = {}
-        total = torch.zeros((), device=device)
-        for name, task in tasks.items():
-            batch = next(streams[name]).to(device)
-            with _autocast(device, cfg.amp):
-                result = task.compute(model(batch), batch)
-            weighted = result.loss * cfg.task_weights.get(name, 1.0)
-            weighted.backward()
-            losses[name] = float(result.loss.detach())
-            total = total + weighted.detach()
+    last_losses: dict[str, float] = {}
 
-        grad_norm = torch.nn.utils.clip_grad_norm_(model.parameters(), cfg.grad_clip)
-        opt.step()
+    def note(step: int, total: int, losses: dict[str, float], grad: float) -> None:
+        last_losses.clear()
+        last_losses.update(losses)
+        if progress:
+            progress(step, total, losses, grad)
 
-        if progress and (step % cfg.log_every == 0 or step == cfg.steps - 1):
-            progress(step, cfg.steps, losses, float(grad_norm))
+    # Hand over the data, the tasks and the budget. How to learn from them is
+    # the model's business — see `Model.fit`.
+    model.fit(FitContext(
+        episodes=train_eps, tok=tok, tasks=tasks, task_weights=cfg.task_weights,
+        steps=cfg.steps, batch_size=cfg.batch_size, lr=cfg.lr,
+        min_lr_ratio=cfg.min_lr_ratio, warmup=cfg.warmup,
+        weight_decay=cfg.weight_decay, grad_clip=cfg.grad_clip,
+        eval_every=cfg.eval_every, log_every=cfg.log_every, seed=cfg.seed,
+        amp=cfg.amp and not is_rule_based, device=run_device,
+        on_step=note, on_eval=record))
 
-        last = step == cfg.steps - 1
-        if (step + 1) % cfg.eval_every == 0 or last:
-            metrics = _add_lift(evaluate_model(model, tasks, eval_eps, tok,
-                                               batch_size=cfg.batch_size,
-                                               device=device, amp=cfg.amp), floors)
-            history.append({"step": step + 1, "train_loss": losses,
-                            "eval": metrics, "seconds": time.time() - started})
-            _write(out / "history.json", history)
-            if progress:
-                progress(step, cfg.steps, losses, float(grad_norm), metrics)
+    if not history:                       # a learner that reported nothing
+        record(cfg.steps if not is_rule_based else 0)
 
     torch.save({"model": model.state_dict(), "config": cfg.to_dict(),
                 "vocab_size": len(tok)}, out / "model.pt")
+    extra: dict[str, Any] = {}
+    if hasattr(model, "abstention_rate"):
+        extra["abstention_rate"] = float(model.abstention_rate)
+    if hasattr(model, "render"):
+        (out / "rules.txt").write_text(model.render(), encoding="utf-8")
+
     summary = {
         "config": cfg.to_dict(),
         "model": cfg.model,
         "family": model.family,
-        "steps": cfg.steps,
+        "steps": 0 if is_rule_based else cfg.steps,
         "parameters": model.n_parameters(),
         "n_train": len(train_eps), "n_eval": len(eval_eps),
         "vocab_size": len(tok),
         "floors": floors,
         "final": history[-1]["eval"] if history else {},
         "seconds": time.time() - started,
-        "device": str(device),
+        "device": str(run_device),
+        **extra,
     }
     _write(out / "summary.json", summary)
     return summary
-
-
-def _fit_rule_based(cfg: TrainConfig, model: "RuleBasedModel",
-                    tasks: dict[str, Task], floors: dict[str, dict[str, float]],
-                    train_eps: Sequence[Episode], eval_eps: Sequence[Episode],
-                    tok: SymbolTokenizer, out: Path, progress) -> dict[str, Any]:
-    """Fit once, evaluate once, write the same artefacts a trained run writes.
-
-    ``steps`` is meaningless here and is not silently reinterpreted as
-    something else: a decision list is induced from the training episodes in one
-    pass, and running it again would produce the same list. The summary records
-    ``steps: 0`` so that a table row cannot be misread as a model that trained
-    for as long as its neighbours.
-    """
-    started = time.time()
-    if progress:
-        print_fn = progress
-        print_fn(0, 1, {"fit": 0.0}, 0.0)
-    model.fit(train_eps, tok)
-
-    # CPU throughout: these models are Python, and moving them to a GPU would
-    # only move the logits tensor there after the work was already done.
-    metrics = _add_lift(evaluate_model(model, tasks, eval_eps, tok,
-                                       batch_size=cfg.batch_size,
-                                       device=torch.device("cpu"), amp=False), floors)
-    history = [{"step": 0, "train_loss": {}, "eval": metrics,
-                "seconds": time.time() - started}]
-    _write(out / "history.json", history)
-    torch.save({"model": model.state_dict(), "config": cfg.to_dict(),
-                "vocab_size": len(tok)}, out / "model.pt")
-
-    extra: dict[str, Any] = {}
-    if hasattr(model, "abstention_rate"):
-        extra["abstention_rate"] = float(model.abstention_rate)
-    if hasattr(model, "render"):
-        (out / "rules.txt").write_text(model.render(), encoding="utf-8")
-    summary = {
-        "config": cfg.to_dict(), "model": cfg.model, "family": model.family,
-        "parameters": model.n_parameters(), "steps": 0,
-        "n_train": len(train_eps), "n_eval": len(eval_eps), "vocab_size": len(tok),
-        "floors": floors, "final": metrics,
-        "seconds": time.time() - started, "device": "cpu", **extra,
-    }
-    _write(out / "summary.json", summary)
-    if progress:
-        progress(0, 1, {"fit": 0.0}, 0.0, metrics)
-    return summary
-
-
-def _cycle(episodes: Sequence[Episode], task: Task, tok: SymbolTokenizer,
-           cfg: TrainConfig, rng: random.Random) -> Iterator[SymbolicBatch]:
-    """An endless reshuffled stream of batches for one task."""
-    while True:
-        empty = True
-        for batch in batches(episodes, task, tok, batch_size=cfg.batch_size, rng=rng):
-            empty = False
-            yield batch
-        if empty:                                            # pragma: no cover
-            raise RuntimeError(f"task {task.name} produced no batches")
 
 
 def build_tokenizer(cfg: TrainConfig, episodes: Sequence[Episode]) -> SymbolTokenizer:

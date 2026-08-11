@@ -34,18 +34,41 @@ whether training on one helps the other.
 from __future__ import annotations
 
 import math
+import random
 from dataclasses import dataclass, field
-from typing import Any
+from typing import TYPE_CHECKING, Any, Callable, Mapping, Sequence
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
 from ..data.batch import N_RELATIONS, SymbolicBatch
+from ..data.curriculum import Episode
 from ..data.graph import NODE_TYPES
 
+if TYPE_CHECKING:                     # avoids a cycle: tasks imports ModelOutput
+    from ..data.tokenizer import SymbolTokenizer
+
 __all__ = ["ModelConfig", "Model", "NeuralModel", "SymbolicModel", "ModelOutput",
-           "Attention", "FeedForward", "RelationBias", "attention_bias", "N_TYPES"]
+           "FitContext", "Attention", "FeedForward", "RelationBias",
+           "attention_bias", "autocast", "N_TYPES"]
+
+
+def autocast(device: torch.device, enabled: bool):
+    """bfloat16 on CUDA, nothing on CPU. Shared so the loop and the evaluator
+    cannot disagree about the precision a number was computed in."""
+    if device.type == "cuda" and enabled:
+        return torch.autocast("cuda", dtype=torch.bfloat16)
+    return torch.autocast("cpu", enabled=False)
+
+
+def _lr_at(step: int, ctx: "FitContext") -> float:
+    """Linear warmup into a cosine decay, floored at ``min_lr_ratio``."""
+    if step < ctx.warmup:
+        return ctx.lr * (step + 1) / max(ctx.warmup, 1)
+    progress = (step - ctx.warmup) / max(ctx.steps - ctx.warmup, 1)
+    cosine = 0.5 * (1 + math.cos(math.pi * min(progress, 1.0)))
+    return ctx.lr * (ctx.min_lr_ratio + (1 - ctx.min_lr_ratio) * cosine)
 
 N_TYPES = len(NODE_TYPES)
 
@@ -197,13 +220,55 @@ class FeedForward(nn.Sequential):
 # ---------------------------------------------------------------------------
 # the model
 # ---------------------------------------------------------------------------
+@dataclass
+class FitContext:
+    """Everything a model might need in order to learn, and nothing about *how*.
+
+    The trainer fills this in and hands it over. What happens next belongs to
+    the model: :class:`NeuralModel` runs the gradient loop below, a rule-based
+    model counts and induces, and anything else — evolutionary search, EM, a
+    solver — implements ``fit`` its own way without the trainer needing to know.
+    That is the point of the split, and it is why the optimiser lives here in
+    ``models/`` rather than in ``train.py``.
+
+    ``on_step`` and ``on_eval`` are the two hooks a learner may call if it has
+    something to report. Neither is required: a model that fits in one pass
+    calls neither and still produces the same artefacts.
+    """
+
+    episodes: Sequence[Episode]
+    tok: "SymbolTokenizer"
+    tasks: Mapping[str, Any] = field(default_factory=dict)
+    task_weights: Mapping[str, float] = field(default_factory=dict)
+
+    steps: int = 0
+    batch_size: int = 16
+    lr: float = 3e-4
+    min_lr_ratio: float = 0.1
+    warmup: int = 100
+    weight_decay: float = 0.01
+    grad_clip: float = 1.0
+    eval_every: int = 250
+    log_every: int = 50
+    seed: int = 0
+    amp: bool = True
+    device: torch.device = field(default_factory=lambda: torch.device("cpu"))
+
+    #: ``(step, total, losses, grad_norm) -> None``
+    on_step: Callable[..., None] | None = None
+    #: ``(step) -> None`` — the trainer evaluates and records history
+    on_eval: Callable[[int], None] | None = None
+
+
 class Model(nn.Module):
     """The interface every architecture answers to, neural or not.
 
-    One method matters: ``forward(batch) -> ModelOutput``. Whether the logits
-    behind it came from attention or from a decision list is exactly the
-    question the repo is asking, and nothing downstream of here is allowed to
-    care.
+    Two methods matter. ``forward(batch) -> ModelOutput`` says what the model
+    predicts; ``fit(ctx)`` says how it came to predict that. Whether the logits
+    behind it came from attention or from a decision list, and whether the
+    fitting was ten thousand gradient steps or one pass of counting, is exactly
+    the question the repo is asking — so the trainer does neither and only
+    supplies the data, the tasks and the budget.
     """
 
     #: registry name, set by ``@register``
@@ -213,6 +278,10 @@ class Model(nn.Module):
     family: str = "neural"
 
     def forward(self, batch: SymbolicBatch) -> "ModelOutput":
+        raise NotImplementedError
+
+    def fit(self, ctx: FitContext) -> None:
+        """Learn from ``ctx.episodes``. Subclasses decide what that means."""
         raise NotImplementedError
 
     def n_parameters(self, trainable_only: bool = True) -> int:
@@ -278,6 +347,53 @@ class NeuralModel(Model):
         h = self.out_norm(h)
         return ModelOutput(symbol_logits=self.symbol_head(h),
                            type_logits=self.type_head(h), hidden=h)
+
+    # ---- how a network learns ----------------------------------------
+    def fit(self, ctx: FitContext) -> None:
+        """AdamW, cosine decay, gradient clipping — the plain recipe.
+
+        It is deliberately unremarkable, because it is a control rather than a
+        contribution: every network in the repo inherits *this* method, so two
+        architectures differ in what they compute and not in how they were
+        tuned. A model that wants a different recipe overrides this and says so.
+
+        Both objectives are stepped together rather than alternated. Alternating
+        makes the last task's gradient the one the model most recently moved on,
+        which shows up as a sawtooth in whichever metric was not updated last
+        and makes two runs with different task orders incomparable.
+        """
+        from ..data.sampler import cycle
+
+        self.to(ctx.device).train()
+        opt = torch.optim.AdamW(self.parameters(), lr=ctx.lr,
+                                weight_decay=ctx.weight_decay, betas=(0.9, 0.95))
+        rng = random.Random(ctx.seed)
+        streams = {n: cycle(ctx.episodes, t, ctx.tok,
+                            batch_size=ctx.batch_size, rng=rng)
+                   for n, t in ctx.tasks.items()}
+
+        for step in range(ctx.steps):
+            for group in opt.param_groups:
+                group["lr"] = _lr_at(step, ctx)
+
+            opt.zero_grad(set_to_none=True)
+            losses: dict[str, float] = {}
+            for name, task in ctx.tasks.items():
+                batch = next(streams[name]).to(ctx.device)
+                with autocast(ctx.device, ctx.amp):
+                    result = task.compute(self(batch), batch)
+                (result.loss * ctx.task_weights.get(name, 1.0)).backward()
+                losses[name] = float(result.loss.detach())
+
+            grad = torch.nn.utils.clip_grad_norm_(self.parameters(), ctx.grad_clip)
+            opt.step()
+
+            last = step == ctx.steps - 1
+            if ctx.on_step and (step % ctx.log_every == 0 or last):
+                ctx.on_step(step, ctx.steps, losses, float(grad))
+            if ctx.on_eval and ((step + 1) % ctx.eval_every == 0 or last):
+                ctx.on_eval(step + 1)
+                self.train()
 
 
 #: The old name for :class:`NeuralModel`, kept because "symbolic model" now

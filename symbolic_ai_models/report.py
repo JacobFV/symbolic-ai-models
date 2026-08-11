@@ -16,12 +16,20 @@ from typing import Any, Iterable, Sequence
 __all__ = ["load_summaries", "comparison_table", "run_row", "history_table"]
 
 #: The metrics worth putting in a comparison, in the order they belong in.
+#:
+#: ``ans`` comes before ``tok`` on purpose. Only about 1.4% of scored
+#: language-modelling positions are the answer; the rest is the question and the
+#: fixed scaffolding around it, and a model can hold a large ``tok lift`` purely
+#: by reproducing boilerplate. The answer columns are the ones that say whether
+#: anything was understood, so they are read first.
 COLUMNS = (
+    ("lm", "answer_acc", "ans acc", "{:.3f}"),
+    ("lm", "answer_lift", "ans lift", "{:.3f}"),
     ("lm", "token_bits", "bits/tok", "{:.3f}"),
-    ("lm", "token_floor_bits", " floor", "{:.3f}"),
-    ("lm", "token_acc", "tok acc", "{:.3f}"),
+    ("lm", "token_lift", "tok lift", "{:.3f}"),
     ("node", "label_acc", "lbl acc", "{:.3f}"),
     ("node", "label_lift", "lbl lift", "{:.3f}"),
+    ("node", "label_coverage", "lbl cov", "{:.2f}"),
     ("node", "type_acc", "typ acc", "{:.3f}"),
     ("node", "type_lift", "typ lift", "{:.3f}"),
 )
@@ -62,7 +70,7 @@ def _fmt(value: Any, spec: str) -> str:
     return spec.format(value) if isinstance(value, (int, float)) else str(value)
 
 
-def comparison_table(summaries: Sequence[dict[str, Any]], sort_by: str = "lbl lift") -> str:
+def comparison_table(summaries: Sequence[dict[str, Any]], sort_by: str = "ans lift") -> str:
     """One row per run. Runs missing a task simply show ``-`` in its columns."""
     if not summaries:
         return "no finished runs found (a run writes summary.json when it completes)"
@@ -89,6 +97,9 @@ def comparison_table(summaries: Sequence[dict[str, Any]], sort_by: str = "lbl li
     lines.append("lift = (score - floor) / (1 - floor); 0 is the prior, 1 is perfect")
     lines.append("params: neural = tensor weights, rule-based = discrete rules "
                  "and counts. The two are not comparable and are not meant to be.")
+    lines.append("ans = the answer span alone (~1.4% of positions); tok = all of "
+                 "them, so tok lift is mostly boilerplate. lbl cov = share of "
+                 "masked labels the vocabulary can name and the score covers.")
     return "\n".join(lines)
 
 

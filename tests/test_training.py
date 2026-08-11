@@ -12,7 +12,8 @@ import torch
 from symbolic_ai_models.agent import evaluate_choices, as_text_agent, score_choices
 from symbolic_ai_models.data.curriculum import generate
 from symbolic_ai_models.report import comparison_table, load_summaries
-from symbolic_ai_models.tasks import make_task
+from symbolic_ai_models.models import ModelConfig, build
+from symbolic_ai_models.tasks import Totals, make_task
 from symbolic_ai_models.train import TrainConfig, build_tokenizer, load_run, train
 
 LESSONS = "unification,symbol_grounding,context_free_language"
@@ -173,3 +174,72 @@ def test_text_agent_recovers_the_options_from_the_prompt(finished_run, episodes)
     for ep in episodes:
         answer = agent(ep.prompt)
         assert answer in ep.choices, f"{ep.lesson_id}: {answer!r} not an option"
+
+
+# ---- the answer span ------------------------------------------------------
+def test_answer_positions_are_marked_and_scored_apart(episodes):
+    """The LM metric has to separate the answer from the boilerplate.
+
+    Only ~1.4% of scored positions across the curriculum are the answer; the
+    rest is the question and the fixed scaffolding around it. Without the split,
+    `token_bits` measures template reproduction and a model can look excellent
+    on it while never getting an answer right.
+    """
+    from symbolic_ai_models.data.batch import collate_text
+    cfg = small_config(Path("."))
+    tok = build_tokenizer(cfg, episodes)
+    b = collate_text(episodes, tok, max_len=256)
+    assert b.answer_mask is not None and b.answer_mask.any()
+    # Far fewer answer positions than scored positions, and every marked one
+    # really does have a target.
+    scored = (b.target_tokens >= 0)
+    assert int(b.answer_mask.sum()) < int(scored.sum())
+    assert bool((scored | ~b.answer_mask).all()), "a marked position with no target"
+    # What is marked is genuinely the answer's own tokens. Decoded, not joined:
+    # an invented name like "Frank" is usually out of vocabulary and arrives as
+    # its UTF-8 bytes, so the ids are only text again on the way out.
+    for i, ep in enumerate(episodes):
+        got = b.target_tokens[i][b.answer_mask[i]].tolist()
+        assert tok.decode(got).strip() == ep.answer.strip()
+
+
+def test_marking_the_answer_does_not_change_the_input(episodes):
+    """`answer_mask` is reporting only — the sequence must be untouched."""
+    from symbolic_ai_models.data.batch import collate_text
+    cfg = small_config(Path("."))
+    tok = build_tokenizer(cfg, episodes)
+    b = collate_text(episodes, tok, max_len=512)
+    for i, ep in enumerate(episodes):
+        ids = b.tokens[i][b.pad_mask[i]].tolist()
+        assert tok.decode(ids) == ep.text
+
+
+def test_answer_metrics_have_their_own_floor(episodes):
+    """Answers come from a narrower distribution than prose and need their own."""
+    cfg = small_config(Path("."))
+    tok = build_tokenizer(cfg, episodes)
+    floor = make_task("lm", max_len=256).floor(episodes, tok, episodes)
+    for key in ("answer_acc", "answer_bits", "token_acc", "token_bits"):
+        assert key in floor
+    # It is fitted on answers alone: the count must be exactly the answer tokens.
+    expected = sum(len(tok.encode(ep.answer)) for ep in episodes)
+    assert floor["answer_n"] == expected
+    # And it is a different distribution from the text as a whole — in practice
+    # a *harder* one, since answers are largely the per-episode invented names
+    # while the prose is mostly recurring boilerplate.
+    assert floor["answer_bits"] != floor["token_bits"]
+
+
+def test_node_report_says_how_much_it_covers(episodes):
+    """`label_acc` is an accuracy over the nameable labels; say which share."""
+    cfg = small_config(Path("."))
+    tok = build_tokenizer(cfg, episodes)
+    task = make_task("node", max_nodes=64)
+    totals = Totals()
+    batch = task.collate(episodes, tok)
+    model = build("ngram", ModelConfig(vocab_size=len(tok), d_model=32,
+                                       n_layers=1, n_heads=2, d_ff=32))
+    model.fit_on(episodes, tok)
+    totals.add(task.compute(model(batch), batch).counts)
+    out = task.summarize(totals)
+    assert 0.0 <= out["label_coverage"] <= 1.0

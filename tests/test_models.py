@@ -56,7 +56,7 @@ def make(name: str, fixtures, cfg):
     episodes, tok = fixtures
     model = build(name, cfg)
     if isinstance(model, RuleBasedModel):
-        model.fit(episodes, tok)
+        model.fit_on(episodes, tok)
     return model.eval()
 
 
@@ -259,7 +259,7 @@ def test_fitting_is_deterministic(name, fixtures, cfg):
     outs = []
     for _ in range(2):
         model = build(name, cfg)
-        model.fit(episodes, tok)
+        model.fit_on(episodes, tok)
         outs.append(model.eval()(batch).symbol_logits)
     assert torch.allclose(outs[0], outs[1], atol=1e-6)
 
@@ -274,7 +274,7 @@ def test_abstention_lands_exactly_on_the_backoff(fixtures, cfg):
 
     episodes, tok = fixtures
     model = _Silent(cfg)
-    model.fit(episodes, tok)
+    model.fit_on(episodes, tok)
     out = model(collate_text(episodes[:2], tok))
     expected = model.symbol_backoff
     assert torch.allclose(out.symbol_logits[0, 0], expected, atol=1e-5)
