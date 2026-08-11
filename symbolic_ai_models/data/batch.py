@@ -343,4 +343,11 @@ def collate_graph(episodes: Sequence[Episode], tok: SymbolTokenizer, *,
         causal=False, rel=rel, target_tokens=tgt_tok, target_types=tgt_typ,
         target_source=tgt_src, label_group=lab_grp,
         meta={"task": "node", "n_masked": n_masked,
-              "lesson_ids": [ep.lesson_id for ep in episodes]})
+              "lesson_ids": [ep.lesson_id for ep in episodes],
+              # The prompt, and deliberately not the answer. Audited before it
+              # was added: `shortcuts.node_text_leak` finds the prompt names the
+              # hidden symbol about 57% of the time it is absent from the graph
+              # and pins it down 0.000% of the time, so it carries the symbol
+              # without carrying its position. The answer string would carry
+              # both.
+              "prompts": [ep.prompt for ep in episodes]})

@@ -74,7 +74,8 @@ def _relation(view: GraphView, i: int, j: int) -> str:
     return "other"
 
 
-def _pair_features(view: GraphView, i: int, j: int) -> tuple:
+def _pair_features(view: GraphView, i: int, j: int, *,
+                   prose: bool = True) -> tuple:
     """What might make `i` and `j` the same symbol.
 
     Three near-independent things: how they are related, how far apart they are,
@@ -91,13 +92,21 @@ def _pair_features(view: GraphView, i: int, j: int) -> tuple:
     # already conditioned on the query and this was not.
     query = ((view.types[pi] if pi >= 0 and view.types[pi] else "ROOT"),
              min(view.slot[i], 6))
-    return (
+    # How loudly the episode's prose talks about the candidate. Audited before
+    # use: the prompt names a hidden symbol without ever locating it, so this
+    # reads content rather than the answer. Bucketed rather than raw, because
+    # naive Bayes over a count would give a symbol mentioned nine times nine
+    # times the evidence of one mentioned once, which is not what the signal is.
+    said = view.mentions(j)
+    said = -1 if said < 0 else min(said, 3)
+    base = (
         ("rel", rel),
         ("dist", dist),
         ("dir", delta > 0),
         ("query_rel", (query, rel)),
         ("query_dist", (query, dist)),
     )
+    return base + (("said", said),) if prose else base
 
 
 @register("corefer", doc="Pointer over nodes, keyed on learned coreference evidence.")
@@ -155,16 +164,19 @@ class CoreferModel(RuleBasedModel):
         self.prior = math.log(n_pos / n_neg)
 
     # ---- prediction ---------------------------------------------------
-    def _score(self, view: GraphView, i: int, j: int) -> float:
+    def _score(self, view: GraphView, i: int, j: int, *,
+               prose: bool = True) -> float:
         return self.prior + sum(self.weights.get(f, 0.0)
-                                for f in _pair_features(view, i, j))
+                                for f in _pair_features(view, i, j, prose=prose))
 
-    def source_votes(self, view: GraphView) -> dict[int, Votes]:
+    def source_votes(self, view: GraphView,
+                     prose: bool = True) -> dict[int, Votes]:
         out: dict[int, Votes] = {}
         if not self.weights:
             return out
         for i in view.hidden:
-            scores = {j: self._score(view, i, j) for j in range(len(view))
+            scores = {j: self._score(view, i, j, prose=prose)
+                      for j in range(len(view))
                       if j != i and view.labels[j] is not None}
             if not scores:
                 continue
@@ -197,6 +209,14 @@ class CoreferModel(RuleBasedModel):
         """
         out: dict[int, tuple[Votes, Votes]] = {}
         pointers = self.source_votes(view)
+        # The type head points *without* the prose feature, and the reason is
+        # prior to the measurement: how often a symbol is mentioned is a fact
+        # about that symbol's identity, and the type head is asking what kind of
+        # node sits here, not which thing it names. Two nodes of the same type
+        # routinely differ wildly in how much the episode talks about them.
+        # Measured afterwards, it is also large: sharing one pointer costs the
+        # type head 0.174 -> 0.004 lift while the label head gains.
+        type_pointers = self.source_votes(view, prose=False)
         for i in view.hidden:
             vote = pointers.get(i)
             if vote is None:
@@ -204,11 +224,13 @@ class CoreferModel(RuleBasedModel):
                 continue
             weights, confidence = vote
             labels: dict[int, float] = collections.defaultdict(float)
-            types: dict[int, float] = collections.defaultdict(float)
             for j, w in weights.items():
                 label = view.labels[j]
                 if label is not None:
                     labels[int(label)] += w
+            types: dict[int, float] = collections.defaultdict(float)
+            type_vote = type_pointers.get(i)
+            for j, w in (type_vote[0].items() if type_vote else ()):
                 kind = view.types[j]
                 if kind:
                     types[TYPE_TO_ID[kind]] += w

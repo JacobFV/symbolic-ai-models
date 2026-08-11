@@ -43,6 +43,8 @@ import math
 from dataclasses import dataclass
 from typing import Any, Iterable, Mapping, Sequence
 
+import re
+
 import numpy as np
 import torch
 
@@ -85,9 +87,26 @@ class GraphView:
     rel: np.ndarray
     hidden: list[int]
     tok: SymbolTokenizer
+    #: The episode's prompt, or "" when the collator supplied none. The answer
+    #: is never here: it names the hidden symbol *and* locates it, which the
+    #: prompt does not (see `shortcuts.node_text_leak`).
+    text: str = ""
 
     def __len__(self) -> int:
         return len(self.labels)
+
+    def mentions(self, i: int) -> int:
+        """How often node ``i``'s symbol occurs in the prompt, or -1 if hidden.
+
+        Prompt frequency picks the right copy source over a random wrong one at
+        AUC 0.621 — weak on its own, and the four pointers are separated by only
+        0.023 of copy lift, so weak is not nothing here.
+        """
+        word = self.word(i)
+        if word is None or not self.text:
+            return -1
+        return len(re.findall(r"\b" + re.escape(word) + r"\b", self.text,
+                              flags=re.IGNORECASE))
 
     def word(self, i: int) -> str | None:
         """The label of node ``i`` as text, or ``None`` if it is hidden."""
@@ -575,7 +594,8 @@ class RuleBasedModel(Model):
             types=[None if types[i] == mask_id else NODE_TYPES[types[i]]
                    for i in range(n)],
             parent=parent, slot=slot, depth=batch.depth[b, :n].tolist(),
-            rel=rel, hidden=hidden, tok=self.tok)
+            rel=rel, hidden=hidden, tok=self.tok,
+            text=((batch.meta or {}).get("prompts") or [""] * (b + 1))[b])
 
     @staticmethod
     def _mix(backoff: torch.Tensor, shape: tuple[int, int], conf: np.ndarray,
