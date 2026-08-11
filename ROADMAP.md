@@ -97,6 +97,40 @@ occupies in the term graph.
   be the explanation here -- it only reaches the 10-15% of nodes where these
   models abstain, and it would not produce identical predictions on the rest.
 
+- **Prose frequency predicts the copy source, weakly, and my first measurement
+  of it had the sign backwards.** All four pointers key on tree shape alone and
+  none reads the text, so the question is whether the text would help.
+
+  Measured on **training** episodes only: for each masked node, compare the
+  prompt-frequency of a correct source against one randomly drawn wrong
+  candidate. Correct is more frequent **56.2%**, less **32.0%**, tied 11.8% —
+  an AUC of **0.621** against 0.5 for no signal. Real, and modest.
+
+  The first version of this measurement compared the *maximum* frequency over
+  all correct candidates against the maximum over all wrong ones and reported
+  that the correct source was less frequent 73.9% of the time. That is an
+  artefact: the wrong-candidate set is far larger, and a maximum over more draws
+  is larger for that reason alone. The bias produced a confident result with the
+  wrong sign, from data that actually says the opposite.
+
+## Open questions
+
+- **Does giving a node-task model the prompt text leak the answer?** No model can
+  read prose today: `collate_graph` carries no text, so `GraphView` has none.
+  Adding it is the obvious next step for a pointer, and it is not obviously safe.
+
+  The hidden node's symbol appears somewhere in the prompt about **89.6%** of the
+  time. That is not automatically a leak — the same symbol is usually also on a
+  visible *node* (71.9%), and the question is which node, not which symbol, so
+  frequency alone reveals no position. But for the ~28% of masked nodes whose
+  label appears nowhere else in the graph, the prompt may hand over a symbol
+  nothing else in the input could name, and the floor is structure-only and
+  cannot use it. That would move the comparison, not just the score.
+
+  Resolve it with `shortcuts.py`, which exists to audit exactly this, *before*
+  plumbing text into the node batch — not after, when the number will be
+  attractive and the audit inconvenient.
+
 ## Scope
 
 The **symbolic models are the subject**. The neural half exists as a control and
