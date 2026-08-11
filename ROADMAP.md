@@ -87,7 +87,17 @@ Cheap and high-value first; each is exactly measurable under this harness.
       delta is exactly 0.000, and the cost was most of the score: sweep label
       accuracy 0.463 -> 0.186, lift 0.208 -> -0.200, from best-in-repo to below
       the floor. `hrr` is the honest leader at 0.420 / 0.144.
-- [ ] **Calibration.** `RuleBasedModel` already emits a confidence in [0,1].
+- [x] **Calibration.** `calibration.py` buckets stated confidence against
+      observed accuracy; ECE / MCE / signed overconfidence, wired into
+      `eval --calibration`. Finding below.
+- [ ] **Replace the ad-hoc confidence formulas.** `analogy` (ECE 0.368) and
+      `workspace` (0.320) derive confidence from an alignment score or a
+      temperature — quantities that rise with how much structure was *found*,
+      not with how often that structure was *right*. Fit the map from internal
+      score to observed accuracy on training episodes and use it. The models
+      whose confidence is already an estimate of correctness (`ngram`, `ctw`)
+      need nothing.
+- [ ] (superseded) **Calibration.** `RuleBasedModel` already emits a confidence in [0,1].
       Bucket by it, report accuracy per bucket and ECE. Free.
 - [ ] **Cross-language transfer.** Fit on English, evaluate on Chinese/Turkish;
       the graph is identical across renderings. The README claims the data
@@ -171,6 +181,35 @@ The measurement itself was wrong on the first attempt: it used `mask_all=True`,
 which hides every label, so any model answering by copying a visible neighbour
 scored 0.000 on both sides. Implausible baselines are what exposed it; the mask
 rate is now the one evaluation uses.
+
+### Measured: which confidences mean anything
+
+Masked-node task, four lessons, fitted on training seeds and scored on disjoint
+ones. `over` is signed, so a model that is systematically too sure reads
+differently from one that is too shy:
+
+    model            acc   stated    over     ECE     MCE
+    analogy        0.219    0.586  +0.367   0.368   0.770
+    workspace      0.216    0.534  +0.318   0.320   0.534
+    ruleinduce     0.228    0.398  +0.170   0.170   0.779
+    ctw            0.226    0.083  -0.143   0.143   0.194
+    brill          0.272    0.352  +0.080   0.095   0.098
+    grammar        0.271    0.262  -0.009   0.076   0.220
+    ilp            0.165    0.207  +0.042   0.059   0.165
+    ngram          0.217    0.258  +0.041   0.054   0.121
+
+The split is not between good and bad models, it is between two ways of
+building a confidence. `ngram` uses `m / (m + k)` on the observations behind a
+context and `ctw` uses the posterior mass it put on the symbols it named —
+both are estimates of *being right*, and both come out calibrated. `analogy`
+uses `0.2 + 0.6 * alignment_score` and `workspace` uses `1 - temperature`; both
+rise with how much structure was found rather than with how often that
+structure was correct, and both are badly overconfident.
+
+`analogy` is the sharpest case: in its most populated bucket it states 0.881 and
+delivers 0.338. Note this is *after* the route fix — that repair made it
+equivariant under renaming without making its confidence honest, so the two
+defects were independent.
 
 ## Open questions
 

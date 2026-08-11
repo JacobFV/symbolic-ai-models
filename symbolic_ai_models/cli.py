@@ -220,6 +220,13 @@ def cmd_eval(args: argparse.Namespace) -> int:
     floors = {n: t.floor(episodes, tok, train_eps) for n, t in tasks.items()}
     print(json.dumps(_add_lift(metrics, floors), indent=2))
 
+    if args.calibration:
+        from .calibration import calibrate_model
+        for name, task in tasks.items():
+            print(f"\n=== calibration: {name} ===")
+            print(calibrate_model(model, task, episodes, tok,
+                                  device=_device(device)).table())
+
     if args.curriculum:
         print("\n=== curriculum: choose the answer from the episode's options ===")
         report = evaluate_choices(model, tok, episodes, device=device,
@@ -378,6 +385,8 @@ def build_parser() -> argparse.ArgumentParser:
     e.add_argument("--lessons", help="restrict to these lessons")
     e.add_argument("--limit", type=int, help="cap the number of episodes")
     e.add_argument("--limit-lessons", dest="limit_lessons", type=int, default=30)
+    e.add_argument("--calibration", action="store_true",
+                   help="also report stated confidence against observed accuracy")
     e.add_argument("--curriculum", action="store_true",
                    help="also score by choosing among the episode's options")
     e.add_argument("--device")
