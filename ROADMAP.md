@@ -169,6 +169,41 @@ Everything defaults to CPU now, including `TrainConfig.device`, which used to be
       returned in seconds instead of hours. Fixed: a run counts as complete only
       if it ran at least the budget being asked for, and a rule-based model
       (0 steps, fits in one pass) is always complete.
+- [ ] **Run two networks past 2000 steps to find where the curve flattens.**
+      Every network that has finished the re-run is a *lower bound*: all three
+      gained more than the +0.01/500 threshold across their last 500 steps. So
+      even when all six land, the pre-registered answer is "the budget is still
+      binding and the comparison is unsettled", and 2000 was chosen as 8.9
+      passes over the data, not because anything converges there.
+
+      They are not even failing to converge in the same direction. Last four
+      100-step gains:
+
+      | model | gains | shape |
+      |---|---|---|
+      | `gru` | .0058 .0064 .0036 .0070 | flat |
+      | `transformer` | .0049 .0032 .0043 .0006 | decelerating |
+      | `rgt` | .0011 .0013 .0060 .0066 | **accelerating** |
+
+      `rgt` is speeding up at the point the budget ends, so its +0.152 label and
+      +0.587 type are underestimates by an unknown margin, and it is the model
+      the headline type result rests on. A number that is still moving is not a
+      result, it is a snapshot.
+
+      Run `rgt` and `transformer` to 8000 steps — the two cheapest at 11 and 9
+      minutes per 2000, so roughly 45 minutes each, and between them they cover
+      the accelerating and decelerating cases. `gru` is excluded at 60 minutes
+      per 2000; it is flat and the least informative. Stop when the 500-step
+      gain is under +0.01 twice consecutively, and report the budget that took.
+
+      Written in advance: if `rgt` keeps climbing to 8000, the honest headline is
+      that **the structure-aware network was never given enough budget to
+      measure**, and every neural row in this repo is a lower bound of unknown
+      tightness. That is a worse-looking result than the current table and is
+      the one to report if it happens.
+
+      Blocked behind the current sweep, which owns the CPU.
+
 - [ ] **A data-budget curve for the rule-based models, the mirror of the step
       curve for the networks.** Five of them cap their training examples:
       `ilp` 1,500, `brill` 3,000, `ruleinduce` 4,000, `workspace` 4,000, and
