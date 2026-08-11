@@ -31,7 +31,7 @@ from ..registry import register
 __all__ = ["OmegaClawContext"]
 
 
-@register("omegaclaw_ctx",
+@register("omegaclaw_ctx-001",
           doc="OmegaClaw with per-context claw reliability; weighted mixture.")
 class OmegaClawContext(OmegaClaw):
     """Weighted vote, where the weights were measured in this context."""

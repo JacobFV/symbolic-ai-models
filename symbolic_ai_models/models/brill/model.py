@@ -62,7 +62,7 @@ class Transformation:
                 f"   [+{self.fixed} -{self.broke}]")
 
 
-@register("brill", doc="Transformation-based learning: a baseline plus ordered error corrections.")
+@register("brill-001", doc="Transformation-based learning: a baseline plus ordered error corrections.")
 class BrillModel(RuleBasedModel):
     """Guess, then learn the corrections, in the order they pay off."""
 

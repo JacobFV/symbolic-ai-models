@@ -92,7 +92,7 @@ class _Bindings(dict):
     """A substitution from variable names to node indices."""
 
 
-@register("ilp", doc="FOIL-style first-order clause induction; rules bind variables, not symbols.")
+@register("ilp-001", doc="FOIL-style first-order clause induction; rules bind variables, not symbols.")
 class ILPModel(RuleBasedModel):
     """Learn relational clauses whose conclusion is another node's label."""
 

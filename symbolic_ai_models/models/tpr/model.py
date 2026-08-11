@@ -132,7 +132,7 @@ class _TPRStack(nn.Module):
         return x
 
 
-@register("tpr", doc="Tensor Product Representations: role-filler binding with a per-edge role algebra.")
+@register("tpr-001", doc="Tensor Product Representations: role-filler binding with a per-edge role algebra.")
 class TPRModel(SymbolicModel):
     """Role-filler binding, with a learned role algebra on the edges.
 

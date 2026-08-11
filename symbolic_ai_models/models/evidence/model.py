@@ -39,7 +39,7 @@ from .answering import EVIDENCE_THRESHOLD, concepts
 __all__ = ["EvidenceModel"]
 
 
-@register("evidence", doc="Retrieval by concept overlap, with a real abstention threshold.")
+@register("evidence-001", doc="Retrieval by concept overlap, with a real abstention threshold.")
 class EvidenceModel(RuleBasedModel):
     """Find the earlier sentence this one is echoing; continue it the same way."""
 

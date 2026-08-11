@@ -296,6 +296,18 @@ occupies in the term graph.
 
   The copy floor stays at 0.266 and `corefer`'s +0.096 stands.
 
+## Naming
+
+Models are registered as `name-001`. A bare name resolves to the highest
+version, so every existing config, script and command keeps working; a versioned
+name pins a specific model and never moves. Variants go beside their predecessor
+rather than replacing it — `corefer-002`, or `corefer-noprose` when the point is
+what changed rather than when.
+
+Register the new one, leave the old one registered, and let `sweep --models
+corefer-001,corefer-002` print both rows. That is the comparison this repo keeps
+wanting and has so far only been able to describe in commit messages.
+
 ## Design rules, learned the expensive way
 
 1. **The label head and the type head do not share machinery.** Discovered four

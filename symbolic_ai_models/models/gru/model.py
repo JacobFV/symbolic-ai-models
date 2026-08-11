@@ -68,7 +68,7 @@ class _GRUStack(nn.Module):
         return x.gather(1, idx.unsqueeze(-1).expand_as(x))
 
 
-@register("gru", doc="Recurrent control: a GRU over the linearisation, causal or bidirectional.")
+@register("gru-001", doc="Recurrent control: a GRU over the linearisation, causal or bidirectional.")
 class RecurrentModel(SymbolicModel):
     """The floor. No attention, no edges, fixed-width state."""
 

@@ -29,7 +29,7 @@ from ..registry import register
 __all__ = ["OmegaClawFlat"]
 
 
-@register("omegaclaw_flat",
+@register("omegaclaw_flat-001",
           doc="OmegaClaw control: fixed per-claw strengths, no learned trust.")
 class OmegaClawFlat(OmegaClaw):
     """Every claw counts what it always counts, wherever it fires."""

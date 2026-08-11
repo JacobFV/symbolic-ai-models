@@ -90,7 +90,7 @@ class _Case:
         return [j for j, p in enumerate(self.parent) if p == i]
 
 
-@register("analogy", doc="Structure mapping: retrieve an isomorphic case and transfer its answer.")
+@register("analogy-001", doc="Structure mapping: retrieve an isomorphic case and transfer its answer.")
 class AnalogyModel(RuleBasedModel):
     """MAC/FAC over stored graphs; the answer comes from the aligned position."""
 

@@ -130,7 +130,7 @@ class _NDRStack(nn.Module):
         return x
 
 
-@register("ndr", doc="Neural Data Router: shared layer, copy gate, geometric attention.")
+@register("ndr-001", doc="Neural Data Router: shared layer, copy gate, geometric attention.")
 class NDRModel(SymbolicModel):
     """Depth of computation untied from depth of network.
 

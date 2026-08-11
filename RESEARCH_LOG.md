@@ -5,6 +5,15 @@ the harness and the models; `ROADMAP.md` holds the task list and the working
 rules; this file says what is *known*, what is *shaky*, and what is *wrong that
 used to be believed*.
 
+**Model names carry a version.** Every model is registered as `name-001`, and a
+bare `name` resolves to the highest version, so `--models corefer` still works
+and means "the current one" while `corefer-001` pins a specific thing. A number
+in this file is attached to a versioned name because it has to be: `corefer`'s
+type head went 0.174 -> 0.612 in one commit and `workspace` moved from eighth to
+joint first when a cap was raised, and both silently redefined what an earlier
+row meant. A variant is now `corefer-002` or `corefer-noprose`, a separate row in
+the same sweep.
+
 Numbers here are from `runs/full179`: all 179 generatable lessons, 20 training
 episodes each, evaluation seeds a million away, CPU. The sweep is the authority;
 nothing in this file was measured by a scratch script.

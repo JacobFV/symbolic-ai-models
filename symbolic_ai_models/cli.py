@@ -235,7 +235,20 @@ def _select_models(spec: str | None) -> list[str]:
         want_rules = spec != "neural"
         return [n for n in model_names()
                 if issubclass(REGISTRY[n], RuleBasedModel) == want_rules]
-    return [m.strip() for m in spec.split(",") if m.strip()]
+    # Resolve bare names to their registered version, so `--models corefer`
+    # writes `runs/.../corefer-001` and the run directory says which model
+    # produced it. A pinned name passes through untouched.
+    from .models.registry import get as _get
+    out = []
+    for m in spec.split(","):
+        m = m.strip()
+        if not m:
+            continue
+        try:
+            out.append(_get(m).name)
+        except KeyError:
+            out.append(m)          # let train report the unknown-model error
+    return out
 
 
 def cmd_eval(args: argparse.Namespace) -> int:

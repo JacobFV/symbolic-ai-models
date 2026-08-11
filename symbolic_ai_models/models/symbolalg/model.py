@@ -40,7 +40,7 @@ __all__ = ["SymbolAlgebraModel"]
 HOLE = "\x00"
 
 
-@register("symbolalg", doc="Ambiguity-preserving fact parser; predicts by template analogy.")
+@register("symbolalg-001", doc="Ambiguity-preserving fact parser; predicts by template analogy.")
 class SymbolAlgebraModel(RuleBasedModel):
     """Parse the prefix into facts; expect the next fact to rhyme with them."""
 

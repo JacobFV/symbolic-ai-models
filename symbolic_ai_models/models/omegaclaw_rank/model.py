@@ -37,7 +37,7 @@ from ..registry import register
 __all__ = ["OmegaClawRank"]
 
 
-@register("omegaclaw_rank",
+@register("omegaclaw_rank-001",
           doc="OmegaClaw with per-context claw reliability; the best claw takes all.")
 class OmegaClawRank(OmegaClaw):
     """Rank the claws that fired, and believe the top one."""

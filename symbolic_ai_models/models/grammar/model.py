@@ -84,7 +84,7 @@ class _Classes:
         return sum(1 for m in self.members.values() if len(m) > 1)
 
 
-@register("grammar", doc="Distributional grammar induction: classes and patterns, learned not written.")
+@register("grammar-001", doc="Distributional grammar induction: classes and patterns, learned not written.")
 class GrammarModel(RuleBasedModel):
     """Induce the equivalence classes, then predict at the level of the class."""
 

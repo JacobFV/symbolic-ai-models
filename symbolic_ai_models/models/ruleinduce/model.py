@@ -58,7 +58,7 @@ __all__ = ["RuleInductionModel"]
 MAX_SIBLING = 3
 
 
-@register("ruleinduce", doc="Decision-list induction over structural context; rules predict pointers.")
+@register("ruleinduce-001", doc="Decision-list induction over structural context; rules predict pointers.")
 class RuleInductionModel(RuleBasedModel):
     """Induce ordered rules mapping structural context to a copy action."""
 

@@ -48,7 +48,7 @@ class Stack(nn.Module):
         return x
 
 
-@register("transformer", doc="Plain pre-LN transformer; reads a graph as its linearisation.")
+@register("transformer-001", doc="Plain pre-LN transformer; reads a graph as its linearisation.")
 class TransformerModel(NeuralModel):
     """The control. No edge ever reaches it."""
 

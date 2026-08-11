@@ -47,7 +47,7 @@ from ...parsers.primitives.syllogistic import parse_prompt
 __all__ = ["SyllogismModel"]
 
 
-@register("syllogism", doc="Categorical parser plus forward-chaining entailment; aligns subtrees.")
+@register("syllogism-001", doc="Categorical parser plus forward-chaining entailment; aligns subtrees.")
 class SyllogismModel(RuleBasedModel):
     """Parse, saturate, answer — and abstain outside the fragment."""
 

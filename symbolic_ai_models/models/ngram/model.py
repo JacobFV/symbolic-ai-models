@@ -30,7 +30,7 @@ from ..symbolic import (ABSTAIN, GraphView, RuleBasedModel, Votes,
 __all__ = ["NGramModel"]
 
 
-@register("ngram", doc="Variable-order back-off counts over tokens and over node contexts.")
+@register("ngram-001", doc="Variable-order back-off counts over tokens and over node contexts.")
 class NGramModel(RuleBasedModel):
     """Counts, backed off from the longest context that was ever seen.
 

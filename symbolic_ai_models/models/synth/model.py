@@ -41,7 +41,7 @@ from .dsl import Program, SequenceSynthesizer
 __all__ = ["SynthesisModel"]
 
 
-@register("synth", doc="Enumerative program synthesis over token and label sequences.")
+@register("synth-001", doc="Enumerative program synthesis over token and label sequences.")
 class SynthesisModel(RuleBasedModel):
     """Online synthesis: hold a program, predict from it, refit when refuted."""
 

@@ -390,3 +390,45 @@ def test_a_model_with_a_pointer_is_scored_on_copying(fixtures, cfg):
     plain = make("syllogism", fixtures, cfg)
     assert plain(batch).source_logits is None
     assert "copy_n" not in task.compute(plain(batch), batch).counts
+
+
+# ---- versioned identity ---------------------------------------------------
+def test_a_bare_name_resolves_to_a_version_and_a_pinned_name_does_not_move():
+    """Model names pin what produced a number; bare names stay convenient.
+
+    This repo's output is a table of numbers attached to model names, and those
+    numbers only mean something if the name pins the model. It has already been
+    bitten twice: `corefer`'s type head went 0.174 -> 0.612 in one commit and
+    `workspace` moved from eighth to joint first when a cap was raised. Both
+    improvements, both silently redefining what an earlier row meant.
+    """
+    from symbolic_ai_models.models import model_names
+    from symbolic_ai_models.models.registry import base_name, get
+
+    names = model_names()
+    assert names, "no models registered"
+    for n in names:
+        assert base_name(n) != n, f"{n} carries no version"
+
+    # A bare name resolves to the highest version registered under it.
+    assert get("corefer").name == "corefer-001"
+    assert get("ilp").name == "ilp-001"
+    # A pinned name resolves to exactly itself.
+    assert get("corefer-001").name == "corefer-001"
+
+    with pytest.raises(KeyError):
+        get("no-such-model")
+
+
+def test_selecting_models_by_bare_name_yields_versioned_run_names():
+    """`--models corefer` must write `runs/.../corefer-001`, not `corefer`."""
+    from symbolic_ai_models.cli import _select_models
+
+    assert _select_models("corefer,ilp") == ["corefer-001", "ilp-001"]
+    assert _select_models("corefer-001") == ["corefer-001"]
+    assert all(base_name_has_version(n) for n in _select_models("symbolic"))
+
+
+def base_name_has_version(name: str) -> bool:
+    from symbolic_ai_models.models.registry import base_name
+    return base_name(name) != name

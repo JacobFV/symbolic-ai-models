@@ -106,7 +106,7 @@ class Goal:
                 self.has_parallel, self.has_peer, min(self.n_regions, 4))
 
 
-@register("workspace", doc="Copycat-style workspace: infers the goal, partitions memory, runs competing codelets.")
+@register("workspace-001", doc="Copycat-style workspace: infers the goal, partitions memory, runs competing codelets.")
 class WorkspaceModel(RuleBasedModel):
     """Infer the objective, carve the workspace, let codelets compete."""
 

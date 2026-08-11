@@ -81,7 +81,7 @@ class RelationalStack(nn.Module):
         return x
 
 
-@register("rgt", doc="Relational graph transformer: attention biased and values marked by edge type.")
+@register("rgt-001", doc="Relational graph transformer: attention biased and values marked by edge type.")
 class RelationalTransformer(NeuralModel):
     """The same transformer, told which positions are parent, child and sibling."""
 

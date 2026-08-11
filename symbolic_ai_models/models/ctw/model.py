@@ -182,7 +182,7 @@ def _logaddexp(a: float, b: float) -> float:
     return a if b == -math.inf else a + math.log1p(math.exp(b - a))
 
 
-@register("ctw", doc="Context Tree Weighting: Bayesian mixture over all context trees.")
+@register("ctw-001", doc="Context Tree Weighting: Bayesian mixture over all context trees.")
 class CTWModel(RuleBasedModel):
     """The principled counterpart to ``ngram``: mix orders, never choose one.
 

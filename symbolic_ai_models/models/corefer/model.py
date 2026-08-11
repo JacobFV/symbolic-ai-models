@@ -173,7 +173,7 @@ def _type_keys(view: GraphView, i: int, pointed: str | None) -> list[tuple]:
     ]
 
 
-@register("corefer", doc="Pointer over nodes, keyed on learned coreference evidence.")
+@register("corefer-001", doc="Pointer over nodes, keyed on learned coreference evidence.")
 class CoreferModel(RuleBasedModel):
     """Point at the node most likely to be the same symbol."""
 

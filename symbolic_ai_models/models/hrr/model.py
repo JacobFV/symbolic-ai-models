@@ -155,7 +155,7 @@ class _HRRStack(nn.Module):
         return x
 
 
-@register("hrr", doc="Vector-symbolic architecture: circular-convolution binding with a cleanup memory.")
+@register("hrr-001", doc="Vector-symbolic architecture: circular-convolution binding with a cleanup memory.")
 class HRRModel(SymbolicModel):
     """HRR/VSA. ``extra.cleanup_slots`` sizes the cleanup codebook."""
 

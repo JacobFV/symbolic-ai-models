@@ -53,7 +53,7 @@ from ..symbolic import ABSTAIN, GraphView, RuleBasedModel, Votes
 __all__ = ["RouteModel"]
 
 
-@register("routes", doc="Predict by structural route from a context-conditioned prior.")
+@register("routes-001", doc="Predict by structural route from a context-conditioned prior.")
 class RouteModel(RuleBasedModel):
     """Follow the route the structural context expects. Symbol-free by design."""
 
