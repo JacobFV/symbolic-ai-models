@@ -113,9 +113,10 @@ Cheap and high-value first; each is exactly measurable under this harness.
       (-0.011 accuracy, worse calibration) and shipped off by default. Third
       null in a row, and the pattern is the real finding — see the note on
       priority below.
-- [ ] **PRIORITY: get any rule-based model above the label floor.** The last
-      three items refined mechanisms inside models that are all below it, where
-      there is no headroom to refine into. See "the family separation" below.
+- [ ] **PRIORITY: get any rule-based model above the label floor.** Not yet
+      done. The first attempt was to check the floor itself for unfairness —
+      there was a real one, it is fixed, and correcting it moved the floor
+      *up* rather than down (see below), so the gap is genuine and still open.
 - [ ] (done, kept for the record) Anchor-relative: re-express features relative to
       the masked node or the query subtree — relative depth, sibling offset,
       path-from-query — so a hypothesis learned on one episode is *identical*
@@ -334,6 +335,31 @@ refinement:
   names, which is exactly where a pointer method should win and where it is
   currently not scored at all. Scoring copy-style predictions against the
   excluded set would change what the metric rewards.
+
+### Measured: the floor was unfair, and fixing it made it harder
+
+`MaskedNode.floor` read the **true** parent type off the unmasked graph and
+scored every node in it, while a model reads `mask` wherever the parent is
+hidden and is scored only where the mask fell. The floor was being computed with
+information the models were denied, and the docstring claimed the opposite:
+"exactly what a model can read off the relations".
+
+Fixed: the mask is drawn at the evaluation rate, a hidden parent contributes
+`mask` as it does in a `GraphView`, and only masked nodes are scored — averaged
+over several draws at both fit and score time, since one 15% sample is a few
+hundred nodes and this is the number every lift is measured against.
+
+The hypothesis was that this had been depressing every model's lift. It had
+not. On identical data:
+
+    old floor (whole graph, every node)     label_acc 0.327
+    new floor (masked view, masked nodes)   label_acc 0.372
+
+The corrected floor is **harder**, not easier. Masking removes context from the
+lookup too, and scoring only the masked subset changes the mix in the lookup's
+favour. So the family separation is not an artifact of an unfair floor: the gap
+between the neural and rule-based models on label prediction is real, and it is
+now measured against a floor that is actually comparable.
 
 ## Open questions
 

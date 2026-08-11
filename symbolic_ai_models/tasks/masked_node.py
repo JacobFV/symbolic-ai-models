@@ -98,30 +98,43 @@ class MaskedNode(Task):
         any symbol in it, which makes the lift above it the part of the score
         that is actually about reference.
 
-        Fitted on train and scored on eval, and computed over every scorable
-        node rather than over a masked sample — estimating it from 15% of nodes
-        would put variance into the one number that is meant to be the fixed
-        point the model is compared against.
+        Fitted on train and scored on eval, and — since the correction described
+        in :meth:`_nodes` — under the same masking the models face, so the floor
+        is what a structure-only lookup gets *given what a model is given*
+        rather than given the whole graph. Several masked draws are averaged so
+        that sampling 15% of nodes does not put noise into the one number
+        everything else is compared against.
         """
+        # Several masked draws per training episode, so the lookup is fitted on
+        # a comparable amount of evidence to the models', which also see
+        # repeated maskings of the same graphs.
         type_rule, label_rule = _ContextRule(), _ContextRule()
-        for ep in train:
-            for ctx, label, type_ in self._nodes(ep, tok):
-                type_rule.observe(ctx, type_)
-                if label is not None:
-                    label_rule.observe(ctx, label)
+        rng = np.random.default_rng(4)
+        for _ in range(4):
+            for ep in train:
+                for ctx, label, type_ in self._nodes(ep, tok, rng):
+                    type_rule.observe(ctx, type_)
+                    if label is not None:
+                        label_rule.observe(ctx, label)
 
         type_hits = type_n = label_hits = label_n = 0
         eval_types: collections.Counter[str] = collections.Counter()
         eval_labels: collections.Counter[int] = collections.Counter()
-        for ep in episodes:
-            for ctx, label, type_ in self._nodes(ep, tok):
-                type_hits += type_rule.predict(ctx) == type_
-                type_n += 1
-                eval_types[type_] += 1
-                if label is not None:
-                    label_hits += label_rule.predict(ctx) == label
-                    label_n += 1
-                    eval_labels[label] += 1
+        # Averaged over several draws for the same reason it is fitted over
+        # several: one 15% sample of an evaluation set is a few hundred nodes,
+        # and the floor is the fixed point every lift in the repo is measured
+        # against, so it cannot be the noisiest number in the table.
+        scoring = np.random.default_rng(12345)
+        for _ in range(8):
+            for ep in episodes:
+                for ctx, label, type_ in self._nodes(ep, tok, scoring):
+                    type_hits += type_rule.predict(ctx) == type_
+                    type_n += 1
+                    eval_types[type_] += 1
+                    if label is not None:
+                        label_hits += label_rule.predict(ctx) == label
+                        label_n += 1
+                        eval_labels[label] += 1
 
         _, type_bits = empirical_floor(dict(eval_types))
         _, label_bits = empirical_floor(dict(eval_labels))
@@ -132,24 +145,49 @@ class MaskedNode(Task):
             "label_bits": label_bits, "label_n": float(label_n),
         }
 
-    def _nodes(self, ep: Episode, tok: SymbolTokenizer):
-        """``(structural context, label id or None, type)`` per scorable node.
+    def _nodes(self, ep: Episode, tok: SymbolTokenizer,
+               rng: np.random.Generator | None = None):
+        """``(context, label id or None, type)`` for the nodes this episode hides.
 
-        The context is exactly what a model can read off the relations without
-        seeing a single symbol: what kind of node the parent is, which slot this
-        one sits in, how deep it is, and whether it has children of its own.
+        The context is what a model can *actually* read, which is a stronger
+        requirement than it sounds and was got wrong here for a long time. The
+        first version read the true parent type straight off the unmasked graph
+        and scored every node in it, while a model reads ``mask`` wherever the
+        parent is hidden and is scored only where the mask fell. The floor was
+        therefore computed with information the models were denied, and it made
+        every lift in the repo pessimistic by an unknown amount.
+
+        So the mask is drawn here at the rate evaluation uses, a hidden parent
+        contributes ``mask`` exactly as it does in a
+        :class:`~symbolic_ai_models.models.symbolic.GraphView`, and only masked
+        nodes are yielded. The floor is then what the best structure-only lookup
+        gets *under the conditions the model faces*, which is the only version
+        of it worth comparing against.
+
+        The mask positions are not the identical ones any particular evaluation
+        draws — the floor is a property of the distribution, so matching the
+        regime is what matters, not the individual draw.
         """
+        rng = rng or np.random.default_rng(0)
         g = ep.graph
         n = min(len(g), self.max_nodes)
+        if not n:
+            return
+        hidden = set(np.flatnonzero(rng.random(n) < self.mask_rate).tolist())
+        if not hidden:
+            hidden = {int(rng.integers(0, n))}
+
         has_children = [False] * n
         for i in range(n):
             p = g.parent[i]
             if 0 <= p < n:
                 has_children[p] = True
-        for i in range(n):
+        for i in sorted(hidden):
             p = g.parent[i]
-            ctx = (g.types[p] if 0 <= p < n else "ROOT",
-                   min(g.slot[i], 8), min(g.depth[i], 8), has_children[i])
+            parent_type = ("ROOT" if not 0 <= p < n
+                           else ("mask" if p in hidden else g.types[p]))
+            ctx = (parent_type, min(g.slot[i], 8), min(g.depth[i], 8),
+                   has_children[i])
             label = (tok.label_id(g.labels[i])
                      if self._scorable(g.labels[i], g.types[i], tok) else None)
             yield ctx, label, g.types[i]
