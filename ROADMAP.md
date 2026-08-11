@@ -319,6 +319,34 @@ Everything defaults to CPU now, including `TrainConfig.device`, which used to be
       than "copy from the usual place", and 0.44 of headroom to the 0.722
       ceiling is still untouched.
 
+      **`corefer`: a pointer that clears the floor, after two wrong diagnoses.**
+      Learns from training graphs which pairwise features predict that two nodes
+      share a label, naive Bayes, 310 counts, 16 seconds.
+
+      | version | copy acc | copy lift | label lift |
+      |---|---:|---:|---:|
+      | pairwise features only | 0.239 | **-0.036** | 0.188 |
+      | redundant features collapsed | 0.239 | -0.036 | 0.188 |
+      | **+ query context** | **0.305** | **+0.053** | **0.248** |
+
+      First diagnosis, wrong: `siblings`, `same_grandparent`, `same_depth` and
+      `same_ptype` are four views of one fact, naive Bayes added all four, and
+      **99.3% of picks landed at the same depth as the query**. Collapsing them
+      into one categorical changed copy accuracy by 0.001 and left the same-depth
+      rate at 99.3%. The double count was real; it was not the constraint. Same
+      depth is simply where most coreference lives.
+
+      Second diagnosis, right: every feature was *pairwise*, so the model learned
+      one global ranking function while the floor learns a separate offset per
+      structural context. A global ranking loses to a conditioned one by
+      construction. Adding the query's own context — its parent type and slot,
+      interacted with the relation and the distance — moved copy lift from
+      -0.036 to +0.053, more than double `evidence`'s +0.023, and label lift to
+      +0.248, which is fourth of twenty.
+
+      Still only 0.305 of a possible 0.722. The pointer works; it is not close to
+      the ceiling.
+
       What that suggests: retrieval keyed on *generic* structural similarity is
       the wrong key. Coreference is the relation that matters, and the harness
       already computes `same_label` edges and withholds them for hidden nodes.

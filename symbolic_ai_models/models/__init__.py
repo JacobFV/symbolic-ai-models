@@ -38,7 +38,7 @@ from .symbolic import ABSTAIN, GraphView, RuleBasedModel, Votes
 # Registration happens at import; the noqa keeps a linter from tidying away the
 # only thing these imports are for.
 from . import evidence, ngram, ruleinduce, syllogism, symbolalg, synth  # noqa: F401
-from . import analogy, brill, ctw, grammar, ilp, routes_model, workspace  # noqa: F401
+from . import analogy, brill, corefer, ctw, grammar, ilp, routes_model, workspace  # noqa: F401
 from . import omegaclaw_ctx, omegaclaw_flat, omegaclaw_rank  # noqa: F401
 
 #: The neural half is **not registered by default**. It is not the subject of
