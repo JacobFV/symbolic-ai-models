@@ -266,6 +266,44 @@ Everything defaults to CPU now, including `TrainConfig.device`, which used to be
       change is to drop the caps to whatever runtime allows, chosen on runtime
       grounds alone, and re-run the affected models. Recorded as the next item.
 
+- [ ] **Give the label head a pointer, and score the labels it can reach.**
+      The label task is a binding problem being scored as a classification
+      problem, and the gap is most of the available signal.
+
+      Measured on all 179 lessons: **71.9% of scored masked labels already
+      appear on a visible node of the same episode**, so the answer is present
+      in the graph and needs copying, not naming. The best model in the table,
+      `workspace` at +0.280 lift, is at about **0.36 label accuracy against a
+      0.72 copy ceiling**. Roughly half the reachable signal is untouched by
+      every model here, and none of the nineteen has a pointer.
+
+      The excluded 18% is the same story, sharper. Of 522 excluded labels, 462
+      are `ident` nodes carrying invented names, and **80.7% of the excluded set
+      is also copyable** — the metric drops exactly the positions where copying
+      is the only route, which flatters vocabulary-based models and censors the
+      capability this repo exists to study.
+
+      Two parts, and the second is the one that changes what is being measured:
+
+      1. A vote over *nodes* rather than symbols, mixed with the existing
+         symbol back-off and gated on first-mention vs subsequent. `ruleinduce`
+         already predicts pointers and is second on labels at +0.250, so the
+         mechanism is not speculative here.
+      2. Score copy-style predictions against the excluded set, so
+         `label_coverage` stops being a number that quietly removes the hard
+         cases.
+
+      Expect this to reorder the table, and expect the models built *not* to
+      memorise — `analogy`, `ruleinduce` — to gain most, since the reason they
+      were handicapped was a metric that never scored what they were built for.
+
+- [ ] **Strengthen the type floor before trusting `rgt`'s +0.587.** The floor is
+      a lookup on four structural features and reaches 0.795; `rgt` reaches
+      0.915. How much of that margin is the model and how much is a weak
+      baseline is unknown, and the headline result of the neural control rests
+      on it. Fit a decision tree or gradient boosting on the same structural
+      features — still content-blind, so still a floor — and see what survives.
+
 - [ ] **Set the example caps from runtime, not from a guessed constant, and
       re-run the four affected models.** The curve above says `workspace` and
       `brill` are held back by theirs and `ilp` and `ruleinduce` are not. The
@@ -661,6 +699,15 @@ excluded labels are six whole bracket strings — `'(()())'`, `'((())(()'` — t
 un-exploded contents of `str` nodes. Not invented names; an artifact of a `str`
 node carrying its whole content as a label while also exploding into char
 children.
+
+> **This refutation was itself a six-lesson artefact, and is withdrawn.** It was
+> measured where `label_coverage` is 0.92; on all 179 lessons coverage is 0.82
+> and the excluded set is completely different. Of 522 excluded masked labels,
+> **462 (88.5%) are `ident` nodes** with values like `gvnt`, `vkgm`, `vlzk` —
+> invented identifiers, precisely what the original lead claimed. Only 26 are
+> `str` nodes. The lead is alive; see the pointer-head item in the task list.
+> Third time a conclusion drawn from the six-lesson slice has inverted on the
+> full curriculum.
 
 **What this implies for the priority item.** The floor memorises the most common
 label per structural context, and on a fixed symbol pool memorisation is a
