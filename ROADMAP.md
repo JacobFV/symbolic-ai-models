@@ -173,6 +173,37 @@ occupies in the term graph.
       features that ruined the first-pass model are affordable over ten
       candidates and were not over a hundred.
 
+- **The symbol-plausibility feature the error analysis called for does not
+  help, and the first version of it was reading its own target.** The diagnosis
+  below said two candidates of the same type in similar positions are separated
+  only by which symbol they carry, so stage two got a feature: where the
+  candidate's symbol ranks among symbols seen in this query context, counted
+  from training answers, keyed exactly as the structure-only floor keys its
+  lookup.
+
+  | | dev copy accuracy |
+  |---|---:|
+  | no symbol prior | **0.4036** |
+  | prior fitted on the reranker's own episodes | 0.3614 |
+  | prior cross-fitted, 2 folds | 0.3968 |
+
+  The first number to distrust was the *drop*. A useless feature costs a little;
+  losing 0.042 means the feature was actively misleading, and it was: the prior
+  was built from the same episodes that supply stage two's training examples, so
+  the gold symbol had contributed to the very counts it was being ranked
+  against. `fits == 0` meant "correct" while fitting and meant much less at
+  prediction time. Cross-fitting the prior — count it on the folds an example
+  did *not* come from — recovers 0.035 of the 0.042, which is the size of the
+  leak.
+
+  The residue is the real answer: even leak-free, the feature is slightly
+  harmful. Reverted. The diagnosis that produced it may still be right about
+  *what* distinguishes the candidates while being wrong that a context-keyed
+  symbol frequency is how to express it — the floor already computes that
+  quantity and the pointer is meant to add what the floor lacks.
+
+  Measured on a held-out slice of training episodes throughout; eval untouched.
+
 - **Candidate recall is not the pointer's constraint; discrimination is.** The
   obvious next move after the two-stage pointer was to widen stage one's top-k,
   since stage two can only pick from what it is shown. Measured on a held-out
