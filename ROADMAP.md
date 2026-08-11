@@ -72,11 +72,12 @@ Cheap and high-value first; each is exactly measurable under this harness.
       Still to do: the same treatment for the per-lesson breakdown of the `lm`
       and `node` tasks, which currently aggregate over all episodes at once and
       so cannot report a shape at all.
-- [ ] **Shortcut audits as extra floors.** Simulate the unthinking heuristic —
-      longest option, option sharing most words with the prompt, most variables,
-      distractor-name suffix — and report each as its own floor. In the source
-      work this caught seven real generator defects, and it is a far stronger
-      control than majority-class.
+- [x] **Shortcut audits as extra floors.** Nine parameter-free cheats in
+      `shortcuts.py`; the curriculum floor is now `max(uniform, majority, best
+      cheat)` and the table names which cheat won. Audited all 179 lessons: no
+      lesson is shortcut-solvable (nothing at or above 0.9), and the worst is
+      `compiler_construction` at 0.467 against a uniform 0.250. This curriculum
+      holds up better than the source work's did.
 - [ ] **Renaming invariance.** Rename every symbol in an eval episode; a
       structure-only model must be bit-identical. Same shape as the two existing
       leak tests. `analogy` should pass by construction; anything that does not
@@ -121,6 +122,20 @@ abstraction is real but rarely needed. Worth retesting at small training sizes,
 where literal contexts miss often and generalising the context should matter
 most; that is the regime the parser scaling curve already showed `induced`
 winning in.
+
+### Measured: what the shortcut audit found, and what it did not
+
+Nothing is shortcut-solvable. Across 179 lessons the strongest cheat anywhere is
+0.467 (`compiler_construction`, "pick the longest option", uniform 0.250). The
+source work found seven lessons solvable outright; this generator has none.
+
+The first pass said otherwise and was wrong, which is the more useful result.
+`compiler_construction` measured 0.867 and `grammar_induction` 0.783 — both
+apparently decisive leaks — until the tie-breaking was fixed. Every shortcut
+resolved ties on the option string, so with no signal they all chose the
+lexicographically largest option, agreed with each other by accident, and posted
+inflated scores that the `max` then picked up. Ties now fall to position, which
+is neutral and uncorrelated across cheats. The "leaks" were mostly in the audit.
 
 ## Open questions
 

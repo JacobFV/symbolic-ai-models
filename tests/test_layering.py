@@ -18,9 +18,14 @@ Reading the imports measures the layering.
 from __future__ import annotations
 
 import ast
+import os
 import subprocess
 import sys
 from pathlib import Path
+
+#: These subprocesses only need the import graph, never the GPU. Initialising
+#: CUDA in several of them at once made the suite flaky under load.
+_ENV = {**os.environ, "CUDA_VISIBLE_DEVICES": ""}
 
 PARSERS = Path(__file__).resolve().parent.parent / "symbolic_ai_models" / "parsers"
 
@@ -62,7 +67,7 @@ def test_models_may_import_parsers_eagerly():
         [sys.executable, "-c",
          "from symbolic_ai_models.models.symbolic import build_parser\n"
          "print(build_parser('none').name)\n"],
-        capture_output=True, text=True, timeout=300)
+        capture_output=True, text=True, timeout=300, env=_ENV)
     assert out.returncode == 0, out.stderr[-2000:]
     assert out.stdout.strip() == "none"
 

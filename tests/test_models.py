@@ -320,8 +320,10 @@ def test_fitting_is_stable_across_processes(name, fixtures, cfg, tmp_path):
         "print(hashlib.sha1(x.numpy().tobytes()).hexdigest())\n")
 
     def run(seed: str) -> str:
+        # No GPU: this test is about hash order, and letting several
+        # subprocesses initialise CUDA at once made the suite flaky under load.
         env = {"PATH": "/usr/bin:/bin", "PYTHONHASHSEED": seed,
-               "HOME": str(tmp_path)}
+               "HOME": str(tmp_path), "CUDA_VISIBLE_DEVICES": ""}
         out = subprocess.run([sys.executable, str(script)], capture_output=True,
                              text=True, env=env, timeout=600)
         assert out.returncode == 0, out.stderr[-2000:]

@@ -47,6 +47,10 @@ class ChoiceResult:
     predicted: str
     correct: bool
     n_choices: int
+    #: kept so the shortcut audit can be run over the same episodes that were
+    #: scored, rather than over a separately drawn set that might differ
+    prompt: str = ""
+    choices: tuple[str, ...] = ()
 
 
 #: A lesson counts as solved at this much of the headroom above its own floor.
@@ -79,11 +83,26 @@ class CurriculumReport:
 
     @property
     def floor(self) -> float:
-        """The higher of the two baselines ``langcurriculum`` uses: guessing
-        uniformly within each episode's own answer set, and always answering the
-        most common gold label. Taking the max is what keeps a lesson with a
-        skewed label distribution from looking solved."""
-        return max(self._uniform_floor(), self._majority_floor())
+        """The best any unthinking rule manages on these episodes.
+
+        Three baselines, whichever is highest: guessing uniformly inside each
+        episode's own answer set, always answering the most common gold label,
+        and the strongest of the parameter-free shortcuts in
+        :mod:`symbolic_ai_models.shortcuts` — pick the longest option, the one
+        sharing most words with the question, the one written unlike the others.
+
+        Including the shortcuts is what stops a model being credited for
+        something a cheat already gets. A lesson where "pick the longest option"
+        scores 0.8 cannot award 0.85 as understanding, and a uniform floor of
+        0.25 would have said it could.
+        """
+        return max(self._uniform_floor(), self._majority_floor(),
+                   self.shortcut_floor()[1])
+
+    def shortcut_floor(self) -> tuple[str, float]:
+        """``(which cheat, what it scores)`` over these episodes."""
+        from .shortcuts import best_shortcut
+        return best_shortcut([r for r in self.results if r.choices])
 
     def _uniform_floor(self) -> float:
         if not self.results:
@@ -129,15 +148,19 @@ class CurriculumReport:
             groups[r.lesson_id].append(r)
         for lesson, rs in sorted(groups.items()):
             sub = CurriculumReport(rs)
+            name, score = sub.shortcut_floor()
             out[lesson] = {"n": len(rs), "acc": sub.accuracy,
-                           "floor": sub.floor, "lift": sub.lift}
+                           "floor": sub.floor, "lift": sub.lift,
+                           "cheat": score, "cheat_name": name}
         return out
 
     def table(self, limit: int = 30) -> str:
         rows = sorted(self.by_lesson().items(), key=lambda kv: -kv[1]["lift"])
-        head = f"{'lesson':<38}{'n':>5}{'acc':>8}{'floor':>8}{'lift':>8}"
+        head = (f"{'lesson':<38}{'n':>5}{'acc':>8}{'floor':>8}{'lift':>8}"
+                f"{'cheat':>8}  {'by':<12}")
         line = "-" * len(head)
-        body = [f"{k:<38}{v['n']:>5}{v['acc']:>8.3f}{v['floor']:>8.3f}{v['lift']:>8.3f}"
+        body = [f"{k:<38}{v['n']:>5}{v['acc']:>8.3f}{v['floor']:>8.3f}"
+                f"{v['lift']:>8.3f}{v['cheat']:>8.3f}  {v['cheat_name']:<12}"
                 for k, v in rows[:limit]]
         if len(rows) > limit:
             body.append(f"... {len(rows) - limit} more lessons")
@@ -145,12 +168,17 @@ class CurriculumReport:
         n = self.n_lessons
         shape = (f"solved (lift >= {SOLVED:.2f}): {self.solved}/{n}"
                  f"    above floor (>= {ABOVE_FLOOR:.2f}): {self.above_floor}/{n}")
+        cheat_name, cheat = self.shortcut_floor()
         average = (f"{'macro-average':<38}{len(self.results):>5}"
-                   f"{self.accuracy:>8.3f}{self.floor:>8.3f}{self.lift:>8.3f}")
+                   f"{self.accuracy:>8.3f}{self.floor:>8.3f}{self.lift:>8.3f}"
+                   f"{cheat:>8.3f}  {cheat_name:<12}")
         return "\n".join([
             head, line, *body, line, shape, average,
             "the two counts are the result; the average is over a bimodal "
-            "distribution and describes neither mode."])
+            "distribution and describes neither mode.",
+            "cheat = the best parameter-free shortcut on the same episodes; it "
+            "is folded into floor. A lesson where it is high has leaked, and "
+            "that is a fact about the lesson, not the model."])
 
 
 @torch.no_grad()
@@ -192,7 +220,8 @@ def evaluate_choices(model: Model, tok: SymbolTokenizer,
         best = ep.choices[max(range(len(scores)), key=lambda i: scores[i])]
         report.results.append(ChoiceResult(
             lesson_id=ep.lesson_id, instance_id=ep.instance_id, answer=ep.answer,
-            predicted=best, correct=best == ep.answer, n_choices=len(ep.choices)))
+            predicted=best, correct=best == ep.answer, n_choices=len(ep.choices),
+            prompt=ep.prompt, choices=tuple(ep.choices)))
     if was_training:
         model.train()
     return report
