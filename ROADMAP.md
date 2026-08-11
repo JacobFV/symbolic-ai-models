@@ -113,23 +113,30 @@ occupies in the term graph.
   is larger for that reason alone. The bias produced a confident result with the
   wrong sign, from data that actually says the opposite.
 
+- **The prompt does not leak hidden node labels; prose is admissible.** Asked
+  and answered by `shortcuts.node_text_leak`, before anything was built on it.
+  Over 12,201 masked labels:
+
+  | | |
+  |---|---:|
+  | answer already on a visible node | 0.711 |
+  | answer not in the graph at all | 0.289 |
+  | of those, prompt contains the answer | 0.567 |
+  | of those, **uniquely determined by the prompt** | **0.000** |
+  | expected accuracy of the cheat, when absent | 0.025 |
+  | **expected accuracy of the cheat, overall** | **0.007** |
+  | structure-only label floor, for comparison | 0.105 |
+
+  The text carries the symbol without carrying its *position*, which is exactly
+  the distinction this task rests on: the question is which node, not which
+  symbol. Not once in 12,201 draws does the prompt pin the answer down, and a
+  text-only cheat scores an order of magnitude below the floor it would have to
+  beat. `test_the_prompt_does_not_leak_hidden_node_labels` keeps it that way and
+  will fail if the margin ever closes.
+
+  So the prose pointer is unblocked.
+
 ## Open questions
-
-- **Does giving a node-task model the prompt text leak the answer?** No model can
-  read prose today: `collate_graph` carries no text, so `GraphView` has none.
-  Adding it is the obvious next step for a pointer, and it is not obviously safe.
-
-  The hidden node's symbol appears somewhere in the prompt about **89.6%** of the
-  time. That is not automatically a leak — the same symbol is usually also on a
-  visible *node* (71.9%), and the question is which node, not which symbol, so
-  frequency alone reveals no position. But for the ~28% of masked nodes whose
-  label appears nowhere else in the graph, the prompt may hand over a symbol
-  nothing else in the input could name, and the floor is structure-only and
-  cannot use it. That would move the comparison, not just the score.
-
-  Resolve it with `shortcuts.py`, which exists to audit exactly this, *before*
-  plumbing text into the node batch — not after, when the number will be
-  attractive and the audit inconvenient.
 
 ## Scope
 

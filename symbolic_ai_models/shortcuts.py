@@ -34,7 +34,8 @@ import re
 from dataclasses import dataclass
 from typing import Callable, Sequence
 
-__all__ = ["SHORTCUTS", "Shortcut", "best_shortcut", "shortcut_scores",
+__all__ = ["SHORTCUTS", "Shortcut", "best_shortcut", "node_text_leak",
+           "shortcut_scores",
            "shortcut_table"]
 
 _WORD = re.compile(r"[^\W\d_]+|\d+", re.UNICODE)
@@ -200,3 +201,76 @@ def shortcut_table(episodes: Sequence, *, limit: float = 0.0) -> str:
         if score == score and score >= limit:
             lines.append(f"{name:<14}{score:>7.3f}   {why[name]}")
     return "\n".join(lines)
+
+
+# ---------------------------------------------------------------------------
+# the node task: would handing a model the prose leak the answer?
+# ---------------------------------------------------------------------------
+def node_text_leak(episodes: Sequence, *, mask_rate: float = 0.15,
+                   max_nodes: int = 128, seed: int = 0) -> dict[str, float]:
+    """How much of a hidden node's label the prompt gives away by itself.
+
+    No model reads prose on the node task today — `collate_graph` carries no
+    text. Adding it is the obvious next move for a pointer, and this decides
+    whether it is admissible before anything is built on it.
+
+    The split that matters is whether the answer is already in the graph:
+
+    * **already visible** — the same symbol sits on an unmasked node, so the
+      prompt reveals no symbol the input did not have. Nothing to leak.
+    * **not in the graph** — this is the case to worry about. The prompt may
+      name a symbol nothing else in the input can, while the floor is
+      structure-only and cannot use it. That would move the comparison rather
+      than the score, which is worse than an inflated number.
+
+    The cheat measured is the one actually available: *the answer is a word of
+    the prompt that is not already on a visible node*. Reported as its recall
+    (is the answer even among those words) and its expected accuracy if it
+    guesses uniformly among them, which is what "how ambiguous is it" means in
+    units anyone can compare against a lift.
+
+    Fit nothing, tune nothing: this is an audit, and it runs on whatever
+    episodes it is handed.
+    """
+    import numpy as np
+
+    rng = np.random.default_rng(seed)
+    in_graph = out_of_graph = 0
+    recalled = 0
+    expected_hits = 0.0
+    unique = 0
+
+    for ep in episodes:
+        g = ep.graph
+        n = min(len(g), max_nodes)
+        if not n:
+            continue
+        hidden = set(np.flatnonzero(rng.random(n) < mask_rate).tolist())
+        visible = {g.labels[j] for j in range(n)
+                   if j not in hidden and g.labels[j]}
+        words = set(_words(ep.prompt))
+        candidates = words - {v.lower() for v in visible}
+
+        for i in sorted(hidden):
+            label = g.labels[i]
+            if not label:
+                continue
+            if label in visible:
+                in_graph += 1
+                continue
+            out_of_graph += 1
+            if label.lower() in candidates:
+                recalled += 1
+                expected_hits += 1.0 / max(len(candidates), 1)
+                unique += len(candidates) == 1
+
+    total = in_graph + out_of_graph
+    return {
+        "n_masked": float(total),
+        "already_in_graph": in_graph / total if total else float("nan"),
+        "not_in_graph": out_of_graph / total if total else float("nan"),
+        "recall_when_absent": recalled / out_of_graph if out_of_graph else float("nan"),
+        "expected_acc_when_absent": expected_hits / out_of_graph if out_of_graph else float("nan"),
+        "uniquely_determined": unique / out_of_graph if out_of_graph else float("nan"),
+        "expected_acc_overall": expected_hits / total if total else float("nan"),
+    }

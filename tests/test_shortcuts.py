@@ -79,3 +79,33 @@ def test_the_table_names_what_each_cheat_exploits(episodes):
     for shortcut in SHORTCUTS:
         assert shortcut.name in text
     assert "exploits" in text
+
+
+def test_the_prompt_does_not_leak_hidden_node_labels():
+    """Prose is admissible input for the node task, and this is why.
+
+    The hidden symbol appears in the prompt often, which looked alarming enough
+    to stop and check before plumbing text into the node batch. It is not a
+    leak: on 12,201 masked labels from the full curriculum, 71.1% are already on
+    a visible node (nothing to reveal), and of the 28.9% that are not, the
+    prompt contains the answer 56.7% of the time but **never once pins it down**
+    -- uniquely determined 0.000. Guessing among the prompt's words that are not
+    already on a visible node is worth 0.025 there and 0.007 overall, against a
+    structure-only label floor of 0.105.
+
+    So the text carries the symbol without carrying its position, which is the
+    distinction the whole task rests on: the question is which node, not which
+    symbol.
+    """
+    from symbolic_ai_models.data.curriculum import generate, lesson_ids
+    from symbolic_ai_models.shortcuts import node_text_leak
+
+    episodes = list(generate(lesson_ids()[:12], n=6))
+    got = node_text_leak(episodes, mask_rate=0.15, max_nodes=128)
+
+    assert got["n_masked"] > 0
+    assert 0.0 <= got["already_in_graph"] <= 1.0
+    # The cheat must stay far below the floor it would otherwise be beating.
+    assert got["expected_acc_overall"] < 0.05, (
+        f"a text-only cheat scores {got['expected_acc_overall']:.3f}; if this "
+        "ever approaches the 0.105 label floor, prose stops being admissible")
