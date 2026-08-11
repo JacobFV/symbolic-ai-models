@@ -383,9 +383,30 @@ gru          neural  995,537   0.061    -0.050    (300 steps ~ 1.3 passes)
 
 That is below the floor, and it would be cheap and wrong to report it as the
 separation inverting. The neural models were given 300 steps at batch 16 against
-3,580 training episodes — barely more than one pass — while every rule-based
-model sees the training set in full. It is an undertrained model, not a beaten
-one.
+3,580 training episodes — barely more than one pass. It is an undertrained
+model, not a beaten one.
+
+**Earlier versions of this paragraph finished "…while every rule-based model
+sees the training set in full". That is false**, and it was the load-bearing
+half of the fairness argument. Those 3,580 episodes yield about **130,800**
+masked-node training examples, and five rule-based models cap how many they
+learn from:
+
+| model | cap | share of available |
+|---|---:|---:|
+| `ilp` | 1,500 | **1.1%** |
+| `brill` | 3,000 | 2.3% |
+| `ruleinduce` | 4,000 | 3.1% |
+| `workspace` | 4,000 | 3.1% |
+| `analogy` | `max_cases` | varies |
+
+The caps stride rather than truncate, so the sample is spread across the
+curriculum instead of stopping at the early lessons — that bug was found and
+fixed earlier. But `ilp` reaching fourth place on 1.1% of the data is a
+different and more interesting claim than the one this README was making, and
+it means the budget asymmetry ran in *both* directions at once. They are
+defaults in `extra`, not constants; nobody has measured what these models do
+when raised.
 
 **The fair comparison is running now**, at 2000 steps (8.9 passes) on CPU — it
 did not need a GPU, only the patience to let it finish, and `train --resume` so

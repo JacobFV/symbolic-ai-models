@@ -142,6 +142,25 @@ Everything defaults to CPU now, including `TrainConfig.device`, which used to be
       returned in seconds instead of hours. Fixed: a run counts as complete only
       if it ran at least the budget being asked for, and a rule-based model
       (0 steps, fits in one pass) is always complete.
+- [ ] **A data-budget curve for the rule-based models, the mirror of the step
+      curve for the networks.** Five of them cap their training examples:
+      `ilp` 1,500, `brill` 3,000, `ruleinduce` 4,000, `workspace` 4,000, and
+      `analogy` by `max_cases`. Measured against the ~130,800 masked-node
+      examples the full curriculum yields, that is 1.1% for `ilp` and about 3%
+      for the others. The README claimed the opposite -- "every rule-based model
+      sees the training set in full" -- and that claim was the load-bearing half
+      of the argument that the networks' 300 steps were unfair.
+
+      So the asymmetry ran both ways and neither side was measured. Raise the
+      caps in `extra` and plot lift against examples consumed, exactly as
+      `history.json` now gives lift against steps. Two outcomes worth
+      distinguishing in advance: if the curves are flat, the caps cost nothing
+      and `ilp` reaching fourth on 1.1% of the data is the headline; if they
+      climb, every rule-based number in the table is a lower bound and the
+      family comparison has to be redone at matched data.
+
+      Do not start this until the neural re-run finishes -- it owns the CPU.
+
 - [x] (superseded) Finish the full-curriculum sweep and rewrite the conclusions. Running
       via `configs/full179.toml --tasks node`. Nothing in the README should be
       trusted until the complete table is in. Run it with `--resume` so an
