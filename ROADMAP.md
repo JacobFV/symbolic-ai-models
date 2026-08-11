@@ -48,11 +48,17 @@ occupies in the term graph.
 
 - [x] `parsers/base.py` — Parser, ParseResult, registry
 - [x] `parsers/evaluate.py` — gold roles from the graph, clustering F1
-- [ ] parsers: `none`, `regex`, `categorical`, `induced`, `chunker`
-- [ ] `symbolic-ai-models parsers` and `parse-eval` CLI
-- [ ] reasoners accept `extra.parser`; sweep the parser x reasoner matrix
-- [ ] scale test: parser quality vs number of training episodes (the curriculum
+- [x] parsers: `none`, `regex`, `categorical`, `induced`, `chunker`
+- [x] `symbolic-ai-models parsers` and `parse-eval` CLI
+- [x] reasoners accept `extra.parser`; `ngram` consumes one. Matrix swept:
+      the abstraction level works and buys ~1% of a bit (see below)
+- [x] scale test: parser quality vs number of training episodes (the curriculum
       is unbounded, so this curve is free and is the point of the exercise)
+- [ ] **Move the shared parsing primitives down into `parsers/`.** `regex`
+      imports `models/symbolalg/parse.py` and `categorical` imports the
+      syllogism fragment, so `parsers` depends on `models` while `models`
+      depends on `parsers`. Nothing breaks today only because the model-side
+      import is function-local. Parsing code belongs in the parser layer.
 
 ### Next, from the design docs in `.old/docs` (ranked)
 
@@ -90,6 +96,26 @@ Cheap and high-value first; each is exactly measurable under this harness.
 - [ ] **Cap the counting models' memory.** The source work reports a
       count-based model taking the host down at 40M tokens. `ngram`, `ctw` and
       `grammar` grow with distinct contexts and have no bound.
+
+### Measured: the parser x reasoner matrix, first cut
+
+`ngram` gained a class-context back-off level fed by whatever parser it is
+given. Fitted on 240 episodes over four lessons, scored on disjoint seeds:
+
+    parser        ctx  bits/tok  ans_acc
+    none            0     1.269    0.227
+    induced        36     1.256    0.227
+    chunker      1013     1.265    0.227
+    categorical    67     1.266    0.227
+    regex          19     1.269    0.227
+
+So the plumbing works and the payoff is ~1% of a bit, with answer accuracy
+untouched. The likely reason is that at order 4 with this much data the literal
+contexts nearly always hit, so the abstract level is seldom reached — the
+abstraction is real but rarely needed. Worth retesting at small training sizes,
+where literal contexts miss often and generalising the context should matter
+most; that is the regime the parser scaling curve already showed `induced`
+winning in.
 
 ## Open questions
 

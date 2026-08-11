@@ -395,9 +395,16 @@ def _collect(votes: Votes, b: int, node: int, rows: list, cols: list,
 
 
 def _build_parser(name: str):
-    """Resolve a parser by name. Imported lazily to keep the import graph a DAG:
-    parsers depend on the data layer, models depend on parsers, and nothing
-    depends on models."""
+    """Resolve a parser by name, imported lazily because the layering is *not*
+    a DAG and this is what keeps it working.
+
+    Two parsers reuse parsing code that still lives under ``models/`` —
+    ``regex`` imports ``symbolalg.parse``, ``categorical`` imports the syllogism
+    fragment — because that code arrived welded to those models. So ``parsers``
+    imports ``models`` at module scope and ``models`` imports ``parsers`` here,
+    inside the function, which is the only reason the cycle does not bite. The
+    real fix is to move those primitives down into ``parsers/``; it is on the
+    roadmap and this comment should shrink when it lands."""
     from ..parsers import build
     return build(name)
 

@@ -36,7 +36,7 @@ class NGramModel(RuleBasedModel):
     ``extra.order`` sets the longest token context kept (default 4).
     """
 
-    LEARNED = ("text", "label", "type", "order")
+    LEARNED = ("text", "label", "type", "order", "class_next", "class_of")
 
     def __init__(self, cfg: ModelConfig) -> None:
         super().__init__(cfg)
@@ -45,6 +45,10 @@ class NGramModel(RuleBasedModel):
         self.text: list[dict[tuple, collections.Counter]] = []
         self.label: dict[tuple, collections.Counter] = {}
         self.type: dict[tuple, collections.Counter] = {}
+        #: token id -> the class its parser assigned, when it assigned one
+        self.class_of: dict[int, str] = {}
+        #: class context -> next token. The abstract back-off level.
+        self.class_next: dict[tuple, collections.Counter] = {}
 
     def learn(self, episodes: Sequence[Episode], tok: SymbolTokenizer) -> None:
         self.text = [collections.defaultdict(collections.Counter)
@@ -60,6 +64,8 @@ class NGramModel(RuleBasedModel):
                     if t + 1 >= k:
                         self.text[k][tuple(ids[t + 1 - k:t + 1])][nxt] += 1
 
+        self._learn_classes(episodes, tok)
+
         # Graph contexts are counted on *masked* views, so the keys recorded
         # here are keys that will still resolve at evaluation time.
         for view, targets in self.training_views(episodes, tok,
@@ -72,14 +78,87 @@ class NGramModel(RuleBasedModel):
                         self.label[key][label_id] += 1
 
     # ---- prediction ---------------------------------------------------
+    def _learn_classes(self, episodes: Sequence[Episode],
+                       tok: SymbolTokenizer) -> None:
+        """Add one back-off level above the literal contexts, from the parser.
+
+        Where the token tables back off to a *shorter* context, this backs off to
+        a more *abstract* one: the same span read as the classes the parser
+        assigned. A context never seen with these particular words can still
+        resolve if it was seen with words of the same kind.
+
+        With ``parser=none`` nothing is assigned and the table is left empty, so
+        this model is then bit-identical to what it was before the parser
+        existed — which is the property that makes the parser x reasoner matrix
+        readable, since the ``none`` column is a true control rather than a
+        differently-shaped model.
+        """
+        self.class_of = {}
+        self.class_next = {}
+
+        votes: dict[str, collections.Counter] = collections.defaultdict(
+            collections.Counter)
+        for ep in episodes:
+            result = self.parser.parse(ep.text)
+            for i, word in enumerate(result.tokens):
+                assigned = result.classes.get(i)
+                if assigned:
+                    votes[word][assigned] += 1
+        if not votes:                       # the parser has no opinion
+            return
+
+        word_class = {w: c.most_common(1)[0][0] for w, c in votes.items()}
+        for token_id, piece in enumerate(tok.itos):
+            klass = word_class.get(piece.strip())
+            if klass:
+                self.class_of[token_id] = klass
+
+        table: dict[tuple, collections.Counter] = collections.defaultdict(
+            collections.Counter)
+        for ep in episodes:
+            ids = tok.encode(ep.text, bos=True, eos=True)
+            abstract = [self.class_of.get(i) for i in ids]
+            for t in range(len(ids) - 1):
+                for k in range(1, self.order + 1):
+                    if t + 1 < k:
+                        continue
+                    window = abstract[t + 1 - k:t + 1]
+                    # Only wholly-classified spans generalise. A window with a
+                    # gap in it is the literal context wearing a hat, and
+                    # keeping those would just duplicate the token tables.
+                    if all(window):
+                        table[tuple(window)][ids[t + 1]] += 1
+        self.class_next = dict(table)
+
     def text_votes(self, ids: Sequence[int]) -> list[Votes]:
         out: list[Votes] = []
         for t in range(len(ids)):
             # Only ids[:t+1] is ever read, so this is causal by construction.
-            out.append(self._backoff_vote(
-                [self.text[k].get(tuple(ids[t + 1 - k:t + 1]))
-                 for k in range(min(self.order, t + 1), -1, -1)]))
+            # Interleaved by specificity: a literal k-gram, then the same span
+            # read as classes, then the literal (k-1)-gram, and so on.
+            #
+            # Appending the class tables *after* every literal one, which is the
+            # obvious arrangement, makes them dead code: the literal 1-token
+            # context is seen for nearly every token in training, so back-off
+            # reaches it first and stops, and the abstraction is never
+            # consulted. Measured before this was fixed - the logits were
+            # bit-identical for `none`, `induced`, `chunker` and `regex` while
+            # the class tables sat there fully populated.
+            tables: list[collections.Counter | None] = []
+            for k in range(min(self.order, t + 1), 0, -1):
+                tables.append(self.text[k].get(tuple(ids[t + 1 - k:t + 1])))
+                tables.append(self._class_table(ids, t, k))
+            tables.append(self.text[0].get(()))
+            out.append(self._backoff_vote(tables))
         return out
+
+    def _class_table(self, ids: Sequence[int], t: int,
+                     k: int) -> collections.Counter | None:
+        """The last ``k`` positions read as parser classes, if all were assigned."""
+        if not self.class_next:
+            return None
+        window = [self.class_of.get(i) for i in ids[t + 1 - k:t + 1]]
+        return self.class_next.get(tuple(window)) if all(window) else None
 
     def node_votes(self, view: GraphView) -> dict[int, tuple[Votes, Votes]]:
         out: dict[int, tuple[Votes, Votes]] = {}
@@ -130,4 +209,5 @@ class NGramModel(RuleBasedModel):
     def n_symbolic_parameters(self) -> int:
         return (sum(len(v) for tbl in self.text for v in tbl.values())
                 + sum(len(v) for v in self.label.values())
-                + sum(len(v) for v in self.type.values()))
+                + sum(len(v) for v in self.type.values())
+                + sum(len(v) for v in self.class_next.values()))
