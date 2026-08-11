@@ -44,6 +44,33 @@ occupies in the term graph.
   Checked under `PYTHONHASHSEED=1` vs `999`: all eight are bit-identical.
   `test_fitting_is_stable_across_processes` keeps it that way.
 
+- **Three models score bit-identically on type, and it is not a bug.**
+  `evidence`, `routes` and `symbolalg` all report type_acc
+  **0.6990857503152585** over the same 6,344 nodes on the full curriculum. Two
+  identical numbers is a coincidence; three to sixteen digits is a shared cause,
+  so I went looking for one, expecting a broken fallback.
+
+  It is not that. All three emit type votes on 85-89% of nodes rather than
+  abstaining, their predictions are not constant (three distinct types), and on
+  a sample they agree node for node. The cause is that their type heuristics are
+  *equivalent*: each copies the type of a structural neighbour, and on a tree
+  whose node types are nearly determined by shape, sibling-copying and
+  peer-copying and best-match-copying return the same answer almost everywhere.
+  Three models, one method, arrived at independently.
+
+  They sit below the type floor because the floor is a lookup on
+  `(parent type, slot, depth, has children)` -- strictly more context than any
+  neighbour-copy uses -- so on 179 lessons the table wins. That is a result
+  about the task, not a defect in the models. `ilp` and `workspace` differ
+  slightly (0.6687, 0.6695) and are doing something marginally their own.
+
+  One real asymmetry was found on the way and left alone deliberately:
+  `symbol_backoff` receives a structural `context_prior` at inference and
+  `type_backoff` does not, so an abstaining model falls back to the global type
+  marginal rather than the structural one. That is worth fixing, but it cannot
+  be the explanation here -- it only reaches the 10-15% of nodes where these
+  models abstain, and it would not produce identical predictions on the rest.
+
 ## Scope
 
 The **symbolic models are the subject**. The neural half exists as a control and
