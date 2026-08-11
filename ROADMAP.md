@@ -113,10 +113,15 @@ Cheap and high-value first; each is exactly measurable under this harness.
       (-0.011 accuracy, worse calibration) and shipped off by default. Third
       null in a row, and the pattern is the real finding — see the note on
       priority below.
-- [ ] **PRIORITY: get any rule-based model above the label floor.** Not yet
-      done. The first attempt was to check the floor itself for unfairness —
-      there was a real one, it is fixed, and correcting it moved the floor
-      *up* rather than down (see below), so the gap is genuine and still open.
+- [x] **PRIORITY: get any rule-based model above the label floor.** Done,
+      barely: `analogy` at +0.008 lift, by pairing route transfer with a
+      memorising fallback. See below — the margin is thin and the interesting
+      part is what it took.
+- [ ] **Widen the margin.** +0.008 is one model scraping over the line. The
+      diagnostic that got it there — accuracy *where a model commits* versus
+      coverage — applies to every rule-based model and has only been used on
+      one. `grammar` commits on 94% at 0.273; `routes` on 100% at 0.233. Find
+      the ones whose mechanism is good but whose coverage is low.
 - [ ] (done, kept for the record) Anchor-relative: re-express features relative to
       the masked node or the query subtree — relative depth, sibling offset,
       path-from-query — so a hypothesis learned on one episode is *identical*
@@ -390,6 +395,35 @@ predicts pointers rather than symbols — on the strength of a premise that does
 not hold. Equivariance is real and worth having; it is simply not what this task
 rewards. A rule-based model that clears the floor most likely has to do both:
 memorise the recurring pool where it pays, and use structure where it does not.
+
+### Measured: coverage, not reasoning, was the binding constraint
+
+Splitting each model's accuracy into "where it commits" and "how often it
+commits" changes the picture completely:
+
+    model        argmax  voted%  acc where it voted
+    analogy       0.221     63%              0.352
+    grammar       0.267     94%              0.273
+    ngram         0.250    100%              0.238
+    routes        0.215    100%              0.233
+    ctw           0.198    100%              0.221
+    floor         0.332    100%              0.332
+
+`analogy`'s mechanism was already **above the floor** — 0.352 against 0.332 —
+and its overall score was being dragged down by abstaining on 37% of nodes,
+where it fell back to the unigram prior. Nothing was wrong with the reasoning;
+the model simply declined to answer a third of the questions.
+
+Filling that gap with the floor's own strategy — memorise the commonest label
+per structural context, used only where route transfer finds nothing — gives
+0.221 -> 0.337, lift -0.166 -> +0.008. First rule-based model over the line.
+
+This is a deliberate reversal of an earlier decision. `analogy` was rebuilt to
+avoid memorising, on the premise that the curriculum reinvents its vocabulary;
+that premise is measured false, so the memorisation it was refusing is free
+accuracy. Equivariance is a real property and `routes` still has it — but it is
+not what this task rewards, and `analogy` has been removed from the
+structure-only list rather than pretending it can have both.
 
 ## Open questions
 

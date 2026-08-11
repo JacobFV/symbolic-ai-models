@@ -94,7 +94,8 @@ class _Case:
 class AnalogyModel(RuleBasedModel):
     """MAC/FAC over stored graphs; the answer comes from the aligned position."""
 
-    LEARNED = ("cases", "index", "max_cases", "candidates", "confidence_map")
+    LEARNED = ("cases", "index", "max_cases", "candidates", "confidence_map",
+               "context_labels", "memorise_fallback")
 
     def __init__(self, cfg: ModelConfig) -> None:
         super().__init__(cfg)
@@ -104,6 +105,10 @@ class AnalogyModel(RuleBasedModel):
         self.cases: list[_Case] = []
         self.index: dict[tuple, list[int]] = {}
         self.confidence_map = ScoreCalibrator()
+        #: Most common label per structural context — the floor's own strategy,
+        #: used only where route transfer finds nothing. See `_fallback`.
+        self.context_labels: dict[tuple, int] = {}
+        self.memorise_fallback = bool(cfg.get("memorise_fallback", True))
 
     # ---- the case base -------------------------------------------------
     def learn(self, episodes: Sequence[Episode], tok: SymbolTokenizer) -> None:
@@ -125,7 +130,35 @@ class AnalogyModel(RuleBasedModel):
                 self.index[_coarse(view, node)].append(len(self.cases))
                 self.cases.append(case)
         self.index = dict(self.index)
+        self._fit_fallback(episodes, tok)
         self._calibrate(episodes, tok)
+
+    def _fit_fallback(self, episodes: Sequence[Episode],
+                      tok: SymbolTokenizer) -> None:
+        """Memorise the commonest label per structural context.
+
+        Route transfer answers only 63% of masked nodes, and where it answers it
+        beats the floor (0.352 against 0.332). The other 37% were abstentions,
+        which land on the unigram prior and cost more than they save — the
+        model's overall score was 0.221 against a mechanism worth 0.352.
+
+        So the gap is filled with the floor's own strategy. That is a
+        deliberate reversal: this model was rebuilt to *avoid* memorising, on
+        the premise that the curriculum invents its vocabulary per episode. That
+        premise is measured false — every scored label recurs in training — so
+        refusing to memorise was paying for robustness the task never rewards.
+        Structure answers first; memory answers what structure cannot.
+        """
+        counts: dict[tuple, collections.Counter] = collections.defaultdict(
+            collections.Counter)
+        for view, targets in self.training_views(episodes, tok,
+                                                 max_nodes=self.cfg.max_len,
+                                                 repeats=2):
+            for node, (label_id, _) in targets.items():
+                if label_id >= 0:
+                    counts[_coarse(view, node)][label_id] += 1
+        self.context_labels = {k: c.most_common(1)[0][0]
+                               for k, c in counts.items()}
 
     def _calibrate(self, episodes: Sequence[Episode],
                    tok: SymbolTokenizer) -> None:
@@ -170,10 +203,19 @@ class AnalogyModel(RuleBasedModel):
         labels, best = self._retrieve(view, node)
         types = self._types(view, node)
         if not labels:
-            return ABSTAIN, (types if types else ABSTAIN)
+            return self._fallback(view, node), (types if types else ABSTAIN)
         confidence = (self.confidence_map(best) if self.confidence_map.fitted
                       else min(0.2 + 0.6 * best, 0.88))
         return (dict(labels), confidence), (types if types else ABSTAIN)
+
+    def _fallback(self, view: GraphView, node: int) -> Votes:
+        """What to say when no route explains anything: what usually goes here."""
+        if not self.memorise_fallback:
+            return ABSTAIN
+        symbol = self.context_labels.get(_coarse(view, node))
+        # Weaker than a route transfer, because it is a fact about the corpus
+        # rather than about this episode.
+        return ({symbol: 1.0}, 0.30) if symbol is not None else ABSTAIN
 
     def _types(self, view: GraphView, node: int) -> Votes | None:
         types = self._retrieve_types(view, node)
