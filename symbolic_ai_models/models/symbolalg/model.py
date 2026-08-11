@@ -44,6 +44,8 @@ HOLE = "\x00"
 class SymbolAlgebraModel(RuleBasedModel):
     """Parse the prefix into facts; expect the next fact to rhyme with them."""
 
+    LEARNED = ("templates", "slots", "max_context")
+
     def __init__(self, cfg: ModelConfig) -> None:
         super().__init__(cfg)
         self.max_context = int(cfg.get("max_context", 6))

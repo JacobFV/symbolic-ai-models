@@ -29,7 +29,7 @@ from typing import Sequence
 
 import torch
 
-from .data.batch import collate_text
+from .data.batch import text_batch
 from .data.curriculum import Episode
 from .data.tokenizer import SymbolTokenizer
 from .models.base import Model
@@ -122,25 +122,13 @@ def score_choices(model: Model, tok: SymbolTokenizer, prompt: str,
         seq = (ids + cont)[-max_len:]
         n_cont = min(len(cont), len(seq) - 1)
         x = torch.tensor(seq, dtype=torch.long, device=device)[None]
-        batch = _text_batch(x, tok, device)
+        batch = text_batch(seq, tok, device)
         logits = model(batch).symbol_logits[0].float()
         logp = torch.log_softmax(logits[:-1], dim=-1)
         targets = x[0, 1:]
         picked = logp.gather(-1, targets[:, None]).squeeze(-1)
         scores.append(float(picked[-n_cont:].mean()) if n_cont > 0 else float("-inf"))
     return scores
-
-
-def _text_batch(x: torch.Tensor, tok: SymbolTokenizer, device):
-    from .data.graph import TYPE_TO_ID
-    from .data.batch import SymbolicBatch
-    B, L = x.shape
-    return SymbolicBatch(
-        tokens=x,
-        types=torch.full((B, L), TYPE_TO_ID["text"], dtype=torch.long, device=device),
-        pad_mask=torch.ones((B, L), dtype=torch.bool, device=device),
-        depth=torch.zeros((B, L), dtype=torch.long, device=device),
-        causal=True, rel=None, meta={"task": "lm"})
 
 
 def evaluate_choices(model: Model, tok: SymbolTokenizer,

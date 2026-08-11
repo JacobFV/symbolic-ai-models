@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import collections
+import copy
 import json
 from pathlib import Path
 
@@ -14,7 +15,8 @@ from symbolic_ai_models.data.curriculum import generate
 from symbolic_ai_models.report import comparison_table, load_summaries
 from symbolic_ai_models.models import ModelConfig, build
 from symbolic_ai_models.tasks import Totals, make_task
-from symbolic_ai_models.train import TrainConfig, build_tokenizer, load_run, train
+from symbolic_ai_models.train import (TrainConfig, build_tokenizer, load_data,
+                                      load_run, train)
 
 LESSONS = "unification,symbol_grounding,context_free_language"
 
@@ -243,3 +245,104 @@ def test_node_report_says_how_much_it_covers(episodes):
     totals.add(task.compute(model(batch), batch).counts)
     out = task.summarize(totals)
     assert 0.0 <= out["label_coverage"] <= 1.0
+
+
+# ---- persistence of the rule-based half -----------------------------------
+@pytest.mark.parametrize("name", ["ngram", "ruleinduce", "symbolalg",
+                                  "syllogism", "evidence", "synth"])
+def test_a_fitted_rule_based_model_survives_a_round_trip(name, tmp_path, episodes):
+    """A decision list is not a tensor, so `state_dict` cannot see it.
+
+    Without the extra state a reloaded symbolic model has its back-off and none
+    of its rules, which would make `eval` and `sample` quietly score the prior
+    instead of the model.
+    """
+    summary = train(small_config(tmp_path / name, model=name, tasks=("node",),
+                                 task_weights={"node": 1.0}))
+    assert summary["family"] == "rule-based"
+    model, tok, _ = load_run(tmp_path / name)
+
+    batch = make_task("node", max_nodes=64).collate(episodes, tok)
+    with torch.no_grad():
+        reloaded = model(batch).symbol_logits
+    fresh = build(name, ModelConfig(vocab_size=len(tok), d_model=32, n_layers=2,
+                                    n_heads=4, d_ff=64, dropout=0.0))
+    fresh.fit_on(load_data(TrainConfig(**{**small_config(tmp_path, model=name).to_dict(),
+                                          "tasks": ("node",)}))[0], tok)
+    with torch.no_grad():
+        direct = fresh.eval()(batch).symbol_logits
+    assert torch.allclose(reloaded, direct, atol=1e-5), \
+        f"{name}: reloaded model does not predict what the fitted one did"
+
+
+def test_reloading_a_symbolic_run_without_its_state_is_an_error(tmp_path, episodes):
+    """Fail loudly rather than silently scoring the back-off."""
+    import torch as _torch
+    out = tmp_path / "stale"
+    train(small_config(out, model="ngram", tasks=("node",),
+                       task_weights={"node": 1.0}))
+    ckpt = _torch.load(out / "model.pt", weights_only=False)
+    ckpt.pop("symbolic_state")
+    _torch.save(ckpt, out / "model.pt")
+    with pytest.raises(ValueError, match="learned state"):
+        load_run(out)
+
+
+# ---- sampling -------------------------------------------------------------
+def test_sampling_never_shows_the_model_its_answer(finished_run, episodes):
+    """The decoder is fed the prompt and must produce the rest itself."""
+    from symbolic_ai_models.decode import SamplingConfig, sample_episodes
+    out, _ = finished_run
+    model, tok, _ = load_run(out)
+    samples = sample_episodes(model, tok, episodes[:3],
+                              config=SamplingConfig(max_new_tokens=6))
+    assert len(samples) == 3
+    for s, ep in zip(samples, episodes[:3]):
+        assert s.prompt == ep.prompt and s.gold == ep.answer
+
+    # The decisive check: rewrite the gold answers and the continuations must
+    # not budge. (Asserting the answer is absent from the prompt would be
+    # wrong — the prompt states the answer *set*, and the answer is in it.)
+    altered = [copy.deepcopy(e) for e in episodes[:3]]
+    for e in altered:
+        e.answer = "zzzz"
+    again = sample_episodes(model, tok, altered,
+                            config=SamplingConfig(max_new_tokens=6))
+    assert [x.generated for x in again] == [x.generated for x in samples]
+
+
+def test_greedy_sampling_is_deterministic(finished_run, episodes):
+    from symbolic_ai_models.decode import SamplingConfig, generate
+    out, _ = finished_run
+    model, tok, _ = load_run(out)
+    cfg = SamplingConfig(max_new_tokens=8, greedy=True)
+    a = generate(model, tok, episodes[0].prompt + "\n", config=cfg)
+    b = generate(model, tok, episodes[0].prompt + "\n", config=cfg)
+    assert a.text == b.text and a.token_ids == b.token_ids
+
+
+def test_sampling_stops_and_reports_why(finished_run, episodes):
+    from symbolic_ai_models.decode import SamplingConfig, generate
+    out, _ = finished_run
+    model, tok, _ = load_run(out)
+    gen = generate(model, tok, episodes[0].prompt + "\n",
+                   config=SamplingConfig(max_new_tokens=4))
+    assert gen.stopped in ("eos", "newline", "length")
+    assert len(gen.token_ids) <= 4
+    assert "\n" not in gen.text
+    assert len(gen.logprobs) == len(gen.token_ids)
+
+
+def test_samples_export_as_json_for_a_reviewer(finished_run, episodes, tmp_path):
+    from symbolic_ai_models.decode import SamplingConfig, sample_episodes, write_json
+    out, _ = finished_run
+    model, tok, _ = load_run(out)
+    samples = sample_episodes(model, tok, episodes[:2],
+                              config=SamplingConfig(max_new_tokens=4))
+    path = write_json(tmp_path / "s.json", samples, model="rgt")
+    payload = json.loads(path.read_text())
+    assert payload["n"] == 2
+    for record in payload["samples"]:
+        for key in ("lesson_id", "prompt", "gold", "generated",
+                    "exact_match", "in_answer_set", "choices"):
+            assert key in record

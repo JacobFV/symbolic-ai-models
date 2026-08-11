@@ -228,6 +228,46 @@ def cmd_eval(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_sample(args: argparse.Namespace) -> int:
+    """Decode continuations and print them, for a person or a reviewing model."""
+    from .decode import SamplingConfig, sample_episodes, transcript, write_json
+    from .data.curriculum import resolve_lessons
+    from .train import load_data, load_run
+
+    device = args.device or "cpu"
+    model, tok, cfg = load_run(args.run, device=device)
+    if args.data:
+        cfg.data = args.data
+    _, episodes = load_data(cfg)
+    if args.lessons:
+        keep = set(resolve_lessons(args.lessons))
+        episodes = [e for e in episodes if e.lesson_id in keep]
+
+    # Spread the sample across lessons rather than taking the first N, which
+    # would be the first lesson in registry order and nothing else.
+    if args.per_lesson:
+        seen: dict[str, int] = {}
+        picked = []
+        for e in episodes:
+            if seen.get(e.lesson_id, 0) < args.per_lesson:
+                seen[e.lesson_id] = seen.get(e.lesson_id, 0) + 1
+                picked.append(e)
+        episodes = picked
+    if args.n:
+        episodes = episodes[:args.n]
+
+    sampling = SamplingConfig(
+        max_new_tokens=args.max_new_tokens, greedy=not args.sample,
+        temperature=args.temperature, top_k=args.top_k, top_p=args.top_p,
+        seed=args.seed)
+    samples = sample_episodes(model, tok, episodes, config=sampling, device=device)
+    print(transcript(samples, show_prompt=not args.no_prompt))
+    if args.json:
+        path = write_json(args.json, samples, model=cfg.model, config=sampling)
+        print(f"\nwrote {len(samples)} samples to {path}", file=sys.stderr)
+    return 0
+
+
 def cmd_compare(args: argparse.Namespace) -> int:
     from .report import comparison_table, history_table, load_summaries
     if args.history:
@@ -298,6 +338,27 @@ def build_parser() -> argparse.ArgumentParser:
                    help="also score by choosing among the episode's options")
     e.add_argument("--device")
     e.set_defaults(fn=cmd_eval)
+
+    p_ = sub.add_parser("sample", help="decode continuations to read (not a metric)")
+    p_.add_argument("run")
+    p_.add_argument("--data", help="episode cache to sample from")
+    p_.add_argument("--lessons", help="restrict to these lessons")
+    p_.add_argument("-n", type=int, help="cap the total number of samples")
+    p_.add_argument("--per-lesson", dest="per_lesson", type=int, default=2,
+                    help="how many episodes per lesson (default 2)")
+    p_.add_argument("--max-new-tokens", dest="max_new_tokens", type=int, default=24)
+    p_.add_argument("--sample", action="store_true",
+                    help="sample instead of decoding greedily")
+    p_.add_argument("--temperature", type=float, default=1.0)
+    p_.add_argument("--top-k", dest="top_k", type=int, default=0)
+    p_.add_argument("--top-p", dest="top_p", type=float, default=0.0)
+    p_.add_argument("--json", help="also write the samples as JSON, for an "
+                                   "LLM reviewer")
+    p_.add_argument("--no-prompt", dest="no_prompt", action="store_true",
+                    help="omit prompts from the transcript")
+    p_.add_argument("--seed", type=int, default=0)
+    p_.add_argument("--device")
+    p_.set_defaults(fn=cmd_sample)
 
     c = sub.add_parser("compare", help="put finished runs side by side")
     c.add_argument("runs", nargs="+")

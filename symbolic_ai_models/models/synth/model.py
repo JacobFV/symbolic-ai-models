@@ -45,6 +45,8 @@ __all__ = ["SynthesisModel"]
 class SynthesisModel(RuleBasedModel):
     """Online synthesis: hold a program, predict from it, refit when refuted."""
 
+    LEARNED = ("found", "attempts")
+
     def __init__(self, cfg: ModelConfig) -> None:
         super().__init__(cfg)
         self.max_size = int(cfg.get("max_size", 5))

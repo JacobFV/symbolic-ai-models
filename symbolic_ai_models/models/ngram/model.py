@@ -36,6 +36,8 @@ class NGramModel(RuleBasedModel):
     ``extra.order`` sets the longest token context kept (default 4).
     """
 
+    LEARNED = ("text", "label", "type", "order")
+
     def __init__(self, cfg: ModelConfig) -> None:
         super().__init__(cfg)
         self.order = int(cfg.get("order", 4))

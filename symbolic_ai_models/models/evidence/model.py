@@ -43,6 +43,8 @@ __all__ = ["EvidenceModel"]
 class EvidenceModel(RuleBasedModel):
     """Find the earlier sentence this one is echoing; continue it the same way."""
 
+    LEARNED = ("document_frequency", "n_documents", "threshold")
+
     def __init__(self, cfg: ModelConfig) -> None:
         super().__init__(cfg)
         self.threshold = float(cfg.get("threshold", EVIDENCE_THRESHOLD))

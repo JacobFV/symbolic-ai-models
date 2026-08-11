@@ -256,8 +256,12 @@ def train(cfg: TrainConfig, *, progress=None) -> dict[str, Any]:
     if not history:                       # a learner that reported nothing
         record(cfg.steps if not is_rule_based else 0)
 
-    torch.save({"model": model.state_dict(), "config": cfg.to_dict(),
-                "vocab_size": len(tok)}, out / "model.pt")
+    checkpoint = {"model": model.state_dict(), "config": cfg.to_dict(),
+                  "vocab_size": len(tok)}
+    if isinstance(model, RuleBasedModel):
+        # A decision list is not a tensor, so `state_dict` cannot see it.
+        checkpoint["symbolic_state"] = model.symbolic_state()
+    torch.save(checkpoint, out / "model.pt")
     extra: dict[str, Any] = {}
     if hasattr(model, "abstention_rate"):
         extra["abstention_rate"] = float(model.abstention_rate)
@@ -321,5 +325,12 @@ def load_run(run_dir: str | Path, device: torch.device | str = "cpu"
     tok = SymbolTokenizer.load(root / "tokenizer.json")
     model = make_model(cfg, ckpt["vocab_size"]).to(device)
     model.load_state_dict(ckpt["model"])
+    if isinstance(model, RuleBasedModel):
+        state = ckpt.get("symbolic_state")
+        if state is None:
+            raise ValueError(
+                f"{run_dir}: a rule-based checkpoint without its learned state. "
+                "Re-run the training; the run predates symbolic persistence.")
+        model.load_symbolic_state(state, tok)
     model.eval()
     return model, tok, cfg

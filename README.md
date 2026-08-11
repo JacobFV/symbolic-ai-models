@@ -157,9 +157,45 @@ same run, and every network in the sweep holds `token_lift` above 0.65 while
 scoring *negative* `answer_lift`. Undifferentiated, the LM metric measures how well a model reproduces
 "Answer with exactly one of:".
 
-There is **no free generation**. Every number is teacher-forced scoring, which
-is how language models are trained and evaluated; it is not a measure of
-autoregressive decoding, and this repo does not claim to be one.
+Every *number* is teacher-forced scoring, which is how language models are
+trained and evaluated. Free-running generation exists but is deliberately
+**outside** the evaluation path — see below.
+
+## Sampling, for reading rather than scoring
+
+A model with a respectable cross-entropy can still produce nonsense the moment
+it stands on its own output, and no aggregate will show you that. So there is a
+decoder, and it feeds no metric:
+
+```bash
+symbolic-ai-models sample runs/rgt --per-lesson 2 --max-new-tokens 12
+symbolic-ai-models sample runs/rgt --sample --temperature 0.8 --json out.json
+scripts/qualitative-sample.sh runs/both        # every run, transcripts + JSON
+```
+
+Greedy by default, with temperature / top-k / top-p available; it stops at
+`<eos>` or the end of the line. The prompt is fed exactly as training saw it
+(`<bos> prompt \n`), the answer never enters the input, and because both
+families answer the same `forward`, the same sampler decodes a decision list and
+a transformer alike. There is no KV cache — each step re-runs the whole prefix,
+which is quadratic and entirely fine at review volumes, and keeps the decoder on
+the same forward pass the metrics use.
+
+The script writes a transcript per model, flat JSON records for a reviewing
+model to read, and a `review.md` explaining what a reviewer is actually for.
+Nothing it produces has a floor, and none of it should be compared against the
+numbers in `summary.json`.
+
+It is immediately useful. At 400 steps `rgt` scores `token_lift` 0.67 — and
+samples like this:
+
+```
+gold      : 'o1'
+generated : 'Reply with exactly one of: o1'
+```
+
+which is the same finding as the negative `answer_lift`, in a form you cannot
+misread.
 
 ## Where the vocabulary comes from
 
@@ -265,9 +301,12 @@ symbolic-ai-models/
       base.py             # Task protocol, floors, lift
       lm.py               # next-token
       masked_node.py      # masked node: type head + label head
-    train.py              # the loop; joint losses summed, not alternated
+    train.py              # data, tasks, budget -> model.fit(); no learning here
+    decode.py             # sampling, for reading; feeds no metric
     agent.py              # trained model -> multiple-choice answerer
     report.py cli.py
+  scripts/
+    qualitative-sample.sh # decode every run; transcripts + JSON for a reviewer
   tests/
 ```
 

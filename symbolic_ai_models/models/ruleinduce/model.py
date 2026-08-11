@@ -55,6 +55,8 @@ MAX_SIBLING = 3
 class RuleInductionModel(RuleBasedModel):
     """Induce ordered rules mapping structural context to a copy action."""
 
+    LEARNED = ("label_rules", "type_rules", "text_rules", "frequent")
+
     def __init__(self, cfg: ModelConfig) -> None:
         super().__init__(cfg)
         self.max_examples = int(cfg.get("max_examples", 4000))

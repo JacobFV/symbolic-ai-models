@@ -154,6 +154,28 @@ class RuleBasedModel(Model):
         """Fit straight from episodes, for callers with nothing else to say."""
         self.fit(FitContext(episodes=episodes, tok=tok))
 
+    # ---- persistence -------------------------------------------------
+    #: Attribute names holding what this model learned. A network's parameters
+    #: are tensors and ``state_dict`` finds them by itself; a decision list, a
+    #: counter and a codebook of templates are ordinary Python objects that it
+    #: cannot see, so each model names them here and they are saved alongside.
+    #: Leaving this empty means a model reloads unfitted and cannot predict.
+    LEARNED: tuple[str, ...] = ()
+
+    def symbolic_state(self) -> dict[str, Any]:
+        """Everything ``state_dict`` would miss."""
+        return {"_fitted": self._fitted,
+                **{name: getattr(self, name, None) for name in self.LEARNED}}
+
+    def load_symbolic_state(self, state: Mapping[str, Any],
+                            tok: SymbolTokenizer) -> None:
+        self.tok = tok
+        for name, value in state.items():
+            if name == "_fitted":
+                self._fitted = bool(value)
+            else:
+                setattr(self, name, value)
+
     def _fit_backoff(self, episodes: Sequence[Episode], tok: SymbolTokenizer) -> None:
         """A smoothed unigram over everything the training episodes contain.
 

@@ -51,6 +51,8 @@ __all__ = ["SyllogismModel"]
 class SyllogismModel(RuleBasedModel):
     """Parse, saturate, answer — and abstain outside the fragment."""
 
+    LEARNED = ("verdict_tokens", "answer_tokens", "n_rules")
+
     def __init__(self, cfg: ModelConfig) -> None:
         super().__init__(cfg)
         self.engine = Engine(max_rounds=int(cfg.get("max_rounds", 6)))
