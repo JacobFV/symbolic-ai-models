@@ -1,7 +1,14 @@
-"""What every architecture in this repo shares, so that only the interesting
-part differs.
+"""What every architecture shares, so that only the interesting part differs.
 
-A model here is an **encoder** and nothing else. The embedding tables, the
+Two families live in this repo and both answer to :class:`Model`: networks that
+are trained by gradient descent, and rule-based systems that are *fitted* by
+counting, parsing and searching. They meet at one interface — a
+:class:`~symbolic_ai_models.data.batch.SymbolicBatch` in, a :class:`ModelOutput` of logits
+out — which is what lets a decision list and a transformer appear in the same
+table under the same floors. See :mod:`symbolic_ai_models.models.symbolic` for the other
+half.
+
+A **neural** model here is an encoder and nothing else. The embedding tables, the
 output heads, the parameter budget and the two losses are defined once, in this
 file, and every architecture inherits them. That is deliberate and it is the
 whole methodology: if the relational transformer beats the plain one, the
@@ -37,8 +44,8 @@ import torch.nn.functional as F
 from ..data.batch import N_RELATIONS, SymbolicBatch
 from ..data.graph import NODE_TYPES
 
-__all__ = ["ModelConfig", "SymbolicModel", "ModelOutput", "Attention",
-           "RelationBias", "attention_bias", "N_TYPES"]
+__all__ = ["ModelConfig", "Model", "NeuralModel", "SymbolicModel", "ModelOutput",
+           "Attention", "FeedForward", "RelationBias", "attention_bias", "N_TYPES"]
 
 N_TYPES = len(NODE_TYPES)
 
@@ -190,11 +197,33 @@ class FeedForward(nn.Sequential):
 # ---------------------------------------------------------------------------
 # the model
 # ---------------------------------------------------------------------------
-class SymbolicModel(nn.Module):
-    """Base class: embeddings in, two heads out, one encoder in between."""
+class Model(nn.Module):
+    """The interface every architecture answers to, neural or not.
+
+    One method matters: ``forward(batch) -> ModelOutput``. Whether the logits
+    behind it came from attention or from a decision list is exactly the
+    question the repo is asking, and nothing downstream of here is allowed to
+    care.
+    """
 
     #: registry name, set by ``@register``
     name: str = ""
+    #: ``"neural"`` or ``"rule-based"`` — printed in comparison tables, because
+    #: a parameter count means very different things across the two.
+    family: str = "neural"
+
+    def forward(self, batch: SymbolicBatch) -> "ModelOutput":
+        raise NotImplementedError
+
+    def n_parameters(self, trainable_only: bool = True) -> int:
+        ps = self.parameters()
+        return sum(p.numel() for p in ps if p.requires_grad or not trainable_only)
+
+
+class NeuralModel(Model):
+    """Embeddings in, two heads out, one encoder in between."""
+
+    family = "neural"
 
     def __init__(self, cfg: ModelConfig) -> None:
         super().__init__()
@@ -250,7 +279,7 @@ class SymbolicModel(nn.Module):
         return ModelOutput(symbol_logits=self.symbol_head(h),
                            type_logits=self.type_head(h), hidden=h)
 
-    # ---- bookkeeping --------------------------------------------------
-    def n_parameters(self, trainable_only: bool = True) -> int:
-        ps = self.parameters()
-        return sum(p.numel() for p in ps if p.requires_grad or not trainable_only)
+
+#: The old name for :class:`NeuralModel`, kept because "symbolic model" now
+#: means something specific in this repo and the ambiguity is worth retiring.
+SymbolicModel = NeuralModel

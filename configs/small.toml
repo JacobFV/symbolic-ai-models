@@ -1,7 +1,7 @@
 # A run that finishes in a couple of minutes on one GPU.
 # Use it to check the wiring, not to draw a conclusion.
 #
-#   uv run symmodels train --config configs/small.toml --model rgt --out runs/small-rgt
+#   uv run symbolic-ai-models train --config configs/small.toml --model rgt --out runs/small-rgt
 
 model = "rgt"
 tasks = "lm,node"

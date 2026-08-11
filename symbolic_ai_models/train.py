@@ -28,7 +28,7 @@ import torch
 from .data.batch import SymbolicBatch
 from .data.curriculum import Episode, generate, read_jsonl, resolve_lessons
 from .data.tokenizer import SymbolTokenizer
-from .models import ModelConfig, SymbolicModel, build
+from .models import Model, ModelConfig, RuleBasedModel, build
 from .tasks import Task, Totals, make_task
 from .tasks.base import lift
 
@@ -156,7 +156,7 @@ def _task_kwargs(cfg: TrainConfig, name: str) -> dict[str, Any]:
             "max_nodes": cfg.max_nodes, "seed": cfg.seed}
 
 
-def make_model(cfg: TrainConfig, vocab_size: int) -> SymbolicModel:
+def make_model(cfg: TrainConfig, vocab_size: int) -> Model:
     return build(cfg.model, ModelConfig(
         vocab_size=vocab_size, d_model=cfg.d_model, n_layers=cfg.n_layers,
         n_heads=cfg.n_heads, d_ff=cfg.d_ff, dropout=cfg.dropout,
@@ -167,7 +167,7 @@ def make_model(cfg: TrainConfig, vocab_size: int) -> SymbolicModel:
 # evaluation
 # ---------------------------------------------------------------------------
 @torch.no_grad()
-def evaluate_model(model: SymbolicModel, tasks: dict[str, Task],
+def evaluate_model(model: Model, tasks: dict[str, Task],
                    episodes: Sequence[Episode], tok: SymbolTokenizer, *,
                    batch_size: int, device: torch.device,
                    amp: bool = True) -> dict[str, dict[str, float]]:
@@ -227,7 +227,14 @@ def _add_lift(metrics: dict[str, dict[str, float]],
 # the loop
 # ---------------------------------------------------------------------------
 def train(cfg: TrainConfig, *, progress=None) -> dict[str, Any]:
-    """Run ``cfg`` to completion and write everything to ``cfg.out``."""
+    """Run ``cfg`` to completion and write everything to ``cfg.out``.
+
+    Both families come through here and both leave the same artefacts, so
+    ``compare`` puts a decision list and a transformer in one table. What
+    differs is only how the model is brought to its final state: a network takes
+    ``steps`` gradient steps, a rule-based model is *fitted* once, in a single
+    pass over the same training episodes.
+    """
     torch.manual_seed(cfg.seed)
     random.seed(cfg.seed)
     np.random.seed(cfg.seed)
@@ -244,7 +251,11 @@ def train(cfg: TrainConfig, *, progress=None) -> dict[str, Any]:
     tasks: dict[str, Task] = {n: make_task(n, **_task_kwargs(cfg, n)) for n in cfg.tasks}
     floors = {n: t.floor(eval_eps, tok, train_eps) for n, t in tasks.items()}
 
-    model = make_model(cfg, len(tok)).to(device)
+    model = make_model(cfg, len(tok))
+    if isinstance(model, RuleBasedModel):
+        return _fit_rule_based(cfg, model, tasks, floors, train_eps, eval_eps,
+                               tok, out, progress)
+    model = model.to(device)
     opt = torch.optim.AdamW(model.parameters(), lr=cfg.lr,
                             weight_decay=cfg.weight_decay, betas=(0.9, 0.95))
 
@@ -291,6 +302,8 @@ def train(cfg: TrainConfig, *, progress=None) -> dict[str, Any]:
     summary = {
         "config": cfg.to_dict(),
         "model": cfg.model,
+        "family": model.family,
+        "steps": cfg.steps,
         "parameters": model.n_parameters(),
         "n_train": len(train_eps), "n_eval": len(eval_eps),
         "vocab_size": len(tok),
@@ -300,6 +313,53 @@ def train(cfg: TrainConfig, *, progress=None) -> dict[str, Any]:
         "device": str(device),
     }
     _write(out / "summary.json", summary)
+    return summary
+
+
+def _fit_rule_based(cfg: TrainConfig, model: "RuleBasedModel",
+                    tasks: dict[str, Task], floors: dict[str, dict[str, float]],
+                    train_eps: Sequence[Episode], eval_eps: Sequence[Episode],
+                    tok: SymbolTokenizer, out: Path, progress) -> dict[str, Any]:
+    """Fit once, evaluate once, write the same artefacts a trained run writes.
+
+    ``steps`` is meaningless here and is not silently reinterpreted as
+    something else: a decision list is induced from the training episodes in one
+    pass, and running it again would produce the same list. The summary records
+    ``steps: 0`` so that a table row cannot be misread as a model that trained
+    for as long as its neighbours.
+    """
+    started = time.time()
+    if progress:
+        print_fn = progress
+        print_fn(0, 1, {"fit": 0.0}, 0.0)
+    model.fit(train_eps, tok)
+
+    # CPU throughout: these models are Python, and moving them to a GPU would
+    # only move the logits tensor there after the work was already done.
+    metrics = _add_lift(evaluate_model(model, tasks, eval_eps, tok,
+                                       batch_size=cfg.batch_size,
+                                       device=torch.device("cpu"), amp=False), floors)
+    history = [{"step": 0, "train_loss": {}, "eval": metrics,
+                "seconds": time.time() - started}]
+    _write(out / "history.json", history)
+    torch.save({"model": model.state_dict(), "config": cfg.to_dict(),
+                "vocab_size": len(tok)}, out / "model.pt")
+
+    extra: dict[str, Any] = {}
+    if hasattr(model, "abstention_rate"):
+        extra["abstention_rate"] = float(model.abstention_rate)
+    if hasattr(model, "render"):
+        (out / "rules.txt").write_text(model.render(), encoding="utf-8")
+    summary = {
+        "config": cfg.to_dict(), "model": cfg.model, "family": model.family,
+        "parameters": model.n_parameters(), "steps": 0,
+        "n_train": len(train_eps), "n_eval": len(eval_eps), "vocab_size": len(tok),
+        "floors": floors, "final": metrics,
+        "seconds": time.time() - started, "device": "cpu", **extra,
+    }
+    _write(out / "summary.json", summary)
+    if progress:
+        progress(0, 1, {"fit": 0.0}, 0.0, metrics)
     return summary
 
 
@@ -346,7 +406,7 @@ def _write(path: Path, obj: Any) -> None:
 
 
 def load_run(run_dir: str | Path, device: torch.device | str = "cpu"
-             ) -> tuple[SymbolicModel, SymbolTokenizer, TrainConfig]:
+             ) -> tuple[Model, SymbolTokenizer, TrainConfig]:
     """Reload a finished run: the model, its vocabulary and its config."""
     root = Path(run_dir)
     ckpt = torch.load(root / "model.pt", map_location=device, weights_only=False)

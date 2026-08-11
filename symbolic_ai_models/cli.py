@@ -1,4 +1,4 @@
-"""``symmodels`` — build data, train an architecture, compare the results."""
+"""``symbolic_ai_models`` — build data, train an architecture, compare the results."""
 
 from __future__ import annotations
 
@@ -45,11 +45,11 @@ def _config_from_args(args: argparse.Namespace):
 
 def _add_train_flags(p: argparse.ArgumentParser) -> None:
     p.add_argument("--config", help="TOML file of defaults; flags override it")
-    p.add_argument("--model", help="architecture id (see `symmodels models`)")
+    p.add_argument("--model", help="architecture id (see `symbolic_ai_models models`)")
     p.add_argument("--tasks", help="comma-separated: lm, node, or both")
     p.add_argument("--task-weights", dest="task_weights",
                    help="e.g. lm=1.0,node=0.5")
-    p.add_argument("--data", help="a directory built by `symmodels data`")
+    p.add_argument("--data", help="a directory built by `symbolic_ai_models data`")
     p.add_argument("--lessons", help="all | core170 | tag:X | cap:X | a,b,c")
     p.add_argument("--n-train", dest="n_train", type=int)
     p.add_argument("--n-eval", dest="n_eval", type=int)
@@ -95,8 +95,12 @@ def _progress(step: int, total: int, losses: dict[str, float],
 # ---------------------------------------------------------------------------
 def cmd_models(args: argparse.Namespace) -> int:
     from .models import REGISTRY, model_names
-    for name in model_names():
-        print(f"{name:<14}{getattr(REGISTRY[name], 'summary', '')}")
+    from .models.symbolic import RuleBasedModel
+    for family, want in (("neural", False), ("rule-based", True)):
+        print(f"--- {family} ---")
+        for name in model_names():
+            if issubclass(REGISTRY[name], RuleBasedModel) == want:
+                print(f"  {name:<13}{getattr(REGISTRY[name], 'summary', '')}")
     return 0
 
 
@@ -160,8 +164,7 @@ def cmd_sweep(args: argparse.Namespace) -> int:
     from .report import comparison_table, load_summaries
     from .train import train
 
-    names = (model_names() if args.models in (None, "all")
-             else [m.strip() for m in args.models.split(",")])
+    names = _select_models(args.models)
     root = Path(args.out or "runs/sweep")
     done: list[Path] = []
     for name in names:
@@ -176,6 +179,19 @@ def cmd_sweep(args: argparse.Namespace) -> int:
             print(f"  {name} failed: {type(e).__name__}: {e}", file=sys.stderr)
     print("\n" + comparison_table(load_summaries(done)))
     return 0
+
+
+def _select_models(spec: str | None) -> list[str]:
+    """``all``, a family name, or a comma-separated list."""
+    from .models import REGISTRY, model_names
+    from .models.symbolic import RuleBasedModel
+    if spec in (None, "all"):
+        return model_names()
+    if spec in ("neural", "rule-based", "symbolic"):
+        want_rules = spec != "neural"
+        return [n for n in model_names()
+                if issubclass(REGISTRY[n], RuleBasedModel) == want_rules]
+    return [m.strip() for m in spec.split(",") if m.strip()]
 
 
 def cmd_eval(args: argparse.Namespace) -> int:
@@ -234,7 +250,7 @@ def _device(name: str):
 # ---------------------------------------------------------------------------
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
-        prog="symmodels",
+        prog="symbolic-ai-models",
         description="Train and evaluate symbolic text models on one harness: "
                     "next-token prediction and masked graph-node prediction.")
     sub = p.add_subparsers(dest="command", required=True)
@@ -268,7 +284,8 @@ def build_parser() -> argparse.ArgumentParser:
 
     s = sub.add_parser("sweep", help="train several architectures identically")
     _add_train_flags(s)
-    s.add_argument("--models", help="comma-separated, or all (default)")
+    s.add_argument("--models", default="all",
+                   help="all (default) | neural | symbolic | a,comma,list")
     s.set_defaults(fn=cmd_sweep)
 
     e = sub.add_parser("eval", help="score a finished run")

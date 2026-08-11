@@ -1,14 +1,10 @@
-"""The two transformers: the one that is told the structure and the one that is not.
+"""The same transformer, told which positions are parent, child and sibling.
 
-These are the poles of the comparison. ``transformer`` is an ordinary pre-LN
-transformer: on the text task it is exactly what you would expect, and on the
-graph task it reads the term tree as its pre-order linearisation and is left to
-infer from position and depth what the edges were. ``rgt`` is the same network
-with the edges handed to it.
-
-Nothing else differs — same depth, same width, same heads, same initialisation —
-so the gap between them is the value of knowing the structure rather than
-inferring it, measured directly.
+The contrast with :mod:`symbolic_ai_models.models.transformer` is the cleanest one in the
+repo: same depth, same width, same heads, same initialisation, same data in the
+same order. The only difference is that the edges of the term graph are visible
+here and invisible there, so whatever separates the two numbers is the value of
+knowing the structure rather than inferring it from a linearisation.
 """
 
 from __future__ import annotations
@@ -16,47 +12,12 @@ from __future__ import annotations
 import torch
 import torch.nn as nn
 
-from ..data.batch import N_RELATIONS, SymbolicBatch
-from .base import Attention, FeedForward, ModelConfig, SymbolicModel
-from .registry import register
+from ...data.batch import N_RELATIONS, SymbolicBatch
+from ..base import ModelConfig, NeuralModel
+from ..registry import register
+from ..transformer.model import Block
 
-__all__ = ["TransformerModel", "RelationalTransformer"]
-
-
-class Block(nn.Module):
-    """Pre-LN block. ``use_relations`` is passed straight through to attention."""
-
-    def __init__(self, cfg: ModelConfig, *, use_relations: bool) -> None:
-        super().__init__()
-        self.n1 = nn.LayerNorm(cfg.d_model)
-        self.attn = Attention(cfg, use_relations=use_relations)
-        self.n2 = nn.LayerNorm(cfg.d_model)
-        self.ff = FeedForward(cfg)
-        self.drop = nn.Dropout(cfg.dropout)
-
-    def forward(self, x: torch.Tensor, batch: SymbolicBatch) -> torch.Tensor:
-        x = x + self.drop(self.attn(self.n1(x), batch))
-        return x + self.drop(self.ff(self.n2(x)))
-
-
-class Stack(nn.Module):
-    def __init__(self, cfg: ModelConfig, *, use_relations: bool) -> None:
-        super().__init__()
-        self.blocks = nn.ModuleList(
-            Block(cfg, use_relations=use_relations) for _ in range(cfg.n_layers))
-
-    def forward(self, x: torch.Tensor, batch: SymbolicBatch) -> torch.Tensor:
-        for b in self.blocks:
-            x = b(x, batch)
-        return x
-
-
-@register("transformer", doc="Plain pre-LN transformer; reads a graph as its linearisation.")
-class TransformerModel(SymbolicModel):
-    """The control. No edge ever reaches it."""
-
-    def build_encoder(self, cfg: ModelConfig) -> nn.Module:
-        return Stack(cfg, use_relations=False)
+__all__ = ["RelationalTransformer"]
 
 
 class RelationalBlock(Block):
@@ -121,7 +82,7 @@ class RelationalStack(nn.Module):
 
 
 @register("rgt", doc="Relational graph transformer: attention biased and values marked by edge type.")
-class RelationalTransformer(SymbolicModel):
+class RelationalTransformer(NeuralModel):
     """The same transformer, told which positions are parent, child and sibling."""
 
     def build_encoder(self, cfg: ModelConfig) -> nn.Module:

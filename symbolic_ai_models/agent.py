@@ -32,7 +32,7 @@ import torch
 from .data.batch import collate_text
 from .data.curriculum import Episode
 from .data.tokenizer import SymbolTokenizer
-from .models.base import SymbolicModel
+from .models.base import Model
 from .tasks.base import lift
 
 __all__ = ["ChoiceResult", "CurriculumReport", "score_choices",
@@ -109,7 +109,7 @@ class CurriculumReport:
 
 
 @torch.no_grad()
-def score_choices(model: SymbolicModel, tok: SymbolTokenizer, prompt: str,
+def score_choices(model: Model, tok: SymbolTokenizer, prompt: str,
                   choices: Sequence[str], *, device: torch.device | str = "cpu",
                   max_len: int = 512) -> list[float]:
     """Mean log-probability per token of each choice, continuing ``prompt``."""
@@ -143,7 +143,7 @@ def _text_batch(x: torch.Tensor, tok: SymbolTokenizer, device):
         causal=True, rel=None, meta={"task": "lm"})
 
 
-def evaluate_choices(model: SymbolicModel, tok: SymbolTokenizer,
+def evaluate_choices(model: Model, tok: SymbolTokenizer,
                      episodes: Sequence[Episode], *,
                      device: torch.device | str = "cpu",
                      max_len: int = 512) -> CurriculumReport:
@@ -171,7 +171,7 @@ def evaluate_choices(model: SymbolicModel, tok: SymbolTokenizer,
 _OPTIONS_RE = re.compile(r"^[^\n:]*:\s*(.+?\s+\|\s+.+)$", re.MULTILINE)
 
 
-def as_text_agent(model: SymbolicModel, tok: SymbolTokenizer, *,
+def as_text_agent(model: Model, tok: SymbolTokenizer, *,
                   device: torch.device | str = "cpu", max_len: int = 512):
     """A ``Callable[[str], str]`` for ``langcurriculum.evaluate``.
 

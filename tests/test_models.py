@@ -1,29 +1,46 @@
 """Every architecture, against the contract the harness assumes of all of them.
 
-The point of these is that they are parameterised over the registry: a new model
-is covered the moment it is registered, and cannot be added without answering
-both questions, respecting causality, and tolerating a batch of one.
+These are parameterised over the registry, so a new model — neural or symbolic —
+is covered the moment it is registered and cannot be added without answering
+both questions, emitting a real distribution, and passing the two leak tests.
+
+The leak tests are the "no cheating" rules, and they are checked empirically
+rather than promised in a docstring:
+
+* :func:`test_causal_task_cannot_see_the_future` — perturbing later tokens must
+  leave earlier predictions bit-identical.
+* :func:`test_the_hidden_answer_never_reaches_the_model` — changing the label a
+  model is being asked to predict must not change what it predicts.
+
+A model that fails either is reading its own answer, and its numbers would be
+worthless whether it was fitted or trained.
 """
 
 from __future__ import annotations
+
+import copy
 
 import numpy as np
 import pytest
 import torch
 
-from symmodels.data.batch import collate_graph, collate_text
-from symmodels.data.curriculum import generate
-from symmodels.data.tokenizer import SymbolTokenizer
-from symmodels.models import ModelConfig, build, model_names
-from symmodels.tasks import make_task
+from symbolic_ai_models.data.batch import collate_graph, collate_text
+from symbolic_ai_models.data.curriculum import generate
+from symbolic_ai_models.data.tokenizer import SymbolTokenizer
+from symbolic_ai_models.models import ModelConfig, RuleBasedModel, build, model_names
+from symbolic_ai_models.tasks import make_task
+from symbolic_ai_models.train import TrainConfig, build_tokenizer
 
 LESSONS = ["unification", "symbol_grounding", "center_embedding"]
+NEURAL = [n for n in model_names() if not issubclass(
+    __import__("symbolic_ai_models.models", fromlist=["REGISTRY"]).REGISTRY[n], RuleBasedModel)]
+RULE_BASED = [n for n in model_names() if n not in NEURAL]
 
 
 @pytest.fixture(scope="module")
 def fixtures():
-    episodes = list(generate(LESSONS, n=3))
-    tok = SymbolTokenizer.build([e.text for e in episodes], max_vocab=400)
+    episodes = list(generate(LESSONS, n=4))
+    tok = build_tokenizer(TrainConfig(vocab_size=600), episodes)
     return episodes, tok
 
 
@@ -34,11 +51,23 @@ def cfg(fixtures):
                        d_ff=64, dropout=0.0)
 
 
+def make(name: str, fixtures, cfg):
+    """Build a model and bring it to its usable state, whichever family it is."""
+    episodes, tok = fixtures
+    model = build(name, cfg)
+    if isinstance(model, RuleBasedModel):
+        model.fit(episodes, tok)
+    return model.eval()
+
+
+# ---------------------------------------------------------------------------
+# the shared contract
+# ---------------------------------------------------------------------------
 @pytest.mark.parametrize("name", model_names())
 def test_answers_both_questions(name, fixtures, cfg):
     """One model, both tasks, both heads, shapes that line up with the targets."""
     episodes, tok = fixtures
-    model = build(name, cfg)
+    model = make(name, fixtures, cfg)
     for batch in (collate_text(episodes, tok),
                   collate_graph(episodes, tok, rng=np.random.default_rng(0))):
         out = model(batch)
@@ -47,20 +76,40 @@ def test_answers_both_questions(name, fixtures, cfg):
         assert torch.isfinite(out.symbol_logits).all()
 
 
-@pytest.mark.parametrize("name", model_names())
-def test_gradients_reach_every_parameter(name, fixtures, cfg):
-    """A parameter with no gradient is a wiring bug, not a design choice."""
+@pytest.mark.parametrize("name", RULE_BASED)
+def test_rule_based_output_is_a_proper_distribution(name, fixtures, cfg):
+    """No rule-based model may assign zero probability to the answer.
+
+    A symbolic model that voted for three symbols and left the rest at zero
+    would score infinite loss the first time it was wrong, which would say
+    nothing about the method. The mixture with the back-off is what makes the
+    comparison meaningful, and this is the test that it is really happening.
+
+    Networks are exempt because they emit unnormalised logits and the loss
+    softmaxes them; a rule-based model emits the log of an already-proper
+    distribution, so for it normalisation is a claim that can be checked.
+    """
     episodes, tok = fixtures
-    model = build(name, cfg)
-    task = make_task("node", max_nodes=64)
-    batch = task.collate(episodes, tok)
-    task.compute(model(batch), batch).loss.backward()
-    dead = [n for n, p in model.named_parameters()
-            if p.requires_grad and (p.grad is None or not p.grad.any())]
-    # The sequence half of the relation bias is genuinely unused on a graph
-    # batch, and vice versa; nothing else is allowed to be.
-    dead = [n for n in dead if "sequence" not in n and "seq_roles" not in n]
-    assert not dead, f"{name}: no gradient for {dead}"
+    model = make(name, fixtures, cfg)
+    batch = collate_graph(episodes, tok, rng=np.random.default_rng(0))
+    logits = model(batch).symbol_logits
+    assert torch.isfinite(logits).all()
+    assert (logits < 0).all(), "log-probabilities must be negative"
+    mass = logits.exp().sum(-1)
+    assert torch.allclose(mass, torch.ones_like(mass), atol=1e-3), \
+        f"{name}: probabilities sum to {mass.min():.4f}..{mass.max():.4f}"
+
+
+@pytest.mark.parametrize("name", model_names())
+def test_the_loss_is_finite_for_every_model(name, fixtures, cfg):
+    """Whatever the family, both objectives must produce a usable number."""
+    episodes, tok = fixtures
+    model = make(name, fixtures, cfg)
+    for task_name, kw in (("lm", {"max_len": 256}), ("node", {"max_nodes": 64})):
+        task = make_task(task_name, **kw)
+        batch = task.collate(episodes, tok)
+        loss = task.compute(model(batch), batch).loss
+        assert torch.isfinite(loss), f"{name}/{task_name} loss is {loss}"
 
 
 @pytest.mark.parametrize("name", model_names())
@@ -68,10 +117,13 @@ def test_causal_task_cannot_see_the_future(name, fixtures, cfg):
     """Changing a later token must not change an earlier prediction.
 
     The single most consequential thing to get wrong: a leak here makes
-    next-token numbers look excellent and means nothing was learned.
+    next-token numbers look excellent and means nothing was learned. It applies
+    with equal force to the rule-based models, whose text side is handed the
+    whole sequence for speed and is therefore only causal by discipline — this
+    is what checks the discipline held.
     """
     episodes, tok = fixtures
-    model = build(name, cfg).eval()
+    model = make(name, fixtures, cfg)
     batch = collate_text(episodes[:2], tok)
     with torch.no_grad():
         before = model(batch).symbol_logits.clone()
@@ -83,10 +135,31 @@ def test_causal_task_cannot_see_the_future(name, fixtures, cfg):
 
 
 @pytest.mark.parametrize("name", model_names())
+def test_the_hidden_answer_never_reaches_the_model(name, fixtures, cfg):
+    """Rewriting a masked node's true label must not move the prediction.
+
+    With every node masked, no label is visible and no coreference edge
+    survives, so the input is identical whatever the labels were. A model whose
+    output moves is reading the answer out of the batch through some channel
+    that was not supposed to carry it.
+    """
+    episodes, tok = fixtures
+    model = make(name, fixtures, cfg)
+    original = episodes[0]
+    rewritten = copy.deepcopy(original)
+    rewritten.graph.labels = [f"zz{i}" for i in range(len(rewritten.graph))]
+
+    with torch.no_grad():
+        a = model(collate_graph([original], tok, mask_all=True)).symbol_logits
+        b = model(collate_graph([rewritten], tok, mask_all=True)).symbol_logits
+    assert torch.allclose(a, b, atol=1e-4), f"{name}: the hidden answer leaked"
+
+
+@pytest.mark.parametrize("name", model_names())
 def test_handles_a_single_short_episode(name, fixtures, cfg):
     """Batch of one, graph of a handful of nodes — the degenerate shapes."""
     episodes, tok = fixtures
-    model = build(name, cfg)
+    model = make(name, fixtures, cfg)
     batch = collate_graph(episodes[:1], tok, rng=np.random.default_rng(1))
     assert torch.isfinite(model(batch).symbol_logits).all()
 
@@ -100,7 +173,7 @@ def test_padding_does_not_change_a_real_position(name, fixtures, cfg):
     results that depend on who else was in the batch.
     """
     episodes, tok = fixtures
-    model = build(name, cfg).eval()
+    model = make(name, fixtures, cfg)
     short = min(episodes, key=lambda e: len(e.graph))
     long = max(episodes, key=lambda e: len(e.graph))
     if len(short.graph) == len(long.graph):
@@ -116,20 +189,30 @@ def test_padding_does_not_change_a_real_position(name, fixtures, cfg):
         f"{name}: padding leaks into real positions"
 
 
+# ---------------------------------------------------------------------------
+# neural only
+# ---------------------------------------------------------------------------
+@pytest.mark.parametrize("name", NEURAL)
+def test_gradients_reach_every_parameter(name, fixtures, cfg):
+    """A parameter with no gradient is a wiring bug, not a design choice."""
+    episodes, tok = fixtures
+    model = build(name, cfg)
+    task = make_task("node", max_nodes=64)
+    batch = task.collate(episodes, tok)
+    task.compute(model(batch), batch).loss.backward()
+    dead = [n for n, p in model.named_parameters()
+            if p.requires_grad and (p.grad is None or not p.grad.any())]
+    # The sequence half of the relation bias is genuinely unused on a graph
+    # batch, and vice versa; nothing else is allowed to be.
+    dead = [n for n in dead if "sequence" not in n and "seq_roles" not in n]
+    assert not dead, f"{name}: no gradient for {dead}"
+
+
 def test_the_symbol_head_is_shared_between_tasks(cfg):
     """The claim the whole comparison rests on: one head, one vocabulary."""
     model = build("transformer", cfg)
     assert model.symbol_head.weight is model.symbol_emb.weight
     assert model.symbol_head.out_features == cfg.vocab_size
-
-
-def test_registry_rejects_a_duplicate_name():
-    from symmodels.models.base import SymbolicModel
-    from symmodels.models.registry import register
-    with pytest.raises(ValueError):
-        @register("transformer")
-        class _Clash(SymbolicModel):
-            pass
 
 
 def test_ndr_steps_can_be_raised_after_construction(cfg):
@@ -139,3 +222,67 @@ def test_ndr_steps_can_be_raised_after_construction(cfg):
     model.set_steps(cfg.n_layers * 3)
     assert model.encoder.n_steps == cfg.n_layers * 3
     assert model.n_parameters() == n_before
+
+
+# ---------------------------------------------------------------------------
+# rule-based only
+# ---------------------------------------------------------------------------
+def test_both_families_are_populated():
+    """The repo is a comparison; it needs both sides of it."""
+    assert len(NEURAL) >= 5 and len(RULE_BASED) >= 5
+
+
+@pytest.mark.parametrize("name", RULE_BASED)
+def test_refuses_to_predict_before_being_fitted(name, fixtures, cfg):
+    """Predicting from an unfitted model would silently score the back-off."""
+    episodes, tok = fixtures
+    model = build(name, cfg)
+    with pytest.raises(RuntimeError, match="fit"):
+        model(collate_text(episodes[:1], tok))
+
+
+@pytest.mark.parametrize("name", RULE_BASED)
+def test_runs_on_cpu_without_touching_autograd(name, fixtures, cfg):
+    """These are Python, not tensors: nothing here should build a graph."""
+    episodes, tok = fixtures
+    model = make(name, fixtures, cfg)
+    out = model(collate_graph(episodes[:2], tok, rng=np.random.default_rng(0)))
+    assert not out.symbol_logits.requires_grad
+    assert out.symbol_logits.device.type == "cpu"
+
+
+@pytest.mark.parametrize("name", RULE_BASED)
+def test_fitting_is_deterministic(name, fixtures, cfg):
+    """Two fits on the same episodes must give the same model."""
+    episodes, tok = fixtures
+    batch = collate_graph(episodes[:2], tok, rng=np.random.default_rng(3))
+    outs = []
+    for _ in range(2):
+        model = build(name, cfg)
+        model.fit(episodes, tok)
+        outs.append(model.eval()(batch).symbol_logits)
+    assert torch.allclose(outs[0], outs[1], atol=1e-6)
+
+
+def test_abstention_lands_exactly_on_the_backoff(fixtures, cfg):
+    """The contract for "I don't know": no vote, no penalty beyond the prior."""
+    from symbolic_ai_models.models.symbolic import ABSTAIN, RuleBasedModel as RBM
+    from symbolic_ai_models.models.base import ModelOutput
+
+    class _Silent(RBM):
+        name = "silent"
+
+    episodes, tok = fixtures
+    model = _Silent(cfg)
+    model.fit(episodes, tok)
+    out = model(collate_text(episodes[:2], tok))
+    expected = model.symbol_backoff
+    assert torch.allclose(out.symbol_logits[0, 0], expected, atol=1e-5)
+
+
+def test_a_decision_list_can_be_read(fixtures, cfg):
+    """The artifact of a symbolic run is text you can argue with."""
+    model = make("ruleinduce", fixtures, cfg)
+    rendered = model.render()
+    assert "label" in rendered and "type" in rendered
+    assert isinstance(model.n_symbolic_parameters(), int)

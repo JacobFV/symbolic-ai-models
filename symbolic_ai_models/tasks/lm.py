@@ -21,7 +21,7 @@ class LanguageModelling(Task):
     The text is the prompt and its answer joined, so a model that gets good at
     this is at some point predicting the answer token and not only the question.
     That is what makes the language-modelling score comparable with the
-    curriculum evaluation in :mod:`symmodels.agent`, where the same head is
+    curriculum evaluation in :mod:`symbolic_ai_models.agent`, where the same head is
     asked to choose between the episode's options.
     """
 

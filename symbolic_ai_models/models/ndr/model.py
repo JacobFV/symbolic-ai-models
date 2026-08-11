@@ -28,10 +28,10 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from ..data.batch import SymbolicBatch
-from .base import (FeedForward, ModelConfig, RelationBias, SymbolicModel,
+from ...data.batch import SymbolicBatch
+from ..base import (FeedForward, ModelConfig, RelationBias, SymbolicModel,
                    attention_bias)
-from .registry import register
+from ..registry import register
 
 __all__ = ["NDRModel"]
 

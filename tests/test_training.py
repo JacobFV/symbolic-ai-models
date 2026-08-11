@@ -9,11 +9,11 @@ from pathlib import Path
 import pytest
 import torch
 
-from symmodels.agent import evaluate_choices, as_text_agent, score_choices
-from symmodels.data.curriculum import generate
-from symmodels.report import comparison_table, load_summaries
-from symmodels.tasks import make_task
-from symmodels.train import TrainConfig, build_tokenizer, load_run, train
+from symbolic_ai_models.agent import evaluate_choices, as_text_agent, score_choices
+from symbolic_ai_models.data.curriculum import generate
+from symbolic_ai_models.report import comparison_table, load_summaries
+from symbolic_ai_models.tasks import make_task
+from symbolic_ai_models.train import TrainConfig, build_tokenizer, load_run, train
 
 LESSONS = "unification,symbol_grounding,context_free_language"
 

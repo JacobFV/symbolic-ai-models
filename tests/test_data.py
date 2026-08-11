@@ -10,11 +10,11 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from symmodels.data.batch import (REL, collate_graph, collate_text,
-                                  relation_matrix)
-from symmodels.data.curriculum import Episode, generate, resolve_lessons
-from symmodels.data.graph import TYPE_TO_ID, Graph, graph_from_json
-from symmodels.data.tokenizer import SymbolTokenizer
+from symbolic_ai_models.data.batch import (REL, collate_graph, collate_text,
+                                           relation_matrix)
+from symbolic_ai_models.data.curriculum import Episode, generate, resolve_lessons
+from symbolic_ai_models.data.graph import TYPE_TO_ID, Graph, graph_from_json
+from symbolic_ai_models.data.tokenizer import SymbolTokenizer
 
 LESSONS = ["unification", "symbol_grounding", "context_free_language"]
 

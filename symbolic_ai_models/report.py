@@ -45,6 +45,7 @@ def run_row(summary: dict[str, Any]) -> dict[str, Any]:
     row: dict[str, Any] = {
         "run": Path(summary.get("_run", "?")).name,
         "model": summary.get("model", "?"),
+        "family": summary.get("family", "neural"),
         "params": summary.get("parameters", 0),
         "tasks": ",".join(summary.get("config", {}).get("tasks", [])),
     }
@@ -72,20 +73,22 @@ def comparison_table(summaries: Sequence[dict[str, Any]], sort_by: str = "lbl li
         return -v if isinstance(v, (int, float)) and v == v else float("inf")
     rows.sort(key=key)
 
-    widths = {"run": 18, "model": 12, "params": 11, "tasks": 9}
-    head = (f"{'run':<{widths['run']}}{'model':<{widths['model']}}"
+    widths = {"model": 13, "family": 12, "params": 11, "tasks": 9}
+    head = (f"{'model':<{widths['model']}}{'family':<{widths['family']}}"
             f"{'params':>{widths['params']}}  {'tasks':<{widths['tasks']}}")
     for _, _, label, _ in COLUMNS:
         head += f"{label:>10}"
     lines = [head, "-" * len(head)]
     for r in rows:
-        line = (f"{r['run']:<{widths['run']}}{r['model']:<{widths['model']}}"
+        line = (f"{r['model']:<{widths['model']}}{r['family']:<{widths['family']}}"
                 f"{r['params']:>{widths['params']},}  {r['tasks']:<{widths['tasks']}}")
         for _, _, label, spec in COLUMNS:
             line += f"{_fmt(r.get(label), spec):>10}"
         lines.append(line)
     lines.append("-" * len(head))
     lines.append("lift = (score - floor) / (1 - floor); 0 is the prior, 1 is perfect")
+    lines.append("params: neural = tensor weights, rule-based = discrete rules "
+                 "and counts. The two are not comparable and are not meant to be.")
     return "\n".join(lines)
 
 

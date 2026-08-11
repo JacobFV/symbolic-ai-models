@@ -14,9 +14,9 @@ from __future__ import annotations
 import torch
 import torch.nn as nn
 
-from ..data.batch import SymbolicBatch
-from .base import ModelConfig, SymbolicModel
-from .registry import register
+from ...data.batch import SymbolicBatch
+from ..base import ModelConfig, SymbolicModel
+from ..registry import register
 
 __all__ = ["RecurrentModel"]
 

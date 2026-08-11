@@ -33,9 +33,9 @@ from __future__ import annotations
 import torch
 import torch.nn as nn
 
-from ..data.batch import N_RELATIONS, SymbolicBatch
-from .base import FeedForward, ModelConfig, SymbolicModel, attention_bias
-from .registry import register
+from ...data.batch import N_RELATIONS, SymbolicBatch
+from ..base import FeedForward, ModelConfig, SymbolicModel, attention_bias
+from ..registry import register
 
 __all__ = ["HRRModel", "bind", "unbind"]
 
