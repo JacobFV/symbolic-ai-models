@@ -370,6 +370,34 @@ hrr           neural     1,272,305    0.057    -0.100    -0.959       -  *
 ndr           neural       939,893    0.048    -0.112    -1.070       -  *
 ```
 
+**Rename every symbol and the table reorders.** Models are fitted on the
+original episodes and scored on episodes where every symbol has been permuted, so
+a model reading structure keeps its accuracy and a model reading vocabulary loses
+it. 2,105 symbols permuted:
+
+| model | original | renamed | change |
+|---|---:|---:|---:|
+| `corefer` | 0.353 | **0.350** | **-0.003** |
+| `omegaclaw_rank` | 0.352 | 0.335 | -0.017 |
+| `ilp` | 0.313 | 0.291 | -0.021 |
+| `workspace` | 0.352 | 0.221 | **-0.130** |
+
+`corefer` and `workspace` are tied on the headline table and are not close here:
+one is equivariant to three decimal places, the other loses 37% of its accuracy.
+
+Worse, and this is a caveat on a change made deliberately: raising `workspace`'s
+example cap lifted its original accuracy 0.273 -> 0.352 and its renamed accuracy
+only 0.214 -> 0.221. **About 91% of what the extra data bought is symbol
+memorisation that a renaming erases.** The cap is still set from runtime rather
+than from either number — choosing it by robustness would be as much a
+post-hoc choice as choosing it by accuracy — but the headline gain should be read
+as mostly vocabulary, not mostly reasoning.
+
+Memorising is not cheating here: the curriculum draws from a fixed symbol pool,
+100% of scored labels recur in training, and the floor memorises too. It is
+simply a different capability from the one this repo is trying to measure, and
+the two are only distinguishable by testing.
+
 `copy lift` is the pointer head, over the structure-only floor of 0.266; a dash
 means the model states no bindings and is not scored on copying. `lbl cov` is
 0.82 for every row and is dropped from the table for space. Rows marked `*` are

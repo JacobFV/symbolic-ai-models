@@ -138,7 +138,10 @@ occupies in the term graph.
 
 ## Open questions
 
-- [ ] **Re-rank the pointer's own candidates. Do not ensemble the pointers.**
+- [x] **Re-rank the pointer's own candidates. Do not ensemble the pointers.**
+      Done: `corefer` is two-stage, copy lift +0.063 -> +0.096. Widening the
+      candidate pool afterwards bought nothing (recall 83% -> 99%, accuracy
+      flat), so stage two's discrimination is the constraint, not its input.
       Both options measured before building either, which is the only reason the
       cheaper-looking one was rejected.
 
@@ -495,7 +498,12 @@ Everything defaults to CPU now, including `TrainConfig.device`, which used to be
       change is to drop the caps to whatever runtime allows, chosen on runtime
       grounds alone, and re-run the affected models. Recorded as the next item.
 
-- [ ] **Give the label head a pointer, and score the labels it can reach.**
+- [x] **Give the label head a pointer, and score the labels it can reach.**
+      Done. `target_source`, `label_group` and `source_logits` are in the
+      harness; `copy_acc` is scored against a floor of 0.266 and a ceiling of
+      0.722, over 5,785 positions including the 18% the label head censors.
+      Four models point: `corefer` +0.096, `routes` +0.051, `ruleinduce` +0.032,
+      `evidence` +0.023.
       The label task is a binding problem being scored as a classification
       problem, and the gap is most of the available signal.
 
@@ -619,7 +627,7 @@ Everything defaults to CPU now, including `TrainConfig.device`, which used to be
       conjunct reaches 0.860, so the binding is worth about 0.086 of type
       accuracy on top of the strongest content-blind baseline.
 
-- [ ] (superseded) Strengthen the type floor. It is now known to be weak.
+- [x] (superseded) Strengthen the type floor. It is now known to be weak.
       A backed-off conjunctive lookup inside `corefer` -- counting, no tensors,
       6 back-off levels, sibling types and arity added to the floor's four
       features -- reaches **type accuracy 0.946** where the floor reaches 0.795
@@ -635,7 +643,7 @@ Everything defaults to CPU now, including `TrainConfig.device`, which used to be
       structural features, still content-blind so it stays a floor -- and it now
       has to happen before any type number is quoted again.
 
-- [ ] (superseded) Strengthen the type floor before trusting `rgt`'s +0.587. The floor is
+- [x] (superseded) Strengthen the type floor before trusting `rgt`'s +0.587. The floor is
       a lookup on four structural features and reaches 0.795; `rgt` reaches
       0.915. How much of that margin is the model and how much is a weak
       baseline is unknown, and the headline result of the neural control rests
@@ -667,7 +675,7 @@ Everything defaults to CPU now, including `TrainConfig.device`, which used to be
       `analogy` uses `max_cases` rather than `max_examples` and was left alone;
       a different knob wants its own measurement.
 
-- [ ] (superseded) Set the example caps from runtime, not from a guessed constant, and
+- [x] (superseded) Set the example caps from runtime, not from a guessed constant, and
       re-run the four affected models.** The curve above says `workspace` and
       `brill` are held back by theirs and `ilp` and `ruleinduce` are not. The
       cap must be chosen *without* reference to eval lift, or the whole table
@@ -678,7 +686,7 @@ Everything defaults to CPU now, including `TrainConfig.device`, which used to be
       `runs/full179` so the published table is not a mix of policies -- the
       budget-drift warning will flag it until they all agree.
 
-- [ ] (superseded) A data-budget curve for the rule-based models, the mirror of the step
+- [x] (superseded) A data-budget curve for the rule-based models, the mirror of the step
       curve for the networks.** Five of them cap their training examples:
       `ilp` 1,500, `brill` 3,000, `ruleinduce` 4,000, `workspace` 4,000, and
       `analogy` by `max_cases`. Measured against the ~130,800 masked-node
