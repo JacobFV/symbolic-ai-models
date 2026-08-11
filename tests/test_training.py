@@ -556,3 +556,32 @@ def test_the_floor_is_the_same_number_for_every_model(episodes):
         eval_eps, tok, train_eps)
     assert other_seed == first, "the floor followed the task's sampling seed"
     assert first["label_n"] > 0 and first["type_n"] > 0
+
+
+def test_a_saved_run_can_rebuild_its_own_model(tmp_path, episodes):
+    """A summary that cannot reconstruct its own model is not a record.
+
+    `train` widens `max_len` to cover whichever surface is longer, plus slack,
+    because one positional embedding serves both the token sequence and the node
+    sequence. That derived value appeared nowhere: `rgt` trained with a 328-row
+    positional embedding while its summary said `max_len = 320`, so rebuilding
+    the model from its own summary and calling `load_state_dict` failed on a
+    shape mismatch. Reloading a trained model had to guess.
+    """
+    import torch
+
+    from symbolic_ai_models.models import build
+    from symbolic_ai_models.models.base import ModelConfig
+
+    out = tmp_path / "rebuildable"
+    summary = train(small_config(out, model="ngram", tasks=("node",),
+                                 task_weights={"node": 1.0}))
+    recorded = summary["model_config"]
+    assert recorded["max_len"] > summary["config"]["max_len"], \
+        "the derived width should differ from the requested one"
+
+    # Rebuild from the record alone, and load the saved weights into it.
+    model = build(summary["model"], ModelConfig(**recorded))
+    saved = torch.load(out / "model.pt", weights_only=False)
+    assert saved["model_config"] == recorded
+    model.load_state_dict(saved["model"])

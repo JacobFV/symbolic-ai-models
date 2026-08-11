@@ -142,12 +142,36 @@ def _task_kwargs(cfg: TrainConfig, name: str) -> dict[str, Any]:
             "max_nodes": cfg.max_nodes, "seed": cfg.seed}
 
 
-def make_model(cfg: TrainConfig, vocab_size: int) -> Model:
-    return build(cfg.model, ModelConfig(
+def _model_config_dict(mc: ModelConfig) -> dict[str, Any]:
+    """The recorded form: plain values, so a summary stays readable JSON."""
+    return {"vocab_size": mc.vocab_size, "d_model": mc.d_model,
+            "n_layers": mc.n_layers, "n_heads": mc.n_heads, "d_ff": mc.d_ff,
+            "dropout": mc.dropout, "max_len": mc.max_len,
+            "max_nodes": mc.max_nodes, "extra": dict(mc.extra)}
+
+
+def model_config(cfg: TrainConfig, vocab_size: int) -> ModelConfig:
+    """The shape the model is actually built with.
+
+    Two fields here are *derived* and appear nowhere in ``TrainConfig``:
+    ``vocab_size`` comes from the fitted tokenizer, and ``max_len`` is widened to
+    cover whichever surface is longer plus slack, since one positional embedding
+    serves both the token sequence and the node sequence.
+
+    It is a separate function so it can be recorded. A run used to save only its
+    ``TrainConfig``, which meant a saved model could not be rebuilt from its own
+    summary: ``rgt`` trained with a 328-row positional embedding while its
+    summary said ``max_len = 320``, and ``load_state_dict`` refused it.
+    """
+    return ModelConfig(
         vocab_size=vocab_size, d_model=cfg.d_model, n_layers=cfg.n_layers,
         n_heads=cfg.n_heads, d_ff=cfg.d_ff, dropout=cfg.dropout,
         max_len=max(cfg.max_len, cfg.max_nodes) + 8, max_nodes=cfg.max_nodes,
-        extra=dict(cfg.extra)))
+        extra=dict(cfg.extra))
+
+
+def make_model(cfg: TrainConfig, vocab_size: int) -> Model:
+    return build(cfg.model, model_config(cfg, vocab_size))
 
 
 # ---------------------------------------------------------------------------
@@ -267,7 +291,12 @@ def train(cfg: TrainConfig, *, progress=None) -> dict[str, Any]:
     if not history:                       # a learner that reported nothing
         record(cfg.steps if not is_rule_based else 0)
 
+    # `model_config` as well as `config`: the first is what the model was built
+    # with, the second what was asked for, and they differ in the two derived
+    # fields. Without the first, reloading a checkpoint means guessing.
+    effective = model_config(cfg, len(tok))
     checkpoint = {"model": model.state_dict(), "config": cfg.to_dict(),
+                  "model_config": _model_config_dict(effective),
                   "vocab_size": len(tok)}
     if isinstance(model, RuleBasedModel):
         # A decision list is not a tensor, so `state_dict` cannot see it.
@@ -281,6 +310,7 @@ def train(cfg: TrainConfig, *, progress=None) -> dict[str, Any]:
 
     summary = {
         "config": cfg.to_dict(),
+        "model_config": _model_config_dict(effective),
         "model": cfg.model,
         "family": model.family,
         "steps": 0 if is_rule_based else cfg.steps,
