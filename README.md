@@ -408,28 +408,38 @@ it means the budget asymmetry ran in *both* directions at once. They are
 defaults in `extra`, not constants; nobody has measured what these models do
 when raised.
 
-**`gru` has finished. It clears the floor, and it had not converged.**
+**Two of six have finished. Both clear the floor; neither had converged.**
 
-| steps | passes | label acc | label lift |
-|------:|-------:|----------:|-----------:|
-|   300 |    1.3 |     0.061 |     -0.050 |
-|  1100 |    4.9 |     0.107 |     +0.002 |
-|  2000 |    8.9 |     0.176 |     **+0.079** |
+| model | 300 steps | 2000 steps | gain over last 500 | type lift | train time |
+|---|---:|---:|---:|---:|---:|
+| `gru` | -0.050 | **+0.079** | +0.030 | +0.052 | 60 min |
+| `transformer` | -0.065 | **+0.044** | +0.015 | -0.079 | 9 min |
 
-`-0.050` was an artefact of the budget. Nothing that rested on it survives, in
-either direction — including any reading of the rule-based models as beating the
-neural half. `gru` at +0.079 sits ninth of nineteen, above `ngram`, `symbolalg`,
-`syllogism`, `ctw` and `synth`, below the other eight rule-based models.
+The 300-step figures were artefacts of the budget. Nothing that rested on them
+survives, in either direction — including any reading of the rule-based models
+as beating the neural half. `gru` at +0.079 sits ninth of nineteen and
+`transformer` at +0.044 twelfth, both above `ngram`, `symbolalg`, `syllogism`,
+`ctw` and `synth`, both below the eight best rule-based models.
 
-Two things that number is not. It is **a lower bound**, not a converged score:
-lift rose +0.030 over the last 500 steps and was still climbing when the budget
-ran out. And it is **one model**, not a family — the other five networks in the
-table are still at 300 steps and must not be read as results. `compare` says so
-itself now, and refusing to read those rows is the whole point of the warning:
+These are **lower bounds, not converged scores** — both were still gaining more
+than +0.01 over their last 500 steps when the budget ran out, though
+`transformer` is decelerating hard (+0.0096 then +0.0049 over its last two
+intervals) where `gru` was not.
+
+Two things worth noticing already. The heads come apart by architecture:
+`gru` clears the *type* floor and `transformer` sits well below it, on the same
+data and the same budget. And the cost is wildly uneven — `transformer` reached
+its score in **9 minutes against `gru`'s 60**, because a recurrence cannot be
+parallelised over the sequence and an attention stack can. On a CPU that is the
+dominant term, not parameter count.
+
+Four networks are still at 300 steps and **must not be read as results**.
+`compare` says so itself, and refusing to read those rows is the whole point of
+the warning:
 
 ```
 !! these rows were NOT produced under one config, so the comparison is not like-for-like:
-  steps: 2000=gru; 300=hrr, ndr, rgt, tpr, transformer
+  steps: 2000=gru, transformer; 300=hrr, ndr, rgt, tpr
 ```
 
 **The rest of the comparison is still running**, at 2000 steps (8.9 passes) on CPU — it
