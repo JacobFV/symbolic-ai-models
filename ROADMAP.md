@@ -60,9 +60,10 @@ Everything defaults to CPU now, including `TrainConfig.device`, which used to be
 
 - [ ] **Finish the full-curriculum sweep and rewrite the conclusions.** Running
       via `configs/full179.toml --tasks node`. Nothing in the README should be
-      trusted until the complete table is in. **Do not kill it**: `ctw` takes
-      about two and a half minutes on its own and I mistook that for a hang
-      twice, restarting from scratch both times.
+      trusted until the complete table is in. Run it with `--resume` so an
+      interruption costs one model rather than all of them. **Do not kill it**:
+      `ctw` takes about two and a half minutes on its own and I mistook that for
+      a hang twice, restarting from scratch both times.
 
 - [x] **Re-run the full sweep and correct the README.** Done, and it refuted
       the claim that prompted it: three rule-based models did *not* clear the
@@ -653,6 +654,11 @@ killed on the mistaken belief it had stalled.
   is a scope boundary worth stating rather than quietly working around.
 
 ## Rules for autonomous work
+
+-1. **`pgrep -f` matches the shell command running it.** Checking for a process
+    with a pattern that appears in your own command line reports it as running
+    forever. Match the interpreter path instead. This cost most of a tick and
+    produced two confident, wrong readings about what was executing.
 
 0. **The sweep is the authority.** Ad-hoc measurement scripts have now
    contradicted `symbolic-ai-models sweep` twice, both times in the direction

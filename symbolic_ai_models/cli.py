@@ -167,6 +167,18 @@ def cmd_sweep(args: argparse.Namespace) -> int:
     names = _select_models(args.models)
     root = Path(args.out or "runs/sweep")
     done: list[Path] = []
+    if args.resume:
+        # A sweep over the whole curriculum takes long enough that it will not
+        # always survive the session that started it, and losing eleven finished
+        # models because the twelfth was interrupted is the kind of waste that
+        # quietly discourages running the honest experiment at all. A model that
+        # already wrote `summary.json` is complete; skip it.
+        finished = [n for n in names if (root / n / "summary.json").exists()]
+        if finished:
+            print(f"resuming: {len(finished)} already complete "
+                  f"({', '.join(finished)})", flush=True)
+        done.extend(root / n for n in finished)
+        names = [n for n in names if n not in set(finished)]
     for name in names:
         cfg = _config_from_args(args)
         cfg.model = name
@@ -377,6 +389,8 @@ def build_parser() -> argparse.ArgumentParser:
     _add_train_flags(s)
     s.add_argument("--models", default="all",
                    help="all (default) | neural | symbolic | a,comma,list")
+    s.add_argument("--resume", action="store_true",
+                   help="skip models that already wrote summary.json in --out")
     s.set_defaults(fn=cmd_sweep)
 
     e = sub.add_parser("eval", help="score a finished run")
