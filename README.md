@@ -334,48 +334,48 @@ symbolic-ai-models/
   tests/
 ```
 
-## What the two families are actually good at
+## What the models are actually good at
 
-Full sweep, six lessons, 400 steps, tiny models — a wiring check, not a result.
-Sorted by label lift:
+**Read this before the numbers below it.** Every result in earlier versions of
+this README was measured on six lessons out of 179, chosen early and never
+revisited. Run on the whole curriculum, the central claim reverses.
+
+Masked-node task, all 179 generatable lessons, 20 training episodes each,
+evaluation seeds a million away, CPU:
 
 ```
-model        family           params   ans lift  bits/tok   lbl acc  lbl lift  typ lift
-hrr          neural        1,784,977     -0.204     1.834     0.423    +0.161    +1.000
-rgt          neural        1,524,145     -0.213     2.140     0.388    +0.110    +0.223
-tpr          neural        1,601,009     -0.213     2.153     0.370    +0.085    -0.968
-transformer  neural        1,445,041     -0.240     2.171     0.358    +0.066    -0.968
-gru          neural          520,081     -0.267     3.789     0.351    +0.057    -1.771
-ndr          neural          495,193     -0.204     1.722     0.342    +0.043    -0.502
-grammar      rule-based          945     -0.213     1.118     0.291    -0.031    -1.771
-workspace    rule-based          300     -0.267     6.382     0.291    -0.031    -6.873
-analogy      rule-based        6,000     -0.267     6.382     0.286    -0.038    +0.819
-ngram        rule-based        9,519     +0.054     0.883     0.250    -0.091    -2.626
-ruleinduce   rule-based           75     -0.267     5.335     0.170    -0.206    +0.922
+model        params      lbl acc  lbl lift   lbl cov   typ lift
+analogy       6,000        0.334    +0.256      0.82     +0.079
+ruleinduce       76        0.329    +0.250      0.82     +0.048
+routes          599        0.324    +0.244      0.82     -0.467
+ilp              74        0.312    +0.231      0.82     -0.615
+brill           537        0.244    +0.155      0.82     +0.295
+evidence      5,819        0.219    +0.128      0.82     -0.467
+grammar      65,125        0.187    +0.092      0.82     +0.017
+ngram       358,167        0.170    +0.072      0.82     -0.383
+symbolalg   157,793        0.149    +0.049      0.82     -0.467
+syllogism        26        0.146    +0.046      0.82     -0.695
+ctw         819,990        0.109    +0.004      0.82     +0.120
 ```
 
-- **The split is by family and it is complete.** Every neural model is above the
-  masked-node label floor; no rule-based model is. That holds after a long run
-  of work specifically aimed at closing it — better back-offs, calibration,
-  held-out fitting — and after correcting a real unfairness in the floor itself
-  (which made it *harder*, not easier).
-- **The rule-based models do not scale with data, and the floor does.** At 50
-  training episodes per lesson `workspace` scores 0.316 against a floor of
-  0.298, a lift of +0.027. At 200 it scores **0.291 against a floor of 0.312**,
-  a lift of −0.031: the model got *worse* with four times the data while the
-  floor got better. Several intermediate results in this repo's history were
-  measured at the smaller size and read as "above the floor"; they do not
-  survive the sweep, and the sweep is the authoritative configuration.
-- **Type and label come apart sharply.** `ruleinduce` is last on labels
-  (−0.206) and near the top on types (+0.922); `workspace` is the reverse.
-  Averaging the two would describe neither.
-- **Nothing has learned to answer.** Every model holds `tok lift` between 0.00
-  and 0.76 while `ans lift` is negative for all but `ngram` at +0.054. See the
-  note above on why `token_*` is not the column to read.
-- **An induced grammar is still the most parameter-efficient thing here.**
-  `grammar` reaches 1.118 bits/token on **945** discrete parameters, against
-  1.722 on 495k for the best network, by recovering the generator's own hidden
-  categories from distribution alone.
+- **Every rule-based model clears the label floor.** On the six-lesson slice not
+  one of them did, and this README said so repeatedly. The claim was an artifact
+  of which lessons were picked.
+- **The ranking reverses too, not just the level.** `ruleinduce` was *last* on
+  the slice at −0.206 lift and is second here at +0.250. A comparison drawn from
+  3% of a curriculum ranked the models close to backwards.
+- **The compact models win.** The top four carry 74 to 6,000 discrete
+  parameters; the bottom three carry 158k to 820k. `ctw`, the largest, is last.
+  Whatever is working here is not memorisation of contexts.
+- **Type and label come apart.** `brill` is fifth on labels and first on types;
+  `ilp` is fourth on labels and last but one on types. Averaging them would
+  describe neither, which is why they are never averaged here.
+
+**What is not established.** The neural models are disabled by default (they are
+the only thing here that wants a GPU) so they were *not* run on the full
+curriculum. The family comparison in earlier versions of this README — all
+neural above the floor, no rule-based above it — is now known to be wrong on its
+second half and untested on its first. Do not quote it.
 
 ## Notes
 

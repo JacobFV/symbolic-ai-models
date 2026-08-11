@@ -58,7 +58,13 @@ Everything defaults to CPU now, including `TrainConfig.device`, which used to be
 
 ## Task list
 
-- [ ] **Finish the full-curriculum sweep and rewrite the conclusions.** Running
+- [x] **Finish the full-curriculum sweep and rewrite the conclusions.** Eleven
+      of thirteen are in and the conclusion reversed completely; README
+      rewritten. `synth` and `workspace` are resuming.
+- [ ] **Re-run the neural half on the full curriculum**, once a GPU is free, to
+      find out whether the family separation was also an artifact of the
+      six-lesson slice. It is currently untested rather than confirmed.
+- [x] (superseded) Finish the full-curriculum sweep and rewrite the conclusions. Running
       via `configs/full179.toml --tasks node`. Nothing in the README should be
       trusted until the complete table is in. Run it with `--resume` so an
       interruption costs one model rather than all of them. **Do not kill it**:
@@ -639,6 +645,32 @@ the cause. `ctw`'s forward really is about fifty times slower than `brill`'s —
 53s to evaluate 716 episodes against 2s — which is a property of walking a
 context path per candidate symbol, not a bug. Two full-curriculum sweeps were
 killed on the mistaken belief it had stalled.
+
+### Measured: the six-lesson slice inverted the result
+
+All 179 lessons, masked-node task, 11 of 13 models complete:
+
+    model        lbl lift (179)   lbl lift (6 lessons)
+    analogy             +0.256                 -0.045
+    ruleinduce          +0.250                 -0.206
+    routes              +0.244                 -0.197
+    ilp                 +0.231                 -0.093
+    brill               +0.155                 -0.065
+    ngram               +0.072                 -0.091
+    ctw                 +0.004                 -0.040
+
+Every model clears the floor on the full curriculum; not one did on the slice.
+And the ordering is close to inverted — `ruleinduce` was last and is now second.
+
+The lesson is about method rather than about models. Six lessons were chosen at
+the start for speed, every subsequent conclusion was drawn from them, and the
+sample was small enough to reverse both the level and the ranking. Several ticks
+of work went into "why does no rule-based model clear the floor", which was a
+question about the sample.
+
+`lbl cov` is 0.82 here against 0.92 on the slice, so the two runs do not score
+quite the same population of nodes; the effect is far too large to be explained
+by that, but it is not a like-for-like comparison.
 
 ## Open questions
 
