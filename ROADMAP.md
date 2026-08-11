@@ -99,9 +99,12 @@ Cheap and high-value first; each is exactly measurable under this harness.
 - [x] **Cross-language transfer.** Measured, and the claim needed correcting
       rather than confirming — see below. The node task cannot test it at all;
       the text task can and shows nothing transferring.
-- [ ] **Held-out-slice selection.** Any reasoner that fits parameters and then
-      selects among them on the same episodes is selecting on its own training
-      signal. Affects `synth`, `ruleinduce`, `grammar`, `analogy`.
+- [x] **Held-out-slice selection.** Confirmed for `ruleinduce` and fixed
+      (0.170 -> 0.099 ECE). Not confirmed for `brill`, where two attempts at the
+      same fix made it strictly worse and were reverted — see below. `synth` and
+      `grammar` do not select on training: `synth` fits each program on the
+      prefix it is about to predict from, and `grammar`'s threshold is a fixed
+      knob rather than a choice made against outcomes.
 - [ ] **Per-episode parameter fitting.** Induce the hypothesis *family* across
       training episodes, then choose the member per episode by consistency with
       what that episode states. This is the direct answer to the curriculum
@@ -234,6 +237,27 @@ is vacuous rather than impressive.
 
 The honest reading: this experiment cannot say anything until some model is
 above floor in its source language. Worth re-running once one is.
+
+### Measured: whose stated confidence was training-inflated
+
+`ruleinduce` reports each rule's confidence as its accuracy on the examples the
+rule was induced from, and greedy separate-and-conquer fits rules until they are
+nearly pure — so that number is near 1.0 by construction. Scored against
+held-out episodes: weighted stated **0.953** against **0.627** delivered, with
+individual rules claiming 1.000 and returning 0.364. Calibrating on a held-out
+fifth took its ECE from 0.170 to 0.099.
+
+`brill` was the negative result and the more useful one. Its confidence comes
+from the same kind of training count (`fixed / (fixed + broke)` measured while
+the rule was being chosen), so it looked like the same defect — but it was
+already well calibrated at ECE 0.095, and both attempts to "fix" it made it
+worse: 0.338, then 0.548. Reverted. The lesson is that an argument for why a
+number *should* be inflated is not evidence that it is, and the measurement has
+to come first.
+
+The first `brill` attempt failed for a reason worth recording: it held out the
+last fifth of the flat example list, which is not held out at all, because
+examples come from repeated masked passes over the same episodes.
 
 ## Open questions
 

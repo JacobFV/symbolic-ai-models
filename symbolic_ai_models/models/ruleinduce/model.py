@@ -42,6 +42,7 @@ from ...data.graph import TYPE_TO_ID
 from ...data.tokenizer import SymbolTokenizer
 from ..base import ModelConfig
 from ..registry import register
+from ...calibration import ScoreCalibrator
 from ..symbolic import ABSTAIN, GraphView, RuleBasedModel, Votes
 from .dlist import DecisionList, induce_decision_list
 from .facts import FactSet, candidate_literals
@@ -55,7 +56,8 @@ MAX_SIBLING = 3
 class RuleInductionModel(RuleBasedModel):
     """Induce ordered rules mapping structural context to a copy action."""
 
-    LEARNED = ("label_rules", "type_rules", "text_rules", "frequent")
+    LEARNED = ("label_rules", "type_rules", "text_rules", "frequent",
+               "confidence_map")
 
     def __init__(self, cfg: ModelConfig) -> None:
         super().__init__(cfg)
@@ -66,6 +68,7 @@ class RuleInductionModel(RuleBasedModel):
         self.type_rules: DecisionList | None = None
         self.text_rules: DecisionList | None = None
         self.frequent: list[int] = []
+        self.confidence_map = ScoreCalibrator()
 
     # ---- fitting ------------------------------------------------------
     def learn(self, episodes: Sequence[Episode], tok: SymbolTokenizer) -> None:
@@ -92,6 +95,7 @@ class RuleInductionModel(RuleBasedModel):
                         label_ex.append((fs, action))
         self.label_rules = self._induce(label_ex)
         self.type_rules = self._induce(type_ex)
+        self._calibrate(episodes, tok)
 
         text_ex = []
         for ep in episodes:
@@ -99,6 +103,55 @@ class RuleInductionModel(RuleBasedModel):
             for t in range(len(ids) - 1):
                 text_ex.append((_text_facts(ids, t, tok), self._text_action(ids, t)))
         self.text_rules = self._induce(text_ex)
+
+    def _calibrate(self, episodes: Sequence[Episode],
+                   tok: SymbolTokenizer) -> None:
+        """Learn what a rule's stated confidence is actually worth.
+
+        A rule's ``confidence`` is its accuracy on the examples it was induced
+        from, and greedy separate-and-conquer fits rules until they are nearly
+        pure — so that number is close to 1.0 by construction rather than by
+        merit. Measured against held-out episodes the gap is large: a weighted
+        stated confidence of 0.953 against 0.627 delivered, with individual
+        rules claiming 1.000 and returning 0.364.
+
+        So the map is fitted on a held-out fifth, using rules induced from the
+        other four. Calibrating against the episodes the rules were grown on
+        would certify the inflation instead of removing it.
+        """
+        cut = max(int(len(episodes) * 0.8), 1)
+        probe = self._induce_labels_only(episodes[:cut], tok)
+        if probe is None:
+            return
+        scores: list[float] = []
+        correct: list[bool] = []
+        for view, targets in self.training_views(episodes[cut:] or episodes, tok,
+                                                 max_nodes=self.cfg.max_len,
+                                                 repeats=1, seed=13):
+            wrapped = _View.from_graph_view(view)
+            for node, (label_id, _) in targets.items():
+                if label_id < 0:
+                    continue
+                action, rule = probe.explain(_node_facts(wrapped, node))
+                symbol = _resolve(wrapped, node, action) if action else None
+                if symbol is None:
+                    continue
+                scores.append(_confidence(rule))
+                correct.append(symbol == label_id)
+        self.confidence_map = ScoreCalibrator().fit(scores, correct)
+
+    def _induce_labels_only(self, episodes: Sequence[Episode],
+                            tok: SymbolTokenizer) -> DecisionList | None:
+        examples = []
+        for view, targets in self.training_views(episodes, tok,
+                                                 max_nodes=self.cfg.max_len):
+            wrapped = _View.from_graph_view(view)
+            for node, (label_id, _) in targets.items():
+                if label_id >= 0:
+                    action = self._best_action(wrapped, node, label_id)
+                    if action is not None:
+                        examples.append((_node_facts(wrapped, node), action))
+        return self._induce(examples)
 
     def _induce(self, examples: list) -> DecisionList | None:
         if not examples:
@@ -173,7 +226,11 @@ class RuleInductionModel(RuleBasedModel):
         symbol = _resolve(view, i, action) if action is not None else None
         if symbol is None and isinstance(action, tuple) and action[0] == "const":
             symbol = action[1]
-        return ({symbol: 1.0}, _confidence(rule)) if symbol is not None else ABSTAIN
+        if symbol is None:
+            return ABSTAIN
+        raw = _confidence(rule)
+        return {symbol: 1.0}, (self.confidence_map(raw)
+                               if self.confidence_map.fitted else raw)
 
     def _type_vote(self, fs: FactSet) -> Votes:
         if self.type_rules is None:
