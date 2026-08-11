@@ -228,6 +228,50 @@ def cmd_eval(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_parsers(args: argparse.Namespace) -> int:
+    from .parsers import REGISTRY, parser_names
+    for name in parser_names():
+        cls = REGISTRY[name]
+        kind = "learned" if cls.learned else "written"
+        print(f"{name:<14}{kind:<9}{cls.summary}")
+    return 0
+
+
+def cmd_parse_eval(args: argparse.Namespace) -> int:
+    """Score parsers against the structure the curriculum generated the text from."""
+    from .data.curriculum import generate, resolve_lessons
+    from .parsers import build, evaluate_parser, parser_names
+    from .parsers.evaluate import ParserReport
+    from .parsers.scale import curve_table, scaling_curve
+    from .train import TrainConfig, build_tokenizer
+
+    lessons = resolve_lessons(args.lessons)
+    names = (parser_names() if args.parsers in (None, "all")
+             else [p.strip() for p in args.parsers.split(",")])
+
+    if args.curve:
+        sizes = [int(s) for s in args.curve.split(",")]
+        print(curve_table(scaling_curve(names, lessons, sizes=sizes,
+                                        n_eval=args.n_eval)))
+        return 0
+
+    training = list(generate(lessons, n=args.n_train, seed0=0))
+    evaluation = list(generate(lessons, n=args.n_eval, seed0=1_000_000))
+    tok = build_tokenizer(TrainConfig(vocab_size=args.vocab_size), training)
+    print(f"fitted on {len(training)} episodes, scored on {len(evaluation)} "
+          f"from disjoint seeds\n")
+    print(ParserReport.header())
+    for name in names:
+        parser = build(name)
+        parser.fit(training, tok)
+        print(evaluate_parser(parser, evaluation, tok).row())
+    if args.render:
+        parser = build(args.render)
+        parser.fit(training, tok)
+        print(f"\n=== {args.render} ===\n{parser.render()}")
+    return 0
+
+
 def cmd_sample(args: argparse.Namespace) -> int:
     """Decode continuations and print them, for a person or a reviewing model."""
     from .decode import SamplingConfig, sample_episodes, transcript, write_json
@@ -359,6 +403,19 @@ def build_parser() -> argparse.ArgumentParser:
     p_.add_argument("--seed", type=int, default=0)
     p_.add_argument("--device")
     p_.set_defaults(fn=cmd_sample)
+
+    sub.add_parser("parsers", help="list parsers").set_defaults(fn=cmd_parsers)
+
+    pe = sub.add_parser("parse-eval",
+                        help="score parsers against the generator's own structure")
+    pe.add_argument("--parsers", default="all", help="all (default) or a,comma,list")
+    pe.add_argument("--lessons", default="all")
+    pe.add_argument("--n-train", dest="n_train", type=int, default=32)
+    pe.add_argument("--n-eval", dest="n_eval", type=int, default=8)
+    pe.add_argument("--vocab-size", dest="vocab_size", type=int, default=4096)
+    pe.add_argument("--curve", help="comma-separated training sizes, e.g. 4,16,64,256")
+    pe.add_argument("--render", help="also print what this parser learned")
+    pe.set_defaults(fn=cmd_parse_eval)
 
     c = sub.add_parser("compare", help="put finished runs side by side")
     c.add_argument("runs", nargs="+")

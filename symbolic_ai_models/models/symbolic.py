@@ -129,6 +129,14 @@ class RuleBasedModel(Model):
         super().__init__()
         self.cfg = cfg
         self.tok: SymbolTokenizer | None = None
+        # Every rule-based model gets a parser, named in `extra.parser` and
+        # defaulting to the one that does nothing. Reading the text and
+        # reasoning over what was read are separate choices, and welding them
+        # together — as each of these models originally did — means a better
+        # parser cannot be dropped under an existing reasoner. A reasoner that
+        # ignores `self.parser` is unaffected; one that uses it must still work
+        # when handed `none`.
+        self.parser = _build_parser(str(cfg.get("parser", "none")))
         # Registered as buffers so a fitted model saves and reloads like any
         # other, through the same `torch.save(state_dict())` path.
         self.register_buffer("symbol_backoff", torch.zeros(cfg.vocab_size))
@@ -146,6 +154,10 @@ class RuleBasedModel(Model):
         model that trained as long as its neighbours.
         """
         self.tok = ctx.tok
+        # The parser is fitted first and on the same episodes, so a reasoner
+        # that consults it during `learn` sees the parser it will see at
+        # evaluation rather than an unfitted one.
+        self.parser.fit(ctx.episodes, ctx.tok)
         self._fit_backoff(ctx.episodes, ctx.tok)
         self.learn(ctx.episodes, ctx.tok)
         self._fitted = True
@@ -163,8 +175,8 @@ class RuleBasedModel(Model):
     LEARNED: tuple[str, ...] = ()
 
     def symbolic_state(self) -> dict[str, Any]:
-        """Everything ``state_dict`` would miss."""
-        return {"_fitted": self._fitted,
+        """Everything ``state_dict`` would miss — the parser included."""
+        return {"_fitted": self._fitted, "_parser": self.parser,
                 **{name: getattr(self, name, None) for name in self.LEARNED}}
 
     def load_symbolic_state(self, state: Mapping[str, Any],
@@ -173,6 +185,9 @@ class RuleBasedModel(Model):
         for name, value in state.items():
             if name == "_fitted":
                 self._fitted = bool(value)
+            elif name == "_parser":
+                if value is not None:
+                    self.parser = value
             else:
                 setattr(self, name, value)
 
@@ -377,6 +392,14 @@ def _collect(votes: Votes, b: int, node: int, rows: list, cols: list,
         cols.append(node)
         syms.append(int(symbol))
         weights.append(float(weight) / total)
+
+
+def _build_parser(name: str):
+    """Resolve a parser by name. Imported lazily to keep the import graph a DAG:
+    parsers depend on the data layer, models depend on parsers, and nothing
+    depends on models."""
+    from ..parsers import build
+    return build(name)
 
 
 def _log_dirichlet(counts: Mapping[int, float], size: int,

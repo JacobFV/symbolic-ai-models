@@ -286,3 +286,45 @@ def test_a_decision_list_can_be_read(fixtures, cfg):
     rendered = model.render()
     assert "label" in rendered and "type" in rendered
     assert isinstance(model.n_symbolic_parameters(), int)
+
+
+@pytest.mark.parametrize("name", RULE_BASED)
+def test_fitting_is_stable_across_processes(name, fixtures, cfg, tmp_path):
+    """Two fits in *separate interpreters* must agree, not just two in one.
+
+    `test_fitting_is_deterministic` runs both fits in one process and would miss
+    the classic failure: iterating a `set` or `frozenset` of strings gives an
+    order that depends on hash randomisation, which is fixed within a process
+    and differs between them. Every model here builds sets somewhere, so a
+    tie-break that silently depended on iteration order would flap every number
+    between runs while looking perfectly reproducible in the test suite.
+    """
+    import subprocess
+    import sys
+
+    script = tmp_path / "fit.py"
+    script.write_text(
+        "import hashlib, torch\n"
+        "from symbolic_ai_models.data.curriculum import generate\n"
+        "from symbolic_ai_models.data.batch import collate_graph\n"
+        "from symbolic_ai_models.train import TrainConfig, build_tokenizer\n"
+        "from symbolic_ai_models.models import build, ModelConfig\n"
+        "eps = list(generate(['unification', 'symbol_grounding'], n=4))\n"
+        "tok = build_tokenizer(TrainConfig(vocab_size=600), eps)\n"
+        f"m = build({name!r}, ModelConfig(vocab_size=len(tok), d_model=32,\n"
+        "          n_layers=2, n_heads=4, d_ff=64, dropout=0.0))\n"
+        "m.fit_on(eps, tok); m.eval()\n"
+        "b = collate_graph(eps, tok, mask_all=True)\n"
+        "with torch.no_grad():\n"
+        "    x = m(b).symbol_logits\n"
+        "print(hashlib.sha1(x.numpy().tobytes()).hexdigest())\n")
+
+    def run(seed: str) -> str:
+        env = {"PATH": "/usr/bin:/bin", "PYTHONHASHSEED": seed,
+               "HOME": str(tmp_path)}
+        out = subprocess.run([sys.executable, str(script)], capture_output=True,
+                             text=True, env=env, timeout=600)
+        assert out.returncode == 0, out.stderr[-2000:]
+        return out.stdout.strip().splitlines()[-1]
+
+    assert run("1") == run("999"), f"{name}: output depends on hash seed"

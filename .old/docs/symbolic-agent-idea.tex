@@ -1,0 +1,564 @@
+make a minimal symbolic agent framework for studying agents across many environments under one abstraction.
+
+the core idea is:
+
+an agent receives symbols from an environment, updates internal symbolic state, and emits symbols back to the environment.
+
+define the interaction approximately as:
+
+observation symbols → agent → action symbols → environment → reward + next observation symbols
+
+the framework should be general enough that many apparently different learning/reasoning paradigms can be expressed as instances of the same agent-environment loop.
+
+for example:
+
+* language modeling:
+
+  * observation: previous tokens
+  * action: predicted next-token
+  * environment transition: append/advance to next token
+  * reward: log probability / negative log-likelihood-derived reward
+
+* images can be pre-processed by SAM and/or other engines to make a list of bbox+class symbols for the image. this still requires learning how to integrate symbolic elements of the lowest layer of the scene graph into a integrated scene understanding
+
+* classification:
+
+  * observation: symbolic representation of an example
+  * action: class symbol
+  * reward: correctness
+
+* theorem proving:
+
+  * observation: axioms, current proof state, goal
+  * action: inference-rule application / generated proposition
+  * reward: proof completion and/or neg log duration
+
+* program synthesis:
+
+  * observation: specification + current program
+  * action: symbolic program edit / ast operation
+  * reward: test results
+
+* planning:
+
+  * observation: symbolic world state
+  * action: symbolic world action
+  * reward: task utility
+
+* games:
+
+  * observation: symbolic game state
+  * action: symbolic move
+  * reward: game reward
+
+* tool-using agents:
+
+  * observation: messages (containing symbols for their language contents) + tool results (containing multiple symbols for their fn class + params)
+  * action: symbolic tool call or response
+  * reward: task grader
+
+do NOT build a huge ontology, theorem proving platform, knowledge graph system, or 'general' symbolic-ai architecture that doesn't do anything.
+
+focus specifically on the agent/environment abstraction.
+
+the most important interfaces should be small.
+
+something conceptually like:
+
+```python
+class Symbol:
+    type: str
+    value: Any
+    metadata: dict
+
+class Environment:
+    reset() -> Observation
+    step(action: Action) -> Transition
+
+class Transition:
+    observation: Observation
+    reward: float
+    terminated: bool
+    info: dict
+
+class Agent:
+    reset()
+    act(observation: Observation) -> Action
+```
+
+but do improve these interfaces where necessary.
+
+observations and actions should fundamentally be symbolic structures, not assumed to be tensors.
+
+perhaps a symbol may be:
+
+* token
+* string
+* number
+* identifier
+* predicate
+* relation
+* ast node
+* tuple
+* list
+* tree
+* graph reference
+* function/operator application
+* structured record
+
+support composition so complex observations/actions can be constructed from simpler symbols.
+
+there should be an interchangeable encoding layer:
+
+raw environment state
+→ encoder / lexer
+→ symbols
+→ agent
+
+and:
+
+agent symbols
+→ decoder / interpreter
+→ environment action
+
+this lets different environments expose radically different underlying state while presenting a common symbolic interface to the agent.
+
+likewise, agents should be interchangeable.
+
+start with several deliberately different agent implementations:
+
+1. random symbolic policy
+2. lookup/table policy
+3. rule-based agent
+4. finite-state agent
+5. search/planning agent
+6. simple learned neural policy over symbolic inputs
+7. autoregressive token policy
+
+the point is not to force them to share the same internal architecture. they only need to satisfy the same external symbolic interaction contract.
+
+keep internal state explicit:
+
+agent state_t + observation_t
+→ agent state_{t+1} + action_t
+
+ideally model the agent mathematically as:
+
+A : (S_agent, O*) → (S_agent, A*)
+
+where O* and A* are structured symbolic observations and actions.
+
+also make environments composable around the same contract.
+
+implement a handful of small environments showing that the abstraction really unifies different paradigms:
+
+* next-token prediction
+* sequence completion
+* classification
+* boolean/logical inference
+* simple gridworld with symbolic observations/actions
+* arithmetic-expression completion
+* simple theorem/proof environment
+* simple tool-call environment
+
+for next-token prediction, explicitly demonstrate how standard language modeling fits the environment abstraction.
+
+for a sequence x_1 ... x_n:
+
+observation_t = x_1 ... x_t
+action_t = prediction for x_{t+1}
+
+and define reward from the predicted probability assigned to the true next symbol, e.g.:
+
+r_t = log p(x_{t+1} | x_{\le t})
+
+or equivalently treat negative log-likelihood as cost.
+
+this example matters because one research objective is to show that supervised prediction, reinforcement learning, reasoning, planning, and agentic interaction can often be represented using the same sequential agent/environment formalism.
+
+separate three concepts carefully:
+
+* symbol space
+* agent policy
+* environment dynamics/reward
+
+do not bake task semantics into the agent.
+
+make symbol spaces typed and inspectable. each environment should declare its observation-symbol space and action-symbol space.
+
+support both:
+
+* discrete action symbols
+* structured action symbols
+
+for example:
+
+`LEFT`
+
+and:
+
+`Call(function="search", args={"query": "..."})`
+
+might both be valid actions.
+
+build trajectories as first-class objects:
+
+trajectory = [
+(observation_0, action_0, reward_0),
+(observation_1, action_1, reward_1),
+...
+]
+
+make them serializable and easy to inspect.
+
+provide a minimal training/evaluation abstraction, but DO NOT prematurely commit the architecture to one optimizer.
+
+we may later want to train agents using:
+
+* maximum likelihood
+* behavioral cloning
+* policy gradients
+* q-learning
+* search
+* evolutionary methods
+* symbolic rule induction
+* offline rl
+* online rl
+
+the environment contract should not care.
+
+include a small experiment harness where i can run something like:
+
+```bash
+symbolic-agent run \
+  --env next_token \
+  --agent autoregressive
+```
+
+or:
+
+```bash
+symbolic-agent run \
+  --env logic \
+  --agent rule_based
+```
+
+and compare combinations.
+
+the architectural emphasis is:
+
+environment semantics are interchangeable.
+symbol encoders/decoders are interchangeable.
+agent implementations are interchangeable.
+
+the invariant is only the symbolic interaction protocol.
+
+keep the implementation small, legible, and hackable. prefer a few hundred lines of strong abstractions and working examples over thousands of lines of enterprise scaffolding.
+
+before coding, briefly inspect existing agent-environment abstractions such as gymnasium and modern agentic-rl environment frameworks, including prime intellect's verifiers/research-environments approach, and borrow useful lifecycle ideas without inheriting unnecessary complexity.
+
+prime intellect's useful pattern is that heterogeneous tasks can retain their native setup and grading semantics while being normalized behind a common contract. apply the analogous principle here: environments should preserve their own transition and reward semantics while exposing them through one symbolic-agent interface.
+
+the resulting project should make this question easy to investigate:
+
+"how much of ai can be represented as an agent consuming symbols, producing symbols, and receiving feedback from an environment?"
+
+addendum: make the system trainable and evaluable against REAL existing datasets and environment zoos.
+
+do not stop once the symbolic agent/environment abstraction works on toy environments. immediately use it to wrap substantial existing training and evaluation distributions.
+
+first, build a generic dataset-backed environment adapter for language modeling and other static supervised datasets.
+
+the important abstraction is that a dataset becomes an environment by defining:
+
+dataset sample
+→ initial symbolic observation
+→ one or more symbolic actions
+→ deterministic/stochastic transition
+→ reward/grader
+
+for autoregressive language modeling, support ordinary tokenized corpora as sequential environments:
+
+x_1 ... x_n
+
+observation_t = x_1 ... x_t
+action_t = distribution/prediction for x_{t+1}
+reward_t = log p(x_{t+1} | x_{\le t})
+
+this should permit ordinary next-token training through the SAME external environment interface used for interactive RL tasks.
+
+build adapters/loaders for major open language-model corpora, starting with manageable subsets/shards rather than attempting absurd full-corpus downloads:
+
+* FineWeb / FineWeb-Edu
+* Dolma
+* C4
+* other reputable open LM corpora when useful
+
+FineWeb alone is currently >18T tokens, while Dolma is roughly 3T tokens, so the harness MUST support streaming, sharding, deterministic sampling, train/validation splits, and small reproducible subsets.
+
+also allow arbitrary Hugging Face datasets to be wrapped through a configurable mapping:
+
+```text
+dataset row
+→ observation symbols
+→ target/action symbols
+→ reward/grader
+```
+
+this should support not only next-token prediction but classification, qa, sequence transformation, code completion, etc.
+
+then integrate REAL interactive environment collections.
+
+PRIORITY 1: integrate every taskset currently exposed by prime intellect's research-environments / verifiers ecosystem that can reasonably be run locally or through its documented runtime.
+
+as of july 22, 2026, prime intellect reports 23 tasksets totaling ~365,000 tasks across software engineering, terminal use, and search. their abstraction separates taskset, harness, and runtime; preserve that separation rather than flattening everything into bespoke adapters.
+
+explicitly investigate and support these prime intellect tasksets:
+
+software engineering:
+
+* swesmith
+* openswe
+* swerebench_v2
+* scaleswe
+* swelego
+* multiswe
+* r2e_gym
+* swebench_pro
+* swebench_verified
+* swebench_multilingual
+* senior_swe_bench
+
+terminal:
+
+* tmax
+* terminal_lego
+* openthoughts_tblite
+* terminal_bench_2
+
+search:
+
+* papersearchqa
+* wideseek
+* s1_deepresearch
+* openseeker
+* deepdive
+* browsecomp
+* redsearcher
+* browsecomp_plus
+
+prime reports approximately:
+
+* 198k software-engineering tasks
+* 28.6k terminal tasks
+* 137.6k search tasks
+
+behind one taskset API. use their implementation wherever possible rather than reimplementing datasets or graders.
+
+write an adapter translating their lifecycle into our symbolic environment lifecycle while retaining native rewards, graders, sandboxes, metadata, and termination semantics.
+
+do the same for OTHER established environment zoos.
+
+PRIORITY 2: browser / computer interaction.
+
+integrate BrowserGym as a major environment source. it already exposes multiple web-agent benchmarks through a Gymnasium-style API, including:
+
+* MiniWoB++
+* WebArena
+* WebArenaVerified
+* VisualWebArena
+* WorkArena
+* AssistantBench
+* WebLINX
+* OpenApps
+* TimeWarp where available
+
+do NOT make separate architectural special cases for each benchmark. build one BrowserGym adapter, then expose benchmark/task identity through configuration.
+
+also investigate OSWorld for real computer/desktop interaction and integrate it through the same symbolic contract. preserve its native action/observation and evaluation semantics underneath the adapter.
+
+PRIORITY 3: standard reinforcement-learning environment zoos.
+
+build a Gymnasium adapter so compatible environments can immediately become symbolic-agent environments.
+
+the Farama ecosystem gives us a large cross-section of useful domains, including:
+
+* MiniGrid
+* MiniWorld
+* Arcade Learning Environment / Atari
+* Gymnasium-Robotics
+* MetaWorld
+* HighwayEnv
+* ViZDoom
+* retro environments
+* other maintained Gymnasium-compatible environments
+
+Farama explicitly maintains these and lists many additional third-party Gymnasium environments. leverage the ecosystem rather than individually wrapping every environment.
+
+for environments with continuous/native numeric observations or actions, DO NOT quietly feed raw tensors into the symbolic agent and call them symbols.
+
+instead make the boundary explicit:
+
+native observation
+→ symbolic encoder
+→ symbolic observation
+
+symbolic action
+→ native action decoder
+→ environment
+
+allow multiple symbolic encoders for the same environment so representation itself can later become an experimental variable.
+
+MiniGrid should be an early target because it is lightweight, configurable, already Gymnasium-compatible, and specifically includes grounded language/instruction tasks.
+
+PRIORITY 4: multi-agent environments.
+
+integrate PettingZoo through a generic adapter.
+
+PettingZoo is effectively a standard API for multi-agent RL and already contains multiple environment families. extend our interaction model from one agent to:
+
+```text
+{agent_id → observation symbols}
+→ policies
+→ {agent_id → action symbols}
+→ environment
+```
+
+without breaking the single-agent interface.
+
+PRIORITY 5: symbolic/textual embodied environments.
+
+integrate environments that are especially natural fits for this project:
+
+* TextWorld
+* ALFWorld
+* ScienceWorld
+
+TextWorld is explicitly an extensible sandbox for training/evaluating RL agents in text-generated worlds.
+
+ALFWorld is particularly relevant because it aligns abstract text environments with embodied worlds, allowing high-level policies learned symbolically to correspond to concrete actions.
+
+ScienceWorld provides interactive science tasks requiring grounded experimentation rather than static question answering.
+
+PRIORITY 6: environment standards emerging specifically for agentic RL.
+
+investigate Hugging Face OpenEnv and make our environment abstraction interoperable with it where reasonable.
+
+OpenEnv currently presents a Gymnasium-style `reset` / `step` / `state` protocol for containerized, remotely deployable agent environments and is explicitly intended as a protocol layer for agentic RL. do not unnecessarily compete with that infrastructure; provide an adapter/backend where useful.
+
+the architectural goal should therefore become:
+
+```text
+                     ┌─ hf datasets / lm corpora
+                     ├─ prime research environments
+                     ├─ browsergym
+                     ├─ gymnasium / farama
+external substrate ──┼─ pettingzoo
+                     ├─ osworld
+                     ├─ textworld / alfworld / scienceworld
+                     ├─ openenv
+                     └─ future environment APIs
+                              │
+                              ▼
+                    environment adapter
+                              │
+                              ▼
+                  STANDARD SYMBOLIC ENV API
+                              │
+                              ▼
+                       symbolic agent
+```
+
+do not rewrite external environments simply to make the architecture look uniform.
+
+uniformity belongs at the ADAPTER boundary.
+
+retain native:
+
+* reset semantics
+* episode boundaries
+* rewards
+* graders
+* action validity rules
+* timeouts
+* truncation
+* sandboxes
+* task metadata
+* seeds
+* dataset splits
+
+and expose normalized versions through our interface.
+
+training must support mixtures of environment families.
+
+i should eventually be able to define something approximately like:
+
+```yaml
+training:
+  mixture:
+    - env: lm/fineweb
+      weight: 0.50
+    - env: minigrid
+      weight: 0.10
+    - env: prime/terminal_lego
+      weight: 0.10
+    - env: prime/scaleswe
+      weight: 0.10
+    - env: browsergym/miniwob
+      weight: 0.10
+    - env: textworld
+      weight: 0.10
+```
+
+and train one compatible agent across the resulting task distribution.
+
+support curriculum schedules as well:
+
+```text
+static token prediction
+→ simple symbolic prediction
+→ short-horizon games
+→ text worlds
+→ tool use
+→ terminal tasks
+→ browser tasks
+→ software engineering
+```
+
+but do NOT assume that curriculum is optimal. make mixture and curriculum policies configurable so we can empirically compare them.
+
+separate TRAINING datasets/environments from HELD-OUT evaluation.
+
+avoid benchmark contamination where possible.
+
+record for every result:
+
+* environment/taskset
+* exact version/commit
+* split
+* seed
+* adapter version
+* symbolic encoder
+* symbolic action decoder
+* agent checkpoint
+* training data mixture
+* reward definition
+* episode/token count
+* native benchmark metrics
+
+where external benchmarks have canonical scoring, report canonical metrics IN ADDITION TO any normalized reward.
+
+do not replace SWE-bench pass/fail with some homemade universal score, for example. SWE-bench verifies generated patches against repository tests in reproducible environments; preserve that evaluator.
+
+the ultimate experiment is not merely:
+
+"does the framework run?"
+
+it is:
+
+"can one agent architecture learn across a heterogeneous distribution spanning token prediction, static supervised tasks, symbolic worlds, games, search, browsers, terminals, and software engineering when all of them are exposed through a common symbolic interaction protocol?"
+
+build enough integration and training/evaluation infrastructure that we can actually begin answering that question.
+
+also, prime’s list is bigger than i expected: their july 22 post claims the 23 tasksets above and ~365k total tasks, so that alone gives you a pretty absurd downstream distribution once the agent can do nontrivial interaction.
+

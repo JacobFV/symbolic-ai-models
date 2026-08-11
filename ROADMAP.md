@@ -28,6 +28,22 @@ Metric: pairwise clustering F1 between "same induced class" and "same true
 role", where a word's true role is the multiset of (parent label, slot) it
 occupies in the term graph.
 
+## Measured, so nobody re-derives it
+
+- **The parser metric has headroom.** A concern was raised that scoring two
+  words as role-sharing when their role sets merely *intersect* is too loose a
+  quotient, putting the one-big-class floor above F1 0.82 and leaving no room to
+  measure in. Measured instead of argued: role-share base rate is **0.074** over
+  all lessons (2354 words) and **0.131** on a two-lesson slice; the one-class
+  floor is **0.078** and **0.232**. The quotient is tight, not loose. The
+  concern was reasonable and did not hold.
+- **The rule-based models are stable across processes.** Sets and frozensets
+  iterate in an order that depends on hash randomisation, which is fixed within
+  a process and differs between them, so a tie-break resting on iteration order
+  would flap every number while looking reproducible in a single-process test.
+  Checked under `PYTHONHASHSEED=1` vs `999`: all eight are bit-identical.
+  `test_fitting_is_stable_across_processes` keeps it that way.
+
 ## Task list
 
 - [x] `parsers/base.py` — Parser, ParseResult, registry
@@ -37,6 +53,56 @@ occupies in the term graph.
 - [ ] reasoners accept `extra.parser`; sweep the parser x reasoner matrix
 - [ ] scale test: parser quality vs number of training episodes (the curriculum
       is unbounded, so this curve is free and is the point of the exercise)
+
+### Next, from the design docs in `.old/docs` (ranked)
+
+Cheap and high-value first; each is exactly measurable under this harness.
+
+- [ ] **Report shape, not the average.** Three separate documents warn that a
+      macro-average hides the finding. Replace it with two integers: lessons
+      solved (lift >= 0.90) and lessons above floor (lift >= 0.15).
+- [ ] **Shortcut audits as extra floors.** Simulate the unthinking heuristic —
+      longest option, option sharing most words with the prompt, most variables,
+      distractor-name suffix — and report each as its own floor. In the source
+      work this caught seven real generator defects, and it is a far stronger
+      control than majority-class.
+- [ ] **Renaming invariance.** Rename every symbol in an eval episode; a
+      structure-only model must be bit-identical. Same shape as the two existing
+      leak tests. `analogy` should pass by construction; anything that does not
+      is leaning on vocabulary it claimed not to need.
+- [ ] **Calibration.** `RuleBasedModel` already emits a confidence in [0,1].
+      Bucket by it, report accuracy per bucket and ECE. Free.
+- [ ] **Cross-language transfer.** Fit on English, evaluate on Chinese/Turkish;
+      the graph is identical across renderings. The README claims the data
+      supports this and nothing measures it.
+- [ ] **Held-out-slice selection.** Any reasoner that fits parameters and then
+      selects among them on the same episodes is selecting on its own training
+      signal. Affects `synth`, `ruleinduce`, `grammar`, `analogy`.
+- [ ] **Per-episode parameter fitting.** Induce the hypothesis *family* across
+      training episodes, then choose the member per episode by consistency with
+      what that episode states. This is the direct answer to the curriculum
+      inventing vocabulary per episode, which is what holds `label_coverage` at
+      0.92 and label lift near the floor.
+- [ ] **Anchor-relative features.** Re-express structural features relative to
+      the masked node or the query subtree — relative depth, sibling offset,
+      path-from-query — so a hypothesis learned on one episode is *identical*
+      rather than merely similar on another.
+- [ ] **Cap the counting models' memory.** The source work reports a
+      count-based model taking the host down at 40M tokens. `ngram`, `ctw` and
+      `grammar` grow with distinct contexts and have no bound.
+
+## Open questions
+
+- The design docs report counting losing to gradients by ~3.5x perplexity on
+  real text, which is the opposite of what this repo's smoke sweep shows. The
+  sweep is 400 steps on synthetic curriculum prose, so the disagreement is
+  probably budget and domain rather than a contradiction — but no narrative
+  should rest on the current LM column until a real budget has been run.
+- The docs argue prediction is a special case of interaction and that their
+  strongest results (state-space extrapolation, re-aiming induced parameters at
+  new goals) need an environment to intervene in. This harness is teacher-forced
+  scoring with no trajectories and no reward, so it cannot reproduce those. That
+  is a scope boundary worth stating rather than quietly working around.
 
 ## Rules for autonomous work
 
