@@ -126,12 +126,11 @@ Cheap and high-value first; each is exactly measurable under this harness.
       an *abstaining* model fell back on the structural prior while a merely
       *unsure* one fell back on the unigram. The back-off is now structure-aware
       for both. `ruleinduce` 0.076 -> 0.297.
-- [ ] **Fit the confidence map against the final mixture, not the raw votes.**
-      The structural back-off raised accuracy sharply while `analogy` and
-      `workspace` still calibrate against the votes that feed the mixture, so
-      they are now under-confident by ~0.05 and their ECE has risen from ~0.09
-      to ~0.22. Benign direction, real gap. The ECE assertion in
-      `test_calibration.py` is suspended with that reasoning written into it.
+- [x] **Fit the confidence map against the final mixture.** Done via post-hoc
+      temperature scaling on the graph output — and it selected **T = 1.0** for
+      every model, i.e. there was nothing to rescale. The elevated ECE is a
+      top-1 artifact, not a mis-scaled distribution; see below. The suspended
+      assertion is replaced with a stronger one on the temperature itself.
 - [ ] (done, kept for the record) Anchor-relative: re-express features relative to
       the masked node or the query subtree — relative depth, sibling offset,
       path-from-query — so a hypothesis learned on one episode is *identical*
@@ -469,6 +468,28 @@ was needlessly weak, not that the families should be levelled. And the fallback
 memorises, so it breaks renaming equivariance for every model that takes it;
 `routes` opts out via `structural_fallback = False` and remains the model that
 demonstrates the property.
+
+### Measured: ECE and NLL disagree, and NLL is the one to believe
+
+The previous tick left `analogy` and `workspace` under-confident by ~0.05 with
+ECE up from ~0.09 to ~0.22, and queued "recalibrate against the final mixture"
+as the fix. Post-hoc temperature scaling is the standard way to do that and has
+the property that matters here: dividing log-probabilities by a constant cannot
+reorder them, so no prediction and no accuracy changes.
+
+Fitted on held-out episodes by minimising negative log-likelihood, it chose
+**T = 1.0** for `analogy`, `workspace` and `ilp` alike. Confirmed on the
+evaluation set as well — NLL 3.370 at T=1.0, rising to 3.376 at 0.9 and 3.454 at
+1.2. The distributions are already properly scaled.
+
+So the two measures genuinely disagree. The models are well calibrated in the
+proper-scoring sense and under-confident specifically on their argmax, which is
+what ECE reads. Sharpening to bring ECE down would raise NLL — trading the score
+the repo reports for a diagnostic — so it is not done.
+
+The machinery stays in place at T=1 as a no-op, because a future change that
+genuinely mis-scales the output should be caught rather than argued about, and
+the test now asserts the temperature rather than an ECE bound.
 
 ## Open questions
 

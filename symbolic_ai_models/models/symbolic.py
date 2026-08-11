@@ -140,6 +140,9 @@ class RuleBasedModel(Model):
         self.parser = build_parser(str(cfg.get("parser", "none")))
         #: structural context -> (commonest label, how pure that context is)
         self.context_prior: dict[tuple, tuple[int, float]] = {}
+        #: Post-hoc temperature on the graph output. 1.0 is no change.
+        self.temperature = 1.0
+        self._fitting_temperature = False
         # Registered as buffers so a fitted model saves and reloads like any
         # other, through the same `torch.save(state_dict())` path.
         self.register_buffer("symbol_backoff", torch.zeros(cfg.vocab_size))
@@ -171,6 +174,67 @@ class RuleBasedModel(Model):
         self._fit_context_prior(ctx.episodes, ctx.tok)
         self.learn(ctx.episodes, ctx.tok)
         self._fitted = True
+        self._fit_temperature(ctx.episodes, ctx.tok)
+
+    def _fit_temperature(self, episodes: Sequence[Episode],
+                         tok: SymbolTokenizer) -> None:
+        """Scale the graph output so its stated probabilities mean what they say.
+
+        Each model already calibrates its *vote* confidence, but the number a
+        reader sees is the probability of the mixture, and the two came apart
+        when the back-off became structure-aware: accuracy rose sharply while
+        the vote confidences were still fitted against a weaker back-off,
+        leaving the models under-confident by about 0.05 and their ECE up from
+        ~0.09 to ~0.22.
+
+        Temperature scaling is the minimal repair and the reason it is the right
+        one here is that dividing log-probabilities by a positive constant
+        cannot reorder them. Every prediction, and therefore every accuracy in
+        the repo, is left exactly as it was; only the confidence attached to it
+        moves. Fitted on held-out episodes by minimising negative log-likelihood
+        over a coarse grid — one parameter, so a grid is honest and a search
+        would be false precision.
+        """
+        import math
+
+        cut = max(int(len(episodes) * 0.8), 1)
+        held_out = episodes[cut:] or episodes
+        self._fitting_temperature = True
+        try:
+            rows: list[tuple[float, ...]] = []
+            targets: list[int] = []
+            for chunk in range(0, len(held_out), 16):
+                batch = self._masked_batch(held_out[chunk:chunk + 16], tok)
+                if batch is None:
+                    continue
+                with torch.no_grad():
+                    logits = self(batch).symbol_logits
+                scored = batch.target_tokens >= 0
+                if not bool(scored.any()):
+                    continue
+                rows.append(logits[scored].double())
+                targets.extend(batch.target_tokens[scored].tolist())
+        finally:
+            self._fitting_temperature = False
+        if not rows or len(targets) < 20:
+            return
+
+        stacked = torch.cat(rows, dim=0)
+        gold = torch.tensor(targets, dtype=torch.long)
+        best_t, best_nll = 1.0, math.inf
+        for step in range(1, 41):
+            t = step * 0.1
+            nll = float(torch.nn.functional.cross_entropy(stacked / t, gold))
+            if nll < best_nll:
+                best_t, best_nll = t, nll
+        self.temperature = best_t
+
+    def _masked_batch(self, episodes: Sequence[Episode], tok: SymbolTokenizer):
+        from ..data.batch import collate_graph
+        if not episodes:
+            return None
+        return collate_graph(episodes, tok, max_nodes=self.cfg.max_len,
+                             mask_rate=0.15, rng=np.random.default_rng(41))
 
     def fit_on(self, episodes: Sequence[Episode], tok: SymbolTokenizer) -> None:
         """Fit straight from episodes, for callers with nothing else to say."""
@@ -188,6 +252,7 @@ class RuleBasedModel(Model):
         """Everything ``state_dict`` would miss — the parser included."""
         return {"_fitted": self._fitted, "_parser": self.parser,
                 "_context_prior": self.context_prior,
+                "_temperature": self.temperature,
                 **{name: getattr(self, name, None) for name in self.LEARNED}}
 
     def load_symbolic_state(self, state: Mapping[str, Any],
@@ -201,6 +266,8 @@ class RuleBasedModel(Model):
                     self.parser = value
             elif name == "_context_prior":
                 self.context_prior = value or {}
+            elif name == "_temperature":
+                self.temperature = float(value or 1.0)
             else:
                 setattr(self, name, value)
 
@@ -433,10 +500,14 @@ class RuleBasedModel(Model):
                 _collect(label_votes, b, node, s_rows, s_cols, s_syms, s_w, s_conf)
                 _collect(type_votes, b, node, t_rows, t_cols, t_syms, t_w, t_conf)
 
+        symbol_logits = self._mix(self.symbol_backoff, (B, L), s_conf,
+                                  s_rows, s_cols, s_syms, s_w,
+                                  prior=(p_rows, p_cols, p_syms, p_mass))
+        if self.temperature != 1.0 and not self._fitting_temperature:
+            symbol_logits = torch.log_softmax(symbol_logits / self.temperature,
+                                              dim=-1)
         return ModelOutput(
-            symbol_logits=self._mix(self.symbol_backoff, (B, L), s_conf,
-                                    s_rows, s_cols, s_syms, s_w,
-                                    prior=(p_rows, p_cols, p_syms, p_mass)),
+            symbol_logits=symbol_logits,
             type_logits=self._mix(self.type_backoff, (B, L), t_conf,
                                   t_rows, t_cols, t_syms, t_w),
             hidden=torch.zeros((B, L, 1)))
