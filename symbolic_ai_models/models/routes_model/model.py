@@ -93,7 +93,7 @@ class RouteModel(RuleBasedModel):
         context: dict[tuple, collections.Counter] = collections.defaultdict(
             collections.Counter)
         for view, targets in self.training_views(episodes, tok,
-                                                 max_nodes=self.cfg.max_len):
+                                                 max_nodes=self.cfg.max_nodes):
             for node, (label_id, _) in targets.items():
                 if label_id < 0:
                     continue
@@ -113,7 +113,7 @@ class RouteModel(RuleBasedModel):
         scores: list[float] = []
         correct: list[bool] = []
         for view, targets in self.training_views(episodes[cut:], tok,
-                                                 max_nodes=self.cfg.max_len,
+                                                 max_nodes=self.cfg.max_nodes,
                                                  repeats=1, seed=23):
             endorsed = self._episode_fit(view)
             for node, (label_id, _) in targets.items():

@@ -206,7 +206,7 @@ class GrammarModel(RuleBasedModel):
         self.node_next = collections.defaultdict(collections.Counter)
         self.node_types = collections.defaultdict(collections.Counter)
         for view, targets in self.training_views(episodes, tok,
-                                                 max_nodes=self.cfg.max_len):
+                                                 max_nodes=self.cfg.max_nodes):
             for i in range(len(view)):
                 label = view.labels[i]
                 if label is not None:

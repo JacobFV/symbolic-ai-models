@@ -224,7 +224,7 @@ class CTWModel(RuleBasedModel):
         # the back-off would have scored the abstention rather than the method.
         self.type_tree = _Tree(self.depth, N_TYPES)
         for view, targets in self.training_views(episodes, tok,
-                                                 max_nodes=self.cfg.max_len):
+                                                 max_nodes=self.cfg.max_nodes):
             for node, (label_id, type_id) in targets.items():
                 context = _ancestor_context(view, node, self.depth)
                 if label_id >= 0:

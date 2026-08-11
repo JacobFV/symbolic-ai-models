@@ -90,6 +90,11 @@ class ModelConfig:
     d_ff: int = 1024
     dropout: float = 0.1
     max_len: int = 1024
+    #: Graph truncation, which is *not* `max_len`. Models were passing the text
+    #: length as the node cap, so they fitted on graphs cut at 520 nodes and
+    #: were evaluated on graphs cut at 128 — different data, and four times the
+    #: work for the half of it that was thrown away.
+    max_nodes: int = 256
     max_depth: int = 64
     tie_embeddings: bool = True
     extra: dict[str, Any] = field(default_factory=dict)
@@ -101,7 +106,8 @@ class ModelConfig:
         return {"vocab_size": self.vocab_size, "d_model": self.d_model,
                 "n_layers": self.n_layers, "n_heads": self.n_heads,
                 "d_ff": self.d_ff, "dropout": self.dropout,
-                "max_len": self.max_len, "max_depth": self.max_depth,
+                "max_len": self.max_len, "max_nodes": self.max_nodes,
+                "max_depth": self.max_depth,
                 "tie_embeddings": self.tie_embeddings, "extra": dict(self.extra)}
 
     @classmethod

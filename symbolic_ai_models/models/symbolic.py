@@ -233,7 +233,7 @@ class RuleBasedModel(Model):
         from ..data.batch import collate_graph
         if not episodes:
             return None
-        return collate_graph(episodes, tok, max_nodes=self.cfg.max_len,
+        return collate_graph(episodes, tok, max_nodes=self.cfg.max_nodes,
                              mask_rate=0.15, rng=np.random.default_rng(41))
 
     def fit_on(self, episodes: Sequence[Episode], tok: SymbolTokenizer) -> None:
@@ -314,7 +314,7 @@ class RuleBasedModel(Model):
         counts: dict[tuple, collections.Counter] = collections.defaultdict(
             collections.Counter)
         for view, targets in self.training_views(episodes[:cut], tok, repeats=2,
-                                                 max_nodes=self.cfg.max_len):
+                                                 max_nodes=self.cfg.max_nodes):
             for node, (label_id, type_id) in targets.items():
                 if label_id >= 0:
                     counts[_node_context(view, node)][label_id] += 1
@@ -337,7 +337,7 @@ class RuleBasedModel(Model):
         seen: collections.Counter = collections.Counter()
         for view, targets in self.training_views(episodes[cut:] or episodes, tok,
                                                  repeats=2, seed=31,
-                                                 max_nodes=self.cfg.max_len):
+                                                 max_nodes=self.cfg.max_nodes):
             for node, (label_id, _) in targets.items():
                 if label_id < 0:
                     continue

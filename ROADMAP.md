@@ -59,9 +59,10 @@ Everything defaults to CPU now, including `TrainConfig.device`, which used to be
 ## Task list
 
 - [ ] **Finish the full-curriculum sweep and rewrite the conclusions.** Running
-      now via `configs/full179.toml`. The first two models out of it already
-      disagree with everything this repo has reported — see below. Nothing in
-      the README should be trusted until the complete table is in.
+      via `configs/full179.toml --tasks node`. Nothing in the README should be
+      trusted until the complete table is in. **Do not kill it**: `ctw` takes
+      about two and a half minutes on its own and I mistook that for a hang
+      twice, restarting from scratch both times.
 
 - [x] **Re-run the full sweep and correct the README.** Done, and it refuted
       the claim that prompted it: three rule-based models did *not* clear the
@@ -621,6 +622,22 @@ Note `lbl cov` falls 0.92 -> 0.82: the wider curriculum has more
 out-of-vocabulary labels, so the label score covers less of it. That is worth
 holding in mind when the full table arrives — the two runs are not scoring quite
 the same population of nodes.
+
+### Fixed: models fitted on graphs four times bigger than they were scored on
+
+`ModelConfig` had no node cap, so every model passed `cfg.max_len` — the *text*
+length — as `max_nodes` when drawing training views. With the default
+`max_len=512` that meant fitting on graphs truncated at 520 nodes and being
+evaluated on graphs truncated at 128. Different data on the two sides, and four
+times the work for the part that was then discarded. `ModelConfig.max_nodes`
+now exists and the trainer passes the task's cap through; ten files were reading
+the wrong field.
+
+This was found while chasing what looked like a hang in `ctw`, and it was not
+the cause. `ctw`'s forward really is about fifty times slower than `brill`'s —
+53s to evaluate 716 episodes against 2s — which is a property of walking a
+context path per candidate symbol, not a bug. Two full-curriculum sweeps were
+killed on the mistaken belief it had stalled.
 
 ## Open questions
 

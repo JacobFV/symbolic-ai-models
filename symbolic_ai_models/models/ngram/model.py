@@ -74,7 +74,7 @@ class NGramModel(RuleBasedModel):
         # Graph contexts are counted on *masked* views, so the keys recorded
         # here are keys that will still resolve at evaluation time.
         for view, targets in self.training_views(episodes, tok,
-                                                 max_nodes=self.cfg.max_len):
+                                                 max_nodes=self.cfg.max_nodes):
             for node, (label_id, type_id) in targets.items():
                 for key in self._view_contexts(view, node):
                     if type_id >= 0:

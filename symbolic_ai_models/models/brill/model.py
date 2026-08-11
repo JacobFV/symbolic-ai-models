@@ -83,7 +83,7 @@ class BrillModel(RuleBasedModel):
     def learn(self, episodes: Sequence[Episode], tok: SymbolTokenizer) -> None:
         examples = []
         for view, targets in self.training_views(episodes, tok,
-                                                 max_nodes=self.cfg.max_len):
+                                                 max_nodes=self.cfg.max_nodes):
             for node, (label_id, type_id) in targets.items():
                 examples.append((view, node, label_id, type_id))
         if len(examples) > self.max_examples:

@@ -156,7 +156,7 @@ class WorkspaceModel(RuleBasedModel):
         prior: collections.Counter = collections.Counter()
         seen = 0
         for view, targets in self.training_views(episodes, tok,
-                                                 max_nodes=self.cfg.max_len):
+                                                 max_nodes=self.cfg.max_nodes):
             regions = _partition(view)
             for node, (label_id, _) in targets.items():
                 if label_id < 0 or seen >= self.max_examples:
@@ -182,7 +182,7 @@ class WorkspaceModel(RuleBasedModel):
         scores: list[float] = []
         correct: list[bool] = []
         for view, targets in self.training_views(episodes, tok,
-                                                 max_nodes=self.cfg.max_len,
+                                                 max_nodes=self.cfg.max_nodes,
                                                  repeats=1, seed=7):
             regions = _partition(view)
             for node, (label_id, _) in targets.items():

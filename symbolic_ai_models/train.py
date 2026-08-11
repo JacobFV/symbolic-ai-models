@@ -144,7 +144,8 @@ def make_model(cfg: TrainConfig, vocab_size: int) -> Model:
     return build(cfg.model, ModelConfig(
         vocab_size=vocab_size, d_model=cfg.d_model, n_layers=cfg.n_layers,
         n_heads=cfg.n_heads, d_ff=cfg.d_ff, dropout=cfg.dropout,
-        max_len=max(cfg.max_len, cfg.max_nodes) + 8, extra=dict(cfg.extra)))
+        max_len=max(cfg.max_len, cfg.max_nodes) + 8, max_nodes=cfg.max_nodes,
+        extra=dict(cfg.extra)))
 
 
 # ---------------------------------------------------------------------------

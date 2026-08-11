@@ -95,7 +95,7 @@ class RuleInductionModel(RuleBasedModel):
         # has to see that, or it will happily learn rules that never apply.
         label_ex, type_ex = [], []
         for view, targets in self.training_views(episodes, tok,
-                                                 max_nodes=self.cfg.max_len):
+                                                 max_nodes=self.cfg.max_nodes):
             wrapped = _View.from_graph_view(view)
             for node, (label_id, type_id) in targets.items():
                 fs = _node_facts(wrapped, node, anchor=self.anchor_features)
@@ -138,7 +138,7 @@ class RuleInductionModel(RuleBasedModel):
         scores: list[float] = []
         correct: list[bool] = []
         for view, targets in self.training_views(episodes[cut:] or episodes, tok,
-                                                 max_nodes=self.cfg.max_len,
+                                                 max_nodes=self.cfg.max_nodes,
                                                  repeats=1, seed=13):
             wrapped = _View.from_graph_view(view)
             for node, (label_id, _) in targets.items():
@@ -156,7 +156,7 @@ class RuleInductionModel(RuleBasedModel):
                             tok: SymbolTokenizer) -> DecisionList | None:
         examples = []
         for view, targets in self.training_views(episodes, tok,
-                                                 max_nodes=self.cfg.max_len):
+                                                 max_nodes=self.cfg.max_nodes):
             wrapped = _View.from_graph_view(view)
             for node, (label_id, _) in targets.items():
                 if label_id >= 0:

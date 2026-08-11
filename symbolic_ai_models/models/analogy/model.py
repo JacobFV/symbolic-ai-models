@@ -116,7 +116,7 @@ class AnalogyModel(RuleBasedModel):
         # was, which is the opposite of what a case base should do.
         candidates: list[tuple] = []
         for view, targets, episode in self.training_views(
-                episodes, tok, max_nodes=self.cfg.max_len, repeats=2,
+                episodes, tok, max_nodes=self.cfg.max_nodes, repeats=2,
                 with_index=True):
             for node, (label_id, type_id) in targets.items():
                 candidates.append((view, node, label_id, type_id, episode))
@@ -157,7 +157,7 @@ class AnalogyModel(RuleBasedModel):
         scores: list[float] = []
         correct: list[bool] = []
         for view, targets, episode in self.training_views(
-                episodes, tok, max_nodes=self.cfg.max_len, repeats=1,
+                episodes, tok, max_nodes=self.cfg.max_nodes, repeats=1,
                 with_index=True, seed=7):
             for node, (label_id, _) in targets.items():
                 if label_id < 0:

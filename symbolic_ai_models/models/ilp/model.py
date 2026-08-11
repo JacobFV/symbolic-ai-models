@@ -124,7 +124,7 @@ class ILPModel(RuleBasedModel):
         """
         out = []
         for view, targets in self.training_views(episodes, tok,
-                                                 max_nodes=self.cfg.max_len):
+                                                 max_nodes=self.cfg.max_nodes):
             for node, (label_id, type_id) in targets.items():
                 out.append((view, node, label_id, type_id))
         if len(out) > self.max_examples:
