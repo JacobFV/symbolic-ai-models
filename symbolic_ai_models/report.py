@@ -116,8 +116,12 @@ COMPARABLE_DATA = ("vocab_size", "max_len", "max_nodes", "mask_rate", "lessons",
 #: reader to skip the warning, which is how a warning stops working.
 COMPARABLE_SHAPE = ("d_model", "n_layers", "n_heads", "d_ff")
 
-#: `steps` is deliberately absent from both: a rule-based model fits in one pass
-#: and reports 0, so a mixed table always disagrees and always would.
+#: `steps` is absent from both because a rule-based model fits in one pass and
+#: reports 0, so a mixed table always disagrees. It is checked separately among
+#: neural rows, where an unequal budget is exactly the confound this repo spent
+#: several days on: 300 steps put every network below the floor and 2000 put the
+#: first one above it, and a half-finished re-run leaves both kinds of row in
+#: one directory looking identical.
 
 
 def config_drift(summaries: Sequence[dict[str, Any]]) -> list[str]:
@@ -138,6 +142,17 @@ def config_drift(summaries: Sequence[dict[str, Any]]) -> list[str]:
         return []
     neural = [s for s in summaries if s.get("family") == "neural"]
     drifted: list[str] = []
+    # Read from the summary's own `steps`, not `config.steps`: the config records
+    # what was asked for and this records what ran, and a run killed part-way is
+    # precisely the case worth catching.
+    budgets: dict[str, list[str]] = {}
+    for s in neural:
+        if "steps" in s:
+            budgets.setdefault(repr(s["steps"]), []).append(str(s.get("model", "?")))
+    if len(budgets) > 1:
+        groups = "; ".join(f"{v}={', '.join(sorted(m))}"
+                           for v, m in sorted(budgets.items()))
+        drifted.append(f"  steps: {groups}")
     for key, rows in ([(k, summaries) for k in COMPARABLE_DATA]
                       + [(k, neural) for k in COMPARABLE_SHAPE]):
         if len(rows) < 2:

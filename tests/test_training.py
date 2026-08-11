@@ -448,12 +448,25 @@ def test_comparison_table_flags_config_drift():
     assert "d_model" in joined and "tpr" in joined and "gru" in joined
     assert "n_train" not in joined, "keys that agree must not be reported"
 
-    # A differing step budget is legitimate: rule-based models report 0 steps.
-    same = [{"model": "ilp", "family": "rule-based",
-             "config": {"d_model": 96, "steps": 0}},
-            {"model": "gru", "family": "neural",
-             "config": {"d_model": 96, "steps": 2000}}]
+    # A rule-based model reporting 0 steps next to a trained network is not
+    # drift: it fits in one pass and never consumed a budget.
+    same = [{"model": "ilp", "family": "rule-based", "steps": 0,
+             "config": {"d_model": 96}},
+            {"model": "gru", "family": "neural", "steps": 2000,
+             "config": {"d_model": 96}}]
     assert config_drift(same) == []
+
+    # Two networks on different budgets IS drift, and is the confound that cost
+    # this repo the most: 300 steps put every network below the floor and 2000
+    # put the first one above it. A half-finished re-run leaves both kinds of
+    # row in one directory looking identical.
+    budgets = [{"model": "gru", "family": "neural", "steps": 2000, "config": {}},
+               {"model": "tpr", "family": "neural", "steps": 300, "config": {}},
+               {"model": "ilp", "family": "rule-based", "steps": 0, "config": {}}]
+    warned = config_drift(budgets)
+    assert any("steps" in l and "gru" in l and "tpr" in l for l in warned)
+    assert not any("ilp" in l for l in warned), \
+        "a rule-based row must not be dragged into a budget comparison"
 
     # A rule-based model records d_model and has no tensors to apply it to.
     # Flagging that would fire on every mixed table and train readers to skip
