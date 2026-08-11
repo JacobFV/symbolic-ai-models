@@ -100,7 +100,62 @@ def comparison_table(summaries: Sequence[dict[str, Any]], sort_by: str = "ans li
     lines.append("ans = the answer span alone (~1.4% of positions); tok = all of "
                  "them, so tok lift is mostly boilerplate. lbl cov = share of "
                  "masked labels the vocabulary can name and the score covers.")
+    lines.extend(config_drift(summaries))
     return "\n".join(lines)
+
+
+#: What every row must agree on: the data and the task. A model evaluated on
+#: different lessons, a different mask rate or a different split is answering a
+#: different question whatever family it belongs to.
+COMPARABLE_DATA = ("vocab_size", "max_len", "max_nodes", "mask_rate", "lessons",
+                   "n_train", "n_eval", "language", "seed")
+
+#: Network shape, checked only among neural rows. A rule-based model records
+#: `d_model` because it shares one config object, and has no tensors to apply it
+#: to -- flagging those rows would fire on every mixed table and teach the
+#: reader to skip the warning, which is how a warning stops working.
+COMPARABLE_SHAPE = ("d_model", "n_layers", "n_heads", "d_ff")
+
+#: `steps` is deliberately absent from both: a rule-based model fits in one pass
+#: and reports 0, so a mixed table always disagrees and always would.
+
+
+def config_drift(summaries: Sequence[dict[str, Any]]) -> list[str]:
+    """Warn when rows in one table were produced under different configs.
+
+    A comparison table's whole claim is that the rows differ only in the model.
+    Nothing enforced that. `configs/full179.toml` did not pin `d_model`, whose
+    default is 256, so a re-run of part of a sweep silently trained models 2.7x
+    wider into a directory whose other rows were built at 96 -- and the drifted
+    rows would have printed in this table looking exactly like the rest, because
+    the config is recorded per run and never compared across them.
+
+    Warning rather than raising: the numbers are real and a reader may well want
+    them, and a sweep that dies at the last line after hours of work would be a
+    worse failure than the one being reported.
+    """
+    if len(summaries) < 2:
+        return []
+    neural = [s for s in summaries if s.get("family") == "neural"]
+    drifted: list[str] = []
+    for key, rows in ([(k, summaries) for k in COMPARABLE_DATA]
+                      + [(k, neural) for k in COMPARABLE_SHAPE]):
+        if len(rows) < 2:
+            continue
+        seen: dict[str, list[str]] = {}
+        for s in rows:
+            cfg = s.get("config") or {}
+            if key not in cfg:
+                continue
+            seen.setdefault(repr(cfg[key]), []).append(str(s.get("model", "?")))
+        if len(seen) > 1:
+            groups = "; ".join(f"{v}={', '.join(sorted(m))}"
+                               for v, m in sorted(seen.items()))
+            drifted.append(f"  {key}: {groups}")
+    if not drifted:
+        return []
+    return ["", "!! these rows were NOT produced under one config, so the "
+            "comparison is not like-for-like:"] + drifted
 
 
 def history_table(run_dir: str | Path) -> str:

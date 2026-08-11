@@ -421,3 +421,49 @@ def test_resume_reruns_a_model_that_ran_a_smaller_budget(tmp_path):
     assert not _already_ran(tmp_path / "absent", argparse.Namespace(steps=10))
     (out / "summary.json").write_text("{not json")
     assert not _already_ran(out, argparse.Namespace(steps=10))
+
+
+# ---- a table's rows must come from one config -----------------------------
+def test_comparison_table_flags_config_drift():
+    """A table claims its rows differ only in the model. Nothing enforced it.
+
+    `configs/full179.toml` did not pin `d_model` (default 256), so a partial
+    re-run trained models 2.7x wider into a directory built at 96, and the rows
+    would have printed looking exactly like the others.
+    """
+    from symbolic_ai_models.report import config_drift
+
+    a = {"model": "gru", "family": "neural",
+         "config": {"d_model": 96, "n_train": 20}}
+    b = {"model": "ilp", "family": "rule-based",
+         "config": {"d_model": 96, "n_train": 20}}
+    assert config_drift([a, b]) == []
+    assert config_drift([a]) == []
+
+    wide = {"model": "tpr", "family": "neural",
+            "config": {"d_model": 256, "n_train": 20}}
+    warning = config_drift([a, b, wide])
+    assert warning, "a width difference must be reported"
+    joined = "\n".join(warning)
+    assert "d_model" in joined and "tpr" in joined and "gru" in joined
+    assert "n_train" not in joined, "keys that agree must not be reported"
+
+    # A differing step budget is legitimate: rule-based models report 0 steps.
+    same = [{"model": "ilp", "family": "rule-based",
+             "config": {"d_model": 96, "steps": 0}},
+            {"model": "gru", "family": "neural",
+             "config": {"d_model": 96, "steps": 2000}}]
+    assert config_drift(same) == []
+
+    # A rule-based model records d_model and has no tensors to apply it to.
+    # Flagging that would fire on every mixed table and train readers to skip
+    # the warning, so shape is compared among neural rows only.
+    mixed = [{"model": "gru", "family": "neural", "config": {"d_model": 96}},
+             {"model": "ilp", "family": "rule-based", "config": {"d_model": 256}},
+             {"model": "brill", "family": "rule-based", "config": {"d_model": 256}}]
+    assert config_drift(mixed) == []
+
+    # Data disagreement is everyone's problem, whatever the family.
+    split = [{"model": "gru", "family": "neural", "config": {"n_train": 20}},
+             {"model": "ilp", "family": "rule-based", "config": {"n_train": 50}}]
+    assert any("n_train" in l for l in config_drift(split))

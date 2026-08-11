@@ -17,6 +17,19 @@ n_train = 20
 n_eval = 4
 
 vocab_size = 8192
+# Pinned, not defaulted. `TrainConfig.d_model` defaults to 256 and this file did
+# not set it, so every rule-based entry in `runs/full179` recorded d_model 96
+# (passed on the command line at the time) while a later re-run of the neural
+# half picked up the 256 default and trained models 2.7x wider into the same
+# directory. Nothing complained: the shape knob is recorded in each summary but
+# never compared across them, so the drifted rows would have sat in the
+# comparison table looking like the others. A config that omits a shape knob is
+# not a config, it is a default with a filename.
+d_model = 96
+n_layers = 3
+n_heads = 4
+d_ff = 256
+dropout = 0.1
 max_len = 320
 max_nodes = 128
 batch_size = 16
