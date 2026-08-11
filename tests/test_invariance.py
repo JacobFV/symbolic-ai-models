@@ -22,7 +22,9 @@ LESSONS = ["symbol_grounding", "unification", "center_embedding"]
 #: Models whose method reads structure only, and which must therefore keep
 #: their accuracy exactly. Deliberately short: it is the list of claims that
 #: have actually been checked, not the list of models that sound structural.
-STRUCTURE_ONLY = ["ilp", "evidence"]
+#: `analogy` earned its place by having its memorising readout removed — it
+#: failed this test when it was first written, which is why the test exists.
+STRUCTURE_ONLY = ["ilp", "evidence", "analogy"]
 
 
 @pytest.fixture(scope="module")

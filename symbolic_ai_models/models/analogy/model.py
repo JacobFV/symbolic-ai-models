@@ -24,19 +24,25 @@ The contrast with ``evidence`` was meant to be the point of having both: that
 one retrieves by *shared concepts* within an episode, this one by *isomorphism*
 across the training set.
 
-**Measured, and the claim does not hold.** This docstring used to say the model
-"would work identically if every symbol in the corpus were replaced by a fresh
-one". Under the renaming test in :mod:`symbolic_ai_models.invariance` its
-masked-node label accuracy falls from 0.417 to 0.036, while ``evidence`` and
-``ilp`` lose nothing at all. Retrieval and alignment really are structural — the
-MAC signature and the FAC alignment read types and slots and never a label — but
-:func:`_transfer` then falls back to ``case.label``, the symbol remembered from
-the training case, whenever the peer route does not apply. That fallback is
-where most of the score came from, and it is memorisation.
+**The claim is true now, and it cost most of the score.** This docstring once
+said the model "would work identically if every symbol in the corpus were
+replaced by a fresh one", and the renaming test in
+:mod:`symbolic_ai_models.invariance` showed it did not: label accuracy fell from
+0.417 to 0.036 under a permutation of the vocabulary. Retrieval and alignment
+were always structural — the MAC signature and the FAC alignment read types and
+slots, never a label — but the readout fell back to ``case.label``, the symbol
+remembered from the training case, and that fallback carried most of the score.
 
-So the honest description is: a structural retriever with a memorising readout.
-Making the transfer structure-only, and paying whatever accuracy that costs, is
-on the roadmap.
+What travels between two episodes is not a symbol but a **route**: the case
+records that its answer stood at, say, its slot-0 sibling, and the query is read
+at the same place. :func:`_explaining_routes` recovers which structural paths
+would have produced the remembered answer, and :func:`_transfer` follows them in
+the new episode. Where no route explains the case, the model now returns nothing
+rather than a name it happens to remember.
+
+Measured: 0.417 -> 0.173 on ordinary episodes, and 0.036 -> 0.173 under
+renaming, so the delta is exactly zero. The honest accuracy of structure mapping
+here is 0.173; the other 0.244 was memorisation wearing its name.
 
 A case base is a model with no compression at all, so the size reported is the
 number of stored cases: the honest count for a method whose hypothesis is its
@@ -230,44 +236,95 @@ def _align(view: GraphView, node: int, case: _Case) -> float:
     return score
 
 
-def _transfer(view: GraphView, node: int, case: _Case) -> int | None:
-    """The answer the analogue gives.
+#: Structural paths from a node to somewhere else in the same episode. A route
+#: is the *answer to* "where does the answer live, relative to me" — and it is
+#: the only thing an analogy is allowed to carry across, because it is the only
+#: part of a remembered case that survives the vocabulary being reinvented.
+MAX_STEP = 4
 
-    Two ways round, and the order matters. If the remembered answer is a symbol
-    that also appears *structurally* in the query — the peer's label, the
-    parent's — take the query's copy, because that is what the analogy actually
-    licenses. Otherwise fall back to the remembered symbol itself, which only
-    helps for the vocabulary that recurs across episodes.
-    """
-    if case.label < 0:
+
+def _follow(labels, parent, slot, node: int, route: tuple) -> int | None:
+    """Walk one structural route from ``node``; ``None`` if it does not exist."""
+    kind = route[0]
+    if kind == "parent":
+        p = parent[node]
+        return p if p >= 0 else None
+    if kind == "grandparent":
+        p = parent[node]
+        return parent[p] if p >= 0 and parent[p] >= 0 else None
+    if kind == "sibling":
+        p = parent[node]
+        if p < 0:
+            return None
+        sibs = [j for j, q in enumerate(parent) if q == p and j != node]
+        return sibs[route[1]] if route[1] < len(sibs) else None
+    if kind == "child":
+        kids = [j for j, q in enumerate(parent) if q == node]
+        return kids[route[1]] if route[1] < len(kids) else None
+    if kind == "aunt":
+        p = parent[node]
+        g = parent[p] if p >= 0 else -1
+        if g < 0:
+            return None
+        aunts = [j for j, q in enumerate(parent) if q == g and j != p]
+        return aunts[route[1]] if route[1] < len(aunts) else None
+    if kind == "prev":
+        for j in range(node - 1, -1, -1):
+            if labels[j] is not None:
+                return j
         return None
-    source = _peer_label(view, node)
-    if source is not None and _peer_label_of_case(case) == case.label:
-        return source
-    return case.label
-
-
-def _peer_label(view: GraphView, node: int) -> int | None:
-    p = view.parent[node]
-    if p < 0 or view.labels[p] is None:
+    if kind == "peer":
+        # the same slot of another subtree whose head matches: coreference
+        # *within* the episode, which is structure, not a remembered symbol
+        p = parent[node]
+        if p < 0 or labels[p] is None:
+            return None
+        head = labels[p]
+        for other, other_label in enumerate(labels):
+            if other != p and other_label == head:
+                kids = [j for j, q in enumerate(parent) if q == other]
+                if slot[node] < len(kids):
+                    return kids[slot[node]]
         return None
-    head, slot = view.labels[p], view.slot[node]
-    for other in range(len(view)):
-        if other != p and view.labels[other] == head:
-            kids = view.children(other)
-            if slot < len(kids) and view.labels[kids[slot]] is not None:
-                return view.labels[kids[slot]]
     return None
 
 
-def _peer_label_of_case(case: _Case) -> int | None:
-    p = case.parent[case.node]
-    if p < 0 or case.labels[p] is None:
+def _routes() -> tuple:
+    return (("peer",), ("parent",), ("grandparent",), ("prev",),
+            *[("sibling", k) for k in range(MAX_STEP)],
+            *[("child", k) for k in range(MAX_STEP)],
+            *[("aunt", k) for k in range(MAX_STEP)])
+
+
+def _explaining_routes(case: _Case) -> list[tuple]:
+    """The routes that would have produced this case's answer from its own node.
+
+    This is what the analogy actually transfers. The remembered *symbol* is
+    worthless — the next episode will not contain it — but "the answer was my
+    slot-0 sibling" is a fact about shape and travels intact.
+    """
+    out = []
+    for route in _routes():
+        target = _follow(case.labels, case.parent, case.slot, case.node, route)
+        if target is not None and case.labels[target] == case.label:
+            out.append(route)
+    return out
+
+
+def _transfer(view: GraphView, node: int, case: _Case) -> int | None:
+    """Read the query at the position the case's answer stood in.
+
+    Previously this fell back to ``case.label`` — the symbol memorised from the
+    training case — whenever the peer route did not apply, and the renaming test
+    showed that fallback was carrying most of the model's score: accuracy fell
+    from 0.417 to 0.036 when every symbol was permuted. Structure mapping is
+    supposed to survive exactly that. It now returns nothing rather than a
+    remembered name, which costs accuracy and is the honest version.
+    """
+    if case.label < 0:
         return None
-    head, slot = case.labels[p], case.slot[case.node]
-    for other in range(len(case.labels)):
-        if other != p and case.labels[other] == head:
-            kids = case.children(other)
-            if slot < len(kids) and case.labels[kids[slot]] is not None:
-                return case.labels[kids[slot]]
+    for route in _explaining_routes(case):
+        target = _follow(view.labels, view.parent, view.slot, node, route)
+        if target is not None and view.labels[target] is not None:
+            return view.labels[target]
     return None

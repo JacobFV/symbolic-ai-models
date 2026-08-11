@@ -82,12 +82,11 @@ Cheap and high-value first; each is exactly measurable under this harness.
       (see below). Note the test is for *equivariance*, not invariance: renaming
       moves the correct answer too, so accuracy is the quantity that must hold
       and logits are the wrong one to compare.
-- [ ] **Make `analogy`'s transfer structure-only.** `_transfer` falls back to
-      `case.label` — the symbol memorised from the training case — whenever the
-      peer route does not apply, and that fallback is where most of its score
-      comes from. Drop it, prefer the aligned position, and re-measure both the
-      label accuracy and the renaming delta. Expect the headline number to fall;
-      the point is to find out how far.
+- [x] **Make `analogy`'s transfer structure-only.** It now carries a *route*
+      ("the answer stood at my slot-0 sibling") instead of a symbol. Renaming
+      delta is exactly 0.000, and the cost was most of the score: sweep label
+      accuracy 0.463 -> 0.186, lift 0.208 -> -0.200, from best-in-repo to below
+      the floor. `hrr` is the honest leader at 0.420 / 0.144.
 - [ ] **Calibration.** `RuleBasedModel` already emits a confidence in [0,1].
       Bucket by it, report accuracy per bucket and ECE. Free.
 - [ ] **Cross-language transfer.** Fit on English, evaluate on Chinese/Turkish;

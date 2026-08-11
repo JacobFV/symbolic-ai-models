@@ -127,7 +127,7 @@ orders, corrects its own errors, or reasons by structural analogy:
 | `brill` | Brill 1995 | **Transformation-based error-driven learning.** A weak baseline plus an ordered list of corrections, each chosen to repair more than it breaks *on the output of every rule before it*. The hypothesis is a program over its own predictions, and reads as a narrative about what the baseline got wrong |
 | `grammar` | Harris 1954; ADIOS; SEQUITUR | **Grammar induction — the only parser here that was learned.** Symbols sharing enough contexts are merged into equivalence classes by union-find, then frequent class digrams are promoted to nonterminals. Prediction happens at the class level, so a context never seen with a given word still resolves if the *kind* was seen there |
 | `workspace` | Hofstadter & Mitchell's Copycat; Hearsay-II; SOAR | **Infers its own objective, partitions memory to fit, then runs competing codelets.** Derives a goal signature from the tree, carves the episode's top-level fields into regions, and lets operators (mirror a parallel region, copy a peer, echo the frame) compete; agreement lowers a temperature that governs commitment. What it learns is a *policy over strategies*, keyed by problems it discovered for itself |
-| `analogy` | Gentner's structure mapping; Forbus's MAC/FAC | **Retrieve an isomorphic case and transfer its answer.** Two-stage: a cheap symbol-free structural signature filters the case base, then a real greedy alignment grows a node correspondence outward. It would work identically if every symbol in the corpus were replaced by a fresh one — the strongest available statement of what "symbolic" buys |
+| `analogy` | Gentner's structure mapping; Forbus's MAC/FAC | **Retrieve an isomorphic case and transfer the route to its answer.** A symbol-free structural signature filters the case base, a greedy alignment grows a node correspondence, and what crosses is the *path* the remembered answer stood at rather than the symbol itself. Verified equivariant under renaming — which it was not when first written; see the findings below |
 
 ### No cheating
 
@@ -333,11 +333,24 @@ a result), three things are worth knowing before running anything big:
   **negative** `answer_lift`; `ngram` reaches `token_lift` 0.77 on
   `answer_lift` 0.05. They reproduce the scaffolding and know essentially
   nothing. This is the single best argument for reading `answer_*`.
-- **Structure mapping is the best label predictor in the table.** `analogy`
-  reaches 0.463 label accuracy — **0.208 lift** — beating every network
-  including `hrr` at 0.144. It stores cases and aligns them; it compresses
-  nothing and learns no weights. On the question the curriculum is actually
-  about, retrieval-by-isomorphism beats gradient descent here.
+- **Most of a symbolic score can be memorisation, and only a renaming test
+  finds it.** `analogy` was the best label predictor here — 0.463 accuracy,
+  0.208 lift, beating every network — and this README said so. Then every
+  symbol in the evaluation episodes was permuted: its accuracy fell to 0.036
+  while `evidence` and `ilp` lost nothing. Its retrieval and alignment were
+  always structural, but its *readout* returned the symbol remembered from the
+  training case whenever no structural route applied.
+
+  Fixed, it transfers a **route** — "the answer stood at my slot-0 sibling" —
+  rather than a name, and is now exactly equivariant: 0.173 both before and
+  after renaming. In the full sweep it scores **0.186 label accuracy, −0.200
+  lift**: below the floor, where it had appeared to be the best thing in the
+  repo. The honest ordering puts `hrr` first at 0.420 / 0.144.
+
+  The general lesson is the uncomfortable one: on a curriculum that reinvents
+  its vocabulary every episode, a method can look structural, *be* structural in
+  its retrieval, and still have most of its score riding on remembered symbols.
+  Accuracy alone cannot tell you; renaming can.
 - **Induced rules beat networks on structure.** `ruleinduce` reaches 0.996
   node-type accuracy — 0.898 lift — on ~75 discrete parameters, against 1.78M
   for the best network, and the model is fourteen readable rules.
