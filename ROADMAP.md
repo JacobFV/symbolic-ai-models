@@ -775,6 +775,19 @@ equivalent, so a single long run still loses everything.
     matching lines: `uv run` sits between the shell and the interpreter, so one
     launch always shows at least two rows and two rows prove nothing.
 
+-0.3. **A subagent given "make a branch" shares your working tree.** Told to
+    develop a new model family on a branch, one created it *in this checkout*,
+    which moved my own HEAD onto it mid-tick. The next commit I made -- the
+    config-drift detector, main-line work -- landed on the research fork and
+    `master` was left two commits behind, with nothing to indicate it. Nothing
+    was lost, but only because it was noticed within one tick.
+
+    Give a parallel agent its own worktree (`isolation: "worktree"`), or accept
+    that it owns the checkout and do your own work somewhere else. A shared tree
+    also means the test suite imports the agent's half-written modules, so
+    "tests pass" stops being a statement about your change. Recovering is a
+    pointer move (`git branch -f master <sha>`), and the fork keeps its history.
+
 0. **The sweep is the authority.** Ad-hoc measurement scripts have now
    contradicted `symbolic-ai-models sweep` twice, both times in the direction
    that flattered the result being written up. Quote sweep numbers; use scratch
