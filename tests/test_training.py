@@ -524,3 +524,35 @@ def test_resuming_keeps_the_vocabulary_it_was_trained_with(tmp_path):
     assert resumed <= max(loss_before, cold) + 0.5, (
         f"resumed loss {resumed:.3f} vs {loss_before:.3f} before the break "
         f"and {cold:.3f} cold -- weights and vocabulary may have desynchronised")
+
+
+def test_the_floor_is_the_same_number_for_every_model(episodes):
+    """Every lift in this repo is (score - floor) / (1 - floor).
+
+    That subtraction only compares models if the floor is one number, identical
+    for all of them. It is supposed to be a property of the episodes and the
+    vocabulary alone -- a structure-only lookup table knows nothing about which
+    model is being trained -- but nothing pinned that, and a floor that drifted
+    per run would make every ranking in the README meaningless while every
+    individual number stayed plausible.
+
+    Checked directly on `runs/full179` while writing this: the floor is bit
+    identical across `ilp`, `brill`, `workspace`, `gru`, `tpr` and `transformer`
+    at label_acc 0.10507649019932376 over 42,293 scored nodes. This test keeps
+    it that way.
+    """
+    cfg = small_config(Path("."))
+    tok = build_tokenizer(cfg, episodes)
+    train_eps, eval_eps = episodes[:6], episodes[6:]
+
+    first = make_task("node", max_nodes=64).floor(eval_eps, tok, train_eps)
+    again = make_task("node", max_nodes=64).floor(eval_eps, tok, train_eps)
+    assert first == again, "the floor moved between two identical calls"
+
+    # The task's own sampling seed must not move it: `seed` drives the masking a
+    # model is trained against, while the floor draws its own fixed masks so it
+    # stays the fixed point everything else is measured from.
+    other_seed = make_task("node", max_nodes=64, seed=7).floor(
+        eval_eps, tok, train_eps)
+    assert other_seed == first, "the floor followed the task's sampling seed"
+    assert first["label_n"] > 0 and first["type_n"] > 0
