@@ -87,6 +87,41 @@ Everything defaults to CPU now, including `TrainConfig.device`, which used to be
       the six at 2000 steps (8.9 passes) on CPU, `--resume` so it can be
       assembled across interruptions; ~50 min per model, no GPU taken.
 
+      **What each outcome licenses, written down before the number lands.**
+      This repo has twice had a measurement drift toward flattering the write-up,
+      so the interpretation is fixed in advance rather than chosen afterwards.
+      The in-flight `gru` curve (label lift by step) is:
+
+      | 100 | 200 | 300 | 400 | 500 | 600 |
+      |----:|----:|----:|----:|----:|----:|
+      | -0.101 | -0.051 | -0.045 | -0.041 | -0.035 | -0.031 |
+
+      It reproduces the old 300-step figure of -0.050 at step 300, so the re-run
+      is measuring the same thing the baseline did. Gains per 100 steps after
+      the first are +0.006, +0.004, +0.006, +0.004 -- an order of magnitude
+      below the +0.050 of the opening hundred, flat rather than decaying, and
+      still 1,400 steps from the budget. Type lift is the livelier half:
+      -0.998 -> -0.030 over the same span, so the structural head is close to
+      the lookup table while the label head is not.
+
+      - If the 2000-step lift is **>= 0**: the 300-step number was an
+        undertraining artefact. Every claim about the families separating comes
+        out of the README, and the table is rebuilt from the new rows.
+      - If it **plateaus below 0** (under +0.01 gained over the last 500 steps):
+        more budget does not rescue it. The honest claim is then bounded and
+        must be stated as bounded -- a ~1M-parameter network, 8.9 passes over
+        3,580 episodes, scores below a structure-only lookup table on this task.
+        That is not "networks cannot do this", and must not be written as if it
+        were.
+      - If it is **still climbing at 2000** (over +0.01 over the last 500): the
+        budget is still the binding constraint and the comparison remains
+        unsettled. Say so and stop, rather than reporting the endpoint as if the
+        curve had converged.
+
+      Report the curve either way, not just the endpoint. `history.json` is
+      written on the evaluation cadence, so it survives an interrupted run, and
+      `compare --history` prints it.
+
       **`sweep --resume` would not do this and said nothing.** Its completeness
       test was "a `summary.json` exists", so raising `--steps` over a directory
       of finished 300-step runs skipped all six and reprinted the stale table.
