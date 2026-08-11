@@ -173,6 +173,38 @@ occupies in the term graph.
       features that ruined the first-pass model are affordable over ten
       candidates and were not over a hundred.
 
+- **Candidate recall is not the pointer's constraint; discrimination is.** The
+  obvious next move after the two-stage pointer was to widen stage one's top-k,
+  since stage two can only pick from what it is shown. Measured on a held-out
+  slice of *training* episodes, fitting on 3,000 and scoring on 580, so the
+  choice of k never touched eval:
+
+  | top_k | stage-1 recall (train) | dev copy accuracy |
+  |---:|---:|---:|
+  | 10 | 82.7% | 0.4036 |
+  | 20 | 93.1% | 0.4043 |
+  | 40 | 98.7% | 0.4012 |
+
+  Recall climbs 16 points and accuracy does not move. Every candidate added is
+  found by stage two and then not chosen, so precision loss cancels the recall
+  gain exactly. Keeping k=10; the wider pools cost counts and buy nothing.
+
+  **What it confuses instead.** Over 3,821 errors where the answer *was* in the
+  candidate set: it picks `same_head_same_slot` 61% of the time and `sibling`
+  31%, while the correct node is `same_grandparent` 25% and `same_depth` 11% —
+  it reaches for the structurally nearest candidate when the answer is often one
+  step further out. And **86.2% of the time the node it picked has the same type
+  as the one it should have picked**, so node type carries almost no
+  discriminating information at the point of the mistake.
+
+  That is the shape of a *missing feature*, not a mis-weighted one. Two
+  candidates of the same type in similar structural positions are separated by
+  which *symbol* each carries and whether that symbol is plausible in this query
+  context — precisely the information the pointer was built to avoid using, and
+  precisely what the structure-only floor's lookup table already estimates. The
+  pointer knows where to look and not what is plausible; the label head knows
+  what is plausible and not where to look.
+
 ## Design rules, learned the expensive way
 
 1. **The label head and the type head do not share machinery.** Discovered four
