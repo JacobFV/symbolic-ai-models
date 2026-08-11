@@ -678,6 +678,37 @@ by that, but it is not a like-for-like comparison.
 
 ## Open questions
 
+### Blocked: the neural comparison needs a GPU, and long CPU runs keep dying
+
+The one remaining claim — whether the neural models clear the label floor on the
+full curriculum — cannot be settled right now, and the reasons are worth
+recording so the next attempt is planned rather than rediscovered.
+
+**Cost, measured rather than guessed.** `gru` ran 300 steps in 455s on CPU:
+**0.7 steps/s**. A budget large enough to matter is ~2000 steps, so ~51 minutes
+per model and about five hours for the six. The GPU is occupied by other work
+and must not be taken for this.
+
+**Why 300 steps is not a usable data point.** 300 steps at batch 16 against
+3,580 training episodes is ~1.3 passes, while every rule-based model sees the
+training set in full. `gru`'s -0.050 lift is an undertrained model, not a beaten
+one, and reporting it as the family separation inverting would be wrong.
+
+**Operational problem.** Long background runs launched from a tick do not
+survive it. Four attempts now — two full sweeps and a 1200-step `gru` — have
+been killed part-way, twice leaving output directories with a tokenizer and no
+summary. `sweep --resume` was added for exactly this and works; `train` has no
+equivalent, so a single long run still loses everything.
+
+**What would unblock it**, in preference order:
+
+1. A free GPU: six models at 2000 steps is minutes, not hours.
+2. Failing that, `train --resume` from a checkpoint, so a five-hour CPU run can
+   be assembled from tick-sized pieces.
+3. Failing both, state plainly in the README that the family comparison is
+   untested on the full curriculum. That is already what it says.
+
+
 - The design docs report counting losing to gradients by ~3.5x perplexity on
   real text, which is the opposite of what this repo's smoke sweep shows. The
   sweep is 400 steps on synthetic curriculum prose, so the disagreement is
