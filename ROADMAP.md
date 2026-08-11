@@ -138,6 +138,41 @@ occupies in the term graph.
 
 ## Open questions
 
+- [ ] **Re-rank the pointer's own candidates. Do not ensemble the pointers.**
+      Both options measured before building either, which is the only reason the
+      cheaper-looking one was rejected.
+
+      An ensemble is the obvious move — four pointers, different mechanisms —
+      and its ceiling is low. A *perfect* selector over all four reaches
+      **0.397** against `corefer` alone at 0.306, and the pair that combines
+      best is `corefer`+`evidence` (either-correct 0.379) even though `evidence`
+      is the weakest of the four. Diversity, not strength, is what an ensemble
+      buys, and it buys about +0.09.
+
+      Re-ranking has more than twice the headroom, because the signal is already
+      there and only the order is wrong. Where `corefer` puts the correct node,
+      as a share of the positions that have one:
+
+      | | eval | train |
+      |---|---:|---:|
+      | top-1 (what it scores) | 43.7% | 48.1% |
+      | top-3 | 59.1% | 59.6% |
+      | top-5 | 67.3% | 67.3% |
+      | top-10 | **78.1%** | **78.7%** |
+
+      The right answer is in its top ten roughly four times in five and gets
+      picked out of them fewer than half those times. Confirmed on training
+      episodes so the decision does not rest on eval. As a share of *all* scored
+      positions that is 0.549 reachable by re-ranking `corefer` alone, against
+      0.397 for a perfect ensemble of all four.
+
+      So: keep the naive-Bayes score as a **candidate generator**, take its top
+      k, and score those few with features too expensive or too sparse to apply
+      to every node — full joint contexts, agreement between the other three
+      pointers, whether the candidate's symbol fits the query's type. Sparse
+      features that ruined the first-pass model are affordable over ten
+      candidates and were not over a hundred.
+
 ## Design rules, learned the expensive way
 
 1. **The label head and the type head do not share machinery.** Discovered four
