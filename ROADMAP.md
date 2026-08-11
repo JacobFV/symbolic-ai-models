@@ -3,19 +3,31 @@
 State for autonomous continuation. Read `git log --oneline | head -20` first;
 this file says what the work *is*, the log says how far it got.
 
-## Now: decouple parsing from reasoning
+## Done: parsing is decoupled from reasoning. Almost nothing uses it.
 
-Every symbolic model currently has its parser welded on. `syllogism` owns a
-categorical fragment, `symbolalg` a clause regex, `grammar` a class induction.
-That makes "which parser" and "which reasoner" one choice when they are two, and
-it means a better parser cannot be dropped under an existing reasoner.
-
-The split:
+The split was built and works:
 
 - `parsers/` — a `Parser` is `text -> ParseResult` (tokens, classes, brackets,
   facts). Registered by name, fitted on training episodes only.
 - `models/` — a reasoner declares `extra.parser` and gets whatever it names.
   Reasoners must work with *any* parser, including `none`.
+
+Four reasoners consume one: `ngram`, `grammar`, `syllogism`, `symbolalg`. All
+four sit in the bottom half of the label table, and the parser matrix bought
+about 1% of a bit. That is the honest state of the abstraction: it is correct,
+it is tested, and it has not yet paid.
+
+**The interesting gap.** The one model that reads prose usefully — `corefer`,
+whose `said` feature is worth +0.010 copy lift — does not use a parser at all.
+It counts regex occurrences of a candidate's symbol in the prompt. A parser
+would give it word *classes* instead of raw counts, which is exactly the
+abstraction the layer exists to provide, and nobody has tried it.
+
+That is the natural next experiment on the parser layer, and it is a real test
+rather than a tidy one: if induced classes beat a regex count inside the only
+model where prose demonstrably helps, the abstraction has paid for itself; if
+they do not, "parsers buy ~1% of a bit" stands as the summary of this whole
+direction and should be said plainly at the top of the README.
 
 ## Why parsers can be scored exactly here
 
