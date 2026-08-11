@@ -44,6 +44,32 @@ occupies in the term graph.
   Checked under `PYTHONHASHSEED=1` vs `999`: all eight are bit-identical.
   `test_fitting_is_stable_across_processes` keeps it that way.
 
+- **`rgt`'s type win is uniform across node types, not one class carrying it.**
+  A +0.587 type lift against a next-best +0.295 is large enough to suspect a
+  degenerate cause -- one dominant class predicted well, or a skew the floor
+  handles badly. It is not. Per-type accuracy for the trained `rgt`, over 6,422
+  scored nodes:
+
+  | type | n | acc | share |
+  |---|---:|---:|---:|
+  | `ident` | 2552 | 0.930 | 0.397 |
+  | `pred` | 1794 | 0.939 | 0.279 |
+  | `num` | 818 | 0.813 | 0.127 |
+  | `list` | 423 | 0.856 | 0.066 |
+  | `field` | 400 | 0.985 | 0.062 |
+  | `token` | 149 | 0.960 | 0.023 |
+  | `record` | 123 | 0.935 | 0.019 |
+  | `char` | 110 | 0.991 | 0.017 |
+  | `str` | 53 | 0.774 | 0.008 |
+
+  Every class lands between 0.774 and 0.991, and the two that make up two thirds
+  of the nodes are near the middle of that range. The model is not winning by
+  being excellent at one frequent thing.
+
+  This is a diagnostic, not a headline: it draws its own masks, so it scores
+  6,422 nodes where the sweep scored 6,344, and gets 0.9168 against the sweep's
+  0.915. The sweep remains the authority for the number.
+
 - **Three models score bit-identically on type, and it is not a bug.**
   `evidence`, `routes` and `symbolalg` all report type_acc
   **0.6990857503152585** over the same 6,344 nodes on the full curriculum. Two
