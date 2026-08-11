@@ -82,11 +82,18 @@ class TrainConfig:
     eval_every: int = 250
     log_every: int = 50
     seed: int = 0
-    device: str = "auto"
+    device: str = "cpu"
     amp: bool = True
     out: str = "runs/run"
 
     def resolved_device(self) -> torch.device:
+        """CPU unless a run explicitly asks otherwise.
+
+        The default used to be ``auto``, which took the GPU whenever one
+        existed. The symbolic models are pure Python and gain nothing from it,
+        so all that bought was contention with whatever else was training on the
+        machine. Pass ``--device cuda`` deliberately.
+        """
         if self.device != "auto":
             return torch.device(self.device)
         return torch.device("cuda" if torch.cuda.is_available() else "cpu")

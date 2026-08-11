@@ -13,7 +13,8 @@ Both predict a hidden symbol out of **one shared vocabulary**, through **one sha
 
 ```bash
 uv sync
-uv run symbolic-ai-models models                       # 12 architectures, two families
+uv run symbolic-ai-models models                       # 13 symbolic models
+                                                       # (neural: opt-in, see below)
 uv run symbolic-ai-models inspect unification --seed 2 # one episode, both surfaces
 uv run symbolic-ai-models train --config configs/small.toml --model rgt       --out runs/rgt
 uv run symbolic-ai-models train --config configs/small.toml --model ruleinduce --out runs/rules
@@ -92,7 +93,13 @@ Embeddings, heads, initialisation, optimiser, schedule, the back-off and both lo
 
 Two families, one interface. Both answer `forward(batch) -> logits`, so both are scored by the same cross-entropy against the same floors and land in the same table.
 
-**Neural** — trained by gradient descent, GPU:
+**Neural** — trained by gradient descent, and **off by default**. They are not
+the subject of this repo and they are the only thing in it that wants a GPU,
+which on a shared machine means competing with real training. Nothing is
+deleted; set `SYMBOLIC_AI_MODELS_NEURAL=1` to register them for a run where the
+cross-family comparison is the point and the device is free. Everything else —
+including `--device`, which now defaults to `cpu` rather than grabbing whatever
+accelerator exists — runs on CPU:
 
 | id | what it is | what it is there to show |
 |---|---|---|
@@ -329,69 +336,46 @@ symbolic-ai-models/
 
 ## What the two families are actually good at
 
-From the smoke sweep (six lessons, 400 steps, tiny models — a wiring check, not
-a result), three things are worth knowing before running anything big:
+Full sweep, six lessons, 400 steps, tiny models — a wiring check, not a result.
+Sorted by label lift:
 
-- **Nothing has learned to answer, and the old metric hid it completely.**
-  Every network holds `token_lift` between 0.65 and 0.73 while scoring
-  **negative** `answer_lift`; `ngram` reaches `token_lift` 0.77 on
-  `answer_lift` 0.05. They reproduce the scaffolding and know essentially
-  nothing. This is the single best argument for reading `answer_*`.
-- **Most of a symbolic score can be memorisation, and only a renaming test
-  finds it.** `analogy` was the best label predictor here — 0.463 accuracy,
-  0.208 lift, beating every network — and this README said so. Then every
-  symbol in the evaluation episodes was permuted: its accuracy fell to 0.036
-  while `evidence` and `ilp` lost nothing. Its retrieval and alignment were
-  always structural, but its *readout* returned the symbol remembered from the
-  training case whenever no structural route applied.
+```
+model        family           params   ans lift  bits/tok   lbl acc  lbl lift  typ lift
+hrr          neural        1,784,977     -0.204     1.834     0.423    +0.161    +1.000
+rgt          neural        1,524,145     -0.213     2.140     0.388    +0.110    +0.223
+tpr          neural        1,601,009     -0.213     2.153     0.370    +0.085    -0.968
+transformer  neural        1,445,041     -0.240     2.171     0.358    +0.066    -0.968
+gru          neural          520,081     -0.267     3.789     0.351    +0.057    -1.771
+ndr          neural          495,193     -0.204     1.722     0.342    +0.043    -0.502
+grammar      rule-based          945     -0.213     1.118     0.291    -0.031    -1.771
+workspace    rule-based          300     -0.267     6.382     0.291    -0.031    -6.873
+analogy      rule-based        6,000     -0.267     6.382     0.286    -0.038    +0.819
+ngram        rule-based        9,519     +0.054     0.883     0.250    -0.091    -2.626
+ruleinduce   rule-based           75     -0.267     5.335     0.170    -0.206    +0.922
+```
 
-  Fixed, it transfers a **route** — "the answer stood at my slot-0 sibling" —
-  rather than a name, and is now exactly equivariant: 0.173 both before and
-  after renaming. In the full sweep it scores **0.186 label accuracy, −0.200
-  lift**: below the floor, where it had appeared to be the best thing in the
-  repo. The honest ordering puts `hrr` first at 0.420 / 0.144.
-
-  The general lesson is the uncomfortable one: on a curriculum that reinvents
-  its vocabulary every episode, a method can look structural, *be* structural in
-  its retrieval, and still have most of its score riding on remembered symbols.
-  Accuracy alone cannot tell you; renaming can.
-- **Induced rules beat networks on structure.** `ruleinduce` reaches 0.996
-  node-type accuracy — 0.898 lift — on ~75 discrete parameters, against 1.78M
-  for the best network, and the model is fourteen readable rules.
-- **Counting and mixing are competitive language models.** `ctw` reaches 1.694
-  bits/token against the best network's 1.722, on ~19k counts versus 495k
-  weights — and `ngram` beats them both. On this data the neural models are not
-  yet earning their parameters at the token level.
-- **An induced grammar is the most parameter-efficient thing here.** `grammar`
-  reaches 1.118 bits/token on **945** discrete parameters, against 1.722 on
-  495k for the best network. It gets there by recovering the generator's own
-  hidden categories from distribution alone — nothing was written down:
-
-  ```
-  { ' watched', ' avoided', ' praised', ' followed', ' chased', ' greeted' }
-  { ' purple', ' green', ' blue', ' red', ' yellow', ' orange' }
-  { ' prism', ' sphere', ' cone', ' cube', ' rod', ' disc' }
-  ```
-
-- **The workspace engine infers what it is being asked.** On `unification` it
-  discovers unprompted that `fact` and `pattern` are structurally parallel
-  regions and learns that mirroring between them is the strategy — arriving at
-  the content of the lesson without the word appearing anywhere:
-
-  ```
-  ('fact',    field, slot=0, par=True, peer=False, n=3) -> mirror:0.89   [61x]
-  ('pattern', field, slot=0, par=True, peer=False, n=3) -> mirror:0.86   [59x]
-  ```
-
-  Its accuracy is mid-pack; the artifact is the policy table, which is a
-  readable account of how it decided to carve up the task.
-- **The masked-node floor is brutal, and rightly so.** A structure-only lookup
-  table scores 0.96 on types, and most models — both families — sit below it
-  after a short run. Negative lift is the report working.
-
-`synth` is bimodal by construction: strong where a short program generates the
-sequence, useless on prose. Averaging those halves tells you nothing, so read
-`symbolic-ai-models eval <run> --curriculum` per lesson.
+- **The split is by family and it is complete.** Every neural model is above the
+  masked-node label floor; no rule-based model is. That holds after a long run
+  of work specifically aimed at closing it — better back-offs, calibration,
+  held-out fitting — and after correcting a real unfairness in the floor itself
+  (which made it *harder*, not easier).
+- **The rule-based models do not scale with data, and the floor does.** At 50
+  training episodes per lesson `workspace` scores 0.316 against a floor of
+  0.298, a lift of +0.027. At 200 it scores **0.291 against a floor of 0.312**,
+  a lift of −0.031: the model got *worse* with four times the data while the
+  floor got better. Several intermediate results in this repo's history were
+  measured at the smaller size and read as "above the floor"; they do not
+  survive the sweep, and the sweep is the authoritative configuration.
+- **Type and label come apart sharply.** `ruleinduce` is last on labels
+  (−0.206) and near the top on types (+0.922); `workspace` is the reverse.
+  Averaging the two would describe neither.
+- **Nothing has learned to answer.** Every model holds `tok lift` between 0.00
+  and 0.76 while `ans lift` is negative for all but `ngram` at +0.054. See the
+  note above on why `token_*` is not the column to read.
+- **An induced grammar is still the most parameter-efficient thing here.**
+  `grammar` reaches 1.118 bits/token on **945** discrete parameters, against
+  1.722 on 495k for the best network, by recovering the generator's own hidden
+  categories from distribution alone.
 
 ## Notes
 

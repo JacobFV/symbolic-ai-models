@@ -200,7 +200,7 @@ def cmd_eval(args: argparse.Namespace) -> int:
     from .tasks import make_task
     from .train import _add_lift, _task_kwargs, evaluate_model, load_data, load_run
 
-    device = args.device or ("cuda" if _cuda() else "cpu")
+    device = args.device or "cpu"
     model, tok, cfg = load_run(args.run, device=device)
     if args.data:
         cfg.data = args.data

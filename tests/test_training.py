@@ -22,7 +22,7 @@ LESSONS = "unification,symbol_grounding,context_free_language"
 
 
 def small_config(out: Path, **kw) -> TrainConfig:
-    base = dict(model="rgt", tasks=("lm", "node"), lessons=LESSONS,
+    base = dict(model="ngram", tasks=("lm", "node"), lessons=LESSONS,
                 n_train=12, n_eval=4, steps=4, eval_every=2, log_every=100,
                 d_model=32, n_layers=2, n_heads=4, d_ff=64, batch_size=4,
                 vocab_size=400, max_nodes=64, max_len=192, device="cpu",
@@ -102,7 +102,7 @@ def test_a_run_writes_everything_needed_to_reproduce_it(finished_run):
         assert (out / name).exists(), f"missing {name}"
     assert summary["parameters"] > 0
     assert set(summary["final"]) == {"lm", "node"}
-    assert TrainConfig.from_dict(summary["config"]).model == "rgt"
+    assert TrainConfig.from_dict(summary["config"]).model == "ngram"
 
 
 def test_metrics_carry_their_floor_and_lift(finished_run):
@@ -118,7 +118,7 @@ def test_metrics_carry_their_floor_and_lift(finished_run):
 def test_a_run_reloads_and_produces_the_same_numbers(finished_run, episodes):
     out, _ = finished_run
     model, tok, cfg = load_run(out)
-    assert cfg.model == "rgt"
+    assert cfg.model == "ngram"
     batch = make_task("node", max_nodes=64).collate(episodes, tok)
     with torch.no_grad():
         first = model(batch).symbol_logits
@@ -136,7 +136,7 @@ def test_single_task_runs_do_not_require_the_other(tmp_path):
 def test_comparison_table_reads_finished_runs(finished_run):
     out, _ = finished_run
     table = comparison_table(load_summaries([out]))
-    assert "rgt" in table and "lift" in table
+    assert "ngram" in table and "lift" in table
 
 
 def test_comparison_table_survives_a_missing_task(tmp_path, finished_run):
@@ -339,7 +339,7 @@ def test_samples_export_as_json_for_a_reviewer(finished_run, episodes, tmp_path)
     model, tok, _ = load_run(out)
     samples = sample_episodes(model, tok, episodes[:2],
                               config=SamplingConfig(max_new_tokens=4))
-    path = write_json(tmp_path / "s.json", samples, model="rgt")
+    path = write_json(tmp_path / "s.json", samples, model="ngram")
     payload = json.loads(path.read_text())
     assert payload["n"] == 2
     for record in payload["samples"]:

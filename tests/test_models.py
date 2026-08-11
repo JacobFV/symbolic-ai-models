@@ -36,6 +36,11 @@ NEURAL = [n for n in model_names() if not issubclass(
     __import__("symbolic_ai_models.models", fromlist=["REGISTRY"]).REGISTRY[n], RuleBasedModel)]
 RULE_BASED = [n for n in model_names() if n not in NEURAL]
 
+#: The neural half is opt-in (`SYMBOLIC_AI_MODELS_NEURAL=1`), so its tests skip
+#: rather than fail when it is not registered. They still run, and still have to
+#: pass, on a machine where the comparison is the point.
+needs_neural = pytest.mark.skipif(not NEURAL, reason="neural models not registered")
+
 
 @pytest.fixture(scope="module")
 def fixtures():
@@ -208,6 +213,7 @@ def test_gradients_reach_every_parameter(name, fixtures, cfg):
     assert not dead, f"{name}: no gradient for {dead}"
 
 
+@needs_neural
 def test_the_symbol_head_is_shared_between_tasks(cfg):
     """The claim the whole comparison rests on: one head, one vocabulary."""
     model = build("transformer", cfg)
@@ -215,6 +221,7 @@ def test_the_symbol_head_is_shared_between_tasks(cfg):
     assert model.symbol_head.out_features == cfg.vocab_size
 
 
+@needs_neural
 def test_ndr_steps_can_be_raised_after_construction(cfg):
     """The extrapolation probe: more computation without more parameters."""
     model = build("ndr", cfg)
@@ -227,9 +234,14 @@ def test_ndr_steps_can_be_raised_after_construction(cfg):
 # ---------------------------------------------------------------------------
 # rule-based only
 # ---------------------------------------------------------------------------
-def test_both_families_are_populated():
-    """The repo is a comparison; it needs both sides of it."""
-    assert len(NEURAL) >= 5 and len(RULE_BASED) >= 5
+def test_the_rule_based_family_is_populated():
+    """The subject of the repo. The neural half is opt-in; see `needs_neural`."""
+    assert len(RULE_BASED) >= 10
+
+
+@needs_neural
+def test_both_families_are_populated_when_neural_is_on():
+    assert len(NEURAL) >= 5 and len(RULE_BASED) >= 10
 
 
 @pytest.mark.parametrize("name", RULE_BASED)

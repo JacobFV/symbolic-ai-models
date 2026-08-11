@@ -44,7 +44,29 @@ occupies in the term graph.
   Checked under `PYTHONHASHSEED=1` vs `999`: all eight are bit-identical.
   `test_fitting_is_stable_across_processes` keeps it that way.
 
+## Scope
+
+The **symbolic models are the subject**. The neural half exists as a control and
+is no longer registered by default: it is the only part of this repo that wants
+a GPU, and on a shared machine that means competing with real training for no
+benefit to the question being asked. `SYMBOLIC_AI_MODELS_NEURAL=1` brings it
+back for a run where the cross-family comparison is the point. Nothing was
+deleted and its tests still run under that flag.
+
+Everything defaults to CPU now, including `TrainConfig.device`, which used to be
+`auto` and took an accelerator whenever one existed.
+
 ## Task list
+
+- [x] **Re-run the full sweep and correct the README.** Done, and it refuted
+      the claim that prompted it: three rule-based models did *not* clear the
+      floor. Those measurements were taken at 50 training episodes per lesson
+      and do not survive the sweep's 200 — see below.
+- [ ] **Why do the rule-based models degrade with more data?** `workspace`
+      scores 0.316 at n_train=50 and 0.291 at 200, while the floor rises 0.298
+      -> 0.312. A model getting worse with four times the evidence is a defect,
+      not a property, and it is the most likely reason none of them clears the
+      floor at sweep scale.
 
 - [x] `parsers/base.py` — Parser, ParseResult, registry
 - [x] `parsers/evaluate.py` — gold roles from the graph, clustering F1
@@ -138,9 +160,6 @@ Cheap and high-value first; each is exactly measurable under this harness.
 - [x] **Cap the counting models' memory.** Done, and the two models want
       opposite defaults — see below. `ngram` and `grammar` take a count cutoff
       and a hard cap; `ctw` has tree pruning available but off.
-- [ ] (superseded) Cap the counting models' memory. The source work reports a
-      count-based model taking the host down at 40M tokens. `ngram`, `ctw` and
-      `grammar` grow with distinct contexts and have no bound.
 
 ### Measured: the parser x reasoner matrix, first cut
 
@@ -527,6 +546,27 @@ CTW's pruning had to rebuild `log_w` and `child_logsum` bottom-up afterwards.
 Those are maintained incrementally, so deleting a child leaves its parent
 claiming mass from a subtree that no longer exists and the weighted values
 quietly stop being probabilities — checked, and they still sum to 1.
+
+### Measured: my "above the floor" claims were an artifact of training size
+
+The last several commits reported `workspace` at +0.060, `ilp` at +0.051 and
+`analogy` at +0.025 lift — three rule-based models above the label floor. Those
+were measured at 50 training episodes per lesson with an ad-hoc harness. Run
+through the committed sweep at 200, none of them clears it:
+
+    workspace   n_train=50    acc 0.316   floor 0.298   lift +0.027
+    workspace   n_train=200   acc 0.291   floor 0.312   lift -0.031
+
+Both halves move the wrong way. The floor improves with data, as a lookup table
+should. The model *degrades* — 0.316 to 0.291 on four times the evidence — which
+is not a property of anything working correctly.
+
+So the family separation stands: all six neural models above the label floor,
+all twelve rule-based below, after a long run of work aimed squarely at closing
+it. And the lesson about method is sharper than the lesson about models: an
+ad-hoc measurement at a convenient scale agreed with what I wanted and was
+reported as a result for several commits before the authoritative path
+contradicted it.
 
 ## Open questions
 
