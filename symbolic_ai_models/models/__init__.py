@@ -13,6 +13,12 @@
     ruleinduce  brill    rule induction, by partition and by correction
     evidence  analogy    retrieval, by concept and by structure
 
+    omegaclaw_flat  omegaclaw_ctx  omegaclaw_rank
+        one shared reaching-and-committing skeleton
+        (:mod:`symbolic_ai_models.models.omegaclaw`), three control policies —
+        built to test whether an ABC makes new symbolic models cheap to write
+        and fair to compare
+
 Both answer to :class:`~symbolic_ai_models.models.base.Model`: a batch in, logits over
 the shared vocabulary out. A decision list and a transformer are therefore
 scored by the same cross-entropy against the same floors and appear in the same
@@ -33,6 +39,7 @@ from .symbolic import ABSTAIN, GraphView, RuleBasedModel, Votes
 # only thing these imports are for.
 from . import evidence, ngram, ruleinduce, syllogism, symbolalg, synth  # noqa: F401
 from . import analogy, brill, ctw, grammar, ilp, routes_model, workspace  # noqa: F401
+from . import omegaclaw_ctx, omegaclaw_flat, omegaclaw_rank  # noqa: F401
 
 #: The neural half is **not registered by default**. It is not the subject of
 #: this repo — the symbolic models are — and it is the only thing here that
