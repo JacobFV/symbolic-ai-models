@@ -173,6 +173,23 @@ occupies in the term graph.
       features that ruined the first-pass model are affordable over ten
       candidates and were not over a hundred.
 
+- **Two episode-local candidate features, both slightly harmful.** After the
+  cross-episode symbol prior failed, the remaining idea was episode-local
+  evidence — something the structure-only floor cannot compute. Measured per
+  question on training episodes, then tested on the held-out train slice:
+
+  | feature | AUC | dev copy accuracy |
+  |---|---:|---:|
+  | baseline (no such feature) | — | **0.4036** |
+  | `same_ctx_count` / `echo`: symbol already fills the query's role here | 0.581 | 0.3984 |
+  | `in_episode_count`: how often the symbol occurs at all | 0.442 | not built |
+
+  A feature at AUC 0.581 did not survive contact with the model, which is now
+  the third candidate-level feature in a row to fail. Prose at AUC 0.621 was
+  worth +0.010 copy lift; the returns below that appear to be negative, and the
+  likely reason is that naive Bayes adds a weak correlated signal to features
+  that already carry it rather than absorbing what is new.
+
 - **The symbol-plausibility feature the error analysis called for does not
   help, and the first version of it was reading its own target.** The diagnosis
   below said two candidates of the same type in similar positions are separated
@@ -255,7 +272,27 @@ occupies in the term graph.
    head. Anything shared between them — a calibrator, a confidence, a pointer —
    should be justified before it is written, not after it costs a lift.
 
-2. **A technique that worked once is not a technique that works.** Interacting a
+2. **Pool by question, never by candidate.** Twice now a pooled average has
+   produced a confident conclusion with the wrong sign, and both times the
+   broken version was the one that looked like a finding.
+
+   | measurement | pooled | per question |
+   |---|---:|---:|
+   | prose frequency picks the right source | "less frequent 73.9%" | **AUC 0.621** |
+   | in-episode symbol count picks it | **AUC 0.823** | **AUC 0.442** |
+
+   The mechanism is the same both times and is not subtle once seen. A question
+   with many correct candidates contributes many positive rows, so any feature
+   correlated with *having many correct candidates* — which frequency is, by
+   construction — looks predictive when rows are pooled. A maximum over the
+   larger set does the same thing. The fix is always the same: one positive
+   against one negative, drawn per question.
+
+   `in_episode_count` is the sharpest case. Pooled it reads 0.823, which would
+   have been the strongest feature ever measured here. Per question it is 0.442,
+   *below chance*.
+
+3. **A technique that worked once is not a technique that works.** Interacting a
    feature with the query context took `corefer` from -0.036 to +0.053. The same
    move applied to the prose feature made every head worse. `(query, rel)` is
    dense and `(query, said)` is sparse, and naive Bayes has nothing to smooth
