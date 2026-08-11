@@ -756,6 +756,25 @@ equivalent, so a single long run still loses everything.
     forever. Match the interpreter path instead. This cost most of a tick and
     produced two confident, wrong readings about what was executing.
 
+-0.5. **`nohup ... &` inside a tick does not outlive the tick.** The process
+    group is cleaned up when the invoking call returns, so the detached job dies
+    minutes later wherever it happens to be. A 2000-step `gru` launched this way
+    reached step 51 and vanished without writing its first checkpoint; the log
+    simply stops mid-run, which reads exactly like a hang and invites restarting
+    it from scratch. Long jobs must be launched *as* the backgrounded command
+    the harness tracks, not as a detached child of one. The runs that did
+    survive several ticks were all launched the second way. This has now cost
+    five attempts at the same experiment.
+
+-0.4. **Check for a second copy before concluding a run is slow.** Two sweeps
+    were once training into `runs/full179` at the same time, interleaving writes
+    to the same `checkpoint.pt` and `summary.json` for the same model. The
+    visible symptom was only that the first checkpoint took much longer than the
+    arithmetic said it should, which is indistinguishable from an underpowered
+    CPU. Read `ps -eo pid,ppid,...` and count the *process trees*, not the
+    matching lines: `uv run` sits between the shell and the interpreter, so one
+    launch always shows at least two rows and two rows prove nothing.
+
 0. **The sweep is the authority.** Ad-hoc measurement scripts have now
    contradicted `symbolic-ai-models sweep` twice, both times in the direction
    that flattered the result being written up. Quote sweep numbers; use scratch
