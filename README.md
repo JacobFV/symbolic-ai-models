@@ -13,7 +13,7 @@ Both predict a hidden symbol out of **one shared vocabulary**, through **one sha
 
 ```bash
 uv sync
-uv run symbolic-ai-models models                       # 13 symbolic models
+uv run symbolic-ai-models models                       # 25 symbolic models
                                                        # (neural: opt-in, see below)
 uv run symbolic-ai-models inspect unification --seed 2 # one episode, both surfaces
 uv run symbolic-ai-models train --config configs/small.toml --model rgt       --out runs/rgt
@@ -432,12 +432,89 @@ survive it:
 - **The ranking reverses too, not just the level.** `ruleinduce` was *last* on
   the slice at −0.206 lift and is second here at +0.250. A comparison drawn from
   3% of a curriculum ranked the models close to backwards.
-- **The compact models win.** The top four carry 74 to 6,000 discrete
-  parameters; the bottom three carry 158k to 820k. `ctw`, the largest, is last.
-  Whatever is working here is not memorisation of contexts.
+- **The compact models win — on accuracy.** The top four carry 74 to 6,000
+  discrete parameters; the bottom three carry 158k to 820k. `ctw`, the largest,
+  is last. Whatever is working here is not memorisation of contexts.
+
+  **That claim inverts on bits, and this table is an accuracy table.** See the
+  next section: `label_bits` has been recorded in every run from the beginning
+  and was never compared, and by it the 65k-parameter `grammar` is first and
+  `corefer` sixth. The sentence above is true and it is not the whole truth,
+  which is the sharpest example of the general point that a ranking is a
+  property of a metric.
 - **Type and label come apart.** `brill` is fifth on labels and first on types;
   `ilp` is fourth on labels and last but one on types. Averaging them would
   describe neither, which is why they are never averaged here.
+
+### The ranking depends on which column you read
+
+Every number above is an accuracy. Cross-entropy is in every `summary.json` too,
+and had no lift attached to it, so it was never in a table. It is now, and it
+does not agree:
+
+| model | lbl acc | rank | lbl bits | rank |
+|---|---:|---:|---:|---:|
+| `grammar` | 0.187 | 14 | **6.09** | **1** |
+| `ngram` | 0.170 | 17 | 6.41 | 4 |
+| `corefer` | **0.357** | **1** | 6.95 | 6 |
+| `omegaclaw_rank` | 0.356 | 2 | 8.09 | 11 |
+| `brill` | 0.244 | 10 | 9.08 | 19 |
+
+The cause is the shared mixture, `p = (1-c)·backoff + c·votes`. A model that
+knows the answer is one of ten and nothing more has argmax accuracy 0.1 — and
+`c` was fitted *as* an argmax accuracy, so it kept a tenth of the mass and
+handed the rest back to a unigram. "It is one of these ten" is worth about 3.3
+bits against 8,192 symbols and the interface priced it at nothing. Deciding well
+and estimating well were made to pull against each other by the contract, not by
+the reasoning.
+
+`compare` now prints both columns. Neither is the real one.
+
+### The models that came out of noticing that
+
+Same harness, same floors, all 179 lessons, `runs/ptrgen`:
+
+```
+model                   params  lbl acc  lbl lift   bits  bits lift  typ lift  copy lift
+corefer-001               4115    0.357    +0.250   6.95     +0.258    +0.612     +0.096
+omegaclaw_em-001           872    0.349    +0.240   7.85     +0.162    -0.091          -
+omegaclaw_ctx-001          872    0.344    +0.234   7.87     +0.160    -0.071          -
+ptrgen_joint-001          3696    0.340    +0.230   5.87     +0.374    +0.681     +0.078
+ensemble-pointers         7812    0.340    +0.230   5.91     +0.370    +0.668     +0.078
+omegaclaw_reach-001       1310    0.337    +0.226   7.72     +0.176    -0.093          -
+ptrgen-001                3696    0.336    +0.225   5.91     +0.369    +0.565     +0.078
+ensemble-001             68822    0.336    +0.225   4.77     +0.491    +0.545     +0.078
+ptrgen-argmax             3696    0.321    +0.208   6.49     +0.307    +0.565     +0.078
+```
+
+- **`ptrgen`** states copying and generating as one distribution —
+  `p(v) = g·Σ_{j: label(j)=v} p(j) + (1-g)·backoff` — with `g` fitted by
+  maximising held-out likelihood rather than inferred from an argmax accuracy,
+  and a pointer trained on the marginal likelihood of landing on *any* correct
+  antecedent. `ptrgen-argmax` is the same model with the old gate: the pair
+  isolates the calibrator at **+0.017 lift and 0.58 bits**.
+- **`ensemble-001`** is `ptrgen × grammar` as a geometric mixture, the pair
+  chosen on the renaming column rather than the leaderboard — one loses 0.003
+  accuracy when every symbol is permuted, the other 0.159. At **4.77 bits** it
+  is the best in the repo by a wide margin, and gains no accuracy at all.
+  `ensemble-pointers` is the control that makes this a result: two pointers over
+  identical features gain **exactly zero** bits. Diversity is the whole effect.
+- **`omegaclaw_em`** fits claw reliabilities by EM instead of hard counting, so
+  four claws that agree stop recording four independent solutions to one
+  problem. Worth +0.006 lift, and it re-ranks the claws hard: `prev` falls from
+  first to sixth.
+- **`omegaclaw_reach`** adds the typed, slot-selected sibling that `ilp`'s
+  first-order search turns out to find and `CLAWS` cannot express. It is the
+  most reliable single claw in the set (0.803, against `peer`'s 0.163) and the
+  model still **loses** to `omegaclaw_ctx`. Reach was never the constraint.
+- **`ptrgen_joint`** decodes masked nodes in confidence order, committing the
+  surest and re-reading the graph — the teacher-forcing boundary closed on the
+  prediction side. It helps `ptrgen` (type +0.565 → **+0.681**) and does nothing
+  for `omegaclaw`, which is the opposite of the prediction; the gain is extra
+  candidates, not sequential conditioning.
+
+`RESEARCH_LOG.md` has the pre-registered refutation criteria and what each one
+actually did.
 
 ### Does an ABC make new symbolic models cheap? — `omegaclaw`
 
