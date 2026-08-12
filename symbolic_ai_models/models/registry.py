@@ -53,16 +53,36 @@ def register(name: str, *, doc: str = "") -> Callable[[T], T]:
 
 
 def get(name: str) -> type[SymbolicModel]:
-    """Exact match first, then the highest version of a bare name.
+    """Exact match first, then the highest *numbered* version of a bare name.
 
     Exact-first matters: a model literally registered as ``foo`` must win over
     resolution, or a future ``foo-002`` would hijack a name someone pinned.
+
+    **Numbered, not merely highest.** The convention this registry exists to
+    support encourages naming a variant for what it changed — ``corefer-noprose``
+    reads better than ``corefer-003`` — and a plain string sort puts every such
+    name above every number, so ``corefer`` would have resolved to
+    ``corefer-noprose``. The scheme's own recommendation broke its own
+    resolution rule, and silently: a sweep asking for ``corefer`` would have
+    trained the ablation and labelled it the model. It was caught when
+    ``ptrgen-argmax``, a control, became what ``ptrgen`` meant.
+
+    So a bare name resolves over ``-001``, ``-002``, … only. A word-suffixed
+    variant is a side experiment and has to be asked for by its full name, which
+    is what naming it for an ablation implies in the first place.
     """
     if name in REGISTRY:
         return REGISTRY[name]
-    versions = sorted(n for n in REGISTRY if base_name(n) == name)
-    if versions:
-        return REGISTRY[versions[-1]]
+    numbered = [(int(m.group("version")), n) for n in REGISTRY
+                if (m := _VERSIONED.match(n)) and m.group("base") == name
+                and m.group("version").isdigit()]
+    if numbered:
+        return REGISTRY[max(numbered)[1]]
+    named = sorted(n for n in REGISTRY if base_name(n) == name)
+    if named:
+        raise KeyError(
+            f"{name!r} has no numbered version; its variants are "
+            f"{named} and must be named in full") from None
     raise KeyError(f"unknown model {name!r}; have {model_names()}") from None
 
 

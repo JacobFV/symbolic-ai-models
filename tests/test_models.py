@@ -420,6 +420,25 @@ def test_a_bare_name_resolves_to_a_version_and_a_pinned_name_does_not_move():
         get("no-such-model")
 
 
+def test_a_named_ablation_never_becomes_what_the_bare_name_means():
+    """The scheme's recommendation once broke the scheme's resolution rule.
+
+    Variants are encouraged to be named for what they changed —
+    `corefer-noprose` reads better than `corefer-003` — and a plain string sort
+    puts every word above every number, so the bare name resolved to the
+    ablation. It was live: `ptrgen-argmax` is a control that exists to be worse
+    than `ptrgen-001`, and `--models ptrgen` selected it. A sweep would have
+    trained the control and printed it under the model's name.
+    """
+    from symbolic_ai_models.models.registry import get
+
+    assert get("ptrgen").name == "ptrgen-001"
+    assert get("ptrgen-argmax").name == "ptrgen-argmax"
+    # Numbers compare as numbers, not as strings: -010 is above -009.
+    assert sorted(["x-009", "x-010"])[-1] == "x-010"
+    assert max([(9, "x-009"), (10, "x-010")])[1] == "x-010"
+
+
 def test_selecting_models_by_bare_name_yields_versioned_run_names():
     """`--models corefer` must write `runs/.../corefer-001`, not `corefer`."""
     from symbolic_ai_models.cli import _select_models

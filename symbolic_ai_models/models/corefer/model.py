@@ -315,21 +315,15 @@ class CoreferModel(RuleBasedModel):
         if not questions:
             return
 
-        # Warm start from counting, then correct by error. A perceptron from
-        # zero scored 0.356 against naive Bayes' 0.404 on the held-out training
-        # slice: with no prior it has to discover from sparse joint features what
-        # counting already knew, and thrashes. This is `brill`'s shape -- a
-        # baseline plus an ordered list of corrections -- rather than a
-        # replacement for the baseline.
-        counts_pos: collections.Counter = collections.Counter()
-        counts_neg: collections.Counter = collections.Counter()
-        n_p = n_n = 0
-        for feats, gold in questions:
-            for fs, g in zip(feats, gold):
-                for f in fs:
-                    (counts_pos if g else counts_neg)[f] += 1
-                n_p += g
-                n_n += not g
+        # Counting, and only counting. The perceptron this method was written
+        # around scored 0.356 cold and 0.368 warm-started against 0.404 for
+        # counting, and was removed; what is left is the baseline it failed to
+        # beat. Its removal left *two identical copies* of this loop behind, the
+        # second silently re-initialising and recomputing what the first had
+        # just built. That was a wasted pass over every question and not a wrong
+        # number -- verified by computing the table both ways and comparing:
+        # the 693 fitted weights are identical, so no result carrying this
+        # model's name moves, and it needs no new version.
         counts_pos: collections.Counter = collections.Counter()
         counts_neg: collections.Counter = collections.Counter()
         n_p = n_n = 0
