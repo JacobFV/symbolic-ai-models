@@ -101,6 +101,24 @@ The pattern is worth naming: **six-lesson slices and weak floors both produce
 confident results with the wrong sign.** Three separate conclusions inverted when
 moved from six lessons to 179.
 
+## How to add a variant
+
+Register it beside its predecessor rather than editing in place:
+
+```python
+@register("corefer-002", doc="...")      # leave corefer-001 registered
+```
+
+Then `sweep --models corefer-001,corefer-002` prints both rows against the same
+floors, and the difference is a measurement rather than a claim in a commit
+message. Name the suffix for what changed when that reads better —
+`corefer-noprose` says more than `corefer-003`.
+
+This exists because the alternative was tried and cost real results. `corefer`'s
+type head went 0.174 -> 0.612 in one commit and `workspace` moved from eighth to
+joint first when a cap was raised; both were improvements, and both silently
+redefined what an earlier published row had meant.
+
 ## Open questions
 
 - Can anything reach the 0.722 copy ceiling? Four candidate-level features in a
