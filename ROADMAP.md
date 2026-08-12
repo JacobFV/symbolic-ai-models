@@ -745,9 +745,55 @@ equivalent, so a single long run still loses everything.
   should rest on the current LM column until a real budget has been run.
 - The docs argue prediction is a special case of interaction and that their
   strongest results (state-space extrapolation, re-aiming induced parameters at
-  new goals) need an environment to intervene in. This harness is teacher-forced
-  scoring with no trajectories and no reward, so it cannot reproduce those. That
-  is a scope boundary worth stating rather than quietly working around.
+  new goals) need an environment to intervene in. ~~This harness is
+  teacher-forced scoring with no trajectories and no reward, so it cannot
+  reproduce those.~~ **Partly addressed:** `symbolic_ai_agents/` now presents the
+  same episodes as four text environments with trajectories and reward —
+  `choice` (the control), `retry`, `repair` (masked-node with the teacher forcing
+  removed) and `probe` (facts redacted, revealing them costs). The boundary that
+  remains is narrower and should be stated in its new form:
+
+  - **No state-space extrapolation.** Every environment here is an episode
+    presented differently; none of them has dynamics an agent could learn a
+    model of and roll forward. `repair` compounds the agent's own errors, which
+    is not the same thing.
+  - **No re-aiming at new goals.** The reward function is fixed per environment
+    and known at fitting time. Nothing tests transferring an induced policy to a
+    goal it was not fitted for.
+  - **The reward is dense and immediate.** `recall` credits actions by Monte
+    Carlo return over horizons of at most eight steps. Credit assignment over
+    anything longer is untested and the machinery would probably not survive it.
+
+  What the package *does* buy is the one measurement the model harness cannot
+  make: the size of the teacher-forcing subsidy. `context` is the masked-node
+  floor's own lookup table, and `repair` runs it without a perfect history, so
+  the two numbers are the same table asked the same question under the two
+  regimes. That comparison has not yet been run at a budget worth quoting —
+  see below.
+
+### Open: the agent harness has never been run on the full curriculum
+
+`symbolic_ai_agents` ships with no result, deliberately, and the reason is the
+same one recorded above for the neural comparison: nothing has been run at a
+size that could support a claim. The wiring check in the README is two lessons
+and eight evaluation episodes, where every row sits at or below some floor.
+
+What is worth running first, in order:
+
+1. `configs/agents-full.toml` across all six agents. It is pure Python and CPU-
+   only, so unlike the neural sweep it is not blocked on a GPU — but it is
+   `n_lessons x n_eval x envs x horizon` rollouts and `wrap` costs a model
+   forward pass per candidate action, so it wants the background-launch
+   discipline in the rules below.
+2. `context` on `repair` against `MaskedNode`'s `label_acc` for the same
+   lessons. Those two numbers are the teacher-forcing subsidy and neither has
+   been measured beside the other.
+3. `careful` against `context` on `probe`. On the wiring check the fitted
+   threshold came out at 0.00 — never probe — which is the *known* bias of the
+   tuner (documented in `agents/careful/agent.py`) plus far too little data. If
+   it stays at 0.00 on the full curriculum, that is a negative result about
+   whether asking is worth it here, and it should be reported as one rather
+   than tuned away.
 
 ## Rules for autonomous work
 

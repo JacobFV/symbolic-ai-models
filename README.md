@@ -308,6 +308,8 @@ symbolic-ai-models/
   configs/
     small.toml            # finishes in minutes; checks the wiring
     full.toml             # all 179 lessons
+    agents-small.toml     # the same two, for the agent harness
+    agents-full.toml
   symbolic_ai_models/
     data/
       curriculum.py       # langcurriculum -> Episode (text + graph, one seed)
@@ -329,10 +331,131 @@ symbolic-ai-models/
     decode.py             # sampling, for reading; feeds no metric
     agent.py              # trained model -> multiple-choice answerer
     report.py cli.py
+  symbolic_ai_agents/     # the interactive half; see below
+    envs/
+      base.py             # Environment, Observation, Step, Trajectory, floors
+      choice.py retry.py  #   one dir-free file each, as tasks/ is
+      repair.py probe.py
+      rollout.py          # one loop, every agent, every environment
+    agents/
+      base.py             # Agent + PolicyAgent: preferences -> action, over a prior
+      registry.py
+      random_agent/ shortcut/ context/     # the three reference policies
+      recall/ careful/ wrapped/            # fitted on reward, on doubt, on a model
+    train.py              # episodes, environments -> agent.fit(); no policy here
+    trace.py              # trajectories, for reading; feeds no metric
+    calibration.py report.py cli.py
   scripts/
     qualitative-sample.sh # decode every run; transcripts + JSON for a reviewer
   tests/
 ```
+
+## The interactive half: `symbolic_ai_agents`
+
+Everything above is teacher-forced. A masked node is scored against the true
+value of every other node, so an error at node 7 costs one node and never
+reaches node 30 — which is a fair way to score a *predictor* and is not a way to
+find out whether reasoning survives its own mistakes. `ROADMAP.md` has recorded
+that as a scope boundary rather than a solved problem for as long as it has
+existed.
+
+`symbolic_ai_agents/` is the other side of it. Same episodes, same vocabulary,
+same shortcut floors, same calibrator — all imported rather than rewritten — but
+an agent *acts*, and what it did is part of what it sees next:
+
+```bash
+uv run symbolic-ai-agents envs
+```
+
+```
+  choice    one-shot     horizon 1   Answer the curriculum's multiple-choice question in one move.
+  probe     interactive  horizon 8   Facts are redacted; pay to reveal them, then answer.
+  repair    interactive  horizon 8   Fill a term graph's hidden nodes one at a time; errors stay.
+  retry     interactive  horizon 3   Answer until right or out of tries; paid 1/tries_used.
+```
+
+Read them as taking one thing away at a time. `choice` is the control — it is
+exactly what `symbolic_ai_models.agent.evaluate_choices` scores a model on, and
+any claim that the other three measure something new has to survive being put
+next to it. `retry` asks about the rest of the ranking rather than the argmax.
+`repair` is the masked-node task with the teacher forcing removed. `probe`
+redacts the facts and charges for them, which is the smallest environment here
+that a prediction harness cannot express at all.
+
+`symbolic-ai-agents inspect unification` shows one episode as each of them
+presents it:
+
+```
+--- repair (horizon 8) ---
+name the node marked ? — the answer is a label already somewhere in this term
+
+(frank (fact (parent ? frank)) (pattern (parent dave A)) (query (unify A)))
+  actions: ['unify', 'frank', 'parent', 'dave', 'A', 'query', 'pattern', 'fact']
+
+--- probe (horizon 8) ---
+[1] (hidden)
+[2] (hidden)
+
+What is the unify A?
+Answer with exactly one of: Alice | Bob | Carol | Dave | Erin | Frank
+  probes:  ['look 1', 'look 2']
+```
+
+Six policies, none of them neural:
+
+```
+  random      uniform over the legal actions                         (floor)
+  shortcut    the parameter-free cheats, ranked by what they earned  (floor)
+  context     the commonest answer per structural context — the
+              masked-node floor's own lookup table                   (floor)
+  recall      fitted on its own rollouts: the return each action
+              actually paid, credited Monte Carlo
+  careful     the same table, plus buying information when unsure
+  wrap        any symbolic_ai_models architecture, asked to choose
+```
+
+The first three are also the reference policies every environment's floor is the
+best of, so each has zero lift wherever it wins — that row *is* the baseline,
+the same way `ngram` is both a registered model and the counting baseline the
+rest of the rule-based family has to beat. The floor is computed by **running**
+those policies in the environment rather than by deriving a formula, because a
+closed form for "what guessing gets under a `1/tries` payout" has to be
+re-derived per environment and nothing checks it.
+
+```bash
+uv run symbolic-ai-agents sweep --config configs/agents-small.toml --out runs/agents-small
+```
+
+```
+agent              params  |           choice            |            probe            |           repair            |            retry
+                           |     lift       ret       win|     lift       ret       win|     lift       ret       win|     lift       ret       win
+---------------------------------------------------------------------------------------------------------------------------------------------------
+random                  0  |   +0.000     0.500     0.500|   -0.043     0.088     0.125|   -0.607     0.062     0.000|   +0.000     0.583     0.750
+shortcut                2  |   -0.750     0.125     0.125|   +0.000     0.125     0.125|   -0.607     0.062     0.000|   -0.400     0.417     0.875
+context                62  |   -0.750     0.125     0.125|   +0.000     0.125     0.125|   +0.000     0.417     0.250|   -0.400     0.417     0.875
+```
+
+**That output is real and it is a wiring check, not a result.** Two lessons,
+twelve training episodes, eight evaluation episodes — every row is at or below
+some floor, which is what a harness that is working correctly reports when
+nothing has been given enough data to learn from. `configs/agents-full.toml` is
+where a run that could support a claim starts. Nothing in this package ships
+with a finding, and the same warning the model half carries applies with more
+force: a six-lesson slice once ranked this repo's models close to backwards
+against the full curriculum.
+
+Two things are worth knowing before reading any number out of it. **`lift` is
+the only column comparable across environments** — the returns are not on one
+scale, since `retry` pays `1/tries` and `probe` subtracts a cost. And **`repair`
+is easier than the masked-node task** it mirrors: it asks only about nodes whose
+answer is carried by a visible node nearby, and it offers two dozen candidates
+rather than eight thousand vocabulary entries. The two scores can be discussed
+in one paragraph and must not be put in one column.
+
+`symbolic-ai-agents trace runs/agents-small/context --worst` prints what
+actually happened, step by step. That is where "0.31 on repair" becomes "it
+filled the first node wrongly and then followed its own mistake", which is the
+distinction the whole package exists to make and which no aggregate can show.
 
 ## What the models are actually good at
 
