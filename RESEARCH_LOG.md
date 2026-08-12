@@ -231,6 +231,49 @@ are what survive.
 `prev` or `echo`, and is not singled out. Fourth time a small slice has produced
 a confident wrong answer here.
 
+## The text surface, and a harness bug that made it unmeasurable
+
+**Eleven of nineteen models cannot emit a single token of text.** `ptrgen`,
+`corefer`, the whole `omegaclaw` family and both ensembles implement
+`node_votes` and not `text_votes`, so they abstain to the unigram back-off and
+all score identically: **8.51 bits/token, `answer_acc` 0.000**. The leaderboard
+this repo optimises is masked-node only, and masked-node accuracy is disjoint
+from generation. Of the models that *can* generate, only the counting ones are
+any good — `ngram` 2.35 bits, `grammar` 2.43, `ctw` 4.30, against
+`ruleinduce` 7.69 and `syllogism` 7.71, barely distinguishable from saying
+nothing.
+
+**The tokenizer was deleting underscores.** `_PIECE_RE` was an alternation of
+four cases and `re.findall` drops whatever matches none of them; `_` matched
+none. `'foo_bar_baz'` round-tripped to `'foobarbaz'`. On a twelve-lesson slice,
+**9 of 85 answer strings and 17 of 60 episode texts did not survive a round
+trip** — and a string the tokenizer cannot represent cannot be emitted by any
+model, so those lessons' `exact_match` was pinned at zero for reasons unrelated
+to any model. Both patterns are now total; after the fix, 0/85 and 0/60.
+
+`test_encoding_is_lossless` existed, passed, and missed it: its fixture drew
+episodes containing no underscore. **That is the six-lesson-slice error in a
+different costume** — sampling the world rather than covering it — and it is now
+the fifth time that shape of mistake has produced a confident wrong reading
+here. The replacement tests assert on the alphabet, not on a fixture.
+
+**Refuted: the degenerate generation is not a decoding-rule artefact.**
+`symbolic-ai-old-A` found a 0.00 → 0.40 swing on a gridworld from sampling
+instead of arg-max, with no parameter change, and this repo's
+`'Reply with exactly one of: o1'` output has the same signature. It does not
+replicate:
+
+| | greedy | T=1.0 | T=0.7 top-50 |
+|---|---:|---:|---:|
+| `ngram` in-answer-set | 0.000 | 0.050 | 0.050 |
+| `ctw` | 0.000 | 0.017 | 0.000 |
+| `grammar` | 0.000 | 0.050 | 0.033 |
+
+`exact_match` stays 0.000 everywhere. Sampling from a broad distribution is
+worse to read than its mode, not better. The useful part was the greedy output
+itself — gold `'opt_c'`, generated `'optd'`, the right shape with the underscore
+missing — which is what led to the bug above.
+
 ## What is shaky
 
 - **Every neural number is a lower bound.** All four re-run networks were still
