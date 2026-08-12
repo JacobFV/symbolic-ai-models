@@ -150,6 +150,22 @@ occupies in the term graph.
 
 ## Open questions
 
+- **`synth` is the one row not yet on a versioned name.** Its re-run under
+  `synth-001` was killed by a 40-minute sweep timeout after writing `model.pt`
+  and `history.json` but before `summary.json`, so `runs/full179/synth` is still
+  the unversioned original. Its numbers are valid and unchanged; only its name
+  is stale. Finish with:
+
+      uv run python -m symbolic_ai_models.cli sweep --config configs/full179.toml \
+        --models synth --tasks node --out runs/full179
+
+  It needs about 28 minutes on its own, which is longer than any tick here has
+  had. The partial `synth-001` directory was deleted rather than left in place:
+  a directory holding `model.pt` and no summary is exactly the artefact that sat
+  in this table for several ticks looking like a result.
+
+
+
 - [x] **Re-rank the pointer's own candidates. Do not ensemble the pointers.**
       Done: `corefer` is two-stage, copy lift +0.063 -> +0.096. Widening the
       candidate pool afterwards bought nothing (recall 83% -> 99%, accuracy
