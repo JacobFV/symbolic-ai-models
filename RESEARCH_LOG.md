@@ -31,6 +31,60 @@ exist as a control and are off by default.
 
 ## What is established
 
+**Every ranking this repo has published is an accuracy ranking, and the models
+rank close to inversely by bits.** `label_bits` has been in every
+`summary.json` from the beginning and was never given a lift, so it was never
+compared. On the full curriculum:
+
+| model | lbl acc | rank | lbl bits | rank |
+|---|---:|---:|---:|---:|
+| `grammar` | 0.187 | 14 | **6.09** | **1** |
+| `evidence` | 0.219 | 12 | 6.26 | 3 |
+| `ngram` | 0.170 | 17 | 6.41 | 4 |
+| `corefer` | **0.357** | **1** | 6.95 | 6 |
+| `omegaclaw_rank` | 0.356 | 2 | 8.09 | 11 |
+| `brill` | 0.244 | 10 | 9.08 | 19 |
+
+The cause is the shared mixture, `(1-c)*backoff + c*votes`. A model that knows
+the answer is one of ten and no more has argmax accuracy 0.1, and `c` was fitted
+as an argmax accuracy, so it kept 0.1 of the mass and gave 0.9 back to a unigram.
+Deciding well and estimating well were made to pull against each other by the
+interface, not by the reasoning. **A ranking is a property of a metric and never
+of a set of models**; both columns are now printed by `compare`.
+
+**Fitting the mixture weight as a mixture weight is worth +0.017 lift and 0.58
+bits.** `ptrgen-001` and `ptrgen-argmax` are the same pointer, the same
+features, the same decision procedure, differing in one method: whether the gate
+is fitted by maximising held-out likelihood or by measuring argmax accuracy.
+
+| | lbl acc | lbl lift | bits |
+|---|---:|---:|---:|
+| `ptrgen-001` (likelihood) | 0.336 | +0.225 | **5.91** |
+| `ptrgen-argmax` (accuracy) | 0.321 | +0.208 | 6.49 |
+
+The accuracy gain was not predicted and has a mechanism: raising `c` cannot
+reorder the votes, but it does move the boundary between a voted symbol and the
+structural prior, and the votes win that comparison more often than they lost it.
+
+**An ensemble pays in bits only when the members are actually diverse, and the
+control proves it.** `ensemble-001` is `ptrgen` x `grammar`, chosen on the
+renaming column — one loses 0.003 accuracy when every symbol is permuted, the
+other 0.159. `ensemble-pointers` is `ptrgen` x `corefer`, two pointers over the
+same features, registered as the control.
+
+| | lbl acc | bits | bits vs best member |
+|---|---:|---:|---:|
+| `ptrgen-001` alone | 0.336 | 5.91 | — |
+| `ensemble-001` (diverse) | 0.336 | **4.77** | **-1.14** |
+| `ensemble-pointers` (correlated) | 0.340 | 5.91 | -0.00 |
+
+4.77 bits is the best in the repo by a wide margin, and the correlated pair
+gains *exactly nothing*. The fitted weight is 0.55 — an interior optimum, so
+neither member is carrying it. `ROADMAP` rejected ensembling on a measured
+ceiling for the **copy head** and that rejection stands; this is the label head,
+and every ensemble previously considered was pointer-with-pointer, which the
+control now shows is the case that does not work.
+
 **The label task is a binding problem being scored as classification.** 71.9% of
 scored answers already sit on a *visible* node of the same episode, so the real
 question is "which node do I corefer with", not "which of 8,192 symbols is this".
@@ -69,6 +123,85 @@ vocabulary methods by construction and behave that way, while `brill` and
 `corefer` and `workspace` tie at 0.357 label accuracy and sit at -0.003 and
 -0.130. The score cannot tell them apart; this can.
 
+## Nulls and near-nulls worth not repeating
+
+All four were built expecting a win, all four were pre-registered with what
+would refute them, and all four came back small. Same sweep, same floors,
+`runs/ptrgen`.
+
+**Joint decoding helps the model that gains candidates, not the model that
+gains reach — the opposite of the prediction.** Masked nodes are hidden 15% at a
+time, so a claw reaching for a coreferent node lands on `None` whenever the
+harness hid the evidence and the question together. Filling the surest nodes
+first and re-reading the graph fixes that, and was predicted to help
+`omegaclaw_ctx` most because its claws name specific structural positions.
+
+| | lbl lift | bits | typ lift |
+|---|---:|---:|---:|
+| `omegaclaw_ctx-001` | +0.234 | 7.87 | -0.071 |
+| `omegaclaw_joint-001` | +0.233 | 7.89 | -0.091 |
+| `ptrgen-001` | +0.225 | 5.91 | +0.565 |
+| `ptrgen_joint-001` | +0.230 | 5.87 | **+0.681** |
+
+`omegaclaw` does not move at all; `ptrgen` gains a little on labels and a lot on
+type. The interpretation was fixed in advance — *if only one moves, the effect
+is about reach rather than about decoding* — and it applies: a committed node is
+one more candidate for a model that scores every visible node, and mostly
+nothing for a claw that wanted one particular position. **Sequential decoding is
+not what helped.** The teacher-forcing boundary is worth less on the prediction
+side than the scope note implied.
+
+**Widening the claw set with a route the search discovered makes accuracy
+slightly worse.** `ilp` is the one model here whose hypothesis space is not a
+list somebody wrote down, and it does use that freedom: 38% of its clause
+firings land where no claw reaches, and it is right there 82% of the time. Its
+strongest clause is a *typed, slot-selected sibling*, which `CLAWS` cannot
+express — it has `sibling0` and `prev_sibling` and no way to say which sibling.
+Added as `omegaclaw_reach-001`, `sibling_pred` fires at **0.803** reliability
+against 0.232 for `mirror` and 0.163 for `peer`, the two the base class calls
+the strongest operator every model here agrees on.
+
+It still loses: +0.226 against `omegaclaw_ctx`'s +0.234, with bits slightly
+better (7.72 against 7.87). The number that predicted this was already in the
+diagnostic — `ilp` is uniquely right on only **2.2%** of nodes, because the claw
+set reaches the same answer by another route nearly everywhere. **Reach was
+never the constraint**, and the family's "control beats reach" claim comes out
+of this stronger than it went in: the best single operator anyone has found here
+does not pay for itself once eleven worse ones are already voting.
+
+**EM credit assignment is worth +0.006 lift, and re-ranks the claws sharply.**
+`omegaclaw_em-001` splits one unit of credit among the claws that were right
+instead of giving each a whole hit — `peer` and `mirror` are two routes to the
+same coreferent node and agree constantly, so counting records several
+independent solutions to one problem. It reads +0.240 against `omegaclaw_ctx`'s
++0.234, second-best in the sweep: a real but small gain in score.
+
+The *diagnostic* value is larger than the score change. Which claws keep their
+reputation once the double count is removed, on all 179 lessons:
+
+| claw | counted | EM | kept |
+|---|---:|---:|---:|
+| `prev_sibling` | 0.361 | **0.196** | 54% |
+| `mirror` | 0.177 | 0.109 | 62% |
+| `sibling0` | 0.255 | 0.107 | 42% |
+| `slotmate` | 0.181 | 0.064 | 35% |
+| `echo` | 0.200 | 0.043 | 21% |
+| `prev` | **0.243** | 0.042 | 17% |
+| `peer` | 0.100 | 0.026 | 26% |
+
+The prediction written down before running it was that the vague aggregates —
+`echo`, `slotmate`, `prev` — would lose most and the sharp structural claws
+would keep theirs. That is what happened. `prev` falls from first to sixth: "the
+nearest labelled node before this one" is right largely in the company of a claw
+that had a reason, and hard counting cannot see it. `prev_sibling` and `mirror`
+are what survive.
+
+**A three-lesson slice said something else and it was wrong.** On that slice
+`peer` collapsed from 0.141 to 0.005, which read as a clean discovery that
+`peer` is subsumed by `mirror`. On 179 lessons `peer` keeps 26%, loses less than
+`prev` or `echo`, and is not singled out. Fourth time a small slice has produced
+a confident wrong answer here.
+
 ## What is shaky
 
 - **Every neural number is a lower bound.** All four re-run networks were still
@@ -82,6 +215,17 @@ vocabulary methods by construction and behave that way, while `brill` and
   metrics it leads on were being built. Nothing in it reads eval, and the
   candidate-selection choices were made on a held-out slice of *training*
   episodes, but a reader should weight it accordingly.
+- **The marginal-likelihood pointer did not beat naive Bayes at pointing.**
+  `ptrgen` and `corefer` share stage-one features exactly, and `ptrgen` trains
+  on the marginal likelihood of any correct antecedent where `corefer` asks a
+  yes/no question of each pair. Copy lift: **+0.078 against +0.096**, label
+  accuracy 0.336 against 0.357. The objective is better posed — several nodes
+  usually carry the right label and nothing says which was meant — and it does
+  not win on argmax. What it wins on is bits, by a full 1.04, and that is the
+  gate and the summed label distribution rather than the pointer.
+  `corefer` also has a second-stage reranker and `ptrgen` has none, which is the
+  obvious confound and the obvious next experiment; until it is run, no claim
+  should be made that the training objective is what separates them.
 
 ## What was believed and is false
 
@@ -123,6 +267,23 @@ redefined what an earlier published row had meant.
 
 - Can anything reach the 0.722 copy ceiling? Four candidate-level features in a
   row have failed, and a discriminative re-ranker was worse than counting.
+  `ptrgen`'s marginal-likelihood pointer is the fifth thing to not help, at
+  +0.078 copy lift against `corefer`'s +0.096.
+- **Put a reranker on `ptrgen`.** The cleanest open experiment in the sweep.
+  `corefer` beats it on copy by +0.018 and has a second stage it does not; every
+  other part of stage one is shared. Until that is run, "naive Bayes points
+  better than marginal likelihood" is confounded with "two stages beat one".
+- **Which metric should the repo lead with?** `ensemble-001` is first by bits
+  and ninth by accuracy; `corefer` is the reverse. The two columns are now both
+  printed and nothing decides between them. They are not interchangeable
+  summaries of one quality — bits is a proper scoring rule and accuracy is what
+  the curriculum's own multiple-choice question asks — so the answer is probably
+  "both, always, and never one alone", which is what `compare` now does.
+- Is the accuracy/bits frontier a property of the mixture or of the models? The
+  interface forces a scalar `c` over a shared support. A model emitting a full
+  distribution would not face the trade-off, and none exists here to check with.
+- A probit link for `ScoreCalibrator`, as a data-efficiency variant rather than
+  a multiple-truths one. See design rule 4 in `ROADMAP.md`.
 - Does a parser beat a regex? `corefer` reads prose by counting regex matches,
   and the parser layer — built, tested, scored — has never been tried inside the
   one model where prose demonstrably helps.
