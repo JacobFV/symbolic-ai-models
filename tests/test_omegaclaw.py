@@ -306,3 +306,118 @@ def test_a_new_member_of_the_family_is_one_method(fixtures, cfg):
     # to its cautious formula rather than failing, and the confidence it states
     # must still be a usable number.
     assert 0.0 < model.confidence(0.5) <= 0.9
+
+
+# ---------------------------------------------------------------------------
+# omegaclaw_em: the estimator, isolated
+# ---------------------------------------------------------------------------
+def test_the_default_estimator_is_plain_hard_counting():
+    """`_observe`/`_estimate` split the fitting in two; the default must not
+    have changed what the family already measured."""
+    from symbolic_ai_models.models.omegaclaw import OmegaClaw
+
+    class Probe(OmegaClaw):
+        def weigh(self, name, ctx, claim):
+            return 1.0
+
+    probe = Probe(ModelConfig(vocab_size=64))
+    records = [
+        ("ctx-a", (("peer", 5), ("echo", 9)), 5),      # peer right, echo wrong
+        ("ctx-a", (("peer", 7), ("echo", 7)), 7),      # both right
+        ("ctx-b", (("peer", 1),), 2),                  # peer wrong, alone
+    ]
+    evidence, totals = probe._estimate(records)
+    assert totals["peer"] == [3.0, 2.0]
+    assert totals["echo"] == [2.0, 1.0]
+    assert evidence[("ctx-a", "peer")] == [2.0, 2.0]
+    assert evidence[("ctx-b", "peer")] == [1.0, 0.0]
+
+
+def test_em_reduces_to_counting_when_no_two_claws_agree():
+    """Hard counting is the limiting case, so the difference between the two
+    models is only ever about redundancy — never about anything else."""
+    from symbolic_ai_models.models.omegaclaw_em import OmegaClawEM
+
+    model = OmegaClawEM(ModelConfig(vocab_size=64))
+    # Every example has exactly one correct claw, so there is nothing to share.
+    records = [("c", (("peer", 1), ("echo", 2)), 1)] * 40 + \
+              [("c", (("peer", 3), ("echo", 4)), 4)] * 40
+    _, totals = model._estimate(records)
+    assert totals["peer"][1] == pytest.approx(40.0, abs=0.5)
+    assert totals["echo"][1] == pytest.approx(40.0, abs=0.5)
+
+
+def test_em_splits_credit_between_claws_that_always_agree():
+    """The failure it exists for: two claws, one solved problem, two hits."""
+    from symbolic_ai_models.models.omegaclaw_em import OmegaClawEM
+
+    model = OmegaClawEM(ModelConfig(vocab_size=64))
+    records = [("c", (("peer", 1), ("mirror", 1)), 1)] * 60
+    _, totals = model._estimate(records)
+    hard = sum(totals[n][1] for n in ("peer", "mirror"))
+    assert hard == pytest.approx(60.0, abs=1.0), "credit must be conserved"
+    # Neither may keep a full hit rate: that is exactly the double count.
+    for name in ("peer", "mirror"):
+        assert totals[name][1] / totals[name][0] < 0.95
+
+
+def test_em_charges_a_claw_that_is_never_uniquely_right():
+    """A claw riding along behind a better one should lose its reputation."""
+    from symbolic_ai_models.models.omegaclaw_em import OmegaClawEM
+
+    model = OmegaClawEM(ModelConfig(vocab_size=64))
+    records = (
+        # `mirror` is right alone half the time...
+        [("c", (("mirror", 1),), 1)] * 40 +
+        # ...and `tagalong` is only ever right in its company.
+        [("c", (("mirror", 2), ("tagalong", 2)), 2)] * 40
+    )
+    _, totals = model._estimate(records)
+    mirror = totals["mirror"][1] / totals["mirror"][0]
+    tagalong = totals["tagalong"][1] / totals["tagalong"][0]
+    assert mirror > tagalong, "EM did not discount the redundant claw"
+
+
+def test_perfectly_redundant_claws_split_evenly_and_stay_there():
+    """The degeneracy that would make the ranking meaningless, ruled out.
+
+    Two claws that always fire together and are always both right carry no
+    information distinguishing them, so a mixture's likelihood is flat between
+    "a did it" and "b did it". If the iteration broke that tie it would be
+    inventing a ranking from the initialisation. It does not: the symmetric
+    fixed point is stable at any number of rounds.
+    """
+    from symbolic_ai_models.models.omegaclaw_em import OmegaClawEM
+
+    records = [("c", (("a", 1), ("b", 1)), 1)] * 200
+    for rounds in (1, 12, 200, 1000):
+        model = OmegaClawEM(ModelConfig(
+            vocab_size=64, extra={"em_rounds": rounds, "em_tolerance": 0.0}))
+        _, totals = model._estimate(records)
+        assert totals["a"][1] == pytest.approx(totals["b"][1], rel=1e-6), (
+            f"the tie broke after {rounds} rounds")
+
+
+def test_the_default_round_budget_actually_reaches_the_fixed_point():
+    """Stopping early understates redundancy, which is the whole measurement.
+
+    A claw right only in a better claw's company reads 0.500 after one round
+    and 0.0885 at the fixed point; twelve rounds gives 0.147 and would have
+    been reported as the answer. The default has to converge on its own.
+    """
+    from symbolic_ai_models.models.omegaclaw_em import OmegaClawEM
+
+    records = ([("c", (("a", 1), ("b", 1)), 1)] * 100
+               + [("c", (("a", 2),), 2)] * 100)
+    default = OmegaClawEM(ModelConfig(vocab_size=64))
+    _, at_default = default._estimate(records)
+
+    converged = OmegaClawEM(ModelConfig(
+        vocab_size=64, extra={"em_rounds": 5000, "em_tolerance": 0.0}))
+    _, at_convergence = converged._estimate(records)
+
+    for name in ("a", "b"):
+        rate = at_default[name][1] / at_default[name][0]
+        limit = at_convergence[name][1] / at_convergence[name][0]
+        assert rate == pytest.approx(limit, abs=0.01), (
+            f"{name} had not converged under the default budget")

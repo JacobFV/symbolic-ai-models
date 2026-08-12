@@ -516,10 +516,28 @@ class OmegaClaw(RuleBasedModel, ABC):
                         held_out_evidence, held_out_totals)
 
     def _gather(self, episodes: Sequence[Episode], tok: SymbolTokenizer
-                ) -> tuple[dict[tuple, list[int]], dict[str, list[int]]]:
-        """Run every claw over the masked training views and score it."""
-        evidence: dict[tuple, list[int]] = {}
-        totals: dict[str, list[int]] = {}
+                ) -> tuple[dict[tuple, list[float]], dict[str, list[float]]]:
+        """Run every claw over the masked training views, then score the record.
+
+        Split in two because *observing* what each claw claimed and *deciding
+        what that claim was worth* are different questions, and only the second
+        one is a modelling choice. Running the claws is expensive and identical
+        for every member of the family; a subclass that wants to credit the
+        claims differently should not have to re-run them, and more importantly
+        must not be able to accidentally run them over different episodes. That
+        was the failure the removed ``learn`` override could cause.
+        """
+        records = self._observe(episodes, tok)
+        return self._estimate(records)
+
+    def _observe(self, episodes: Sequence[Episode], tok: SymbolTokenizer
+                 ) -> list[tuple[Hashable, tuple[tuple[str, int], ...], int]]:
+        """``(context, ((claw name, symbol claimed), ...), true label)`` per node.
+
+        Only the claws that fired appear, so a claw's reliability stays an
+        estimate of "right when it speaks" rather than "right about everything".
+        """
+        records: list[tuple[Hashable, tuple[tuple[str, int], ...], int]] = []
         claws = self.claws()
         seen = 0
         for view, targets in self.training_views(episodes, tok,
@@ -529,18 +547,39 @@ class OmegaClaw(RuleBasedModel, ABC):
                 if label_id < 0 or seen >= self.max_examples:
                     continue
                 seen += 1
-                ctx = self.perceive(view, node)
-                for name, claw in claws.items():
-                    claim = claw(scan, node)
-                    if claim is None:
-                        continue
-                    right = int(claim.symbol == label_id)
-                    cell = evidence.setdefault((ctx, name), [0, 0])
-                    cell[0] += 1
-                    cell[1] += right
-                    total = totals.setdefault(name, [0, 0])
-                    total[0] += 1
-                    total[1] += right
+                fired = tuple((name, claim.symbol)
+                              for name, claw in claws.items()
+                              if (claim := claw(scan, node)) is not None)
+                if fired:
+                    records.append((self.perceive(view, node), fired, label_id))
+        return records
+
+    def _estimate(self, records: Sequence[tuple]
+                  ) -> tuple[dict[tuple, list[float]], dict[str, list[float]]]:
+        """Turn observations into ``(fired, credited)`` tallies. **A choice.**
+
+        The default is hard counting: a claw that named the right symbol is
+        credited one whole hit, whatever else fired alongside it. That is the
+        obvious estimator and it has a known bias — when ``peer`` and ``mirror``
+        point at the same correct node, which they routinely do, each is
+        recorded as having independently solved the problem. A claw that is
+        never uniquely right therefore earns the same reputation as one that
+        often is, and ``weigh`` cannot tell them apart.
+
+        ``omegaclaw_em`` overrides this and nothing else, which is what makes
+        the pair a measurement of the estimator rather than of anything else.
+        """
+        evidence: dict[tuple, list[float]] = {}
+        totals: dict[str, list[float]] = {}
+        for ctx, fired, label_id in records:
+            for name, symbol in fired:
+                right = float(symbol == label_id)
+                cell = evidence.setdefault((ctx, name), [0.0, 0.0])
+                cell[0] += 1.0
+                cell[1] += right
+                total = totals.setdefault(name, [0.0, 0.0])
+                total[0] += 1.0
+                total[1] += right
         return evidence, totals
 
     def _calibrate(self, episodes: Sequence[Episode], tok: SymbolTokenizer,
@@ -733,8 +772,8 @@ class OmegaClaw(RuleBasedModel, ABC):
                  f"{len(self.claw_evidence)} context cells ==="]
         rows = sorted(self.claw_totals.items(), key=lambda kv: -kv[1][1])
         for name, (fired, right) in rows:
-            lines.append(f"  {name:<14} fired {fired:>6}   right {right:>6}"
-                         f"   rate {right / max(fired, 1):.3f}")
+            lines.append(f"  {name:<14} fired {fired:>8.0f}   credited {right:>8.1f}"
+                         f"   rate {right / max(fired, 1.0):.3f}")
         if not rows:
             lines.append("  (nothing fired: the model was not fitted)")
         lines.append(

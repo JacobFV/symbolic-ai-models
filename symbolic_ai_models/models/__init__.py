@@ -39,7 +39,8 @@ from .symbolic import ABSTAIN, GraphView, RuleBasedModel, Votes
 # only thing these imports are for.
 from . import evidence, ngram, ruleinduce, syllogism, symbolalg, synth  # noqa: F401
 from . import analogy, brill, corefer, ctw, grammar, ilp, routes_model, workspace  # noqa: F401
-from . import omegaclaw_ctx, omegaclaw_flat, omegaclaw_rank  # noqa: F401
+from . import omegaclaw_ctx, omegaclaw_em, omegaclaw_flat, omegaclaw_rank  # noqa: F401
+from . import ensemble, joint, ptrgen  # noqa: F401
 
 #: The neural half is **not registered by default**. It is not the subject of
 #: this repo — the symbolic models are — and it is the only thing here that
