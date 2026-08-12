@@ -274,6 +274,61 @@ worse to read than its mode, not better. The useful part was the greedy output
 itself — gold `'opt_c'`, generated `'optd'`, the right shape with the underscore
 missing — which is what led to the bug above.
 
+## The transfer question, measured
+
+Curriculum against real English prose, same protocol, `symbolic_ai_models/asymptotics.py`.
+Every curve carries two nulls: a within-sequence shuffle (destroys order, keeps
+the sequence's own subject matter) and a global resample (destroys both, leaving
+the plug-in estimator's floor). `order = raw - within`, `latent = within - global`.
+
+```
+CURRICULUM  1,074 episodes, 183k tokens        REAL ENGLISH  572 chunks, 97k tokens
+   d    I(d)  within  global   order  latent      d    I(d)  within  global   order  latent
+   1   4.136   1.676   1.357   2.461   0.319      1   4.122   2.461   2.315   1.661   0.146
+   8   3.003   1.692   1.382   1.311   0.310      8   2.642   2.497   2.346   0.145   0.151
+  32   2.402   1.746   1.456   0.656   0.291     32   2.628   2.603   2.455   0.025   0.148
+ 128   2.418   1.876   1.926   0.542  -0.050    128   3.365   3.414   3.275  -0.048   0.139
+
+effective rank 333.7 / 2,323 contexts (14%)    effective rank 773.1 / 1,809 contexts (43%)
+top-50 singular values 37.7%                    top-50 singular values 26.0%
+```
+
+**Correction to a number published in this log's first draft.** "`I(d)` plateaus
+at ~2.35 bits at d=128, a constant-latent signature" was measured from the raw
+plug-in curve with no control. Most of that 2.35 is estimator bias: the global
+null alone reads 1.36–1.93 over the same range. The real latent term is **0.31
+bits**, not 2.35 — a seventh of what was claimed. The plateau is real; its
+magnitude was almost entirely an artefact of an uncontrolled estimator.
+
+**The finding that matters for the programme.** The two corpora differ most in
+*order* structure, and in the direction that is bad for transfer:
+
+| | curriculum | real English |
+|---|---:|---:|
+| order structure at d=8 | 1.31 bits | 0.15 |
+| order structure at d=32 | 0.66 | 0.03 |
+| order structure at d=128 | **0.54** | **-0.05** |
+
+Real prose's positional dependence is **gone by d≈16**. The curriculum's is
+still worth half a bit at d=128, because a lesson renders one rigid template —
+fact, then pattern, then query over the same symbols — so the token 128 places
+back is genuinely informative about this one. **That is a property of the
+generator, not of language**, and any method that earns its score by exploiting
+long-range positional regularity will look far better here than on prose.
+
+**The low-effective-rank claim holds, and by a wide margin.** 14% of contexts
+against 43% for prose, with the spectrum more concentrated (37.7% vs 26.0% in
+the top 50). A minimal sufficient statistic for prediction really is small on
+this curriculum, which is what makes an exact symbolic machine affordable — the
+premise of agenda item (A) survives.
+
+**Caveats, stated because the proxy is weak.** The "real English" corpus is 97k
+tokens of this repository's own technical prose, not a language corpus: small,
+one register, one author. Values below about 0.05 bits are inside the
+estimator's resolution here. What it can support is the *contrast* in order
+structure, which is an order of magnitude and survives any reasonable correction;
+what it cannot support is a claim about natural language in general.
+
 ## What is shaky
 
 - **Every neural number is a lower bound.** All four re-run networks were still
