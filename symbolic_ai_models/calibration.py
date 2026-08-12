@@ -40,8 +40,8 @@ import torch
 from .data.curriculum import Episode
 from .data.tokenizer import SymbolTokenizer
 
-__all__ = ["Bucket", "CalibrationReport", "ScoreCalibrator", "calibrate",
-           "calibrate_model"]
+__all__ = ["Bucket", "CalibrationReport", "MassCalibrator", "ScoreCalibrator",
+           "calibrate", "calibrate_model"]
 
 
 @dataclass
@@ -226,6 +226,139 @@ class ScoreCalibrator:
             if score >= edge:
                 index = i
         return min(max(self.values[index], self.floor), self.ceiling)
+
+
+class MassCalibrator:
+    """How much of the mixture's mass this score has earned — fitted by NLL.
+
+    :class:`ScoreCalibrator` answers "how often is the top vote right?" and the
+    mixture in :mod:`symbolic_ai_models.models.symbolic` then spends that number
+    as ``c``, the mass taken off the back-off and spread across *every* vote.
+    Those are two different quantities, and treating them as one is the reason
+    the rule-based half of this repo ranks well on accuracy and badly on bits.
+
+    Consider a model that is sure the answer is one of ten nodes and has no
+    opinion beyond that. Argmax accuracy is 0.1, so a calibrated
+    ``ScoreCalibrator`` hands it ``c = 0.1`` — and 90% of its mass goes to a
+    corpus-wide unigram that has already been shown to be worse than the
+    structural prior, never mind the model. The information "it is one of these
+    ten" is worth about 3.3 bits against a vocabulary of 8,192 and the interface
+    throws nearly all of it away. There is no value of ``c`` derived from argmax
+    accuracy that expresses it, because the quantity being asked for is not an
+    accuracy.
+
+    So fit ``c`` to the thing it actually is: the weight of a two-component
+    mixture, estimated by maximising the held-out log-likelihood of the symbol
+    that turned out to be right::
+
+        c(s) = argmax_c  sum_i log[ (1 - c) * backoff_i + c * votes_i ]
+
+    over the examples whose score falls in ``s``'s bin. That objective is
+    concave in ``c`` — it is a sum of logs of affine functions — so a bisection
+    on the derivative finds the optimum exactly, with no learning rate and no
+    step count to tune.
+
+    **This is a graded target where the old one was binary.** An example no
+    longer says "the top vote was right" or "the top vote was wrong"; it says
+    how much probability the vote set put on the truth, and a model that spread
+    its mass over several candidates is credited for the part it got onto the
+    right one. Being unsure between two nodes and being wrong stop being the
+    same observation.
+
+    What it does *not* do, and this is worth stating because it is the obvious
+    hope: it cannot make a model's argmax better. Raising ``c`` scales every
+    vote equally, so the ordering within the vote set never changes; only the
+    boundary between "a voted symbol" and "a back-off symbol" moves. Expect
+    bits to improve, expect accuracy to move slightly and in either direction,
+    and do not report the first as if it were the second.
+
+    Monotone in the score by the same pool-adjacent-violators as its sibling,
+    for the same reason: bins are thin at the edges and a higher agreement
+    score implying less mass is a worse artefact than the noise it came from.
+    Pooling averages the per-bin optima weighted by count rather than refitting
+    the merged block from scratch — an approximation, noted here because it is
+    invisible in the output and would otherwise have to be rediscovered.
+    """
+
+    def __init__(self, n_bins: int = 8, floor: float = 0.0,
+                 ceiling: float = 0.98, min_count: int = 5) -> None:
+        self.n_bins = n_bins
+        self.floor = floor
+        self.ceiling = ceiling
+        self.min_count = min_count
+        self.edges: list[float] = []
+        self.values: list[float] = []
+
+    @property
+    def fitted(self) -> bool:
+        return bool(self.values)
+
+    def fit(self, scores: Sequence[float], votes: Sequence[float],
+            backoff: Sequence[float]) -> "MassCalibrator":
+        """``votes[i]`` and ``backoff[i]`` are each component's probability of
+        the *gold* symbol at example ``i``. Both must be proper probabilities of
+        the same event, or the mixture weight between them means nothing."""
+        s = np.asarray(scores, dtype=np.float64).ravel()
+        q = np.asarray(votes, dtype=np.float64).ravel()
+        b = np.asarray(backoff, dtype=np.float64).ravel()
+        if not (s.size == q.size == b.size) or s.size < self.min_count * 2:
+            return self
+        # A zero-probability back-off would make the objective -inf at c = 0 and
+        # hand every bin to the votes regardless of evidence.
+        b = np.clip(b, 1e-12, 1.0)
+        q = np.clip(q, 0.0, 1.0)
+
+        order = np.argsort(s)
+        s, q, b = s[order], q[order], b[order]
+        chunks = np.array_split(np.arange(s.size),
+                                max(min(self.n_bins, s.size // self.min_count), 1))
+        edges, best, weights = [], [], []
+        for chunk in chunks:
+            if not chunk.size:
+                continue
+            edges.append(float(s[chunk[0]]))
+            best.append(_optimal_mass(q[chunk], b[chunk]))
+            weights.append(float(chunk.size))
+        if not best:
+            return self
+        self.edges = edges
+        self.values = _pava(best, weights)
+        return self
+
+    def __call__(self, score: float) -> float:
+        if not self.fitted:
+            return float("nan")
+        index = 0
+        for i, edge in enumerate(self.edges):
+            if score >= edge:
+                index = i
+        return min(max(self.values[index], self.floor), self.ceiling)
+
+
+def _optimal_mass(votes: np.ndarray, backoff: np.ndarray) -> float:
+    """``argmax_c sum log((1-c)b + c q)``, by bisection on the derivative.
+
+    The derivative ``sum (q - b) / ((1-c)b + c q)`` is strictly decreasing in
+    ``c``, so the sign at the two endpoints settles it: non-positive at zero
+    means no amount of mass helps and the answer is a genuine zero, which is
+    the honest reading of a vote set that was no better than the prior.
+    """
+    def derivative(c: float) -> float:
+        mix = (1.0 - c) * backoff + c * votes
+        return float(np.sum((votes - backoff) / np.clip(mix, 1e-12, None)))
+
+    if derivative(0.0) <= 0.0:
+        return 0.0
+    if derivative(1.0 - 1e-9) >= 0.0:
+        return 1.0
+    lo, hi = 0.0, 1.0 - 1e-9
+    for _ in range(60):
+        mid = 0.5 * (lo + hi)
+        if derivative(mid) > 0.0:
+            lo = mid
+        else:
+            hi = mid
+    return 0.5 * (lo + hi)
 
 
 def _pava(values: Sequence[float], weights: Sequence[float]) -> list[float]:

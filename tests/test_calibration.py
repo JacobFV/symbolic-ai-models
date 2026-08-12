@@ -131,3 +131,117 @@ def test_the_fitted_confidence_beats_the_formula_it_replaced(name):
     # assertion here is on the quantity that is not gameable that way.
     assert 0.7 <= model.temperature <= 1.4, (
         f"{name} distribution is mis-scaled (T={model.temperature})")
+
+
+# ---------------------------------------------------------------------------
+# MassCalibrator: the mixture weight, fitted as a mixture weight
+# ---------------------------------------------------------------------------
+def test_mass_recovers_a_known_mixture_weight():
+    """The estimator's one job: given data from (1-c)b + c q, return c."""
+    from symbolic_ai_models.calibration import MassCalibrator
+
+    rng = np.random.default_rng(0)
+    n = 4000
+    backoff = np.full(n, 1e-4)          # a flat prior over ~10k symbols
+    votes = np.full(n, 0.2)             # five candidates, gold among them
+    truth = 0.6
+    # Draw which component produced each observation, then report that
+    # component's probability of the gold symbol -- exactly the two numbers the
+    # calibrator is handed at fit time.
+    from_votes = rng.uniform(size=n) < truth
+    q = np.where(from_votes, votes, 0.0)
+    calibrator = MassCalibrator(n_bins=1).fit(np.zeros(n), q, backoff)
+    assert calibrator.fitted
+    assert calibrator(0.0) == pytest.approx(truth, abs=0.05)
+
+
+def test_mass_returns_zero_when_the_votes_are_worse_than_the_prior():
+    """Abstention has to be reachable, or a useless model is forced to speak."""
+    from symbolic_ai_models.calibration import MassCalibrator
+
+    n = 400
+    calibrator = MassCalibrator(n_bins=1).fit(
+        np.zeros(n), np.zeros(n), np.full(n, 1e-3))
+    assert calibrator(0.0) == 0.0
+
+
+def test_mass_is_monotone_in_the_score():
+    """A higher agreement score may not buy less mass; PAVA enforces it."""
+    from symbolic_ai_models.calibration import MassCalibrator
+
+    rng = np.random.default_rng(1)
+    n = 4000
+    scores = rng.uniform(size=n)
+    backoff = np.full(n, 1e-4)
+    # Mass genuinely earned rises with the score, with noise on top.
+    hit = rng.uniform(size=n) < scores
+    votes = np.where(hit, 0.25, 0.0)
+    calibrator = MassCalibrator().fit(scores, votes, backoff)
+    values = [calibrator(s) for s in np.linspace(0, 1, 25)]
+    assert values == sorted(values)
+
+
+def test_mass_beats_argmax_accuracy_at_the_job_the_mixture_uses_it_for():
+    """The motivating case, as an assertion rather than an argument.
+
+    A model that knows the answer is one of five and nothing more has argmax
+    accuracy 0.2, so a ScoreCalibrator hands the mixture c = 0.2 and spends the
+    other 0.8 on a flat prior. The likelihood-optimal weight is 1.0, and the
+    difference is most of the information the model had.
+    """
+    from symbolic_ai_models.calibration import MassCalibrator, ScoreCalibrator
+
+    rng = np.random.default_rng(2)
+    n = 3000
+    backoff = np.full(n, 1e-4)
+    q_gold = np.full(n, 0.2)            # gold always inside the vote set
+    argmax_right = rng.uniform(size=n) < 0.2
+
+    by_accuracy = ScoreCalibrator(n_bins=1).fit(np.zeros(n), argmax_right)(0.0)
+    by_mass = MassCalibrator(n_bins=1).fit(np.zeros(n), q_gold, backoff)(0.0)
+    assert by_accuracy == pytest.approx(0.2, abs=0.05)
+    assert by_mass > 0.9
+
+    nll = lambda c: -np.mean(np.log((1 - c) * backoff + c * q_gold))
+    assert nll(by_mass) < nll(by_accuracy)
+
+
+def test_mass_leaves_the_ordering_of_the_votes_alone():
+    """The honest limit: c scales every vote equally, so argmax cannot move."""
+    from symbolic_ai_models.calibration import MassCalibrator
+
+    calibrator = MassCalibrator(n_bins=1).fit(
+        np.zeros(200), np.full(200, 0.3), np.full(200, 1e-4))
+    votes = {7: 0.5, 9: 0.3, 11: 0.2}
+    backoff = 1e-4
+    for c in (calibrator(0.0), 0.1, 0.9):
+        mixed = {s: (1 - c) * backoff + c * w for s, w in votes.items()}
+        assert max(mixed, key=mixed.get) == 7
+
+
+def test_backoff_prob_agrees_with_the_mixture_it_describes():
+    """If these two disagree the fitted weight is between the wrong things."""
+    import torch
+
+    from symbolic_ai_models.models.symbolic import _node_context
+
+    train = list(generate(["symbol_grounding", "unification"], n=20))
+    tok = build_tokenizer(TrainConfig(vocab_size=900), train)
+    model = build("ruleinduce", ModelConfig(vocab_size=len(tok), max_len=96,
+                                            max_nodes=96))
+    model.fit_on(train, tok)
+
+    view, targets = next(iter(model.training_views(train, tok, max_nodes=96)))
+    node = next(iter(targets))
+    symbol = int(targets[node][0])
+    if symbol < 0:
+        pytest.skip("no scorable label in the first view")
+
+    # What `_mix` would produce for this node with no votes at all: the pure
+    # back-off path, which is what `backoff_prob` claims to report.
+    entry = model.context_prior.get(_node_context(view, node))
+    prior = ([0], [node], [int(entry[0])], [float(entry[1])]) if entry else None
+    logits = model._mix(model.symbol_backoff, (1, len(view)),
+                        np.zeros((1, len(view))), [], [], [], [], prior=prior)
+    assert float(logits[0, node, symbol].exp()) == pytest.approx(
+        model.backoff_prob(view, node, symbol), rel=1e-6)

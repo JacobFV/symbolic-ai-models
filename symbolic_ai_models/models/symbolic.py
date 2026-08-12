@@ -416,6 +416,28 @@ class RuleBasedModel(Model):
                     yield ((view, targets, start + b) if with_index
                            else (view, targets))
 
+    # ---- what the back-off already knows -------------------------------
+    def backoff_prob(self, view: GraphView, node: int, symbol: int) -> float:
+        """The probability the shared back-off puts on ``symbol`` at ``node``.
+
+        Exactly the quantity :meth:`_mix` spends ``(1 - c)`` of the mass on, and
+        computed here from the same two tables so the two cannot drift apart. A
+        model fitting its own mixture weight against
+        :class:`~symbolic_ai_models.calibration.MassCalibrator` needs this: the
+        weight between two components is meaningless unless both are the
+        probability of the same event.
+
+        Not used by anything on the prediction path — it is a fitting-time
+        helper — so a model that ignores it is unaffected.
+        """
+        base = float(self.symbol_backoff[symbol].exp())
+        entry = self.context_prior.get(_node_context(view, node))
+        if entry is None:
+            return base
+        prior_symbol, share = entry
+        return base * (1.0 - share) + (share if int(prior_symbol) == int(symbol)
+                                       else 0.0)
+
     # ---- subclass hooks ----------------------------------------------
     def learn(self, episodes: Sequence[Episode], tok: SymbolTokenizer) -> None:
         """Read the training episodes and build whatever this model reasons with."""
