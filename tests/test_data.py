@@ -296,3 +296,51 @@ def test_the_copy_ceiling_is_reported_and_bounded():
     assert 0.0 <= out["copy_ceiling"] <= 1.0
     assert out["copy_ceiling"] > 0.5, \
         "most answers should be reachable by copying; if not, the premise moved"
+
+
+def test_the_pretokenizer_is_total():
+    """No character may vanish. Checked on characters, not on episodes.
+
+    `test_encoding_is_lossless` above is a real test, it passed, and it missed
+    for two years that underscores were being deleted -- because its fixture
+    drew lessons that happened not to contain one. Sampling the world instead of
+    covering it is the same mistake that let a six-lesson slice rank this repo's
+    models backwards, and the fix is the same: assert on the alphabet.
+    """
+    from symbolic_ai_models.data.tokenizer import _split_pieces
+
+    alphabet = (
+        "abcXYZ0189"
+        "_-+=/\\|@#$%^&*()[]{}<>~`"
+        " \t\n"
+        ".,;:!?'\"" 
+        "çğü这是🙂"
+    )
+    for ch in alphabet:
+        assert "".join(_split_pieces(ch)) == ch, f"{ch!r} was dropped"
+    # And in combination, where a branch may consume a neighbour.
+    for text in ["opt_a", "foo_bar_baz", "_x", "x_", "a__b", "p_dun v_2",
+                 "snake_case AND kebab-case", "a_1_b", "__init__"]:
+        assert "".join(_split_pieces(text)) == text, f"{text!r} was corrupted"
+
+
+def test_underscored_identifiers_survive_a_round_trip():
+    """The failure this repo actually paid for: unreachable gold answers.
+
+    A model cannot emit a string the tokenizer cannot represent, so every
+    `exact_match` on a lesson whose options carry underscores was pinned at zero
+    no matter how good the model was. `opt_a` decoded to `opta`.
+    """
+    tok = SymbolTokenizer.build(["opt_a opt_b the answer is opt_c"] * 3,
+                                max_vocab=400)
+    for s in ["opt_a", "opt_b", "opt_c", "p_dun", "act_now", "foo_bar_baz"]:
+        assert tok.decode(tok.encode(s)) == s, f"{s!r} does not round-trip"
+
+
+def test_split_words_is_total_too():
+    """The graph side explodes string terms with this; a dropped character
+    there silently changes a node label rather than a token."""
+    from symbolic_ai_models.data.tokenizer import split_words
+
+    for text in ["opt_a", "a_b", "__x__", "p_dun"]:
+        assert "".join(split_words(text)) == text.replace(" ", "")

@@ -30,11 +30,26 @@ SPECIALS = (PAD, UNK, MASK, BOS, EOS, SEP)
 
 #: Words, numbers, and single non-alphanumerics, each optionally carrying the
 #: one space that preceded it — so that decoding is plain concatenation.
-_PIECE_RE = re.compile(r" ?[^\W\d_]+|\ ?\d+|\ ?[^\s\w]|\s+", re.UNICODE)
+#:
+#: The trailing ``.`` is load-bearing and is the whole reason this is written as
+#: a *total* pattern rather than an enumeration of the cases anyone thought of.
+#: ``re.findall`` silently drops every character that matches no branch, so a
+#: pretokenizer built from alternatives is lossy exactly where its author's
+#: imagination ran out — and it was: ``_`` matches none of the first four
+#: branches (``[^\W\d_]`` excludes it by name, and ``[^\s\w]`` excludes it
+#: because ``_`` counts as a word character), so **underscores were deleted**.
+#: ``'foo_bar_baz'`` encoded and decoded back to ``'foobarbaz'``, 9 of 85 answer
+#: strings on a twelve-lesson slice could not be produced by any model however
+#: good, and 28% of episode texts did not survive a round trip.
+#:
+#: A catch-all cannot fix a *wrong* segmentation, but it makes losing a
+#: character impossible rather than unlikely, which is the property the
+#: docstring on ``build`` was already claiming.
+_PIECE_RE = re.compile(r" ?[^\W\d_]+|\ ?\d+|\ ?[^\s\w]|\s+|.", re.UNICODE | re.DOTALL)
 
 #: Bare words, with no whitespace attached. Used for node labels and for
-#: exploding a string-valued term into child nodes.
-_WORD_RE = re.compile(r"[^\W\d_]+|\d+|[^\s\w]", re.UNICODE)
+#: exploding a string-valued term into child nodes. Total for the same reason.
+_WORD_RE = re.compile(r"[^\W\d_]+|\d+|[^\s\w]|[^\s]", re.UNICODE)
 
 
 def split_words(text: str) -> list[str]:
@@ -43,7 +58,15 @@ def split_words(text: str) -> list[str]:
 
 
 def _split_pieces(text: str) -> list[str]:
-    """Split into space-carrying pieces. ``"".join`` of these is the input."""
+    """Split into space-carrying pieces. ``"".join`` of these is the input.
+
+    That sentence is an invariant, not a description, and
+    :func:`tests.test_data.test_the_pretokenizer_is_total` enforces it directly
+    on the characters rather than on whichever lessons a fixture happened to
+    draw. The previous round-trip test was real, passed, and missed this for the
+    same reason a six-lesson slice missed the model ranking: it sampled the
+    world instead of covering it.
+    """
     return _PIECE_RE.findall(text)
 
 
