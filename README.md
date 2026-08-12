@@ -468,7 +468,18 @@ bits against 8,192 symbols and the interface priced it at nothing. Deciding well
 and estimating well were made to pull against each other by the contract, not by
 the reasoning.
 
-`compare` now prints both columns. Neither is the real one.
+`compare` now prints both columns. Neither is the real one — and the split is
+partly a *symbolic-versus-statistical* one, which is the uncomfortable half.
+The models at the top of the bits ranking, `grammar` and `ngram`, are the two
+that lose most under renaming; the models at the top of the accuracy ranking are
+the pointer-valued ones that lose nothing. Cross-entropy rewards knowing which
+symbols are common, and this curriculum re-randomises which symbol fills which
+slot every episode.
+
+That is not a reason to go back to quoting accuracy alone. `ptrgen` reaches
+**5.91 bits while dropping 0.002 under renaming**, beating `grammar`'s 6.09 at
+0.282 — so better density estimation is available without memorising. It is a
+reason to read the bits column next to the renaming column, always.
 
 ### The models that came out of noticing that
 
@@ -494,11 +505,16 @@ ptrgen-argmax             3696    0.321    +0.208   6.49     +0.307    +0.565   
   antecedent. `ptrgen-argmax` is the same model with the old gate: the pair
   isolates the calibrator at **+0.017 lift and 0.58 bits**.
 - **`ensemble-001`** is `ptrgen × grammar` as a geometric mixture, the pair
-  chosen on the renaming column rather than the leaderboard — one loses 0.003
-  accuracy when every symbol is permuted, the other 0.159. At **4.77 bits** it
-  is the best in the repo by a wide margin, and gains no accuracy at all.
-  `ensemble-pointers` is the control that makes this a result: two pointers over
-  identical features gain **exactly zero** bits. Diversity is the whole effect.
+  chosen on the renaming column rather than the leaderboard. At **4.77 bits** it
+  is the best in the repo by a wide margin, gains no accuracy at all, and
+  **is not a symbolic model**: permute every symbol without refitting and it
+  falls 0.467 → 0.038, the largest drop ever measured here. The whole 1.14-bit
+  gain over `ptrgen` alone is vocabulary memorisation. `ensemble-pointers`, two
+  pointers over identical features, keeps the equivariance (-0.004) and gains
+  **exactly zero** bits. Diversity is what an ensemble buys and the only
+  diversity available here is structure-versus-memorisation, so on this task
+  **bits and equivariance are in tension.** Read it as a measurement of the
+  metric, not as a model worth using.
 - **`omegaclaw_em`** fits claw reliabilities by EM instead of hard counting, so
   four claws that agree stop recording four independent solutions to one
   problem. Worth +0.006 lift, and it re-ranks the claws hard: `prev` falls from

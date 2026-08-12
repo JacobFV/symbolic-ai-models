@@ -85,6 +85,35 @@ ceiling for the **copy head** and that rejection stands; this is the label head,
 and every ensemble previously considered was pointer-with-pointer, which the
 control now shows is the case that does not work.
 
+**And the entire 1.14-bit gain is vocabulary memorisation.** Run the renaming
+test on it — permute all 340 symbols, do not refit — and it is the least
+equivariant model ever measured here:
+
+| model | plain | renamed | drop |
+|---|---:|---:|---:|
+| `ptrgen-001` | 0.390 | 0.392 | **-0.002** |
+| `ensemble-pointers` | 0.392 | 0.396 | **-0.004** |
+| `omegaclaw_em-001` | 0.450 | 0.423 | +0.027 |
+| `grammar-001` | 0.290 | 0.008 | +0.282 |
+| `ensemble-001` | 0.467 | **0.038** | **+0.429** |
+
+So the finding stands and its sign is the opposite of what it looked like.
+Diversity *is* what an ensemble buys, and the diversity available here is
+"one member reads structure and the other memorises the corpus" — which is why
+the correlated control gains nothing and why the gain does not survive a
+renaming. `ensemble-001` is the best density estimator in the repo and it is not
+a symbolic model; `ensemble-pointers` keeps the equivariance and buys nothing.
+
+The honest summary is that **on this task, bits and equivariance are in
+tension**, not that an ensemble helps. Which makes the next line the important
+one:
+
+**A symbolic model can still win on bits — `ptrgen` already does.** At 5.91 it
+beats `grammar`'s 6.09, the previous best, while dropping 0.002 under renaming
+against `grammar`'s 0.282. The 1.14 bits on top of that are memorisation and the
+0.18 below it are not. Those are different quantities and only the second is
+what this repo is trying to measure.
+
 **The label task is a binding problem being scored as classification.** 71.9% of
 scored answers already sit on a *visible* node of the same episode, so the real
 question is "which node do I corefer with", not "which of 8,192 symbols is this".
