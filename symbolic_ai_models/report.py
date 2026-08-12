@@ -29,6 +29,11 @@ COLUMNS = (
     ("lm", "token_lift", "tok lift", "{:.3f}"),
     ("node", "label_acc", "lbl acc", "{:.3f}"),
     ("node", "label_lift", "lbl lift", "{:.3f}"),
+    # Next to the accuracy lift, never instead of it. These two rank the models
+    # close to inversely and the repo quoted only the first for its whole
+    # history; printing them side by side is what stops the next ranking from
+    # silently being about the metric rather than about the models.
+    ("node", "label_bits_lift", "lbl bits", "{:.3f}"),
     ("node", "label_coverage", "lbl cov", "{:.2f}"),
     ("node", "type_acc", "typ acc", "{:.3f}"),
     ("node", "type_lift", "typ lift", "{:.3f}"),

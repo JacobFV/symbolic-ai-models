@@ -215,8 +215,22 @@ def _add_lift(metrics: dict[str, dict[str, float]],
                 ms[f"{key[:-4]}_floor"] = floor[key]
                 ms[f"{key[:-4]}_lift"] = lift(ms[key], floor[key])
         for key in [k for k in list(ms) if k.endswith("_bits")]:
-            if key in floor:
+            if key in floor and floor[key] > 0.0:
                 ms[f"{key[:-5]}_floor_bits"] = floor[key]
+                # The bits have always been recorded and never given a lift, so
+                # every published ranking in this repo is an accuracy ranking
+                # and none of them says so. On the full curriculum the two order
+                # the models close to inversely -- `grammar` is 14th by accuracy
+                # and 1st by bits, `corefer` 1st and 6th -- because the shared
+                # mixture makes deciding well and estimating well pull against
+                # each other. A ranking is a property of a metric and not of a
+                # set of models, so both belong in the table.
+                #
+                # Normalised the same way as the accuracy lift, against the same
+                # floor: zero is the floor, one is perfect. Bits fall where
+                # accuracy rises, so the sign is flipped to keep "bigger is
+                # better" true of every lift column.
+                ms[f"{key[:-5]}_bits_lift"] = (floor[key] - ms[key]) / floor[key]
     return metrics
 
 

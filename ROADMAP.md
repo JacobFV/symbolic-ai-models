@@ -369,6 +369,49 @@ wanting and has so far only been able to describe in commit messages.
    dense and `(query, said)` is sparse, and naive Bayes has nothing to smooth
    the second with.
 
+4. **Fit against a graded target wherever "was it right" is the wrong
+   question.** This is one rule and it was arrived at from three directions at
+   once, which is why it is written here rather than in any one model.
+
+   Every fitting procedure in the rule-based half used to end at a boolean.
+   `ScoreCalibrator` asks *was the top vote right*, OmegaClaw's evidence table
+   asks *did this claw name the right symbol*, and `corefer`'s reranker asks
+   *is this pair coreferent*. Each is a defensible question and none of them is
+   the question the surrounding code goes on to answer:
+
+   | fitted against | actually spent as | what the boolean loses |
+   |---|---|---|
+   | argmax accuracy | mass on **every** vote in the mixture | "it is one of these ten" is worth 3.3 bits and reads as 0.1 |
+   | claw named the right symbol | how much to trust the claw | four claws that agree record four independent solutions to one problem |
+   | is this pair coreferent | which of ~55 candidates | most questions have several correct answers and no fact about which was meant |
+
+   The repair is the same in all three: make the target a quantity rather than
+   an event, and let a claim be *partly* right.
+
+   - `MassCalibrator` fits the mixture weight by maximising the held-out
+     likelihood of whichever symbol turned out to be right, so an example says
+     how much mass the vote set put on the truth. Concave in the weight, so a
+     bisection is exact. Worth **+0.017 label lift and 0.58 bits** against the
+     identical model with the old gate (`ptrgen-001` vs `ptrgen-argmax`).
+   - `omegaclaw_em` splits one unit of credit among the claws that were right,
+     in proportion to what the current reliabilities say each deserves.
+   - `ptrgen` trains its pointer on the marginal likelihood of landing on *any*
+     correct antecedent, so several valid answers stop competing.
+
+   **Where a probit link belongs, and where it does not.** The natural next step
+   is to replace the isotonic map in `ScoreCalibrator` with a parametric
+   `P(correct) = Phi(a + b*s)`. That is not about entertaining several truths —
+   it is about data efficiency, and it addresses a failure the class already
+   documents: bins are thin at the edges and the top bin often holds a handful
+   of examples, which is exactly where isotonic regression is noisiest and where
+   two parameters would be steadier. It should be measured as a variant beside
+   the isotonic one, and it should be expected to help the small-slice runs and
+   do nothing on 179 lessons.
+
+   A probit is *not* the right tool for the three rows in the table above. Those
+   need the target to carry more information, not the link function to be
+   smoother, and a probit on a boolean is still a fit to a boolean.
+
 ## Scope
 
 The **symbolic models are the subject**. The neural half exists as a control and
