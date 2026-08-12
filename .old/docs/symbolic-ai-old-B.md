@@ -1,4 +1,4 @@
-# symbolic-ai-002: learning algorithms that are symbolic on the inside
+# symbolic-ai-old-B: learning algorithms that are symbolic on the inside
 
 *A design note and experiment on non-neural learners in the symbolic agent protocol.*
 2026-08-06 · hardware: CPU only for every symbolic arm (1× NVIDIA GB10, shared, for the neural controls)
@@ -7,7 +7,7 @@
 
 ## 0. The correction this note responds to
 
-`symbolic-ai-001` was symbolic at the *interface*: symbols crossed the
+`symbolic-ai-old-A` was symbolic at the *interface*: symbols crossed the
 agent/environment boundary, but the agent's insides were a 13.97M-parameter
 transformer. The intended target is stronger — **the algorithm itself is
 symbolic**: a few dozen discrete parameters, plain code, no gradients, no
@@ -154,7 +154,7 @@ done?", so it can be re-aimed at goals nobody trained for.
 
 ## 4. Results
 
-Every symbolic arm below ran on CPU. Neural controls are the `symbolic-ai-001`
+Every symbolic arm below ran on CPU. Neural controls are the `symbolic-ai-old-A`
 checkpoint (13.97M parameters, 16 min on a GB10) and, where noted, a per-task
 finetune of it.
 
@@ -169,7 +169,7 @@ walls, 25 episodes per cell, held-out seeds. Native metric: success rate.
 | world_model (expert data only) | 21 | 0.64 | 0.40 | 0.32 | 0.24 |
 | relational (rule list) | 42 | 0.84 | 0.72 | 0.56 | 0.56 |
 | search (given the true model) | 0 | 0.80 | 0.24 | 0.12 | 0.00 |
-| symbolic-ai-001 (transformer) | 13,969,152 | 0.40 | 0.00 | 0.00 | 0.00 |
+| symbolic-ai-old-A (transformer) | 13,969,152 | 0.40 | 0.00 | 0.00 | 0.00 |
 | random | 0 | 0.00 | 0.00 | 0.00 | 0.00 |
 
 Three things in one table. The induced schema is *flat* across a 16× change in
@@ -205,7 +205,7 @@ evaluation. 40 episodes each, held-out seeds.
 |---|---|---|---|---|
 | **seq_synth** | **0** | nothing | **1.000** | **1.000** |
 | neural specialist | 13,969,152 | train families | 0.975 | **0.000** |
-| symbolic-ai-001 | 13,969,152 | other tasks | 0.200 | 0.000 |
+| symbolic-ai-old-A | 13,969,152 | other tasks | 0.200 | 0.000 |
 | random | 0 | — | 0.025 | 0.000 |
 
 This is the cleanest separation in the project. The network reproduces its
@@ -222,7 +222,7 @@ has no training distribution to be off.
 | text_rules `prior` | **0** | **0** | 12,065 terms | 0 s | 0.600 |
 | text_rules `induce` | 3 | 1500 | none | 0.3 s | 0.480 |
 | **text_rules `both`** | **17** | 1500 | 12,065 terms | **0.7 s CPU** | **0.765** |
-| symbolic-ai-001 | 13,969,152 | 1500 | none | 16 min GPU | 0.585 |
+| symbolic-ai-old-A | 13,969,152 | 1500 | none | 16 min GPU | 0.585 |
 | neural specialist (finetuned) | 13,969,152 | 1500 | none | +50 s GPU | 0.475 |
 
 The ablation is the point: induction alone underperforms, the prior alone is
@@ -241,7 +241,7 @@ BPE vocabulary, same held-out split:
 | VOMM order-6, 5M tokens | counting | 46 s CPU | 252.8 | 0.214 | 7.0 GB |
 | VOMM order-5, 20M tokens | counting | 199 s CPU | 179.4 | 0.237 | 18.1 GB |
 | VOMM order-6, 40M tokens | counting | — | — | — | **aborted: exhausted host memory** |
-| symbolic-ai-001 (mixture) | gradients | 16 min GPU | 89.1 | 0.250 | ~3.6 GB |
+| symbolic-ai-old-A (mixture) | gradients | 16 min GPU | 89.1 | 0.250 | ~3.6 GB |
 | baseline-lm-only | gradients | 22 min GPU | **51.9** | 0.125 | ~3.6 GB |
 
 The counting model loses by 3.5× in perplexity and its memory grows with
@@ -260,7 +260,7 @@ interpolating a *distribution*.
 | relational (MiniGrid) | CPU | 11 s | 5 discrete params | < 1 ms |
 | seq_synth | CPU | none | 0 params | 1.6–43 ms |
 | text_rules:both | CPU | **0.7 s** | 17 discrete params | < 1 ms |
-| symbolic-ai-001 | GB10 GPU | 16 min | 13,969,152 floats (55.9 MB) | ~10 ms/step |
+| symbolic-ai-old-A | GB10 GPU | 16 min | 13,969,152 floats (55.9 MB) | ~10 ms/step |
 
 Wall-clock and device are measured; **energy in Joules is not measured** and is
 not claimed here — the GPU was shared with an unrelated job throughout, so any
@@ -645,7 +645,7 @@ nonsense (`RIGHT unless at(goal,-4,0)`).
 ## 8. Reproduction
 
 ```bash
-symbolic-agent collect --config configs/symbolic-ai-001.yaml     # teacher episodes
+symbolic-agent collect --config configs/symbolic-ai-old-A.yaml     # teacher episodes
 python -m symbolic.experiments.symbolic_suite                    # all four axes
 pytest tests/test_symbolic_learners.py -q                        # 18 assertions on what is induced
 ```

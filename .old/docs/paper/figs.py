@@ -5,7 +5,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator
 
-R = pathlib.Path("/home/brandonin/Documents/symbolic-ai-001")
+R = pathlib.Path("/home/brandonin/Documents/symbolic-ai-old-A")
 OUT = pathlib.Path("/tmp/paper/figs"); OUT.mkdir(parents=True, exist_ok=True)
 
 BLUE, ORANGE, AQUA = "#2a78d6", "#eb6834", "#1baf7a"
@@ -35,7 +35,7 @@ def fig_scaling():
     xs = [c["size"] for c in cells]
     series = [("induced world model (26 params)", "world_model-001", BLUE, "o"),
               ("induced rule list (42 params)", "relational-001", AQUA, "s"),
-              ("transformer (13.97M params)", "symbolic-ai-001", ORANGE, "^")]
+              ("transformer (13.97M params)", "symbolic-ai-old-A", ORANGE, "^")]
     fig, ax = plt.subplots(figsize=(4.9, 2.9))
     ax.grid(axis="y", zorder=0)
     ax.set_axisbelow(True)

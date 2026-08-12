@@ -1,4 +1,4 @@
-# symbolic-ai-001: one symbolic interaction protocol, many substrates
+# symbolic-ai-old-A: one symbolic interaction protocol, many substrates
 
 *A design note and first experiment.*
 2026-08-06 · code commit: see `results/records.jsonl` · hardware: 1× NVIDIA GB10 (shared)
@@ -26,7 +26,7 @@ checkpoints and held-out FineWeb-Edu text, the total return accumulated through
 `Environment.step` and the total log-likelihood computed by ordinary batched
 cross-entropy agree to **|Δ| = 2·10⁻⁵ over 512 token positions**.
 
-We then train **`symbolic-ai-001`** — one 13.97M-parameter decoder-only
+We then train **`symbolic-ai-old-A`** — one 13.97M-parameter decoder-only
 transformer — through this single interface on a mixture of FineWeb-Edu
 next-token prediction, SST-2 classification, a symbolic gridworld, a real
 Gymnasium MiniGrid task, three reasoning environments and a tool-calling
@@ -188,7 +188,7 @@ checkpoints, held-out FineWeb-Edu chunks, identical positions):
 
 | model | positions | Σ log p through `Environment.step` | Σ log p batched | \|Δ\| |
 |---|---|---|---|---|
-| symbolic-ai-001 | 512 | −2398.2746 | −2398.2747 | 1.9·10⁻⁵ |
+| symbolic-ai-old-A | 512 | −2398.2746 | −2398.2747 | 1.9·10⁻⁵ |
 | baseline-lm-only | 512 | −2324.7483 | −2324.7480 | 2.3·10⁻⁴ |
 
 Two consequences. Maximum-likelihood pretraining is not a different objective
@@ -246,7 +246,7 @@ the environment: an object-count cap that spent its budget describing walls
 behind the agent, and a greedy rule that oscillated because turning toward an
 off-axis target swings it to the other side.
 
-## 5. `symbolic-ai-001`
+## 5. `symbolic-ai-old-A`
 
 ### 5.1 Architecture
 
@@ -254,7 +254,7 @@ Decoder-only transformer: 6 layers, 6 heads, `d_model` 384, context 512,
 byte-level BPE with 8,192 merges trained on FineWeb-Edu text *plus* serialized
 symbolic structures, tied embeddings — **13.97M parameters** (13.77M
 non-embedding). It is deliberately ordinary: every neural arm uses this same
-network, so the only difference between `symbolic-ai-001` and the conventional
+network, so the only difference between `symbolic-ai-old-A` and the conventional
 baseline is the data distribution and the sample weighting.
 
 ### 5.2 Three internal encodings, chosen from the declared spaces
@@ -292,7 +292,7 @@ over the action segment of each symbolic step. The update rule is a choice of
 | `w = G − b` | REINFORCE with a baseline |
 | `w = 1[G ≥ b]` | filtered / best-of-n cloning |
 
-`symbolic-ai-001` uses `w = 1` for the corpus and dataset components and
+`symbolic-ai-old-A` uses `w = 1` for the corpus and dataset components and
 advantage weighting (`β = 0.5`) for the interactive ones. Targets for the
 interactive components come from teacher policies that are themselves ordinary
 agents under the same contract — a best-first planner over `env.clone()`, and
@@ -317,14 +317,14 @@ visible to any environment.
 
 8,000 optimizer steps, batch 24 × 512, AdamW, cosine schedule, bf16, 16.0 min
 wall-clock. A curriculum variant of the same mixture ships in
-`configs/symbolic-ai-001-curriculum.yaml`; it is configuration, so "mixture vs
+`configs/symbolic-ai-old-A-curriculum.yaml`; it is configuration, so "mixture vs
 curriculum" is an experiment this repo can run, not an architectural commitment.
 
 ## 6. Experimental design
 
 | arm | what it tests |
 |---|---|
-| `symbolic-ai-001` | one model, heterogeneous mixture, one interface |
+| `symbolic-ai-old-A` | one model, heterogeneous mixture, one interface |
 | `baseline-lm-only` | conventional pretraining: same architecture, same 8,000 steps, corpus only (98.3M tokens) |
 | `specialist-<env>` | conventional pretrain → finetune: from the LM checkpoint, 800 steps on one environment |
 | `scratch-<env>` | same 800 steps from random init (isolates transfer) |
@@ -352,7 +352,7 @@ curriculum" is an experiment this repo can run, not an architectural commitment.
 | table (Q-learning) | 0.00 | 0.28 | 0.40 | 0.00 | 0.44 | 0.00 | 0.42 | 0.16 |
 | mlp (symbol features) | 0.06 | 0.28 | 0.64 | 0.00 | 0.52 | 0.00 | 0.62 | 0.08 |
 | search (planner) | **0.72** | 0.62 | **1.00** | 0.18 | 1.00 | 0.00 | 0.56 | 0.04 |
-| **symbolic-ai-001** | 0.40 | **0.70** | 0.60 | **0.78** | **1.00** | 0.98 | 0.56 | **0.18** |
+| **symbolic-ai-old-A** | 0.40 | **0.70** | 0.60 | **0.78** | **1.00** | 0.98 | 0.56 | **0.18** |
 | baseline-lm-only | 0.00 | 0.28 | 0.44 | 0.00 | 0.40 | 0.00 | 0.56 | 0.02 |
 | specialist-gridworld | 0.44 | 0.00 | 0.66 | 0.00 | 0.28 | 0.00 | 0.42 | 0.02 |
 | specialist-minigrid | 0.00 | 0.70 | 0.66 | 0.00 | 0.28 | 0.00 | 0.58 | 0.04 |
@@ -370,7 +370,7 @@ Neural arms are shown as stochastic policies (T = 1); see §7.4. \
 \* SST-2 accuracy near 0.5 is chance; the argmax of a uniform predictive policy
 breaks ties toward the first class, which is why `random` reads 0.58 rather than
 0.50. Return (`log p`) is the honest column for this row: random −0.693 =
-log 0.5, symbolic-ai-001 −0.683. \
+log 0.5, symbolic-ai-old-A −0.683. \
 † `scene_qa` was held out of training for every arm.
 
 ### 7.2 Normalized return
@@ -381,7 +381,7 @@ log 0.5, symbolic-ai-001 −0.683. \
 | table | −0.891 | +0.266 | −0.467 | −0.892 | +0.066 | −0.720 | −12.019 | −17.408 |
 | mlp | −0.960 | +0.241 | +0.127 | −1.017 | +0.146 | −0.720 | −0.690 | −2.621 |
 | search | **+0.815** | +0.605 | **+0.968** | −0.460 | +0.859 | −0.720 | −9.118 | −19.894 |
-| **symbolic-ai-001** | −0.251 | **+0.681** | +0.123 | **+0.504** | **+0.859** | **+1.040** | **−0.683** | −4.753 |
+| **symbolic-ai-old-A** | −0.251 | **+0.681** | +0.123 | **+0.504** | **+0.859** | **+1.040** | **−0.683** | −4.753 |
 | baseline-lm-only | −2.217 | +0.230 | −0.217 | −1.126 | +0.037 | −0.720 | −1.090 | −6.794 |
 
 The large negative returns for `table` and `search` on the two log-scored
@@ -395,7 +395,7 @@ output type and an environment's reward, rather than hiding it.
 | model | LM steps | LM tokens seen | val NLL (512-ctx) | val ppl | next-token acc (32-ctx) |
 |---|---|---|---|---|---|
 | baseline-lm-only | 8000 | 98.3M | **3.950** | **51.9** | 0.125 |
-| symbolic-ai-001 | 3961 | ~48.7M | 4.489 | 89.1 | 0.250 |
+| symbolic-ai-old-A | 3961 | ~48.7M | 4.489 | 89.1 | 0.250 |
 
 Under an equal optimizer-step budget the mixture model gets half the corpus
 tokens, so this comparison is step-matched, not token-matched; the perplexity gap
@@ -403,7 +403,7 @@ therefore bounds, and probably overstates, the true cost of multi-task training.
 
 ### 7.4 A decision rule, not a model, causes one failure
 
-With greedy (arg-max) decoding, `symbolic-ai-001` scores **0.00** success on the
+With greedy (arg-max) decoding, `symbolic-ai-old-A` scores **0.00** success on the
 gridworld and −1.653 return — worse than random. Inspection of the trajectory
 shows a deadlock: after bumping a wall the observation is unchanged, so the
 arg-max policy re-chooses the same illegal move for the rest of the episode.
@@ -431,7 +431,7 @@ is also the sampled one.
 3. *Conventional LM pretraining alone is not an agent.* `baseline-lm-only`, same
    architecture and step budget, is at or below the random policy on every
    interactive family (gridworld 0.00, tool-calling 0.00, arithmetic 0.00). The
-   competence in `symbolic-ai-001` comes from the interactive components of the
+   competence in `symbolic-ai-old-A` comes from the interactive components of the
    mixture, not from scale or from the corpus.
 4. *Heterogeneity is affordable but not free.* The single model costs 1.7× in
    held-out perplexity at a step-matched budget, and it is behind the logic
@@ -502,8 +502,8 @@ uv pip install --python .venv/bin/python torch --index-url https://download.pyto
 uv pip install --python .venv/bin/python datasets tokenizers gymnasium minigrid pettingzoo verifiers browsergym-core
 
 symbolic-agent prepare-lm --corpus fineweb-edu --tokens 40000000
-symbolic-agent collect    --config configs/symbolic-ai-001.yaml
-symbolic-agent train      --config configs/symbolic-ai-001.yaml  --out runs/symbolic-ai-001 \
+symbolic-agent collect    --config configs/symbolic-ai-old-A.yaml
+symbolic-agent train      --config configs/symbolic-ai-old-A.yaml  --out runs/symbolic-ai-old-A \
                           --set training.steps=8000 training.batch_size=24
 symbolic-agent train      --config configs/baseline-lm-only.yaml --out runs/baseline-lm-only \
                           --set training.steps=8000 training.batch_size=24
@@ -526,7 +526,7 @@ pytest tests/ -q                                  # 129 tests
 | gymnasium / minigrid / pettingzoo | 1.3.0 / 3.1.0 / 1.26.1 |
 | verifiers / browsergym-core | 0.2.1 / 0.14.3 |
 | corpus | `HuggingFaceFW/fineweb-edu`, config `sample-10BT`, revision `87f09149ef4734204d70ed1d046ddc9ca3f2b8f9`, shard `sample/10BT/000_00000.parquet` |
-| corpus split rule | `sha256("symbolic-ai-001\|" + doc_id) < 0.01 → validation`; 40,000,362 train / 400,482 validation tokens |
+| corpus split rule | `sha256("symbolic-ai-old-A\|" + doc_id) < 0.01 → validation`; 40,000,362 train / 400,482 validation tokens |
 | dataset | `SetFit/sst2`, `train` for collection, `validation` for evaluation |
 | adapter version | 0.1.0 |
 | wall-clock | mixture 16.0 min; LM baseline 22.2 min; 11 finetunes ≈ 30–120 s each |
