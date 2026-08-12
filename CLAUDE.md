@@ -3,6 +3,55 @@
 Standing instructions for autonomous work in this repo. `ROADMAP.md` holds the
 task list and the experimental rules; this file holds the workflow ones.
 
+## This is research, not a queue of tickets
+
+The task list is a record of what looked worth doing when it was written. It is
+**not** an instruction to execute the next item. Before running anything, say
+what you expect and why — and if the honest answer is "the next item is not the
+best experiment available", say that instead and do the better one. An
+experiment nobody could have predicted the outcome of is worth ten that confirm
+what the list already assumed.
+
+What that means concretely, all of it learned here the expensive way:
+
+- **State the hypothesis and what would refute it, before the number lands.**
+  This repo has twice had a reading drift toward flattering the write-up — the
+  `gru` curve was recorded as "flat" from six noisy points because flat was the
+  answer already written down. Fixing the interpretation in advance is the only
+  known defence, and it is cheap.
+- **Ask what the measurement is actually measuring.** `label_acc` and
+  `label_bits` are both in every `summary.json` and they rank these models
+  close to inversely. A ranking is a property of a metric, never of a set of
+  models, and a result quoted without saying which metric produced it is not a
+  result. Where two defensible metrics disagree, that disagreement *is* the
+  finding — report it rather than picking the flattering one.
+- **Suspect the harness before the architecture.** The largest measured effects
+  in this repo's history are not differences between models. Models span about
+  0.1 lift; harness decisions span 0.15 to 2.0 — abstention falling back to the
+  structural prior, held-out calibration, the type head getting its own
+  calibrator, strengthening the floor. When something moves a lot, the first
+  hypothesis is that the contract changed, not that the reasoning improved.
+- **A negative result is a result, and a null is worth publishing.** Three
+  candidate features in a row failing is a finding about the combiner. Record
+  what did not work and why it was expected to, in `RESEARCH_LOG.md`.
+- **Prefer the experiment that could embarrass you.** Renaming invariance,
+  copy ceilings, per-question rather than pooled AUC, floors that use every
+  feature the model does — each of these overturned something. Reach for the
+  measurement that could show the work is not doing what it claims.
+- **Do not tune against evaluation.** Seeds >= 1,000,000 are eval only. Form
+  and settle design choices on held-out *training* episodes.
+- **The sweep is the authority.** Scratch scripts have contradicted
+  `symbolic-ai-models sweep` twice, both times flattering the write-up. Use
+  them to form hypotheses, never to report.
+
+## New models go beside the old ones, never in place of them
+
+Register a variant as `name-002` or `name-noprose` and leave its predecessor
+registered, so one sweep prints both rows against the same floors and the
+difference is measured rather than asserted. Editing a model in place silently
+redefines every published number carrying its name; that has already happened
+twice. See `RESEARCH_LOG.md` for the convention.
+
 ## Branches: always merge, never ask
 
 Work done on a branch gets **merged into `master` when it is green**. Do not
