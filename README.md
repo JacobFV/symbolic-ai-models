@@ -318,9 +318,10 @@ symbolic-ai-models/
       base.py             # Model (the interface) + NeuralModel (embeddings, heads)
       symbolic.py         # RuleBasedModel: votes -> distribution, redacted views
       registry.py
-      transformer/ rgt/ tpr/ hrr/ ndr/ gru/        # neural, one dir each
-      ngram/ syllogism/ symbolalg/ synth/          # rule-based, one dir each,
-      ruleinduce/ evidence/                        #   carrying the ported source
+      transformer_001/ rgt_001/ tpr_001/           # neural, one dir each,
+      hrr_001/ ndr_001/ gru_001/                   #   named for what it registers
+      ngram_001/ syllogism_001/ symbolalg_001/     # rule-based, one dir each,
+      synth_001/ ruleinduce_001/ evidence_001/     #   carrying the ported source
     tasks/
       base.py             # Task protocol, floors, lift
       lm.py               # next-token

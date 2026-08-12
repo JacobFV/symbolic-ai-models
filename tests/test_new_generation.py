@@ -44,7 +44,7 @@ def cfg(fixtures):
 # ---------------------------------------------------------------------------
 def test_the_gate_is_a_mixture_weight_not_an_accuracy(fixtures, cfg):
     """`ptrgen-001` and `ptrgen-argmax` differ in one method, by construction."""
-    from symbolic_ai_models.models.ptrgen.model import (PointerGenerator001,
+    from symbolic_ai_models.models.ptrgen_001.model import (PointerGenerator001,
                                                         PointerGeneratorArgmax)
     assert PointerGeneratorArgmax._fit_gate_map is not \
         PointerGenerator001._fit_gate_map
@@ -62,7 +62,7 @@ def test_the_pointer_credits_every_correct_antecedent(cfg):
     indifferent between them, so two symmetric correct candidates must end up
     with equal probability rather than one of them winning.
     """
-    from symbolic_ai_models.models.ptrgen.model import PointerGeneratorModel
+    from symbolic_ai_models.models.ptrgen_001.model import PointerGeneratorModel
 
     model = PointerGeneratorModel(cfg)
     # Two candidates that are correct and described by disjoint features, plus
@@ -77,7 +77,7 @@ def test_the_pointer_credits_every_correct_antecedent(cfg):
 
 def test_the_label_distribution_sums_over_nodes_carrying_one_symbol(fixtures, cfg):
     """Three nodes with one label are three routes to one answer, not a split."""
-    from symbolic_ai_models.models.ptrgen.model import PointerGeneratorModel
+    from symbolic_ai_models.models.ptrgen_001.model import PointerGeneratorModel
 
     train, _, tok = fixtures
     model = PointerGeneratorModel(cfg)
@@ -193,7 +193,7 @@ def test_the_product_is_exact_against_a_dense_reference():
     8,192 symbols while touching only the union support. On a small vocabulary
     the dense version is computable, so the claim is checked rather than
     argued."""
-    from symbolic_ai_models.models.ensemble.model import EnsembleModel
+    from symbolic_ai_models.models.ensemble_001.model import EnsembleModel
 
     vocab = 40
     model = EnsembleModel.__new__(EnsembleModel)     # no members needed
@@ -229,13 +229,13 @@ def test_the_product_is_exact_against_a_dense_reference():
 
 def test_the_ensemble_weight_can_reach_the_endpoints():
     """"One member is carrying this entirely" has to be a reportable answer."""
-    from symbolic_ai_models.models.ensemble.model import GRID
+    from symbolic_ai_models.models.ensemble_001.model import GRID
 
     assert GRID[0] == 0.0 and GRID[-1] == 1.0
 
 
 def test_the_two_ensembles_differ_only_in_which_pair(fixtures, cfg):
-    from symbolic_ai_models.models.ensemble.model import (EnsembleModel,
+    from symbolic_ai_models.models.ensemble_001.model import (EnsembleModel,
                                                           MixedEnsemble,
                                                           PointerEnsemble)
     assert MixedEnsemble.members != PointerEnsemble.members

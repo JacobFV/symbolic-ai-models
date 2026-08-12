@@ -3,7 +3,7 @@
 On the text task it is exactly what you would expect. On the graph task it reads
 the term tree as its pre-order linearisation and is left to infer from position
 and depth what the edges were — no edge ever reaches it. Its sibling
-:mod:`symbolic_ai_models.models.rgt` is the same network with the edges handed over, and
+:mod:`symbolic_ai_models.models.rgt_001` is the same network with the edges handed over, and
 nothing else differs between them, so the gap is the value of being told the
 structure rather than having to infer it.
 """

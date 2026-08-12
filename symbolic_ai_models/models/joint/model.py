@@ -51,8 +51,8 @@ from __future__ import annotations
 
 from typing import Sequence
 
-from ..omegaclaw_ctx import OmegaClawContext
-from ..ptrgen.model import PointerGeneratorModel
+from ..omegaclaw_ctx_001 import OmegaClawContext
+from ..ptrgen_001.model import PointerGeneratorModel
 from ..registry import register
 from ..symbolic import ABSTAIN, GraphView, Votes
 

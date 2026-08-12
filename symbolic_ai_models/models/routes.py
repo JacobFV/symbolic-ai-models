@@ -12,7 +12,7 @@ property — but it buys robustness, not accuracy, and on this curriculum the tw
 pull in opposite directions.
 
 The vocabulary lives here rather than inside one model because two of them need
-it for different reasons. :mod:`symbolic_ai_models.models.analogy` recovers the
+it for different reasons. :mod:`symbolic_ai_models.models.analogy_001` recovers the
 route that explains a *remembered* case and replays it. :mod:`
 symbolic_ai_models.models.episodic` fits the route against the episode in front
 of it. Same alphabet, different way of choosing a letter.

@@ -36,11 +36,16 @@ from .registry import REGISTRY, build, get, model_names, register
 from .symbolic import ABSTAIN, GraphView, RuleBasedModel, Votes
 
 # Registration happens at import; the noqa keeps a linter from tidying away the
-# only thing these imports are for.
-from . import evidence, ngram, ruleinduce, syllogism, symbolalg, synth  # noqa: F401
-from . import analogy, brill, corefer, ctw, grammar, ilp, routes_model, workspace  # noqa: F401
-from . import omegaclaw_ctx, omegaclaw_em, omegaclaw_flat, omegaclaw_rank  # noqa: F401
-from . import ensemble, joint, omegaclaw_reach, ptrgen  # noqa: F401
+# only thing these imports are for. Each package is named for the model it
+# registers, version suffix and all, so the directory and the row in the table
+# cannot drift apart.
+from . import evidence_001, ngram_001, ruleinduce_001  # noqa: F401
+from . import symbolalg_001, syllogism_001, synth_001  # noqa: F401
+from . import analogy_001, brill_001, corefer_001, ctw_001  # noqa: F401
+from . import grammar_001, ilp_001, routes_001, workspace_001  # noqa: F401
+from . import omegaclaw_ctx_001, omegaclaw_em_001  # noqa: F401
+from . import omegaclaw_flat_001, omegaclaw_rank_001  # noqa: F401
+from . import ensemble_001, joint, omegaclaw_reach_001, ptrgen_001  # noqa: F401
 
 #: The neural half is **not registered by default**. It is not the subject of
 #: this repo — the symbolic models are — and it is the only thing here that
@@ -53,7 +58,8 @@ from . import ensemble, joint, omegaclaw_reach, ptrgen  # noqa: F401
 NEURAL_ENABLED = os.environ.get("SYMBOLIC_AI_MODELS_NEURAL", "") not in ("", "0")
 
 if NEURAL_ENABLED:  # pragma: no cover - opt-in path
-    from . import gru, hrr, ndr, rgt, tpr, transformer        # noqa: F401
+    from . import gru_001, hrr_001, ndr_001, rgt_001  # noqa: F401
+    from . import tpr_001, transformer_001            # noqa: F401
 
 __all__ = ["Model", "NeuralModel", "RuleBasedModel", "SymbolicModel",
            "ModelConfig", "ModelOutput", "GraphView", "Votes", "ABSTAIN",

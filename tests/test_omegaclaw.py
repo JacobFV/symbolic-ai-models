@@ -25,9 +25,9 @@ from symbolic_ai_models.data.batch import collate_graph
 from symbolic_ai_models.data.curriculum import generate
 from symbolic_ai_models.models import ModelConfig, build
 from symbolic_ai_models.models.omegaclaw import CLAWS, Claim, OmegaClaw, Scan
-from symbolic_ai_models.models.omegaclaw_ctx import OmegaClawContext
-from symbolic_ai_models.models.omegaclaw_flat import OmegaClawFlat
-from symbolic_ai_models.models.omegaclaw_rank import OmegaClawRank
+from symbolic_ai_models.models.omegaclaw_ctx_001 import OmegaClawContext
+from symbolic_ai_models.models.omegaclaw_flat_001 import OmegaClawFlat
+from symbolic_ai_models.models.omegaclaw_rank_001 import OmegaClawRank
 from symbolic_ai_models.train import TrainConfig, build_tokenizer
 
 LESSONS = ["unification", "symbol_grounding", "center_embedding"]
@@ -336,7 +336,7 @@ def test_the_default_estimator_is_plain_hard_counting():
 def test_em_reduces_to_counting_when_no_two_claws_agree():
     """Hard counting is the limiting case, so the difference between the two
     models is only ever about redundancy — never about anything else."""
-    from symbolic_ai_models.models.omegaclaw_em import OmegaClawEM
+    from symbolic_ai_models.models.omegaclaw_em_001 import OmegaClawEM
 
     model = OmegaClawEM(ModelConfig(vocab_size=64))
     # Every example has exactly one correct claw, so there is nothing to share.
@@ -349,7 +349,7 @@ def test_em_reduces_to_counting_when_no_two_claws_agree():
 
 def test_em_splits_credit_between_claws_that_always_agree():
     """The failure it exists for: two claws, one solved problem, two hits."""
-    from symbolic_ai_models.models.omegaclaw_em import OmegaClawEM
+    from symbolic_ai_models.models.omegaclaw_em_001 import OmegaClawEM
 
     model = OmegaClawEM(ModelConfig(vocab_size=64))
     records = [("c", (("peer", 1), ("mirror", 1)), 1)] * 60
@@ -363,7 +363,7 @@ def test_em_splits_credit_between_claws_that_always_agree():
 
 def test_em_charges_a_claw_that_is_never_uniquely_right():
     """A claw riding along behind a better one should lose its reputation."""
-    from symbolic_ai_models.models.omegaclaw_em import OmegaClawEM
+    from symbolic_ai_models.models.omegaclaw_em_001 import OmegaClawEM
 
     model = OmegaClawEM(ModelConfig(vocab_size=64))
     records = (
@@ -387,7 +387,7 @@ def test_perfectly_redundant_claws_split_evenly_and_stay_there():
     inventing a ranking from the initialisation. It does not: the symmetric
     fixed point is stable at any number of rounds.
     """
-    from symbolic_ai_models.models.omegaclaw_em import OmegaClawEM
+    from symbolic_ai_models.models.omegaclaw_em_001 import OmegaClawEM
 
     records = [("c", (("a", 1), ("b", 1)), 1)] * 200
     for rounds in (1, 12, 200, 1000):
@@ -405,7 +405,7 @@ def test_the_default_round_budget_actually_reaches_the_fixed_point():
     and 0.0885 at the fixed point; twelve rounds gives 0.147 and would have
     been reported as the answer. The default has to converge on its own.
     """
-    from symbolic_ai_models.models.omegaclaw_em import OmegaClawEM
+    from symbolic_ai_models.models.omegaclaw_em_001 import OmegaClawEM
 
     records = ([("c", (("a", 1), ("b", 1)), 1)] * 100
                + [("c", (("a", 2),), 2)] * 100)

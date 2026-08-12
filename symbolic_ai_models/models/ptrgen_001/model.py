@@ -83,7 +83,7 @@ from ...data.curriculum import Episode
 from ...data.graph import TYPE_TO_ID
 from ...data.tokenizer import SymbolTokenizer
 from ..base import ModelConfig
-from ..corefer.model import _pair_features, _type_keys
+from ..corefer_001.model import _pair_features, _type_keys
 from ..registry import register
 from ..symbolic import ABSTAIN, GraphView, RuleBasedModel, Votes
 

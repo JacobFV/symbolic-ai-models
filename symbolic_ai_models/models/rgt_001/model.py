@@ -1,6 +1,6 @@
 """The same transformer, told which positions are parent, child and sibling.
 
-The contrast with :mod:`symbolic_ai_models.models.transformer` is the cleanest one in the
+The contrast with :mod:`symbolic_ai_models.models.transformer_001` is the cleanest one in the
 repo: same depth, same width, same heads, same initialisation, same data in the
 same order. The only difference is that the edges of the term graph are visible
 here and invisible there, so whatever separates the two numbers is the value of
@@ -15,7 +15,7 @@ import torch.nn as nn
 from ...data.batch import N_RELATIONS, SymbolicBatch
 from ..base import ModelConfig, NeuralModel
 from ..registry import register
-from ..transformer.model import Block
+from ..transformer_001.model import Block
 
 __all__ = ["RelationalTransformer"]
 
