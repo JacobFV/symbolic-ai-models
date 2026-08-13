@@ -417,11 +417,11 @@ A smaller one, caught by a test rather than by reading: counting occurrences is
 a statement about node numbering, so scoring canonicalises both graphs
 breadth-first before anything else.
 
-### Six metrics, six floors, and they do not agree
+### A floor for every metric, fitted per metric
 
-`exact`, `uas`, `las`, `type_acc`, `bracket_f1` (PARSEVAL over `(type, label,
-leaf yield)`) and `label_f1` (multiset of labels, structure ignored). The last
-two never call an aligner, deliberately, so a result resting on the alignment
+`bracket_f1` is PARSEVAL over `(type, label, leaf yield)` and `label_f1` is the
+multiset of labels with structure ignored; the full set of ten is below. Five of
+them never call an aligner, deliberately, so a result resting on the alignment
 has a witness that does not. Each gets its own text-blind constant floor, fitted
 by search over training graphs held out against each other — per metric, because
 the constant maximising `label_f1` is not the one maximising `bracket_f1`.
@@ -436,7 +436,7 @@ English, 179 lessons:
 | parser | uas | las | type_acc | bracket_f1 | label_f1 | exact |
 |---|---:|---:|---:|---:|---:|---:|
 | **floor** (text-blind constant) | 0.075 | 0.051 | **0.548** | 0.004 | 0.123 | 0.000 |
-| `prior-001` (one constant graph) | 0.050 | 0.035 | 0.449 | 0.001 | 0.077 | 0.000 |
+| `prior-001` (one constant graph) | 0.028 | 0.020 | 0.502 | 0.004 | 0.033 | 0.000 |
 | `legacy-001` (the old layer's facts) | 0.065 | 0.041 | **0.410** | 0.067 | 0.382 | 0.000 |
 | `bracket-001` (layout, written down) | 0.145 | 0.084 | 0.644 | 0.020 | 0.455 | 0.000 |
 | `retrieve-001` (memorise, no parsing) | 0.568 | 0.511 | 0.943 | 0.228 | 0.758 | 0.008 |
@@ -461,6 +461,105 @@ Three things to read off it, none of them the ranking:
   exact** over that, and nothing at all on `bracket_f1` (0.234 vs 0.228). On a
   templated corpus, recall is most of the score, and any parser number here that
   is not read against `retrieve-001` is unreadable.
+
+### Ten metrics, because six were already disagreeing
+
+`exact`, `uas`, `las`, `type_acc`, `bracket_f1`, `label_f1`, and then four
+graph-level ones: `edge_f1` (Smatch's triple set, exact here because a label
+plus a type names a node, so no hill climbing is needed), `path_f1` (root-to-node
+lineages), `wl_f1` (Weisfeiler-Lehman subtree kernel, two rounds — the only
+score here that is about neighbourhoods rather than trees, and the only one that
+would survive these graphs ceasing to be trees), and `ted_sim` (an upper bound
+on tree edit distance, from the constrained mapping). Five of the ten never call
+the aligner.
+
+They were added because the first six already ranked parsers differently and one
+number was hiding it. On the full curriculum, `cky-001` against `bracket-001`:
+
+| | uas | type_acc | bracket_f1 | edge_f1 | label_f1 |
+|---|---:|---:|---:|---:|---:|
+| `bracket-001` | 0.145 | **0.644** | 0.020 | 0.080 | 0.455 |
+| `cky-001` | **0.299** | 0.594 | **0.168** | **0.261** | **0.527** |
+| floor | 0.075 | 0.548 | 0.004 | 0.039 | 0.123 |
+
+An induced grammar is worth **eight times** the layout baseline's bracket F1 and
+loses to it on node type. Both are true, they are not reconcilable into one
+ordering, and this is the ordinary case rather than a curiosity — a table with
+one column would have reported whichever was written first.
+
+### Classical parsers: a treebank the corpus does not have
+
+The three parsers that *compose* an answer rather than retrieving one, which was
+the standing open question in this file. They need spans, and the generator
+records none — it hands over the term and the string and nothing about which
+characters a subterm produced. `symbolic_ai_parsers/treebank.py` recovers them
+from two facts about the curriculum: arguments are copied into the prose
+verbatim in every language, and a predicate renders as one punctuation-delimited
+clause. Nodes are assigned to clauses greedily by argument overlap.
+
+**79% of clause-shaped graph nodes find a clause** (22,844 of 28,899 at 16
+episodes per lesson), which is the honest ceiling on everything built from it.
+The scaffolding above the clause — record, field, list — is not recovered at all
+and is assembled from block layout, so the classical parsers are grammars *of
+clauses* with a hand-built document skeleton. That cap is in the code.
+
+The induced grammar is 4,487 productions over two preterminals — `ARG` and the
+literal word — with `P(ARG | token)` from training counts and the unseen-token
+rate estimated on hapaxes rather than written down (it comes out at **0.716**:
+a token never seen in training is usually a nonce symbol, and usually an
+argument). Surface order and graph slot are stored separately, which is the one
+piece of linguistics in the file and is what lets Turkish's verb-final rendering
+be one extra production over the same head rather than a new predicate. A test
+asserts exactly that.
+
+Productions are flat, so the LR(0) item-set automaton of this grammar *is* the
+trie of right-hand sides. All three parsers walk the same automaton:
+
+| | size | uas | type_acc | bracket_f1 | edge_f1 | label_f1 | ted_sim |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| floor | | 0.075 | 0.548 | 0.004 | 0.039 | 0.123 | 0.313 |
+| `bracket-001` (written down) | 1.91 | 0.145 | **0.644** | 0.020 | 0.080 | 0.455 | 0.401 |
+| `lr-001` (deterministic) | 2.34 | 0.175 | 0.547 | 0.062 | 0.129 | 0.369 | 0.326 |
+| `cky-001` (exhaustive chart) | 1.52 | 0.299 | 0.594 | **0.168** | 0.261 | 0.527 | 0.472 |
+| `shiftreduce-001` (perceptron) | 1.09 | **0.309** | 0.556 | 0.164 | **0.267** | **0.528** | **0.515** |
+| `retrieve-001` (no parsing) | 1.00 | **0.568** | **0.943** | **0.228** | **0.697** | **0.758** | **0.768** |
+
+Three things, and the third is the one that matters:
+
+- **The chart earns its search.** `cky-001` is 2.7x `lr-001` on bracket F1 and
+  2x on edges, on the same grammar and the same lexicon. The pre-registered
+  alternative — that a deterministic maximal-munch pass would match the chart,
+  making the search wasted work — is refuted: these productions share prefixes
+  and differ later, which is exactly the case a chart exists for.
+- **A learned greedy oracle recovers what the chart gets by searching.**
+  `shiftreduce-001` matches `cky-001` within noise on every metric, beats it on
+  `uas`, `ted_sim` and `edge_f1`, and does it in one left-to-right pass. It also
+  over-generates far less: **1.09 nodes per gold node against the chart's 1.52**,
+  which is where the `ted_sim` gap comes from. This is transition-based parsing's
+  standing claim, and it reproduces here.
+- **All three still lose to memorising.** `retrieve-001` does no parsing at all
+  and beats the best of them by +0.06 bracket F1, +0.43 edge F1 and +0.23 label
+  F1. Composing an answer is not yet competitive with recognising which of 179
+  lessons the text is.
+
+### The compositional parsers are the *most* vocabulary-bound
+
+Share of the English score kept, on `bracket_f1`:
+
+| parser | zh | tr | sw |
+|---|---:|---:|---:|
+| `cky-001` | 0.06 | 0.07 | 0.27 |
+| `lr-001` | 0.05 | 0.06 | 0.08 |
+| `shiftreduce-001` | 0.08 | 0.11 | 0.29 |
+| `retrieve-001` | 0.40 | 0.86 | 0.87 |
+| `template-002` | **0.46** | **0.72** | **0.73** |
+
+This was not expected and is the opposite of the usual story about grammars
+versus lookup tables. The reason is structural: a production's right-hand side is
+keyed on **literal words**, so translating the frame words invalidates every
+rule at once, while a template lookup can be keyed on punctuation and line
+structure and never needs to read a word. A grammar over word classes rather
+than word forms would be the obvious repair and has not been built.
 
 ### Cross-language: the clean test, and my prediction was wrong
 
@@ -782,7 +881,19 @@ redefined what an earlier published row had meant.
   fingerprint of 179 distinct document layouts, and the two are distinguishable:
   render with the layout perturbed — bullets to numbers, semicolons to newlines —
   and see whether identification survives. It has not been run.
-- **Nothing has tried to *build* a graph rather than retrieve one.** All five
-  registered parsers either emit a fixed structure or copy a training graph and
-  substitute words. A parser that composes a term from the text is the obvious
-  next thing and would be the first row in the table that is not a lookup.
+- ~~Nothing has tried to *build* a graph rather than retrieve one.~~ Done:
+  `cky-001`, `lr-001` and `shiftreduce-001` compose one from an induced grammar,
+  and all three lose to `retrieve-001`. The open question it turns into is
+  sharper: **can a compositional parser beat a lookup on this corpus at all, or
+  is 179 templates simply a corpus where recall is the right algorithm?**
+- **A grammar over word classes, not word forms.** The compositional parsers are
+  the most language-bound things in the package — `cky-001` keeps 0.06 of its
+  English bracket F1 in Chinese where `template-002` keeps 0.46 — because a
+  production's right-hand side is keyed on literal words. Replacing those with
+  induced classes (which is what `symbolic_ai_models/parsers/` produces, and the
+  one place the two packages might genuinely meet) is the obvious repair and has
+  not been built.
+- **The treebank's 21% miss is unexamined.** Clause alignment finds a span for
+  79% of clause-shaped nodes. Nothing has looked at which fifth it loses or
+  whether they are systematically one kind of lesson, and every classical score
+  is capped by it.

@@ -27,9 +27,9 @@ import re
 
 from symbolic_ai_models.data.graph import Graph
 
-from ..base import Parser, register
-from ..features import normalise
-from ..features import words_of as _words
+from ...base import Parser, register
+from ...features import normalise
+from ...features import words_of as _words
 
 _BULLET = re.compile(r"^\s*[-*•]\s*(?P<body>.*)$")
 _DIGITS = re.compile(r"^\d+$")

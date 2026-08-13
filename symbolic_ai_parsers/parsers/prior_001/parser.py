@@ -22,8 +22,8 @@ from typing import Sequence
 from symbolic_ai_models.data.curriculum import Episode
 from symbolic_ai_models.data.graph import Graph
 
-from ..base import Parser, register
-from ..floors import fit_floor
+from ...base import Parser, register
+from ...floors import fit_floor
 
 
 @register("prior-001", learned=True,

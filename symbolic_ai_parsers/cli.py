@@ -6,7 +6,7 @@ import argparse
 
 from . import REGISTRY, build, parser_names
 from .evaluate import LANGUAGES, ParserReport, floor_row, run_sweep
-from .scoring import METRICS
+from .scoring import METRICS, SHORT
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -64,7 +64,7 @@ def _print_drops(reports: list[ParserReport], langs: list[str]) -> None:
     print(f"\nshare of the {langs[0]} score kept, by language "
           f"(the gold graph is identical across all of them)")
     head = f"{'parser':<17}{'language':<10}{'retr':>8}" + "".join(
-        f"{m:>12}" for m in METRICS if m != "exact")
+        f"{SHORT[m]:>8}" for m in METRICS if m != "exact")
     print(head + "\n" + "-" * len(head))
     for r in reports:
         if r.language == langs[0] or r.parser not in base:
@@ -75,8 +75,8 @@ def _print_drops(reports: list[ParserReport], langs: list[str]) -> None:
             if m == "exact":
                 continue
             top = b.scores.get(m, 0.0)
-            cells.append(f"{(r.scores.get(m, 0.0) / top):>12.2f}" if top > 1e-9
-                         else f"{'n/a':>12}")
+            cells.append(f"{(r.scores.get(m, 0.0) / top):>8.2f}" if top > 1e-9
+                         else f"{'n/a':>8}")
         rt = ("  n/a" if b.retrieval_acc != b.retrieval_acc or b.retrieval_acc == 0
               else f"{r.retrieval_acc / b.retrieval_acc:>8.2f}")
         print(f"{r.parser:<17}{r.language:<10}{rt:>8}" + "".join(cells))

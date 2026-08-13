@@ -11,6 +11,7 @@ measures.
 from __future__ import annotations
 
 import json
+import pathlib
 import subprocess
 import sys
 
@@ -287,6 +288,108 @@ def test_parsing_is_stable_across_processes(tmp_path):
                              text=True, env=env, check=True)
         digests.append(json.loads(out.stdout.strip().splitlines()[-1]))
     assert digests[0] == digests[1]
+
+
+# ---- the package layout -------------------------------------------------
+
+def test_every_registered_parser_has_a_package_named_after_it():
+    """The ``models/`` convention, enforced rather than described.
+
+    A directory named for the row it produces cannot drift away from the
+    registry — which is the failure the version suffix was added to prevent in
+    the first place. Skeleton packages (``template``, ``classical``) register
+    nothing and are allowed to exist without a row.
+    """
+    import symbolic_ai_parsers.parsers as pkg
+
+    have = {p.name for p in pathlib.Path(pkg.__file__).parent.iterdir()
+            if p.is_dir() and not p.name.startswith("_")}
+    want = {n.replace("-", "_") for n in parser_names()}
+    assert want <= have, f"registered but no package: {sorted(want - have)}"
+    extra = have - want
+    assert extra <= {"template", "classical"}, f"package with no row: {sorted(extra)}"
+
+
+# ---- the treebank and the induced grammar -------------------------------
+
+def test_the_treebank_finds_spans_the_generator_never_recorded(train):
+    from symbolic_ai_parsers.treebank import Treebank
+
+    tb = Treebank.build(train)
+    assert tb.n_clause_nodes > 0
+    assert tb.coverage > 0.0
+    for s in tb.samples:
+        assert s.tokens and s.head
+        for i, slot in s.arg_slots:
+            assert 0 <= i < len(s.tokens)
+            assert slot >= 0
+        assert len(s.categories()) == len(s.tokens)
+
+
+def test_every_induced_rule_can_be_found_again_by_the_chart(train):
+    """The trie is the grammar. If a rule cannot be matched back out of it, the
+    automaton and the rule list have drifted and every classical row is wrong."""
+    from symbolic_ai_parsers.grammar import Grammar
+    from symbolic_ai_parsers.treebank import Treebank
+
+    g = Grammar.induce(Treebank.build(train))
+    assert g.rules
+    for rule in g.rules[:60]:
+        surface = ["zzq_nonce" if c == "ARG" else c for c in rule.rhs]
+        found = {r for end, r, _ in g.matches(surface, 0) if end == len(surface)}
+        assert rule in found, rule
+
+
+def test_surface_order_and_graph_slot_are_kept_apart():
+    """Turkish moves the predicate to the end and leaves the arguments' roles
+    alone. A grammar that folded position into slot would learn that as a
+    different predicate; this asserts it learns it as a different word order."""
+    from symbolic_ai_parsers.grammar import Grammar
+    from symbolic_ai_parsers.treebank import Treebank
+
+    def slots_and_shapes(language):
+        eps = list(generate(["analogy"], n=6, seed0=0, language=language,
+                            max_nodes=128))
+        g = Grammar.induce(Treebank.build(eps))
+        return {r.head: (r.arg_slots, r.rhs) for r in g.rules}
+
+    en, tr = slots_and_shapes("english"), slots_and_shapes("turkish")
+    shared = set(en) & set(tr)
+    assert shared, "the two renderings share no predicate head at all"
+    assert any(en[h][0] == tr[h][0] and en[h][1] != tr[h][1] for h in shared), (
+        "no head kept its slots while changing its surface order")
+
+
+def test_the_classical_parsers_compose_rather_than_retrieve(train, evals):
+    """The claim that separates them from every other parser here.
+
+    A symbol that occurs in no training graph is put into the eval text; a
+    parser that builds its answer will emit it as a node label, and one that
+    copies a remembered graph cannot.
+    """
+    import re
+
+    from symbolic_ai_parsers.features import words_of
+
+    ep = evals["english"][0]
+    # An argument, not a field name: something the generator copied verbatim
+    # into the prose, which is what a parser has to lift back out of it.
+    surface = set(words_of(ep.prompt))
+    victim = next(l for l, t in zip(ep.graph.labels, ep.graph.types)
+                  if t == "ident" and l in surface and len(l) > 2)
+    nonce = "qxzvv"
+    text = re.sub(rf"\b{re.escape(victim)}\b", nonce, ep.prompt)
+
+    built = retrieved = 0
+    for name in ("cky-001", "lr-001", "shiftreduce-001"):
+        p = build(name)
+        p.fit(train)
+        built += nonce in p.parse(text).labels
+    for name in ("retrieve-001", "template-002"):
+        p = build(name)
+        p.fit(train)
+        retrieved += nonce in p.parse(text).labels
+    assert built > 0, "no classical parser emitted a symbol it had never seen"
 
 
 # ---- the seeding knob ---------------------------------------------------

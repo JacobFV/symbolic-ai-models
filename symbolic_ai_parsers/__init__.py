@@ -16,12 +16,15 @@ not a result.
 from .base import REGISTRY, Parser, base_name, build, get, parser_names, register
 from .evaluate import LANGUAGES, ParserReport, evaluate_parser, run_sweep
 from .floors import ConstantFloor, fit_floor
+from .grammar import Grammar, Rule
 from .lexicon import Lexicon
-from .scoring import METRICS, Scores, macro_scores, score_graph
+from .scoring import METRICS, SHORT, Scores, macro_scores, score_graph
+from .treebank import Treebank
 
 from . import parsers  # noqa: F401  (registers them)
 
 __all__ = ["Parser", "REGISTRY", "register", "get", "build", "parser_names",
-           "base_name", "METRICS", "Scores", "score_graph", "macro_scores",
-           "ConstantFloor", "fit_floor", "Lexicon", "ParserReport",
-           "evaluate_parser", "run_sweep", "LANGUAGES"]
+           "base_name", "METRICS", "SHORT", "Scores", "score_graph",
+           "macro_scores", "ConstantFloor", "fit_floor", "Lexicon", "Treebank",
+           "Grammar", "Rule", "ParserReport", "evaluate_parser", "run_sweep",
+           "LANGUAGES"]

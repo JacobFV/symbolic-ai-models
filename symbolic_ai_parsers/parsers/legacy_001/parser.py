@@ -23,7 +23,7 @@ from __future__ import annotations
 from symbolic_ai_models.data.graph import Graph
 from symbolic_ai_models.parsers import build as build_legacy
 
-from ..base import Parser, register
+from ...base import Parser, register
 
 MAX_NODES = 512
 
