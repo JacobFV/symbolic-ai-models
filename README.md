@@ -2,7 +2,9 @@
 
 **Train and evaluate symbolic text model architectures on one harness: predict the next token, and predict a masked node in the graph.**
 
-The premise is that these are the same question asked of two surfaces. [`langcurriculum`](https://jacobfv.github.io/formal-language-cirriculum/) builds every episode as a **typed term** and only then renders it as prose, so for each episode there is a graph that is not a parse of the text but the thing the text was generated *from*. That gives a rare pairing: running text and exact structure, describing the same world, generated from the same seed, in unbounded quantity.
+The premise is that these are the same question asked of two surfaces. The generator — [`langcurriculum`](https://jacobfv.github.io/formal-language-cirriculum/), vendored here as `symbolic_ai_data/` — builds every episode as a **typed term** and only then renders it as prose, so for each episode there is a graph that is not a parse of the text but the thing the text was generated *from*. That gives a rare pairing: running text and exact structure, describing the same world, generated from the same seed, in unbounded quantity.
+
+An episode is a pure function of its seed, so a "dataset" here is only a cache and the train/eval split is a seed range rather than a file. That also means nothing on disk would change if generation drifted, which is why the corpus carries a checksum: `symbolic_ai_models/data/fingerprint.py` hashes 179 lessons × 5 seeds × 7 languages, and a test fails if any cell moves.
 
 So every model here is asked both:
 
@@ -308,9 +310,16 @@ symbolic-ai-models/
   configs/
     small.toml            # finishes in minutes; checks the wiring
     full.toml             # all 179 lessons
+  symbolic_ai_data/       # the generator, vendored verbatim from langcurriculum
+    lessons/ generators/  #   180 registered, 179 that generate; one seed = one
+                          #   episode, in both surfaces
+    grammar/ languages/   #   deterministic realization, seven language packs
+    _vendor.py            #   provenance, and the rule for changing any of it
   symbolic_ai_models/
     data/
-      curriculum.py       # langcurriculum -> Episode (text + graph, one seed)
+      curriculum.py       # symbolic_ai_data -> Episode (text + graph, one seed)
+      fingerprint.py      # a checksum of the corpus; the generator cannot move
+                          #   without a test saying so
       graph.py            # term JSON -> flat node array + parent pointer
       tokenizer.py        # one vocabulary, byte fallback, lossless
       batch.py            # SymbolicBatch + the relation algebra  <- the harness
