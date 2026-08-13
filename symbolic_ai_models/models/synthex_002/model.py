@@ -62,7 +62,7 @@ import collections
 import hashlib
 from typing import Sequence
 
-from ...calibration import MassCalibrator
+from symbolic_ai_core.calibration import MassCalibrator
 from symbolic_ai_core.data.curriculum import Episode
 from symbolic_ai_core.data.tokenizer import SymbolTokenizer
 from ..base import ModelConfig

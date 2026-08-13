@@ -132,7 +132,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Callable, Hashable, Mapping, Sequence
 
-from ...calibration import ScoreCalibrator
+from symbolic_ai_core.calibration import ScoreCalibrator
 from symbolic_ai_core.data.curriculum import Episode
 from symbolic_ai_core.data.graph import TYPE_TO_ID
 from symbolic_ai_core.data.tokenizer import SymbolTokenizer

@@ -100,27 +100,47 @@ def test_the_core_does_not_import_its_consumers():
     assert not offenders, "core must not depend on its consumers: " + "; ".join(offenders)
 
 
-def test_the_deprecated_data_paths_still_resolve_to_the_moved_objects():
-    """`symbolic_ai_models.data.*` are re-export shims now. They are not
-    decoration: `symbolic_ai_agents` on the `omegaclaw` branch imports `Episode`,
-    `Graph`, `SymbolTokenizer`, `collate_graph` and friends from the old paths in
-    twenty places, and a merge that silently lost them would look green.
+#: Every path that moved into `symbolic_ai_core`, and the shim left behind.
+MOVED = [
+    ("symbolic_ai_models.data.batch", "symbolic_ai_core.data.batch"),
+    ("symbolic_ai_models.data.curriculum", "symbolic_ai_core.data.curriculum"),
+    ("symbolic_ai_models.data.fingerprint", "symbolic_ai_core.data.fingerprint"),
+    ("symbolic_ai_models.data.graph", "symbolic_ai_core.data.graph"),
+    ("symbolic_ai_models.data.sampler", "symbolic_ai_core.data.sampler"),
+    ("symbolic_ai_models.data.tokenizer", "symbolic_ai_core.data.tokenizer"),
+    ("symbolic_ai_models.calibration", "symbolic_ai_core.calibration"),
+    ("symbolic_ai_models.invariance", "symbolic_ai_core.invariance"),
+    ("symbolic_ai_models.tasks.base", "symbolic_ai_core.floors"),
+]
 
-    Identity, not equality — a shim that rebound a *copy* of `Graph` would pass
-    an equality check and then fail every `isinstance` in the parsers.
+
+def test_the_pre_split_import_paths_still_resolve_to_the_moved_objects():
+    """The old paths are re-export shims now. They are not decoration:
+    `symbolic_ai_agents` on the `omegaclaw` branch imports `Episode`, `Graph`,
+    `SymbolTokenizer`, `collate_graph`, `Totals`, `lift` and `CalibrationReport`
+    from them in twenty places, and a merge that silently lost that would look
+    green — a modify/delete conflict resolves toward the delete without a word.
+
+    Identity, not equality: a shim that rebound a *copy* of `Graph` would pass an
+    equality check and then fail every `isinstance` downstream.
     """
-    import symbolic_ai_core.data.batch as new_batch
-    import symbolic_ai_core.data.curriculum as new_curriculum
-    import symbolic_ai_core.data.graph as new_graph
-    import symbolic_ai_core.data.tokenizer as new_tokenizer
-    import symbolic_ai_models.data.batch as old_batch
-    import symbolic_ai_models.data.curriculum as old_curriculum
-    import symbolic_ai_models.data.graph as old_graph
-    import symbolic_ai_models.data.tokenizer as old_tokenizer
+    from importlib import import_module
 
-    for old, new in ((old_batch, new_batch), (old_curriculum, new_curriculum),
-                     (old_graph, new_graph), (old_tokenizer, new_tokenizer)):
-        assert new.__all__, new.__name__
+    for old_name, new_name in MOVED:
+        old, new = import_module(old_name), import_module(new_name)
+        assert new.__all__, new_name
         for name in new.__all__:
             assert getattr(old, name) is getattr(new, name), (
-                f"{old.__name__}.{name} is not {new.__name__}.{name}")
+                f"{old_name}.{name} is not {new_name}.{name}")
+
+
+def test_the_shims_cover_names_their_source_forgot_to_export():
+    """`invariance.__all__` omits `label_accuracy`, and always did, while
+    `train.py` and three test files import it. A shim re-exporting only `__all__`
+    would therefore be silently partial, so the name is listed by hand — this
+    pins that, because the failure is an ImportError in someone else's package.
+    """
+    import symbolic_ai_core.invariance as new
+    import symbolic_ai_models.invariance as old
+
+    assert old.label_accuracy is new.label_accuracy

@@ -56,7 +56,7 @@ from symbolic_ai_core.data.graph import TYPE_TO_ID
 from symbolic_ai_core.data.tokenizer import SymbolTokenizer
 from ..base import ModelConfig
 from ..registry import register
-from ...calibration import ScoreCalibrator
+from symbolic_ai_core.calibration import ScoreCalibrator
 from ..symbolic import ABSTAIN, GraphView, RuleBasedModel, Votes
 
 __all__ = ["WorkspaceModel", "Region", "Proposal"]

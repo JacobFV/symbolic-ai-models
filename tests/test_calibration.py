@@ -10,7 +10,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from symbolic_ai_models.calibration import calibrate, calibrate_model
+from symbolic_ai_core.calibration import calibrate, calibrate_model
 from symbolic_ai_core.data.curriculum import generate
 from symbolic_ai_models.models import ModelConfig, build
 from symbolic_ai_models.tasks import make_task
@@ -68,7 +68,7 @@ def test_a_real_model_reports_a_usable_curve():
 
 def test_the_isotonic_map_is_monotone_and_the_right_length():
     """A higher internal score must never map to a lower stated accuracy."""
-    from symbolic_ai_models.calibration import ScoreCalibrator, _pava
+    from symbolic_ai_core.calibration import ScoreCalibrator, _pava
 
     assert _pava([0.4, 0.1, 0.9], [1.0, 1.0, 1.0]) == pytest.approx(
         [0.25, 0.25, 0.9])
@@ -85,7 +85,7 @@ def test_the_isotonic_map_is_monotone_and_the_right_length():
 
 def test_the_map_never_promises_certainty():
     """A confidence of 1.0 would let the mixture stake everything on one symbol."""
-    from symbolic_ai_models.calibration import ScoreCalibrator
+    from symbolic_ai_core.calibration import ScoreCalibrator
 
     calibrator = ScoreCalibrator().fit(np.linspace(0, 1, 200), np.ones(200, bool))
     assert calibrator(1.0) <= 0.95
@@ -93,7 +93,7 @@ def test_the_map_never_promises_certainty():
 
 def test_too_little_data_leaves_the_map_unfitted():
     """And the model must then fall back rather than trust three examples."""
-    from symbolic_ai_models.calibration import ScoreCalibrator
+    from symbolic_ai_core.calibration import ScoreCalibrator
 
     assert not ScoreCalibrator().fit([0.1, 0.9], [False, True]).fitted
 
@@ -138,7 +138,7 @@ def test_the_fitted_confidence_beats_the_formula_it_replaced(name):
 # ---------------------------------------------------------------------------
 def test_mass_recovers_a_known_mixture_weight():
     """The estimator's one job: given data from (1-c)b + c q, return c."""
-    from symbolic_ai_models.calibration import MassCalibrator
+    from symbolic_ai_core.calibration import MassCalibrator
 
     rng = np.random.default_rng(0)
     n = 4000
@@ -157,7 +157,7 @@ def test_mass_recovers_a_known_mixture_weight():
 
 def test_mass_returns_zero_when_the_votes_are_worse_than_the_prior():
     """Abstention has to be reachable, or a useless model is forced to speak."""
-    from symbolic_ai_models.calibration import MassCalibrator
+    from symbolic_ai_core.calibration import MassCalibrator
 
     n = 400
     calibrator = MassCalibrator(n_bins=1).fit(
@@ -167,7 +167,7 @@ def test_mass_returns_zero_when_the_votes_are_worse_than_the_prior():
 
 def test_mass_is_monotone_in_the_score():
     """A higher agreement score may not buy less mass; PAVA enforces it."""
-    from symbolic_ai_models.calibration import MassCalibrator
+    from symbolic_ai_core.calibration import MassCalibrator
 
     rng = np.random.default_rng(1)
     n = 4000
@@ -189,7 +189,7 @@ def test_mass_beats_argmax_accuracy_at_the_job_the_mixture_uses_it_for():
     other 0.8 on a flat prior. The likelihood-optimal weight is 1.0, and the
     difference is most of the information the model had.
     """
-    from symbolic_ai_models.calibration import MassCalibrator, ScoreCalibrator
+    from symbolic_ai_core.calibration import MassCalibrator, ScoreCalibrator
 
     rng = np.random.default_rng(2)
     n = 3000
@@ -208,7 +208,7 @@ def test_mass_beats_argmax_accuracy_at_the_job_the_mixture_uses_it_for():
 
 def test_mass_leaves_the_ordering_of_the_votes_alone():
     """The honest limit: c scales every vote equally, so argmax cannot move."""
-    from symbolic_ai_models.calibration import MassCalibrator
+    from symbolic_ai_core.calibration import MassCalibrator
 
     calibrator = MassCalibrator(n_bins=1).fit(
         np.zeros(200), np.full(200, 0.3), np.full(200, 1e-4))

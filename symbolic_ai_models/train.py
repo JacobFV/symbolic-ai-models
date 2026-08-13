@@ -361,7 +361,8 @@ def _renaming_check(model, eval_eps: Sequence[Episode], tok: SymbolTokenizer,
     never refitted: refitting after the rename would ask whether the method can
     learn a relabelled world, which is a much easier question.
     """
-    from .invariance import build_renaming, label_accuracy, rename_episodes
+    from symbolic_ai_core.invariance import (build_renaming, label_accuracy,
+                                             rename_episodes)
 
     renaming = build_renaming(eval_eps, tok)
     if not len(renaming):

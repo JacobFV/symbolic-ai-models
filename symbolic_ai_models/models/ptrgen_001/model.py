@@ -78,7 +78,7 @@ from typing import Sequence
 
 import numpy as np
 
-from ...calibration import MassCalibrator, ScoreCalibrator
+from symbolic_ai_core.calibration import MassCalibrator, ScoreCalibrator
 from symbolic_ai_core.data.curriculum import Episode
 from symbolic_ai_core.data.graph import TYPE_TO_ID
 from symbolic_ai_core.data.tokenizer import SymbolTokenizer

@@ -278,7 +278,7 @@ def cmd_eval(args: argparse.Namespace) -> int:
     print(json.dumps(_add_lift(metrics, floors), indent=2))
 
     if args.calibration:
-        from .calibration import calibrate_model
+        from symbolic_ai_core.calibration import calibrate_model
         for name, task in tasks.items():
             print(f"\n=== calibration: {name} ===")
             print(calibrate_model(model, task, episodes, tok,

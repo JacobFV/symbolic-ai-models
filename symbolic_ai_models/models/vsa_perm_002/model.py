@@ -536,7 +536,7 @@ class VSAReach(VSAModel):
     # ---- the three heads -------------------------------------------------
     def _fit_gate(self, episodes: Sequence[Episode],
                   tok: SymbolTokenizer) -> None:
-        from ...calibration import MassCalibrator
+        from symbolic_ai_core.calibration import MassCalibrator
         scores: list[float] = []
         votes: list[float] = []
         backoff: list[float] = []
