@@ -1,0 +1,2170 @@
+{
+ "global": "68be4d098db17e28",
+ "languages": [
+  "chinese",
+  "english",
+  "english_synonym",
+  "spanish",
+  "swahili",
+  "symbols",
+  "turkish"
+ ],
+ "lessons": {
+  "abstraction_ladder": {
+   "raw": "13fc1b88efc309b2",
+   "text": {
+    "chinese": "4cf03f6b552b8c14",
+    "english": "0c17da2a3475a585",
+    "english_synonym": "eb61e2ec68f360b0",
+    "spanish": "2394d86c4c2ed2fa",
+    "swahili": "69e52b4787adbecd",
+    "symbols": "a660fc3e51d77b15",
+    "turkish": "f037ca14dd5c695d"
+   }
+  },
+  "adversarial_argumentation": {
+   "raw": "9b252f0b9869f3f8",
+   "text": {
+    "chinese": "f963fddceafba065",
+    "english": "af2c372e26209a01",
+    "english_synonym": "a7d4c00874a7701e",
+    "spanish": "7e594f2dacbb06c8",
+    "swahili": "269c3162e27aff40",
+    "symbols": "fd97b15bfc134057",
+    "turkish": "d9e63f02b9cb746b"
+   }
+  },
+  "algorithm_analysis": {
+   "raw": "36ae308a22a3bfe4",
+   "text": {
+    "chinese": "cdba8fb2f1259809",
+    "english": "cc051851a5ac251d",
+    "english_synonym": "34935a75031cfd30",
+    "spanish": "9a26000f61ac69f2",
+    "swahili": "fe1746ae22347b8b",
+    "symbols": "bad62d6f7daa5154",
+    "turkish": "b6a0282d03e9881a"
+   }
+  },
+  "algorithm_discovery": {
+   "raw": "e94b1c7b3df46eb9",
+   "text": {
+    "chinese": "126d2bf57e10c3f8",
+    "english": "58734a80fe5743a2",
+    "english_synonym": "5367890e793382b9",
+    "spanish": "cf6af75c1b2ce433",
+    "swahili": "2c4c49be0122e3da",
+    "symbols": "f0266ce9681830e9",
+    "turkish": "a04601f02041c542"
+   }
+  },
+  "ambiguity_preservation": {
+   "raw": "9bb169ae70514c3e",
+   "text": {
+    "chinese": "52151b59ebacbf19",
+    "english": "42543bd2a04992d4",
+    "english_synonym": "b43ebb6e62891673",
+    "spanish": "934dcf3905484e57",
+    "swahili": "f45399b03435d02f",
+    "symbols": "3da7cebb4e5a14d2",
+    "turkish": "de20bd6016f3a42a"
+   }
+  },
+  "analogy": {
+   "raw": "5211d04f22009c77",
+   "text": {
+    "chinese": "b57086dae8037bf6",
+    "english": "bbfadd4cfbe1534d",
+    "english_synonym": "e171eaba347995d1",
+    "spanish": "36449105f827372c",
+    "swahili": "e3fec8fcf970a1e3",
+    "symbols": "5d9676d1eeb3fec8",
+    "turkish": "ac2dc0c9e77e0f5d"
+   }
+  },
+  "anomaly_resolution": {
+   "raw": "b92c02be088925a3",
+   "text": {
+    "chinese": "d3fd0eff7b55968e",
+    "english": "f7b2d187ae53b0ae",
+    "english_synonym": "c314b7d09b42afea",
+    "spanish": "3cdfb5775c17604f",
+    "swahili": "9d2d6ee0e361f492",
+    "symbols": "85016df775e70e83",
+    "turkish": "c44b2b60c04df468"
+   }
+  },
+  "anytime_reasoning": {
+   "raw": "aeaedc62ab437a60",
+   "text": {
+    "chinese": "bd3b3da7b3a40c18",
+    "english": "a69b18e83b75e2c7",
+    "english_synonym": "c7425cf038ceac2a",
+    "spanish": "978d52670bc0068c",
+    "swahili": "a7bee98f93a41622",
+    "symbols": "ea782c24d362da7e",
+    "turkish": "ee80da2074494938"
+   }
+  },
+  "architecture_composition": {
+   "raw": "517b318dd36c188b",
+   "text": {
+    "chinese": "778bbc2ae5ed680a",
+    "english": "ee28fdf6685ef829",
+    "english_synonym": "85b65d029751264a",
+    "spanish": "4dd4ac910f724e74",
+    "swahili": "bc9c94058f1ee78b",
+    "symbols": "fcf7223c5a17a553",
+    "turkish": "6c391fcdca335654"
+   }
+  },
+  "architecture_selection": {
+   "raw": "9182838f05ca3f1a",
+   "text": {
+    "chinese": "a5b0dfeb39fcabe9",
+    "english": "c11a97652441ae1e",
+    "english_synonym": "64d386ffa6c38dc4",
+    "spanish": "f1222ff005222857",
+    "swahili": "0568ee3a48bf8b58",
+    "symbols": "017c4e9d74162fec",
+    "turkish": "2347de76084c6af7"
+   }
+  },
+  "argumentation": {
+   "raw": "90a3dfbd64ec1048",
+   "text": {
+    "chinese": "0670564908215318",
+    "english": "cde29192bb0790e2",
+    "english_synonym": "ad60d9aef859d434",
+    "spanish": "315a6d61c94bf67d",
+    "swahili": "9db6be0ad2697d14",
+    "symbols": "cf2c37811c520fed",
+    "turkish": "d852f70a7e18c2f8"
+   }
+  },
+  "belief_revision": {
+   "raw": "a5419d0bca00bba7",
+   "text": {
+    "chinese": "d6ba8b3df63a4808",
+    "english": "aa5ecb501e7128ce",
+    "english_synonym": "ebddb84dbf94b6f7",
+    "spanish": "28a0045a0ed010e9",
+    "swahili": "6dcb7b00cb7ea889",
+    "symbols": "da31609243192a63",
+    "turkish": "ae7df6475ee6c296"
+   }
+  },
+  "belief_state": {
+   "raw": "ce238bdbf7002ac0",
+   "text": {
+    "chinese": "9f0ae78dbbe08b59",
+    "english": "300df0763a9dad65",
+    "english_synonym": "d8d685d2dfd45b25",
+    "spanish": "d544bef241b1468e",
+    "swahili": "6c8ea126dcd2a2cd",
+    "symbols": "bf52f8b0c51d5e9c",
+    "turkish": "cdc1ee31e5bde076"
+   }
+  },
+  "capability_estimation": {
+   "raw": "2c0551bc7468291e",
+   "text": {
+    "chinese": "389d14da6e716d95",
+    "english": "5e3de83ddc9b21c1",
+    "english_synonym": "8aefa14f49f088cf",
+    "spanish": "0edbd191bb12638c",
+    "swahili": "6ef207ec3a27842c",
+    "symbols": "a5c5067afe1d0741",
+    "turkish": "6821f731032b41c3"
+   }
+  },
+  "causal_language": {
+   "raw": "e2736a755785d2ef",
+   "text": {
+    "chinese": "b3d940a45a0d6a48",
+    "english": "d49fa9ed87050f79",
+    "english_synonym": "1dd9174eaa934a16",
+    "spanish": "610fd7d97591c620",
+    "swahili": "8bf3f09d98bc6584",
+    "symbols": "ea54440f3fdafac6",
+    "turkish": "180f21dba44c91cc"
+   }
+  },
+  "center_embedding": {
+   "raw": "6d0be899cdfbdf8c",
+   "text": {
+    "chinese": "bbb4d820f5e742a3",
+    "english": "bec6df38f0b3f295",
+    "english_synonym": "d05a42e13d82b332",
+    "spanish": "1bf88a6845548560",
+    "swahili": "91c74532265962e2",
+    "symbols": "25fa67204fc369bc",
+    "turkish": "4ec871eb7c6e8ba1"
+   }
+  },
+  "civilization_simulator": {
+   "raw": "fb8bf05c0ed9485b",
+   "text": {
+    "chinese": "c4e190ff006d70c9",
+    "english": "37d855de27e25d30",
+    "english_synonym": "3740d7947e425a0e",
+    "spanish": "bb49713fccbfe471",
+    "swahili": "fe40fa68c0595437",
+    "symbols": "3b2873a19630340a",
+    "turkish": "cc35340479a9914f"
+   }
+  },
+  "coalition_formation": {
+   "raw": "1b175558ea37926e",
+   "text": {
+    "chinese": "31b52f2a80e939ac",
+    "english": "724f1235e53d06b1",
+    "english_synonym": "46fcd6482e5a7209",
+    "spanish": "3ec57dbf5227cac1",
+    "swahili": "d5cb9cad0b4618d7",
+    "symbols": "77ea2b8c2d9ea2c8",
+    "turkish": "f1b233601fa9a9a3"
+   }
+  },
+  "collective_theory_building": {
+   "raw": "9402ddb82e5ed8de",
+   "text": {
+    "chinese": "e19d2f389b7eed66",
+    "english": "598346f2052ded9a",
+    "english_synonym": "8f780755fedc828e",
+    "spanish": "3c63c106661289b3",
+    "swahili": "9d9b331aadb5e1a6",
+    "symbols": "58a835afd40c251a",
+    "turkish": "030364dfa0521b69"
+   }
+  },
+  "comparatives": {
+   "raw": "f3947953da87ceb3",
+   "text": {
+    "chinese": "b11d5f48b66c984d",
+    "english": "e9b7ebddf92340ee",
+    "english_synonym": "bb1b490608a1b2d7",
+    "spanish": "f5dd6545550223b0",
+    "swahili": "14e9bf0e0b190169",
+    "symbols": "13222a048d5fb559",
+    "turkish": "d8f13f4083798cd3"
+   }
+  },
+  "compiler_construction": {
+   "raw": "f35e0a1e5684e9b8",
+   "text": {
+    "chinese": "ecbedb6763087b27",
+    "english": "3e334c33140b2d4e",
+    "english_synonym": "fd35c3e6825b7a01",
+    "spanish": "88d61f566ce482d2",
+    "swahili": "72f22c8b081b76d4",
+    "symbols": "e88565863d70fcff",
+    "turkish": "f4302bfabe88313d"
+   }
+  },
+  "compositional_reference": {
+   "raw": "db516d94aa6255d3",
+   "text": {
+    "chinese": "5c2e4e998796e4a2",
+    "english": "449051046e66a0d6",
+    "english_synonym": "1c44ea41a9d6c0fe",
+    "spanish": "c74d6ee9978fcd83",
+    "swahili": "55e8986645517485",
+    "symbols": "95ba391aa2b5781f",
+    "turkish": "445e2bdbaecdbfcb"
+   }
+  },
+  "compressed_language": {
+   "raw": "d772b85daefc90a4",
+   "text": {
+    "chinese": "79a0a5f79cfd66ac",
+    "english": "22ec82e54774cbb0",
+    "english_synonym": "a96384d73a034d2c",
+    "spanish": "8393798db2d71c78",
+    "swahili": "9eb1168e0ed88073",
+    "symbols": "684ec2c2d630985a",
+    "turkish": "5a87f88baca3e10e"
+   }
+  },
+  "concept_invention": {
+   "raw": "9bfb6516794b350a",
+   "text": {
+    "chinese": "a498f7d3f3ce3528",
+    "english": "4571b038e0e64e3a",
+    "english_synonym": "be99aea6904f04da",
+    "spanish": "9cf8850154cb7f34",
+    "swahili": "8cee8f879d70c5cb",
+    "symbols": "0e18d2ff3e191bfb",
+    "turkish": "2af1a77d3ae9b87d"
+   }
+  },
+  "conceptual_chunking": {
+   "raw": "ec9bf5fb0d61f642",
+   "text": {
+    "chinese": "2404fa946b93d832",
+    "english": "3261f12da7538852",
+    "english_synonym": "b330c16152dd76ca",
+    "spanish": "e54d7771e8f738e0",
+    "swahili": "33206c22f04a4a6f",
+    "symbols": "d4aaa7eaa3791029",
+    "turkish": "6d4acbff83cc7c1a"
+   }
+  },
+  "conjecture_generation": {
+   "raw": "c4e994669b0366b9",
+   "text": {
+    "chinese": "f8a1dc35e7794f0f",
+    "english": "33b07e7fc46d29ce",
+    "english_synonym": "e846b9cbb3639832",
+    "spanish": "a67c1f5e11ebb1eb",
+    "swahili": "c3f9bede64db00ba",
+    "symbols": "063772d846bfaa9e",
+    "turkish": "717cec8abf414900"
+   }
+  },
+  "conservation_law_discovery": {
+   "raw": "de45415e9b8601ee",
+   "text": {
+    "chinese": "4fb9118051430e2c",
+    "english": "a6ed783ac5e9664e",
+    "english_synonym": "023c3e8c5ea42b76",
+    "spanish": "5bd12ccbd3e97de3",
+    "swahili": "7f262b9390f662ea",
+    "symbols": "095217b74b417849",
+    "turkish": "7f20258117c88e9c"
+   }
+  },
+  "context_free_language": {
+   "raw": "f00937f9f598bfba",
+   "text": {
+    "chinese": "ebef9a1eee700eab",
+    "english": "d605761ab9a6e231",
+    "english_synonym": "d8727f9c58f5ddac",
+    "spanish": "6d53bc388dc310ed",
+    "swahili": "ca7d20946a4bac48",
+    "symbols": "dcc018b1b0087494",
+    "turkish": "14415757ccd0be0e"
+   }
+  },
+  "continual_language": {
+   "raw": "2ce6094eae6848fd",
+   "text": {
+    "chinese": "8880fa26f8c9c178",
+    "english": "eed615f5d3744b70",
+    "english_synonym": "036694a77715c3d9",
+    "spanish": "c6fbd3302e23905d",
+    "swahili": "6c0e1a8d0db5f378",
+    "symbols": "59b445f5403c2bcf",
+    "turkish": "e8e2422b781ef196"
+   }
+  },
+  "contract_reasoning": {
+   "raw": "beae6486c218f889",
+   "text": {
+    "chinese": "84a74044287f7a65",
+    "english": "8a6ba2c4641d355c",
+    "english_synonym": "fb2194dcf8f9736d",
+    "spanish": "ce2d7c5a46cf7d7a",
+    "swahili": "4bb90d2b9d17c71c",
+    "symbols": "179e10ca71efb31c",
+    "turkish": "71ffbaa4b0e1123a"
+   }
+  },
+  "contradiction_tolerance": {
+   "raw": "dd054475b5a0acc9",
+   "text": {
+    "chinese": "3ab50974604bd494",
+    "english": "b4bfc2052ef5dd7a",
+    "english_synonym": "8e2337e9d76680ba",
+    "spanish": "37a5469a2fb16f77",
+    "swahili": "0299dcf0c2d89994",
+    "symbols": "5302f0f840be46fe",
+    "turkish": "c19e75305a52246d"
+   }
+  },
+  "counterexample_generation": {
+   "raw": "72f02d1efaeacd97",
+   "text": {
+    "chinese": "2b6e7a2edd90729a",
+    "english": "9cd9a9652f50e16e",
+    "english_synonym": "d751e69eb91fde88",
+    "spanish": "4b0aa8a3554ca23a",
+    "swahili": "9c8c479933667a4a",
+    "symbols": "a235abaa84978e61",
+    "turkish": "0f8fe7172c6c2e54"
+   }
+  },
+  "counterfactuals": {
+   "raw": "2d16d4ffa78d4a74",
+   "text": {
+    "chinese": "4898bc3936ce5651",
+    "english": "460d4f47b25b7ba7",
+    "english_synonym": "80b07a6d0a7fbb5e",
+    "spanish": "6088ff5da112ccf2",
+    "swahili": "750ce00118272282",
+    "symbols": "c4db457a87c0fe59",
+    "turkish": "e36eb8813f1d208e"
+   }
+  },
+  "counting_quantifier": {
+   "raw": "a91891bea6f6140d",
+   "text": {
+    "chinese": "ff08010421045205",
+    "english": "be44302d8ffe6a87",
+    "english_synonym": "dce7155fc74b4cd8",
+    "spanish": "fdd39e18d32c92e5",
+    "swahili": "fb65b01e5c9e0c42",
+    "symbols": "f03e5cab3b90b26b",
+    "turkish": "61fdfc7ef61a4d38"
+   }
+  },
+  "cross_domain_unification": {
+   "raw": "a43eb232cafc35e6",
+   "text": {
+    "chinese": "983cc786b3b7900a",
+    "english": "24fae27598f6ad97",
+    "english_synonym": "a81541e1374c573c",
+    "spanish": "fe634bb0dc367b19",
+    "swahili": "ba77d10a003503ef",
+    "symbols": "c6f902430df8690d",
+    "turkish": "73227210cb139c5d"
+   }
+  },
+  "cultural_evolution": {
+   "raw": "01130befd826a7ba",
+   "text": {
+    "chinese": "ce16fd34a35056e3",
+    "english": "5f35d7a8296818cb",
+    "english_synonym": "6a5cf8fe9475ad1f",
+    "spanish": "c3d4e81931f6f0f6",
+    "swahili": "1f8076bca141b85a",
+    "symbols": "39552014c758bbad",
+    "turkish": "3a31403fcf352dbb"
+   }
+  },
+  "curriculum_design": {
+   "raw": "16da4010bfe37485",
+   "text": {
+    "chinese": "51259f75d821f3a9",
+    "english": "72040e2605f52290",
+    "english_synonym": "7f794de62bec9fcd",
+    "spanish": "05d9be78450bcf88",
+    "swahili": "7b0adb22cdd24c6a",
+    "symbols": "927cf15bb6b18b0f",
+    "turkish": "84008cda3ecab91e"
+   }
+  },
+  "curriculum_invention": {
+   "raw": "0011b59961f32683",
+   "text": {
+    "chinese": "a44a236ced52feea",
+    "english": "8be71c05908eadf3",
+    "english_synonym": "a544adea00bc4f79",
+    "spanish": "2491afeb8df43873",
+    "swahili": "d66b4561b02072e8",
+    "symbols": "4241da86355c68c7",
+    "turkish": "9852a05c7838881f"
+   }
+  },
+  "deception_detection": {
+   "raw": "cf0c5cbcc7b4e847",
+   "text": {
+    "chinese": "0c83bdfb88feb0f4",
+    "english": "c2e2018692710aa3",
+    "english_synonym": "9af167dee09bdc9a",
+    "spanish": "8119e1f9f957144a",
+    "swahili": "5cca9d08ffd2c115",
+    "symbols": "d29fd82f1d841dc7",
+    "turkish": "33f0614f2189f434"
+   }
+  },
+  "decomposition": {
+   "raw": "d3a8a5fab1ee7cc5",
+   "text": {
+    "chinese": "d92754b9737a9a32",
+    "english": "260a82744793e236",
+    "english_synonym": "6a76bba1e7599196",
+    "spanish": "acb5ffb15c381a18",
+    "swahili": "c69af5e442b52675",
+    "symbols": "c85c0e240206f2a5",
+    "turkish": "6baba8efe1f0b1f7"
+   }
+  },
+  "default_reasoning": {
+   "raw": "63288b80d4ed70b1",
+   "text": {
+    "chinese": "d233a802dec0e767",
+    "english": "b451b4284855db18",
+    "english_synonym": "ee7e1cc92735fe6e",
+    "spanish": "fb25872589e91c6b",
+    "swahili": "154b9bac8c530b97",
+    "symbols": "3d8303d1b6f5a0d6",
+    "turkish": "146b29b70beb31ff"
+   }
+  },
+  "definitions": {
+   "raw": "79e6ea6c97e135c7",
+   "text": {
+    "chinese": "9d9fa3e99dc9cadd",
+    "english": "ba147c9cac6e24ff",
+    "english_synonym": "322fb0f3963e46e8",
+    "spanish": "3cf54e278d40b88f",
+    "swahili": "e2f3c42430d4b610",
+    "symbols": "0a7bae66c28c87f8",
+    "turkish": "15f3d734b4647626"
+   }
+  },
+  "deformalization": {
+   "raw": "fa88baaed842503c",
+   "text": {
+    "chinese": "d6d7071ae40bd561",
+    "english": "51b1fa6f5721972a",
+    "english_synonym": "bb53e74ebee4e721",
+    "spanish": "83ec2504b15b42da",
+    "swahili": "eccb745cce4cf8e6",
+    "symbols": "a59b081ba5af0abe",
+    "turkish": "c1ba44a24d483f4a"
+   }
+  },
+  "dialogue_game": {
+   "raw": "969d79e5e6f45ae9",
+   "text": {
+    "chinese": "9a8d27fcf3918167",
+    "english": "f72cb45cfef7f8e4",
+    "english_synonym": "4c1d3f36cd0fa44a",
+    "spanish": "fd66d630b1add525",
+    "swahili": "2bd002ee6a25de5f",
+    "symbols": "36371a63da7f385c",
+    "turkish": "262fe84bf2a50495"
+   }
+  },
+  "dimensional_analysis": {
+   "raw": "99797fd935af811b",
+   "text": {
+    "chinese": "fdc04b04c7dd99d3",
+    "english": "6c403f56d885c0ae",
+    "english_synonym": "ba00a97618eebc83",
+    "spanish": "ed9205b71cfc4eae",
+    "swahili": "4e253c55567efe81",
+    "symbols": "f84b670e7d6439d9",
+    "turkish": "1479c31c2d19d408"
+   }
+  },
+  "discourse_state": {
+   "raw": "c202041cd1c8af83",
+   "text": {
+    "chinese": "bc4c03a1d5cef227",
+    "english": "741d69f49a65162c",
+    "english_synonym": "e7ee06ea3b610592",
+    "spanish": "58af520f5756ac0e",
+    "swahili": "e3ebdd2e198f99b2",
+    "symbols": "0e781cdddb199862",
+    "turkish": "7038089ea8076283"
+   }
+  },
+  "distributed_knowledge": {
+   "raw": "36204e54c0d4c069",
+   "text": {
+    "chinese": "1e486fe67a170bcd",
+    "english": "29899ff3f42c2af1",
+    "english_synonym": "f64083f96be35307",
+    "spanish": "bbed2177c9458006",
+    "swahili": "59482ff6df01d417",
+    "symbols": "b0fd7bd4e88a1aeb",
+    "turkish": "af8629b1363023f0"
+   }
+  },
+  "document_world": {
+   "raw": "83da4165bd0a6f82",
+   "text": {
+    "chinese": "5debc2ffb1844c56",
+    "english": "6887a77719c39df6",
+    "english_synonym": "a4cab2c49e1b40d5",
+    "spanish": "7fa0316a42ae0285",
+    "swahili": "6da4a276d1794f28",
+    "symbols": "340006f4e95ee97f",
+    "turkish": "4f063f40d78b2336"
+   }
+  },
+  "dsl_invention": {
+   "raw": "15a7d29354cd8400",
+   "text": {
+    "chinese": "ffafc915d8b314a9",
+    "english": "809a0748fda7ec16",
+    "english_synonym": "68b8dd07e0843da4",
+    "spanish": "85b4cea04dec680f",
+    "swahili": "93ccfffd591f0423",
+    "symbols": "78c11243bc91331e",
+    "turkish": "8e849d444fffbd1a"
+   }
+  },
+  "ellipsis": {
+   "raw": "5289323631d20d10",
+   "text": {
+    "chinese": "e69398e17947998a",
+    "english": "afaf81d1c6879194",
+    "english_synonym": "86414f48078978ce",
+    "spanish": "76be7cea0ed0dabd",
+    "swahili": "e0740e129727126b",
+    "symbols": "b9cc8b540f55fe33",
+    "turkish": "9ddc30b249ec0235"
+   }
+  },
+  "emergence_discovery": {
+   "raw": "ce1c722e1142259d",
+   "text": {
+    "chinese": "e82511a81d70021d",
+    "english": "2fa891c979b2b3eb",
+    "english_synonym": "dbadf8f19fe64621",
+    "spanish": "b25d84504a7b33bb",
+    "swahili": "7b4afa4b25db7500",
+    "symbols": "619a16ce0ec0338c",
+    "turkish": "b2694c946470fda1"
+   }
+  },
+  "entailment": {
+   "raw": "16212338732c8ded",
+   "text": {
+    "chinese": "3e55b655224e22d2",
+    "english": "de68d41feeeac7e6",
+    "english_synonym": "de81871d9c1001c7",
+    "spanish": "def7242c0918b08d",
+    "swahili": "c2954c44b44cc5d5",
+    "symbols": "b9ca83d57f93762d",
+    "turkish": "9d649e5447c0efdc"
+   }
+  },
+  "event_semantics": {
+   "raw": "243c3134f42d95f2",
+   "text": {
+    "chinese": "625533715d911e5d",
+    "english": "13c83c25ad635173",
+    "english_synonym": "ae258912572aec7b",
+    "spanish": "1bde924d2ce48e3d",
+    "swahili": "76f5edbae3f5a1d8",
+    "symbols": "985a6a14f7605a51",
+    "turkish": "2093de8113a47b8c"
+   }
+  },
+  "experimental_design": {
+   "raw": "b7a657c1b4c173e7",
+   "text": {
+    "chinese": "11ede3feabe185f3",
+    "english": "7d91a439d0c55057",
+    "english_synonym": "4e5f9c6925e84f7c",
+    "spanish": "baa978e650cb65c1",
+    "swahili": "38a5cdd7e8cec519",
+    "symbols": "087187b5e9bfc62a",
+    "turkish": "d4ee4731fe65827e"
+   }
+  },
+  "explanation": {
+   "raw": "28e81fc6e15d7989",
+   "text": {
+    "chinese": "692e17a79ed2b075",
+    "english": "382637022ec23363",
+    "english_synonym": "2ab8c00a427cc27d",
+    "spanish": "c9bd39ede67ab17d",
+    "swahili": "3b0e3b300630f648",
+    "symbols": "6050b35ee6019033",
+    "turkish": "ec939d240da22252"
+   }
+  },
+  "explanation_repair": {
+   "raw": "66e6643604e1dca8",
+   "text": {
+    "chinese": "ff3de1619893b87b",
+    "english": "2d61743cd4419126",
+    "english_synonym": "5d4cf8d98f9c8446",
+    "spanish": "b98a12519862b4d9",
+    "swahili": "393d473788fb51a3",
+    "symbols": "9c2d9528845557d0",
+    "turkish": "d47d0479334efb11"
+   }
+  },
+  "expression_eval": {
+   "raw": "9de8a397205b2c6c",
+   "text": {
+    "chinese": "87e002a0d2394039",
+    "english": "a75ee60636efc878",
+    "english_synonym": "468372e35845bd2d",
+    "spanish": "ed6e4dfbcd54343f",
+    "swahili": "8d0091edad5654c2",
+    "symbols": "b0ffa328cc96442c",
+    "turkish": "38229fd3d8ded9e2"
+   }
+  },
+  "external_memory_design": {
+   "raw": "fca2aca9c32c0d6a",
+   "text": {
+    "chinese": "8f875cc84e154085",
+    "english": "3a858b7ad1ea816a",
+    "english_synonym": "580c240b4a1cd4be",
+    "spanish": "923816a3a548a5e7",
+    "swahili": "655d6840eaffed92",
+    "symbols": "d52ac1c6a900fcf8",
+    "turkish": "b07fe05c25daa4a5"
+   }
+  },
+  "falsification": {
+   "raw": "3a1cf2a505ce687e",
+   "text": {
+    "chinese": "dcbc1f42c650823b",
+    "english": "2242919deb9fb69d",
+    "english_synonym": "5223287e1a9b990e",
+    "spanish": "6815f60aebeb0958",
+    "swahili": "d1565a382e621a9d",
+    "symbols": "6d6f2021379642af",
+    "turkish": "6c6d01453df3d56e"
+   }
+  },
+  "few_shot_language_learning": {
+   "raw": "afd57746316257ed",
+   "text": {
+    "chinese": "6cc651a09ac1add8",
+    "english": "e6b718ea7f067a42",
+    "english_synonym": "cdaf0bd1db137062",
+    "spanish": "6604ed2dca7456fe",
+    "swahili": "3d16b84f4399e32c",
+    "symbols": "d9c6a85e9970647a",
+    "turkish": "f45eb6734ca213c0"
+   }
+  },
+  "finite_state_language": {
+   "raw": "bb208241291b73d7",
+   "text": {
+    "chinese": "b8aae40913cc8396",
+    "english": "bcdfefd19e9c3fd6",
+    "english_synonym": "ff4f652f102a35db",
+    "spanish": "653274e595b6784e",
+    "swahili": "3b509a0a288f6b59",
+    "symbols": "75b56d2a261672ce",
+    "turkish": "d6d4ad631f1562d2"
+   }
+  },
+  "formalization": {
+   "raw": "7ce5a187b3afb104",
+   "text": {
+    "chinese": "221d13214b42c22e",
+    "english": "721bb52ecf56ce08",
+    "english_synonym": "003f63b4c006a4c1",
+    "spanish": "e157fabbe9dd0bf8",
+    "swahili": "39d7919ccdc2c5d7",
+    "symbols": "de0e742fb7ec0fa7",
+    "turkish": "061ce817af49fad1"
+   }
+  },
+  "general_language_agent": {
+   "raw": "85f496f3cd11ef07",
+   "text": {
+    "chinese": "8ec50dde47000261",
+    "english": "05af83f6184ff762",
+    "english_synonym": "e25cb3b166e7d0db",
+    "spanish": "4cab1a35f75493d6",
+    "swahili": "be1273380b71dfe5",
+    "symbols": "319a314a008ff484",
+    "turkish": "74e59e6c2dae4b47"
+   }
+  },
+  "goal_generation": {
+   "raw": "919f85536737ef60",
+   "text": {
+    "chinese": "6a1740a8a3cac286",
+    "english": "0a643955a758547c",
+    "english_synonym": "2c003b59e5ccc06e",
+    "spanish": "48c8b3ea34ec22a5",
+    "swahili": "822ca2c30770b420",
+    "symbols": "6e4729bd244ea959",
+    "turkish": "f28ba6a4a8d4b201"
+   }
+  },
+  "goal_inference": {
+   "raw": "1b699d2f105913b9",
+   "text": {
+    "chinese": "de2a3edb054c93f8",
+    "english": "ce5f5967d62c6022",
+    "english_synonym": "67a180123431f26a",
+    "spanish": "016060a316d3c230",
+    "swahili": "1c144fa9185aab7e",
+    "symbols": "49cab2d335c960e5",
+    "turkish": "55753dd900f2fad7"
+   }
+  },
+  "goal_revision": {
+   "raw": "adb2f5094391923d",
+   "text": {
+    "chinese": "6a6f6b6f11b7b43b",
+    "english": "69e3d6c2b59b0e5e",
+    "english_synonym": "d50f4bf4f7497c6c",
+    "spanish": "cf2ce98e9ff24743",
+    "swahili": "f454540032901255",
+    "symbols": "4ff2ac3cda342a35",
+    "turkish": "172ca8e179af603c"
+   }
+  },
+  "grammar_induction": {
+   "raw": "1325ba7dc4226fff",
+   "text": {
+    "chinese": "bd27fe1dbde7a612",
+    "english": "9268e0cb03c0e716",
+    "english_synonym": "8d36ed394d10dfef",
+    "spanish": "5977669af8b0e63e",
+    "swahili": "c7ba2443d20c16ce",
+    "symbols": "42d4d172f1f1f4cc",
+    "turkish": "18526f30fc4562a3"
+   }
+  },
+  "hierarchical_planning": {
+   "raw": "db36349fec0de1e9",
+   "text": {
+    "chinese": "9f0bfe43f97e6483",
+    "english": "9b1eaf1926e93244",
+    "english_synonym": "67fc1b63e6554937",
+    "spanish": "30a7e99fd43b5708",
+    "swahili": "4e7dbef674f59e0f",
+    "symbols": "fba332fd33fc5c72",
+    "turkish": "6041234ee4312e57"
+   }
+  },
+  "historical_reconstruction": {
+   "raw": "9c64e5e57924cf57",
+   "text": {
+    "chinese": "c89e163e53d8438f",
+    "english": "bc82ad87df738fcf",
+    "english_synonym": "f356816d80449318",
+    "spanish": "2a57210aa4222fbc",
+    "swahili": "3cab574636d2dd84",
+    "symbols": "a4eb96510be2b18a",
+    "turkish": "a1bad13ea1e1f6d8"
+   }
+  },
+  "identity_continuity": {
+   "raw": "c1e6d5660e21aad3",
+   "text": {
+    "chinese": "7ad0197aeda05164",
+    "english": "b951eefe99d6c472",
+    "english_synonym": "8a139bfbd469e19e",
+    "spanish": "1ce553ed7522bcab",
+    "swahili": "71a4bf72a664a62f",
+    "symbols": "10b19d6361cde84b",
+    "turkish": "07a1303a58b8735d"
+   }
+  },
+  "implicature": {
+   "raw": "b37302514332f8f3",
+   "text": {
+    "chinese": "fb5a7cdef2f25a72",
+    "english": "4b02d2a57fe871ca",
+    "english_synonym": "7fa063f285c77df2",
+    "spanish": "ffc135fc3803c210",
+    "swahili": "61c603c728d5f3ed",
+    "symbols": "2889065623209aef",
+    "turkish": "afce8e663a3289a9"
+   }
+  },
+  "institution_design": {
+   "raw": "a7c3f6eecfce9614",
+   "text": {
+    "chinese": "19052a832ffaed1e",
+    "english": "fcbdbc7e178bd557",
+    "english_synonym": "52339ed16cccc474",
+    "spanish": "b5c6675681f8b394",
+    "swahili": "987ab7aee4417776",
+    "symbols": "fcb472c0ac01a1ae",
+    "turkish": "ddb8a5b3d4f35b33"
+   }
+  },
+  "institution_learning": {
+   "raw": "63145c2cc61b7b52",
+   "text": {
+    "chinese": "d39b283ae27a86cf",
+    "english": "303a03db1686c835",
+    "english_synonym": "3bc395ed8537f4cf",
+    "spanish": "e4700542befce235",
+    "swahili": "48d4d6fcc4550897",
+    "symbols": "7d1b5086e627ca39",
+    "turkish": "499edb0211c83472"
+   }
+  },
+  "instruction_composition": {
+   "raw": "969585dc90f7390e",
+   "text": {
+    "chinese": "e085e33061ed650c",
+    "english": "9e99c75e9f5dcd2b",
+    "english_synonym": "a12f1b7ec850eb9c",
+    "spanish": "3deb0b9738b71cca",
+    "swahili": "710c2c8704b8eb04",
+    "symbols": "80a25d91bb1c7315",
+    "turkish": "3d86d75838261d32"
+   }
+  },
+  "instruction_following_micro": {
+   "raw": "704c1c3eece738e6",
+   "text": {
+    "chinese": "51e89f94fd175f65",
+    "english": "0986963358da62c8",
+    "english_synonym": "3d528569f63f209f",
+    "spanish": "937cf7c66f680d32",
+    "swahili": "768bbc4aeec7a7d5",
+    "symbols": "859b4afdcb27351d",
+    "turkish": "1daa9b50c4bd3366"
+   }
+  },
+  "interactive_reference": {
+   "raw": "f1826bf445c3c263",
+   "text": {
+    "chinese": "02b272376ec97616",
+    "english": "1a397c8a5cb933ad",
+    "english_synonym": "e6f140248957033a",
+    "spanish": "03ece79c30f95e91",
+    "swahili": "43c95ee0829e1386",
+    "symbols": "4a6c3adac207ed1c",
+    "turkish": "6c1f97dde419b4fe"
+   }
+  },
+  "interpreter_learning": {
+   "raw": "8f0df1a17ec958fe",
+   "text": {
+    "chinese": "e575573a45c769bd",
+    "english": "bcffbbd5fe08a600",
+    "english_synonym": "21d1c031c023611c",
+    "spanish": "e0eaf51c06fbd84f",
+    "swahili": "a8e518642b7da3ca",
+    "symbols": "d622644f905595d7",
+    "turkish": "4fd646327a1ec03e"
+   }
+  },
+  "invariance_discovery": {
+   "raw": "4c8cb504c534d06b",
+   "text": {
+    "chinese": "494cc53658d017ea",
+    "english": "6f67ca0ae0ccd2c9",
+    "english_synonym": "447f916088d4cbd6",
+    "spanish": "79c4a3dd93586a18",
+    "swahili": "040b675a4f1849d2",
+    "symbols": "5100e4174a7d1f01",
+    "turkish": "2bf094e9c70c2977"
+   }
+  },
+  "knowledge_gap_detection": {
+   "raw": "85f1feddeae815e9",
+   "text": {
+    "chinese": "b4f79d2b3dcf9910",
+    "english": "7a2b4559591f821b",
+    "english_synonym": "14e8ef9be7d32614",
+    "spanish": "a46a154c34c58de9",
+    "swahili": "99cff558a022be5d",
+    "symbols": "d220fa60a81fc89c",
+    "turkish": "e21c2f1404c0b0ae"
+   }
+  },
+  "knowledge_refactoring": {
+   "raw": "dca42814a1f0650c",
+   "text": {
+    "chinese": "9306e845888eb292",
+    "english": "f449022578c0c699",
+    "english_synonym": "8fbe4ffe5e156f9a",
+    "spanish": "e678b54c0f89d7c6",
+    "swahili": "24bd563edd1ce089",
+    "symbols": "e66b7bbd44bf38c3",
+    "turkish": "b44cfbfb069e590d"
+   }
+  },
+  "knowledge_update": {
+   "raw": "98a8878338526541",
+   "text": {
+    "chinese": "d1bba455a6f03b56",
+    "english": "ed3159d283dd43c1",
+    "english_synonym": "6342374433ab5517",
+    "spanish": "aaf216ed2f21d2fd",
+    "swahili": "0867e2b5b763749a",
+    "symbols": "923e62f8d844f0ca",
+    "turkish": "bf9b036c587e8045"
+   }
+  },
+  "language_culture": {
+   "raw": "9a97b32d0bc034cb",
+   "text": {
+    "chinese": "3fca2b323aa887cb",
+    "english": "13948f53cef8d7c9",
+    "english_synonym": "49e7b6e9f2aabc27",
+    "spanish": "37bb50007dfd3330",
+    "swahili": "47812b24c946553c",
+    "symbols": "d8381e59687e0ba4",
+    "turkish": "389e881d52f4c467"
+   }
+  },
+  "language_design": {
+   "raw": "95c34909d91ba21a",
+   "text": {
+    "chinese": "419c11936f12e23e",
+    "english": "4a34eaadb9aef80f",
+    "english_synonym": "9e3b63627e5c13f4",
+    "spanish": "c736d612624df47e",
+    "swahili": "387ea4268a1d256e",
+    "symbols": "a422ef32ccf46994",
+    "turkish": "7560926935657183"
+   }
+  },
+  "latent_rule_discovery": {
+   "raw": "07af549258d160d0",
+   "text": {
+    "chinese": "f025ed4d32f54e51",
+    "english": "5c97dc66df7fbfbb",
+    "english_synonym": "e4d10a0214dcdba3",
+    "spanish": "055322876bf865e0",
+    "swahili": "bb29ee7aa2c83282",
+    "symbols": "0af21cf2599c92d7",
+    "turkish": "6ed914176bb813e5"
+   }
+  },
+  "lemma_invention": {
+   "raw": "8a29cbc1278ea446",
+   "text": {
+    "chinese": "561b8798f0f4341c",
+    "english": "e727c0249c2ff6ae",
+    "english_synonym": "e09232be0fbf8f0b",
+    "spanish": "48c7db9f524588c9",
+    "swahili": "9f9ad7478f8c4f69",
+    "symbols": "0db1c5233e96f714",
+    "turkish": "ce7a48ee38bbd61a"
+   }
+  },
+  "lexicon_induction": {
+   "raw": "74b1fd8904cdb099",
+   "text": {
+    "chinese": "3fbbfaae9450ca09",
+    "english": "7368a3cb96961cf7",
+    "english_synonym": "9df2728f1e62a0e2",
+    "spanish": "df3c29bd0684b06f",
+    "swahili": "b2ff581d7041883e",
+    "symbols": "5593ee307fd90054",
+    "turkish": "61280052c2a4f0c2"
+   }
+  },
+  "logic_discovery": {
+   "raw": "c57ec096ec17b911",
+   "text": {
+    "chinese": "67fd3cccbc8879e2",
+    "english": "5d7cf18b7419f00c",
+    "english_synonym": "1890dfa407004fd5",
+    "spanish": "c674895dcb03fc24",
+    "swahili": "3b2138aa8d05b97c",
+    "symbols": "fcf1ba7d1b86e607",
+    "turkish": "25878046f07befad"
+   }
+  },
+  "logic_selection": {
+   "raw": "11e200e20c128585",
+   "text": {
+    "chinese": "76abf099ff8d511d",
+    "english": "bb89606904b62184",
+    "english_synonym": "ede1fa933b1a2529",
+    "spanish": "b298cad546e5a942",
+    "swahili": "674a26bd484d7e84",
+    "symbols": "691c2d699de338de",
+    "turkish": "7debb457dcf7c74a"
+   }
+  },
+  "long_horizon_projects": {
+   "raw": "8e74495661cd251e",
+   "text": {
+    "chinese": "2b81d3d2347a24ef",
+    "english": "01178a36a0636d64",
+    "english_synonym": "a4dddb241ed02891",
+    "spanish": "cd3eea57b8eddea3",
+    "swahili": "2909088c2814ef60",
+    "symbols": "261e9638fa57caad",
+    "turkish": "956e8c4d85ab4414"
+   }
+  },
+  "long_range_agreement": {
+   "raw": "9513d5ba210bf2da",
+   "text": {
+    "chinese": "5e29f7b57df40e9c",
+    "english": "4815f9788bc2f49b",
+    "english_synonym": "4cc8a9947f9ecf11",
+    "spanish": "90c72e2102ca16f1",
+    "swahili": "90d161225ea8af9c",
+    "symbols": "6ba154650d96152e",
+    "turkish": "85c4ac8de8447cb3"
+   }
+  },
+  "mathematical_definition_learning": {
+   "raw": "349b47861ab99b88",
+   "text": {
+    "chinese": "9ac23041e3978805",
+    "english": "895cb8a3ab738823",
+    "english_synonym": "0de04617c34d1f8d",
+    "spanish": "b458ae8c83ef38d2",
+    "swahili": "6b1b49134f62323f",
+    "symbols": "730852f42989ba77",
+    "turkish": "a5a8af4ad5cb9054"
+   }
+  },
+  "mechanism_design": {
+   "raw": "22c4815490eb4cb1",
+   "text": {
+    "chinese": "b60834e41caf144a",
+    "english": "a025781f80b1afcc",
+    "english_synonym": "28cf6b1865d21581",
+    "spanish": "51bd10d65060102a",
+    "swahili": "4da94bb0392efc7b",
+    "symbols": "32dc453c11c59846",
+    "turkish": "2178b95cacf9a945"
+   }
+  },
+  "mechanism_discovery": {
+   "raw": "170fefa51755b4d2",
+   "text": {
+    "chinese": "45e1d65ea8f398e4",
+    "english": "ea273b367d84f19c",
+    "english_synonym": "d2aee5cd5087f2f4",
+    "spanish": "09450330e3f6d494",
+    "swahili": "af5be01c25b67c3f",
+    "symbols": "9be5ea4bcb772a76",
+    "turkish": "0de28e07271a9e07"
+   }
+  },
+  "metalinguistic_reasoning": {
+   "raw": "767dd9b352a47d83",
+   "text": {
+    "chinese": "13b8378b81f800a1",
+    "english": "33ba971f0a37f93d",
+    "english_synonym": "e8503abd0f544d0f",
+    "spanish": "cdaba98d84a74fbb",
+    "swahili": "c6a5102890c90eeb",
+    "symbols": "e7dcc84ad3d9713e",
+    "turkish": "d069ea32c1dcb45e"
+   }
+  },
+  "metareasoning": {
+   "raw": "e15cb7b27e6298ec",
+   "text": {
+    "chinese": "7d71f02195af6c76",
+    "english": "8618cf2e650d1fd8",
+    "english_synonym": "0151f3d096c4ab75",
+    "spanish": "de8f51dd5b228138",
+    "swahili": "95ef3c22f019cfe4",
+    "symbols": "fb5df3f0d2e854d7",
+    "turkish": "be49a95d386abd78"
+   }
+  },
+  "minimum_description_learning": {
+   "raw": "88b2327ae799b210",
+   "text": {
+    "chinese": "02dd089bd8fcff63",
+    "english": "e1a87e2dbba59a63",
+    "english_synonym": "8e943282184f3f7e",
+    "spanish": "009ab45e472aed39",
+    "swahili": "d87e1719f95a2c69",
+    "symbols": "2d5039c745c0c683",
+    "turkish": "e32cf9d6affea088"
+   }
+  },
+  "multi_objective_reasoning": {
+   "raw": "0b42c0c7b6eaf44e",
+   "text": {
+    "chinese": "8124b0b76f3fb056",
+    "english": "f6bdb1cf2b244163",
+    "english_synonym": "4169f7e24d47f68d",
+    "spanish": "65ffddd4cde4066a",
+    "swahili": "0cd5df0b1cfbe089",
+    "symbols": "ae555c242195b5e0",
+    "turkish": "e02d79157c3f95bb"
+   }
+  },
+  "multi_perspective_modeling": {
+   "raw": "ab8aa36bd5fc58e6",
+   "text": {
+    "chinese": "d8b45ac2c730eb9e",
+    "english": "ca4b5236d4976192",
+    "english_synonym": "75d2cf7eb5841041",
+    "spanish": "2e990c40232761ad",
+    "swahili": "854ccd2de764d7cb",
+    "symbols": "e622a2f7834947ab",
+    "turkish": "68d7cb21dc53d1ac"
+   }
+  },
+  "multimodal_symbolization": {
+   "raw": "7e1335fa4ee7cd35",
+   "text": {
+    "chinese": "1cc8c9d8b05c8dc7",
+    "english": "841fdd5e8cc63514",
+    "english_synonym": "ba2ba4a6293a5b8c",
+    "spanish": "6bc7dac2fb61c95f",
+    "swahili": "5acb765e488875b3",
+    "symbols": "448cffd40123e890",
+    "turkish": "ada26e2e6321ae72"
+   }
+  },
+  "multiscale_modeling": {
+   "raw": "bf85681d1789cfda",
+   "text": {
+    "chinese": "45703738f32683f3",
+    "english": "dea8beb0e64da37e",
+    "english_synonym": "7098d93e38b0ff41",
+    "spanish": "4bceb4afd67dc972",
+    "swahili": "53ca3be51313bc4c",
+    "symbols": "fff64380908052d7",
+    "turkish": "a729369aab6a11be"
+   }
+  },
+  "narrative_modeling": {
+   "raw": "1811431cd98d33de",
+   "text": {
+    "chinese": "8974fa7605eb93b1",
+    "english": "124e06df2eafe5cc",
+    "english_synonym": "0829f85daab10ac0",
+    "spanish": "247df0759d7a01d3",
+    "swahili": "cbe5bf3a52ca26bb",
+    "symbols": "fa729518aec4063a",
+    "turkish": "ce3a93accaacb37f"
+   }
+  },
+  "natural_language_bridge": {
+   "raw": "b7e00fe2f9918d1e",
+   "text": {
+    "chinese": "8752b4994afa6838",
+    "english": "af00c87e771ee0b9",
+    "english_synonym": "21951a16af2e3ca2",
+    "spanish": "15ddc717cb54951c",
+    "swahili": "caa81901862d4b22",
+    "symbols": "9c8c8a8ad55fd759",
+    "turkish": "fc457024864f88d3"
+   }
+  },
+  "negation": {
+   "raw": "7db66e8e9c1cf5b8",
+   "text": {
+    "chinese": "faf6707d1b442b5a",
+    "english": "244ef8ac88f9444f",
+    "english_synonym": "0b3124d589f3215d",
+    "spanish": "71685f933a5e87d0",
+    "swahili": "7c19ccb45aca3023",
+    "symbols": "85086e01e0cf6767",
+    "turkish": "a88c92b6c07094de"
+   }
+  },
+  "negotiation_game": {
+   "raw": "224bf86d19908f52",
+   "text": {
+    "chinese": "632af8d047673d96",
+    "english": "68db2cd3a0816d1c",
+    "english_synonym": "543bfdef078140e5",
+    "spanish": "862e2cc8ba32e470",
+    "swahili": "26638b7cbdc66c83",
+    "symbols": "082fe9a6e62bccda",
+    "turkish": "b4a6441cab96c207"
+   }
+  },
+  "nesting_depth_compare": {
+   "raw": "a7bd31cc0a6188ce",
+   "text": {
+    "chinese": "d7178ec97936d7b4",
+    "english": "91d77f8df762192e",
+    "english_synonym": "6891f03632da84eb",
+    "spanish": "e54cde1be806da66",
+    "swahili": "833efd251d79d17a",
+    "symbols": "de00efef1695b89d",
+    "turkish": "c0fe24a83b368a47"
+   }
+  },
+  "next_symbol": {
+   "raw": "0567e0d1756845df",
+   "text": {
+    "chinese": "1883aa2ef7a22a3b",
+    "english": "9b8304e5606cfb03",
+    "english_synonym": "e8c0ebc9e4c0fede",
+    "spanish": "31b05be3825ced52",
+    "swahili": "2bacf08fe8b9125a",
+    "symbols": "ee666658c4e63ba7",
+    "turkish": "1c1e7cfec84bb6d7"
+   }
+  },
+  "noisy_channel_language": {
+   "raw": "5a417ba9dbb90715",
+   "text": {
+    "chinese": "0b752d4b703d53b5",
+    "english": "9a9de984a7e43a25",
+    "english_synonym": "04199fc77106ef1f",
+    "spanish": "7ccee60e1641afa8",
+    "swahili": "dc69591f15ee53a2",
+    "symbols": "f9bd5a734188946d",
+    "turkish": "115d5a9ec034a75e"
+   }
+  },
+  "norm_reasoning": {
+   "raw": "5fe2453150047775",
+   "text": {
+    "chinese": "44775daeb2f75b64",
+    "english": "26db9f50566ae8a2",
+    "english_synonym": "d797f9b2b8fdbbb5",
+    "spanish": "8007a13d322e76e1",
+    "swahili": "9c6c71d920b1852a",
+    "symbols": "18f6b0e4510c2c03",
+    "turkish": "0b472723d3b27303"
+   }
+  },
+  "ontology_alignment": {
+   "raw": "feed798896cdaa0a",
+   "text": {
+    "chinese": "c67817be61284b14",
+    "english": "8189254d3f7efd8c",
+    "english_synonym": "4b27bce382f928c8",
+    "spanish": "2b2aaf2bf71f02ef",
+    "swahili": "d60fed5727628a4b",
+    "symbols": "6740dbdb24559c18",
+    "turkish": "b6981ea283eae74d"
+   }
+  },
+  "ontology_construction": {
+   "raw": "3173a25ce2f17287",
+   "text": {
+    "chinese": "81d93211ef76b11b",
+    "english": "f23da4d0c9d6596a",
+    "english_synonym": "ec3d27822b52fd72",
+    "spanish": "51abdcc6a28e0b0c",
+    "swahili": "20a6ffa587d7a2d2",
+    "symbols": "2f43f208fa9fbd6c",
+    "turkish": "798909b19f0e557a"
+   }
+  },
+  "ontology_revision": {
+   "raw": "44c9f6d4327c104a",
+   "text": {
+    "chinese": "48c444f51436eff4",
+    "english": "ffb8e6c9704493d5",
+    "english_synonym": "21625f7b210dc5b2",
+    "spanish": "82b4dc07efa195ef",
+    "swahili": "e8bb8c6146dfab24",
+    "symbols": "c84a167e2412e1ba",
+    "turkish": "b971c5228835f391"
+   }
+  },
+  "open_ended_concept_discovery": {
+   "raw": "6415899cd8c36282",
+   "text": {
+    "chinese": "9d3c1857911359b8",
+    "english": "fd4b7ed6ae305198",
+    "english_synonym": "64548cb328553ce9",
+    "spanish": "8fa6cc0bf55d71cf",
+    "swahili": "c5a54e6badb30ac2",
+    "symbols": "e7f57780b8f64632",
+    "turkish": "2c6ec78856cac3a0"
+   }
+  },
+  "open_ended_question_generation": {
+   "raw": "facd464a02b03ed8",
+   "text": {
+    "chinese": "59457caa2509ce76",
+    "english": "b5ddb5e0c2871daa",
+    "english_synonym": "72ad6391d9aca514",
+    "spanish": "1512a7cf2c5ac197",
+    "swahili": "842e4474e973c161",
+    "symbols": "39dd785acde450e4",
+    "turkish": "a7115770b5ebf832"
+   }
+  },
+  "open_world_language": {
+   "raw": "9906987639dffd72",
+   "text": {
+    "chinese": "94a3805f0924d7be",
+    "english": "9fedda87501a081c",
+    "english_synonym": "28ebc79433229d18",
+    "spanish": "d9041f99ee7ae15b",
+    "swahili": "5b8232de5a6206e2",
+    "symbols": "231f537bbcc17318",
+    "turkish": "84e0c5b98cb655c2"
+   }
+  },
+  "palindrome": {
+   "raw": "973f14a495e70cc5",
+   "text": {
+    "chinese": "50d35d697f01686f",
+    "english": "f7cac29f607131c3",
+    "english_synonym": "2519a691ff4d9b16",
+    "spanish": "2acd742991e435b2",
+    "swahili": "7fcb0c55243e1ba0",
+    "symbols": "91e8d05f8cd8eec1",
+    "turkish": "f2822d0e8e31efd4"
+   }
+  },
+  "paradigm_shift": {
+   "raw": "1a207c3ada83dc04",
+   "text": {
+    "chinese": "d95511cc31c8db98",
+    "english": "ebf3586ac4fb50d9",
+    "english_synonym": "b711ec52b93e757a",
+    "spanish": "258745e179987c62",
+    "swahili": "67b26634e5212cb9",
+    "symbols": "d7fa45282c395dba",
+    "turkish": "ed2932422d234d94"
+   }
+  },
+  "paraphrase": {
+   "raw": "1961bf65cae28991",
+   "text": {
+    "chinese": "be801ac77bf3dcff",
+    "english": "7ef0ae8611d0acb3",
+    "english_synonym": "dab79c4bd4b519b8",
+    "spanish": "e05cfbf94b1ebcc8",
+    "swahili": "e5ea3e569fa46981",
+    "symbols": "88c604db3672e30d",
+    "turkish": "0856b0d3404aebc0"
+   }
+  },
+  "parse_depth": {
+   "raw": "fc18735f4fa08a7c",
+   "text": {
+    "chinese": "73f2c518e982f08f",
+    "english": "f53e503340427161",
+    "english_synonym": "19da24435f900022",
+    "spanish": "63ba4bf34300449c",
+    "swahili": "914eb6abf39b3f72",
+    "symbols": "b0ef499e3b1e1c1b",
+    "turkish": "46ae65829c7ee175"
+   }
+  },
+  "planning_language": {
+   "raw": "0af1bc1663430636",
+   "text": {
+    "chinese": "5a96c002d3236815",
+    "english": "286e010d7bd82428",
+    "english_synonym": "184a004443f78ba2",
+    "spanish": "84b1d65b8920c6be",
+    "swahili": "c5a762ee4cd60a99",
+    "symbols": "ccf6845825320e66",
+    "turkish": "96618873b999a45c"
+   }
+  },
+  "predicate_logic": {
+   "raw": "978e61e89f3f9ae7",
+   "text": {
+    "chinese": "0327ea78dbea44be",
+    "english": "ddb5bb41dc6732bb",
+    "english_synonym": "eb13b9959d9be98a",
+    "spanish": "a2ae1850c1a77569",
+    "swahili": "a9c6ecc18ea6ace2",
+    "symbols": "3f2ef093cee97bfe",
+    "turkish": "df65ec49208a94ef"
+   }
+  },
+  "presupposition": {
+   "raw": "9c23cfdc12b42698",
+   "text": {
+    "chinese": "8f40ea6ad991c369",
+    "english": "f66734e70b966259",
+    "english_synonym": "baf3c5528382debd",
+    "spanish": "321034f1ff739882",
+    "swahili": "0d45e4a4507dd49b",
+    "symbols": "ea0920eaf8b790e5",
+    "turkish": "77fc2f25ceaec434"
+   }
+  },
+  "problem_formulation": {
+   "raw": "dcd84ef41fe27979",
+   "text": {
+    "chinese": "23bdd49e457f08a8",
+    "english": "d92d935c7467ad15",
+    "english_synonym": "96fef3ff0f4d1d13",
+    "spanish": "8700d95001e43ec9",
+    "swahili": "05a1b4dea1d2867e",
+    "symbols": "988541af7624baa1",
+    "turkish": "891de47af63386c1"
+   }
+  },
+  "problem_reformulation": {
+   "raw": "a54f1fbfd25280a4",
+   "text": {
+    "chinese": "e58e29394a4358ca",
+    "english": "fd9a6933ab427e97",
+    "english_synonym": "e5fb65afaed28a03",
+    "spanish": "30d5c71c4fc0a13c",
+    "swahili": "8f5e50c41e9ed2f1",
+    "symbols": "6eb82be84c6d7b1b",
+    "turkish": "4bc305bace0b3a8c"
+   }
+  },
+  "procedural_language": {
+   "raw": "28dbfb5411fbc26a",
+   "text": {
+    "chinese": "01fa522f5619daf4",
+    "english": "9e7f35fed4bb30d7",
+    "english_synonym": "19786b9116a47813",
+    "spanish": "25223c2ee61c3af7",
+    "swahili": "7462b32f7261263e",
+    "symbols": "7308cd4a96f7c20e",
+    "turkish": "c9d09f78b9fefbd2"
+   }
+  },
+  "program_explanation": {
+   "raw": "2fca69846987dccc",
+   "text": {
+    "chinese": "f1896ed80cb740f5",
+    "english": "bea15cbc74a3541a",
+    "english_synonym": "570eea799b98b27c",
+    "spanish": "ec34b039eb912034",
+    "swahili": "a4474775b0a303d3",
+    "symbols": "1b32058874284be0",
+    "turkish": "752497a2d60ee408"
+   }
+  },
+  "program_synthesis": {
+   "raw": "704a994d4c12bd90",
+   "text": {
+    "chinese": "4a4c1b0983c0ee88",
+    "english": "59316c1a0e100602",
+    "english_synonym": "c48449cac4dc5caf",
+    "spanish": "2c4136ea9aa4b17a",
+    "swahili": "1aedefbe27fba3a0",
+    "symbols": "71cffb78f36d3f71",
+    "turkish": "3b58c52dd808046d"
+   }
+  },
+  "pronoun_coreference": {
+   "raw": "c256ead14c63a90b",
+   "text": {
+    "chinese": "19c8f63e27b2201b",
+    "english": "2b72bdbf3a6a4a1f",
+    "english_synonym": "91bf1f6c22c5fb71",
+    "spanish": "f35acdbeb0b0d6d0",
+    "swahili": "1ee8e4ae4bfb3c4a",
+    "symbols": "b508200a117d0a57",
+    "turkish": "b9361a62a0e5a9e6"
+   }
+  },
+  "proof_compression": {
+   "raw": "580c01815de77df5",
+   "text": {
+    "chinese": "3fd50a7db0c7ccba",
+    "english": "d843514b83a763c5",
+    "english_synonym": "299cd00c08880628",
+    "spanish": "59012b0ee164cc24",
+    "swahili": "34131f032540329b",
+    "symbols": "3edd3fbccc38b689",
+    "turkish": "74cb8d7cdde90835"
+   }
+  },
+  "proof_translation": {
+   "raw": "c02ced70f8a74541",
+   "text": {
+    "chinese": "87bd6a7f3c221873",
+    "english": "3f2d64db24310184",
+    "english_synonym": "3dbe1c4d1f004a0c",
+    "spanish": "e575361914cdc1bb",
+    "swahili": "5989a1310a42a16b",
+    "symbols": "5a1a303b753afc52",
+    "turkish": "f5d95f5f2a476e02"
+   }
+  },
+  "protocol_discovery": {
+   "raw": "74f72e41aa716a64",
+   "text": {
+    "chinese": "5a51eff7a25bd9cf",
+    "english": "75459d03b8bff34d",
+    "english_synonym": "9a51f3eef1cb526e",
+    "spanish": "224d5f27d664588f",
+    "swahili": "851c642cd5cd11df",
+    "symbols": "fdbfb93f5d344063",
+    "turkish": "173b685f2e93564e"
+   }
+  },
+  "quantification": {
+   "raw": "fe83e3990c626a42",
+   "text": {
+    "chinese": "1c2c8defc1ea0f1a",
+    "english": "ce5437f6c2247114",
+    "english_synonym": "8ae28b90b5ed0eb2",
+    "spanish": "fe6395abe1eaa332",
+    "swahili": "a04692f480f1c9e8",
+    "symbols": "4902f7e7defd4102",
+    "turkish": "e37932ad80d9a40b"
+   }
+  },
+  "question_answering": {
+   "raw": "099d5f876b71a023",
+   "text": {
+    "chinese": "a814a4866ed11dca",
+    "english": "9a9a1bc1aaa1ae60",
+    "english_synonym": "8ac3ea9372e86f99",
+    "spanish": "6852333f44ff5c61",
+    "swahili": "bf7cbc31ff9ae996",
+    "symbols": "406e2a88dc342a93",
+    "turkish": "32ab6c5b4f008212"
+   }
+  },
+  "question_generation": {
+   "raw": "7cb03c18b02a73ec",
+   "text": {
+    "chinese": "230dad30e354916b",
+    "english": "2ecf493d5d36d119",
+    "english_synonym": "958dafb706f39691",
+    "spanish": "ceade7294dbe7ece",
+    "swahili": "29b97af882c4977c",
+    "symbols": "ea354f9b5f4563b2",
+    "turkish": "ac6319785ceb218f"
+   }
+  },
+  "recursive_self_application": {
+   "raw": "a508392791a5f1b3",
+   "text": {
+    "chinese": "dfb1a29a4fb64b10",
+    "english": "b2fe7c77917cab47",
+    "english_synonym": "bf21e61eda5b5024",
+    "spanish": "1609ead5aac324fd",
+    "swahili": "37cb7b95286c05ba",
+    "symbols": "ac5dbedf75a0f84e",
+    "turkish": "0f9d35576ec62b94"
+   }
+  },
+  "reflective_goal_reasoning": {
+   "raw": "56fd8e97427f929a",
+   "text": {
+    "chinese": "872efdb3bcc3e4ca",
+    "english": "cae1c74d44692b81",
+    "english_synonym": "35a37bb745b7ba47",
+    "spanish": "d4f92d08bed4eb01",
+    "swahili": "2579c4b022aacf30",
+    "symbols": "80bd2741a3975387",
+    "turkish": "ca20702bedf9a660"
+   }
+  },
+  "representation_invention": {
+   "raw": "48426930436d7cc9",
+   "text": {
+    "chinese": "613d2421cb003fcc",
+    "english": "8ab43fc7ea93f219",
+    "english_synonym": "49d511c518fa85fa",
+    "spanish": "62e7f5959d99de05",
+    "swahili": "86875073a7b203fd",
+    "symbols": "b3c33e83d2455565",
+    "turkish": "b6d03f17acf32b4d"
+   }
+  },
+  "representation_selection": {
+   "raw": "71ebcc2b7bf1e0a8",
+   "text": {
+    "chinese": "18f8b2e2ff96475b",
+    "english": "424e238873701db9",
+    "english_synonym": "692b64b7696b7882",
+    "spanish": "b50e2767a5b2940c",
+    "swahili": "5716f0465df57642",
+    "symbols": "5b7dba4b5cca3a6c",
+    "turkish": "65f077fbd87f1948"
+   }
+  },
+  "research_program": {
+   "raw": "709a97fb35292f08",
+   "text": {
+    "chinese": "bccbfe69f077cd33",
+    "english": "4c9fb241711dfa56",
+    "english_synonym": "432ff37a5a93fdf0",
+    "spanish": "91ce41ddceff8662",
+    "swahili": "f5f482f554d9f61c",
+    "symbols": "ebd14e36a997cbb4",
+    "turkish": "36fd73faa4fbaeba"
+   }
+  },
+  "resource_bounded_reasoning": {
+   "raw": "960a4d2a9386ea0b",
+   "text": {
+    "chinese": "ea3f1d7e8ac3c378",
+    "english": "453aeb94eb66bc72",
+    "english_synonym": "4987ba7410e210e2",
+    "spanish": "5441d2844dce8c0b",
+    "swahili": "6635efe88f5f8429",
+    "symbols": "512e0ad86902da2d",
+    "turkish": "02c1857dc7582b64"
+   }
+  },
+  "scientific_civilization": {
+   "raw": "4a0638eb703cc3c9",
+   "text": {
+    "chinese": "087fe3844866f758",
+    "english": "0491e6c4b177307b",
+    "english_synonym": "dba661b9c2258fa3",
+    "spanish": "58fb93acff8644e5",
+    "swahili": "d36035b87e2b130c",
+    "symbols": "2c52ea8bc730a278",
+    "turkish": "a0e0e533486f714d"
+   }
+  },
+  "scientific_model_induction": {
+   "raw": "342411da7f21dbf3",
+   "text": {
+    "chinese": "43ab922b2b2d9548",
+    "english": "f1b8bde96f933a84",
+    "english_synonym": "f9bb1b1de24a1fc4",
+    "spanish": "a68ad515c19eed99",
+    "swahili": "f60d49d5704446a2",
+    "symbols": "96bcca7c3985dbfb",
+    "turkish": "ceacd6d4c2c7e610"
+   }
+  },
+  "scope_ambiguity": {
+   "raw": "4cfaa01e7f6cd88b",
+   "text": {
+    "chinese": "d83ab44fdfe13b8a",
+    "english": "3289b0dd78765c69",
+    "english_synonym": "d87295c5518cdfe6",
+    "spanish": "12a3be30bd68391b",
+    "swahili": "900f51f6b5eb2d46",
+    "symbols": "e4fac0e2c41dc7e4",
+    "turkish": "21943c2ef37f6df6"
+   }
+  },
+  "self_error_diagnosis": {
+   "raw": "f40bc7717e0a33cd",
+   "text": {
+    "chinese": "b3397df9e87459b6",
+    "english": "7eb86700e424a9fa",
+    "english_synonym": "5c654de5d0f20773",
+    "spanish": "ef9216f09b873ad9",
+    "swahili": "84b20a06b269e8f8",
+    "symbols": "92373ff0705cd1f9",
+    "turkish": "0716a42a62a12ee3"
+   }
+  },
+  "self_model": {
+   "raw": "0d4cfcf8e63a0cf7",
+   "text": {
+    "chinese": "167a66d0c6e362d6",
+    "english": "1ffbac80870cf336",
+    "english_synonym": "e17c3b07dec344b6",
+    "spanish": "0db3288af7772c89",
+    "swahili": "7af2f418a0521e19",
+    "symbols": "05b31a496878fc8e",
+    "turkish": "3c237d3f877cd0de"
+   }
+  },
+  "self_repair": {
+   "raw": "f5738d7ea45cda38",
+   "text": {
+    "chinese": "6a4b50e9dee87505",
+    "english": "6f49e9ad9a023506",
+    "english_synonym": "17fa2a7cceea9fc4",
+    "spanish": "a5839f65556a31ec",
+    "swahili": "ed7d2b467d56f8dc",
+    "symbols": "9852ce151f4c7c3e",
+    "turkish": "73bff63bb51e330f"
+   }
+  },
+  "semantic_compression": {
+   "raw": "f15dd589fa93c7ec",
+   "text": {
+    "chinese": "56751af8b379797c",
+    "english": "f4560d21db037e5a",
+    "english_synonym": "f31886867eef2abf",
+    "spanish": "e03d63feb4700b04",
+    "swahili": "d4d227490b82dba7",
+    "symbols": "0075e5b9d4f4e9f1",
+    "turkish": "237f0cb3dc148b9d"
+   }
+  },
+  "sequence_copy": {
+   "raw": "070216ecbf78b92b",
+   "text": {
+    "chinese": "279ca086a045de1a",
+    "english": "267cc6f7b5bb4806",
+    "english_synonym": "cd262122f8938e74",
+    "spanish": "229b5b6b2c6e92d8",
+    "swahili": "71912f66298d8093",
+    "symbols": "7a08986de49a070e",
+    "turkish": "c28e429cd532bb01"
+   }
+  },
+  "set_operations": {
+   "raw": "95c65b1b13dfc977",
+   "text": {
+    "chinese": "9b623f551ec8cff6",
+    "english": "0ff0653781a91ddd",
+    "english_synonym": "5e697bce2f2b9648",
+    "spanish": "914205fc056871a7",
+    "swahili": "cb774ca7dc5e3a66",
+    "symbols": "41b2d6bcf8707b84",
+    "turkish": "38f9a36f36a30278"
+   }
+  },
+  "social_convention_learning": {
+   "raw": "069aeb73d4f2fe72",
+   "text": {
+    "chinese": "f56cc92b8da179da",
+    "english": "a270fb579ddc12b4",
+    "english_synonym": "b23e8dc243803891",
+    "spanish": "faee0b66662a0880",
+    "swahili": "89c368ef44336dc4",
+    "symbols": "f1eccb0f9451a8ce",
+    "turkish": "0d47843c5412071b"
+   }
+  },
+  "source_provenance": {
+   "raw": "12937d2c62cc227f",
+   "text": {
+    "chinese": "4a2431a86113608e",
+    "english": "93b1a60bde8e1d39",
+    "english_synonym": "593973601dd99bea",
+    "spanish": "80f9a8558e9519c6",
+    "swahili": "1c89459283347475",
+    "symbols": "785cb55bb166a55e",
+    "turkish": "3379901edf4518b0"
+   }
+  },
+  "source_reliability_learning": {
+   "raw": "aa639256dd6fdd1a",
+   "text": {
+    "chinese": "aef5e3f0c6b97342",
+    "english": "8d2c64f907e1e22e",
+    "english_synonym": "90db7f145337328d",
+    "spanish": "17f6f580f43dba50",
+    "swahili": "89f0c984517ea6e5",
+    "symbols": "960dc0b204e73ccf",
+    "turkish": "c988e8cfb9984257"
+   }
+  },
+  "spatial_language": {
+   "raw": "e610bd4d1bc154a0",
+   "text": {
+    "chinese": "165f8ff09b510e3c",
+    "english": "5b35bc863d523e00",
+    "english_synonym": "b05b853805d2109a",
+    "spanish": "e3e228a7ea19e186",
+    "swahili": "34453b343a38ad44",
+    "symbols": "90b944f14b375494",
+    "turkish": "3d805abbf7f924c9"
+   }
+  },
+  "speaker_listener_game": {
+   "raw": "ef78c802b7492c7b",
+   "text": {
+    "chinese": "5f6b47b3a760bf3d",
+    "english": "50b736a336626706",
+    "english_synonym": "4e906951236cac57",
+    "spanish": "ca9280bca5a6dec9",
+    "swahili": "2512d5b05dac8966",
+    "symbols": "27d37d28fe9cc88c",
+    "turkish": "0cdd591d77e89db8"
+   }
+  },
+  "strategy_discovery": {
+   "raw": "4b3826f36d0d22db",
+   "text": {
+    "chinese": "f86b1e091fe6eb2c",
+    "english": "06c0d5dc825c5e10",
+    "english_synonym": "0cce54fcf955fee9",
+    "spanish": "9f9a46c2b6b64a48",
+    "swahili": "d3c971ad671ae8cf",
+    "symbols": "b56a090f523149ed",
+    "turkish": "ad4cd9909b7d55f1"
+   }
+  },
+  "strategy_transfer": {
+   "raw": "46f1d0b82a97fc2e",
+   "text": {
+    "chinese": "b3b608f30a0820c3",
+    "english": "24dc5995be353fa5",
+    "english_synonym": "9b14f3bab3ac8883",
+    "spanish": "a74d3cb6939f1610",
+    "swahili": "baee44f74d5d6f37",
+    "symbols": "580ec227cb69d5e1",
+    "turkish": "c3eb45bf080292f8"
+   }
+  },
+  "string_reversal": {
+   "raw": "225f30a897d6fdfa",
+   "text": {
+    "chinese": "a88c1d9bb2029aee",
+    "english": "f8a0cc4f31e966be",
+    "english_synonym": "7b06e8dc14ff8555",
+    "spanish": "fd6ed124a5b27998",
+    "swahili": "a3f3865c83c0bdf0",
+    "symbols": "63c1295c91a3a36a",
+    "turkish": "1b6b388a0f0d8b41"
+   }
+  },
+  "symbol_discrimination": {
+   "raw": "bf8782814b4f645a",
+   "text": {
+    "chinese": "815f9dc762fa7594",
+    "english": "68a4c5bbacc2dbec",
+    "english_synonym": "80eaf8c301c98e11",
+    "spanish": "ae148a5a7c4aab16",
+    "swahili": "42aac0eadd307f83",
+    "symbols": "b8e9fc645a05e3db",
+    "turkish": "76b626c984b8a1cc"
+   }
+  },
+  "symbol_equivalence": {
+   "raw": "1eebd48f737e79f6",
+   "text": {
+    "chinese": "d603d4b22cbafb0e",
+    "english": "9a0261a697bcf44b",
+    "english_synonym": "b7a65bf21db6711e",
+    "spanish": "4443b4d0f06a0b97",
+    "swahili": "01228145cc592640",
+    "symbols": "cb7b7e55381db884",
+    "turkish": "6bf3ac1b577e62d3"
+   }
+  },
+  "symbol_grounding": {
+   "raw": "7cb913180624621d",
+   "text": {
+    "chinese": "b73545fc24c4c7d5",
+    "english": "389022604d595d90",
+    "english_synonym": "ac593c0cc7d351fe",
+    "spanish": "7bf20d17d3d341d6",
+    "swahili": "dc664b64a44444d8",
+    "symbols": "edb6ee51252f16c6",
+    "turkish": "89b3ec37b94a5d1e"
+   }
+  },
+  "symbolic_generalist": {
+   "raw": "6123c27ae69f3d2d",
+   "text": {
+    "chinese": "1fa70e99ee8b86c0",
+    "english": "266818e2242828ec",
+    "english_synonym": "832a2c0e18dcfd87",
+    "spanish": "f6ac07665dd19c08",
+    "swahili": "d731f97c1a65c1e4",
+    "symbols": "ba92d2c9a2192b5f",
+    "turkish": "346dd70f52f494c7"
+   }
+  },
+  "symbolic_world_builder": {
+   "raw": "cda2778a29ef8e7e",
+   "text": {
+    "chinese": "80adcb32b4a37614",
+    "english": "bc87371bf93d5d70",
+    "english_synonym": "e4234206235f2053",
+    "spanish": "f682f4db31c2bc07",
+    "swahili": "b808bfd334ae24c7",
+    "symbols": "f17235843edf575e",
+    "turkish": "aa642a9105e03d2d"
+   }
+  },
+  "symmetry_reasoning": {
+   "raw": "d486d2395cb4544a",
+   "text": {
+    "chinese": "a9a444d5d03bd3ed",
+    "english": "d01e7b436c2cf1ea",
+    "english_synonym": "ed07f7188914d0f4",
+    "spanish": "6e0f93e92ccedda0",
+    "swahili": "585172812a79647d",
+    "symbols": "06bd6039e5d86f6f",
+    "turkish": "e8c785961d611189"
+   }
+  },
+  "teaching": {
+   "raw": "588f86f2b1bec673",
+   "text": {
+    "chinese": "ccc5fc3f3c3452c5",
+    "english": "98c94bb4b8fa593b",
+    "english_synonym": "ec21d1f4f9bf7321",
+    "spanish": "277721a3706c8cbb",
+    "swahili": "f9f8daf2ef00fdda",
+    "symbols": "65a42b95ef350fa7",
+    "turkish": "28fdc76cc7965696"
+   }
+  },
+  "temporal_language": {
+   "raw": "6d9ad34bea7dbef7",
+   "text": {
+    "chinese": "8ff370a3195518ad",
+    "english": "dcc7e87e6ac670b6",
+    "english_synonym": "c78c4020e961fff9",
+    "spanish": "45dc176983610a86",
+    "swahili": "1909e5fd48ff6dc7",
+    "symbols": "48e7c1c140bf6456",
+    "turkish": "0948bf99fed8f8b1"
+   }
+  },
+  "thematic_roles": {
+   "raw": "a2fcf11777cbee1b",
+   "text": {
+    "chinese": "54bb4fbf25ab29a9",
+    "english": "e2011c74005b9bf2",
+    "english_synonym": "651a9737020bc180",
+    "spanish": "a49cddfaee7b91af",
+    "swahili": "7d0cf7ff0dc7722d",
+    "symbols": "ef300cb543e0f0f5",
+    "turkish": "907aee31b4e2ee48"
+   }
+  },
+  "theorem_proving": {
+   "raw": "d06fccfd1cf5e1c7",
+   "text": {
+    "chinese": "6f794b061e2b7f68",
+    "english": "d0a1149655150d52",
+    "english_synonym": "83bc437a6a6e6e6d",
+    "spanish": "f51d96f442518a3e",
+    "swahili": "53d269b80e06ef38",
+    "symbols": "3e3dd6a4757ff6b9",
+    "turkish": "e7652424bbd24305"
+   }
+  },
+  "theory_comparison": {
+   "raw": "5ae73205aa8f6f7f",
+   "text": {
+    "chinese": "d9d6ab75082433a9",
+    "english": "e12365af673c9d77",
+    "english_synonym": "b16c17ea9e7acd44",
+    "spanish": "242d677015ad492c",
+    "swahili": "94145e80387910ef",
+    "symbols": "c14b7ae725d16a7c",
+    "turkish": "24ec06faaf5534c5"
+   }
+  },
+  "theory_transfer": {
+   "raw": "50eaecfd4db1c82d",
+   "text": {
+    "chinese": "09c8241e948bc715",
+    "english": "71633631493916f1",
+    "english_synonym": "d22ccf576630ecdf",
+    "spanish": "183f512aeeb59eaa",
+    "swahili": "8ee54142f3fce71f",
+    "symbols": "447306a31d9f6826",
+    "turkish": "90fa042c515d0902"
+   }
+  },
+  "tool_construction": {
+   "raw": "15cb20b099a62f22",
+   "text": {
+    "chinese": "01a894e9aadf2477",
+    "english": "8dcc487a06b9f03e",
+    "english_synonym": "512bf80f2dcebcb6",
+    "spanish": "beaf221cef446da9",
+    "swahili": "7706eb15aa753875",
+    "symbols": "045c4517bfc4bc1a",
+    "turkish": "d8afe7f9d9d5b9ba"
+   }
+  },
+  "translation": {
+   "raw": "dad3f23116cc4767",
+   "text": {
+    "chinese": "4ff549f38020e9d5",
+    "english": "a68128eaef08a968",
+    "english_synonym": "1299bb1381296103",
+    "spanish": "3a285ee3a8c704b5",
+    "swahili": "b0fccd2b2cc5a654",
+    "symbols": "39ad9f8e3caef2cc",
+    "turkish": "f3f13e5027ed77e8"
+   }
+  },
+  "tree_to_sequence": {
+   "raw": "431e3fa5aaa15924",
+   "text": {
+    "chinese": "56db695ac8633df4",
+    "english": "1054c5e80ed04285",
+    "english_synonym": "4cb52d1ec480183c",
+    "spanish": "7f6e09be48c86d56",
+    "swahili": "807b25cae0f32c4e",
+    "symbols": "17d4b40f6c077d84",
+    "turkish": "6359bb9f06d8fd4c"
+   }
+  },
+  "uncertain_symbolic_reasoning": {
+   "raw": "483d8257bbe5921d",
+   "text": {
+    "chinese": "d47c07aca571e6da",
+    "english": "4c0e406ed08346f8",
+    "english_synonym": "e55945fbf43bf2aa",
+    "spanish": "91d2b2985cf2d631",
+    "swahili": "557e5a76b78efb60",
+    "symbols": "fad25742e68cdae8",
+    "turkish": "1b2e68da1cc7ed01"
+   }
+  },
+  "underspecification_reasoning": {
+   "raw": "a794e4f1cca9647c",
+   "text": {
+    "chinese": "ab3eeab714255fdd",
+    "english": "d6c73aac3ef1b96a",
+    "english_synonym": "f4d66109775c1679",
+    "spanish": "1cef250e20e99c0a",
+    "swahili": "d5a187ae5249a5bc",
+    "symbols": "d87721c57fbfed60",
+    "turkish": "5d5738234eaa4361"
+   }
+  },
+  "unification": {
+   "raw": "16d0fd066450f1cb",
+   "text": {
+    "chinese": "6c0302d47a3d8c1d",
+    "english": "407623a444e99ef9",
+    "english_synonym": "30b9efb2d8149725",
+    "spanish": "ff61834ce93f1fe6",
+    "swahili": "bbb33c78bf60beed",
+    "symbols": "d4471d98b7637a94",
+    "turkish": "4082b5ff62c123f2"
+   }
+  },
+  "universal_interface_transfer": {
+   "raw": "f4c87447276e3bdf",
+   "text": {
+    "chinese": "c86b5ef7eb1d13ca",
+    "english": "7e6fcde1602a2eb8",
+    "english_synonym": "218c91b5ec48baf3",
+    "spanish": "c7f11bcba42919a1",
+    "swahili": "94188c0b716045c1",
+    "symbols": "35812f6d4862d36e",
+    "turkish": "e4d3a91edcfc57ca"
+   }
+  },
+  "unknown_game": {
+   "raw": "8f4884ff62d594ff",
+   "text": {
+    "chinese": "0a9a6b223eef1a7a",
+    "english": "8a5fbc8258a69810",
+    "english_synonym": "8f1899c76148b252",
+    "spanish": "6d2ccdd1eba4a450",
+    "swahili": "4b8109484fc14d95",
+    "symbols": "7ec918ded354a8bf",
+    "turkish": "ec627a3c6402ef14"
+   }
+  },
+  "value_learning": {
+   "raw": "e97874debdb986f3",
+   "text": {
+    "chinese": "b01de10cae555247",
+    "english": "0c3b8c9eb9b17218",
+    "english_synonym": "90b534524f056c62",
+    "spanish": "f38696b5f03b6492",
+    "swahili": "a5fca671c5f15147",
+    "symbols": "24ec107620444a8b",
+    "turkish": "e845de3fe3a1d861"
+   }
+  },
+  "variable_binding": {
+   "raw": "617952f072082300",
+   "text": {
+    "chinese": "9dcdf89b0dd33e60",
+    "english": "d9637a80f16f550e",
+    "english_synonym": "bc44b4824160d827",
+    "spanish": "8b4e256f283651fe",
+    "swahili": "56fedacad99fab9f",
+    "symbols": "2279ee7da87faa1c",
+    "turkish": "123a66de0df9b72c"
+   }
+  },
+  "world_model_synthesis": {
+   "raw": "dda10ab61f21009f",
+   "text": {
+    "chinese": "dc477296e52f4944",
+    "english": "d7c9905a78871b6a",
+    "english_synonym": "fb011a3b6f68e4fa",
+    "spanish": "1bc9494edf314c61",
+    "swahili": "6be247c207b174b3",
+    "symbols": "c612fa1202d531d5",
+    "turkish": "0c4e15235244db3d"
+   }
+  }
+ },
+ "n_lessons": 179,
+ "seeds": [
+  0,
+  1,
+  7,
+  1000000,
+  1000003
+ ]
+}

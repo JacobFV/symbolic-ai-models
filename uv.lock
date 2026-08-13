@@ -126,11 +126,6 @@ wheels = [
 ]
 
 [[package]]
-name = "langcurriculum"
-version = "0.2.0"
-source = { git = "https://github.com/JacobFV/formal-language-cirriculum#504e1182e179bb82f159289e2a186d906e97af4d" }
-
-[[package]]
 name = "markupsafe"
 version = "3.0.3"
 source = { registry = "https://pypi.org/simple" }
@@ -493,7 +488,6 @@ name = "symbolic-ai-models"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
-    { name = "langcurriculum" },
     { name = "numpy" },
     { name = "torch" },
 ]
@@ -505,7 +499,6 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "langcurriculum", git = "https://github.com/JacobFV/formal-language-cirriculum" },
     { name = "numpy", specifier = ">=2.5.2" },
     { name = "torch", specifier = ">=2.7" },
 ]
