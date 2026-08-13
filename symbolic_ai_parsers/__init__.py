@@ -1,0 +1,27 @@
+"""Parsers, in the only sense that admits an exact score: ``str -> Graph``.
+
+``langcurriculum`` renders every episode from a typed term and hands the term
+over, so text and structure come out of one seed and the mapping between them is
+known exactly. That makes recovering the graph from the text a fully supervised
+problem with no annotator, no judge, and an unbounded supply of fresh episodes —
+which is a rarer thing than it sounds, and is the reason this package exists
+separately from the parser layer in ``symbolic_ai_models`` (whose codomain is
+word classes, not structure; see :mod:`symbolic_ai_parsers.base`).
+
+Read :mod:`symbolic_ai_parsers.scoring` before quoting a number from here. There
+are six metrics, they do not agree, and a parser named without one of them is
+not a result.
+"""
+
+from .base import REGISTRY, Parser, base_name, build, get, parser_names, register
+from .evaluate import LANGUAGES, ParserReport, evaluate_parser, run_sweep
+from .floors import ConstantFloor, fit_floor
+from .lexicon import Lexicon
+from .scoring import METRICS, Scores, macro_scores, score_graph
+
+from . import parsers  # noqa: F401  (registers them)
+
+__all__ = ["Parser", "REGISTRY", "register", "get", "build", "parser_names",
+           "base_name", "METRICS", "Scores", "score_graph", "macro_scores",
+           "ConstantFloor", "fit_floor", "Lexicon", "ParserReport",
+           "evaluate_parser", "run_sweep", "LANGUAGES"]
