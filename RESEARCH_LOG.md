@@ -544,6 +544,137 @@ episodes, so two draws already separate it from a content word most of the time.
 A curriculum-wide dictionary buys nothing a handful of examples does not, and
 `FRAME_THRESHOLD` was not swept to rescue it.
 
+## The VSA was not unbinding anything, and permutation fixed it
+
+`runs/vsa_reach`, all 179 lessons, same config, floors and evaluation seeds as
+every other row. The `vsa-002` and `corefer-001` rows reproduce their published
+numbers to three decimals, so the two runs are directly comparable.
+
+**The diagnosis, which is a fact about the algebra rather than a measurement.**
+`VSAModel._trace` superposes only nodes that have a label, and the masked node's
+label is `None`. Its binding was never in the trace, so `role(i) * trace` is not
+a recall — it is the crosstalk, and the score of candidate `s` collapses to
+`sum over {j : label_j = s} of <role(i), role(j)>`. A role is a *product* of four
+independent bipolar atoms, so that inner product is `d` when the two role tuples
+are identical and a zero-mean random walk otherwise: measured at `d = 4096`,
+**4096 ± 0 on a match against 4 ± 60 on a mismatch**. Sixty-eight standard
+deviations. `vsa-002` is a **hard partition** — "the commonest symbol among the
+visible nodes sharing my exact `(ptype, slot, depth, arity)`" — which is a table
+lookup, and a worse one than the floor's, since it has one key and no back-off.
+
+On a five-lesson diagnostic slice a visible node with the query's exact role
+tuple exists for only **37.5%** of scored nodes, and where none exists the model's
+label accuracy is **0.000**. The copy head's -0.115 was never a readout defect on
+top of a working retrieval. The retrieval had no reach.
+
+**The fix is the operator the family never had.** The copy floor keys on the
+relative *node-index* offset `i - source`, and no role atom encodes position.
+Permutation is the standard third VSA operator and is exactly what binds order:
+`seq = sum_j rho^j(cb[label_j])`, probed at `sum_k w_k rho^{k-i}(seq)` with `w`
+counted per structural context on **training** episodes, keyed on the head of the
+same ladder the floor keys on. Two things differ from the floor and both are
+priced below: it superposes the top six routes where the floor takes the arg-max
+over them, and it has a back-off ladder where the floor has one key and a global
+fallback.
+
+| model | lbl acc | lbl lift | bits | bits lift | copy acc | copy lift | rename | secs |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| `vsa-002` | 0.219 | +0.089 | 6.80 | +0.275 | 0.181 | -0.115 | 0.029 | 35 |
+| `vsa_pure-002` | 0.200 | +0.066 | 6.94 | +0.259 | 0.181 | -0.115 | 0.002 | 35 |
+| `vsa_addr-002` | 0.219 | +0.089 | 6.80 | +0.275 | 0.210 | -0.076 | 0.029 | 44 |
+| `vsa_addr_pure-002` | 0.200 | +0.066 | 6.94 | +0.259 | 0.210 | -0.076 | 0.002 | 43 |
+| `vsa_transform-002` | 0.242 | +0.116 | 6.69 | +0.286 | 0.254 | -0.016 | 0.021 | 44 |
+| `vsa_perm_one-002` | 0.295 | +0.178 | 6.64 | +0.292 | 0.301 | +0.048 | 0.006 | 44 |
+| `vsa_perm-002` | 0.326 | +0.213 | 6.49 | +0.307 | **0.310** | **+0.060** | 0.010 | 41 |
+| `vsa_perm_pure-002` | **0.337** | **+0.227** | 6.62 | +0.293 | **0.310** | **+0.060** | **-0.003** | 40 |
+| `vsa_full-002` | 0.325 | +0.212 | 6.42 | +0.314 | 0.300 | +0.047 | 0.010 | 45 |
+| `vsa_full_gated-002` | 0.327 | +0.215 | 6.41 | **+0.316** | 0.299 | +0.045 | 0.008 | 56 |
+| `vsa_full_pure-002` | 0.328 | +0.216 | 6.56 | +0.300 | 0.300 | +0.047 | -0.000 | 46 |
+| `corefer-001` | **0.357** | +0.250 | 6.95 | +0.258 | **0.336** | **+0.096** | 0.003 | 197 |
+
+Floors: label 0.143, type 0.860, copy 0.266, copy ceiling 0.722. The type head was
+not touched and every row sits at -0.486, which is where `vsa-002` already was;
+design rule 1 says the two heads do not share machinery and nothing here does.
+
+- **The copy head crosses its floor**, -0.115 to +0.060: a swing of 0.175, larger
+  than the entire spread between the four pointers this repo already had.
+- **The label head moves further than the copy head did**, +0.089 to +0.213,
+  because in this model they are one computation — reaching for a source *is*
+  reaching for a symbol. The family was near-last on accuracy and its best row is
+  now 0.337 against `corefer`'s 0.357, without giving up its bits. That ranking
+  is against the rows in this sweep and the established table above, not a fresh
+  nineteen-model run.
+- **The control does not carry it, and is not nothing.** `vsa_addr-002` changes
+  only the pointer *readout* — a node scores by its address, `<Q(i), role(j)>`,
+  rather than by the mass its label received — and recovers +0.039 of the copy
+  deficit while leaving the label head identical to three decimals. So a third of
+  the pointer's problem was that it was the label head read twice, and two thirds
+  was that it could not reach.
+- **The analogical transform is the weaker half.** Learning per context which
+  roles the answer occupies and superposing them into one query vector (`a:b::c:?`
+  in one multiply) is worth +0.027 label lift and +0.099 copy — real, and a third
+  of what permutation buys.
+- **Superposing both channels is worse than the better one alone, and weighting
+  them does not rescue it.** `vsa_full` loses 0.013 copy lift against `vsa_perm`
+  and gains 0.007 bits. The obvious defence is that an equal share is too much
+  for the weaker channel, so `vsa_full_gated-002` fits the share on held-out
+  *training* episodes by held-out likelihood — design rule 4, the mass on
+  whichever symbol turned out to be right rather than whether the argmax was it.
+  It lands **interior at 1.25** and the row still trails `vsa_perm-002` on the
+  head the channel was added for. Pre-registered and refuted: the role transform
+  is subsumed once relative position is available, not mis-weighted.
+
+  The first attempt at this answered nothing and is recorded so the mistake is
+  not repeated: the grid stopped at 1.0, the fit landed on 1.0, and the model came
+  out bit-identical to `vsa_full-002`. A boundary optimum cannot distinguish "this
+  is the best balance" from "the grid was too narrow", and reporting it as a null
+  would have been wrong.
+- **Superposing the *routes* is worth less than it looks, and the control says
+  so.** `vsa_perm_one-002` pins `top_k = 1`, which makes it the copy floor's own
+  rule — same key, arg-max offset — expressed in hypervectors. It scores **+0.048
+  copy lift**, so four fifths of the gain is there before a single route is
+  superposed, and the mixture over six routes adds +0.012 copy and +0.035 label
+  on top. The honest reading is that the *positional channel* is what was
+  missing; the superposition is a real but secondary refinement. Note the
+  single-route row still clears the floor it is a copy of, because it inherits a
+  back-off ladder the floor does not have, a graded cleanup and a calibrated
+  gate — so +0.048 is not "the floor scored above itself", it is what those three
+  are worth on top of the same rule.
+- **The memorising fallback stops being worth anything — it starts costing.** For
+  `vsa-002` the shared `structural_fallback` was +0.019 accuracy and all of its
+  renaming sensitivity. For the reaching variants it is **negative**:
+  `vsa_perm_pure-002` scores 0.337 against `vsa_perm-002`'s 0.326, and
+  `vsa_full_pure-002` 0.328 against 0.325. The fallback was compensating for a
+  retrieval that could not find anything, and charging the family its one
+  distinguishing property for the service.
+- **The best row in the family is now the exactly equivariant one.**
+  `vsa_perm_pure-002`: label lift **+0.227**, bits lift +0.293, copy lift +0.060,
+  renaming drop **-0.003** over a permutation of all 2,105 symbols, in 40
+  seconds. It is within 0.023 label lift of `corefer-001` at a fifth of the
+  runtime, and unlike `corefer` its equivariance is a property of the algebra
+  rather than a measurement that came out well.
+- Still 0.310 of a 0.722 ceiling, and still behind `corefer` on the copy head.
+
+**A seventh small-sample artefact, caught this time before it was written up.**
+The first equivariance measurement of the permutation variants used the module's
+24-episode test fixture and read **+0.051** against `vsa_pure-002`'s 0.000 —
+which says the new channel bought its accuracy by memorising. The obvious
+mechanism, superposition crosstalk (the sequence trace is loaded by *every* node
+where the role trace is not), was checked and refuted: raising `d` from 4096 to
+16384 moved the drop the wrong way. Re-measured with more episodes:
+
+| eval episodes | `vsa_pure` | `vsa_perm_pure` | `vsa_full_pure` |
+|---:|---:|---:|---:|
+| 24 | +0.000 | +0.051 | +0.051 |
+| 72 | +0.010 | +0.005 | +0.010 |
+| 192 | -0.002 | +0.008 | +0.008 |
+
+It was sampling noise, and the full curriculum agrees: `vsa_perm-002` is +0.010
+against `vsa-002`'s +0.029 — *less* renaming-sensitive, not more. The lesson is
+the one this repo keeps paying for, with one difference worth recording: this is
+the first time the artefact was caught by re-measuring at a larger sample rather
+than by a later sweep contradicting a published claim.
+
 ## What is shaky
 
 - **Every neural number is a lower bound.** All four re-run networks were still
@@ -610,7 +741,15 @@ redefined what an earlier published row had meant.
 - Can anything reach the 0.722 copy ceiling? Four candidate-level features in a
   row have failed, and a discriminative re-ranker was worse than counting.
   `ptrgen`'s marginal-likelihood pointer is the fifth thing to not help, at
-  +0.078 copy lift against `corefer`'s +0.096.
+  +0.078 copy lift against `corefer`'s +0.096. The first thing that *did* move
+  a pointer a long way is `vsa_perm-002`, and it moved it from far below the
+  floor to +0.060 — still third of the pointers, so the ceiling is untouched.
+- **The type head is the last one nothing has attacked.** Every VSA row sits at
+  -0.486, unchanged since `vsa-002`, because the family's type vote is a
+  four-feature lookup and the floor is a six-level backed-off ladder. Two of
+  nineteen models are positive on type. Design rule 1 says the heads do not share
+  machinery, so the fix cannot be "point the label pointer at it" — `corefer`
+  already tried that and paid 0.174 -> 0.004.
 - **Put a reranker on `ptrgen`.** The cleanest open experiment in the sweep.
   `corefer` beats it on copy by +0.018 and has a second stage it does not; every
   other part of stage one is shared. Until that is run, "naive Bayes points
