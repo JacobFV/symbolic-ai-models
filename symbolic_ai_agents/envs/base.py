@@ -290,9 +290,15 @@ class Environment:
         return summarize(totals)
 
     def floor(self, episodes: Sequence[Episode], tok: SymbolTokenizer,
-              train: Sequence[Episode]) -> dict[str, Any]:
-        """The best of the reference policies, run here on these episodes."""
-        return reference_floor(self, episodes, tok, train)
+              train: Sequence[Episode], *,
+              envs: "Mapping[str, Environment] | None" = None,
+              seed: int = 0) -> dict[str, Any]:
+        """The best of the reference policies, run here on these episodes.
+
+        ``envs`` and ``seed`` are the ones the scored agent was fitted with, and
+        passing them is not optional bookkeeping -- see :func:`reference_floor`.
+        """
+        return reference_floor(self, episodes, tok, train, envs=envs, seed=seed)
 
     # ---- helpers for subclasses ----------------------------------------
     def episode_rng(self, ep: Episode) -> random.Random:
@@ -311,8 +317,9 @@ class Environment:
 
 
 def reference_floor(env: Environment, episodes: Sequence[Episode],
-                    tok: SymbolTokenizer, train: Sequence[Episode]
-                    ) -> dict[str, Any]:
+                    tok: SymbolTokenizer, train: Sequence[Episode], *,
+                    envs: "Mapping[str, Environment] | None" = None,
+                    seed: int = 0) -> dict[str, Any]:
     """Fit each reference policy on ``train``; run it on ``episodes``; take the best.
 
     Measured rather than derived, and that is not fastidiousness. The expected
@@ -325,18 +332,32 @@ def reference_floor(env: Environment, episodes: Sequence[Episode],
     Returns the winning policy's metrics with ``floor_by`` naming it, because
     *which* cheat wins says what leaked — the same argument
     :func:`symbolic_ai_models.shortcuts.shortcut_table` makes.
+
+    **Fit the reference policies exactly as the scored agent was fitted.** This
+    took ``envs={env.name: env}`` and no seed while the run fitted its agent with
+    every environment and ``cfg.seed``, so the floor was a *differently fitted
+    copy* of the same policy. On the first full-curriculum sweep ``context``
+    scored 0.2589 on ``repair`` against a floor of 0.2336 recorded as
+    ``floor_by: context`` — a reference policy beating itself by 0.025, which was
+    the only positive number in the entire table.
+
+    A floor is the one number in a run that nothing else is checked against, so
+    an asymmetry here is invisible: every lift in the agents half was measured
+    against a weaker copy of its own baseline, and no test could have noticed.
     """
     from ..agents import build as build_agent
     from ..agents.base import LearnContext
     from .rollout import rollouts
 
     best: dict[str, float] = {}
+    fit_envs = dict(envs) if envs else {env.name: env}
     for name in FLOOR_POLICIES:
         try:
             policy = build_agent(name, {})
         except KeyError:                                  # pragma: no cover
             continue
-        policy.fit(LearnContext(episodes=list(train), tok=tok, envs={env.name: env}))
+        policy.fit(LearnContext(episodes=list(train), tok=tok, envs=fit_envs,
+                                seed=seed))
         metrics = env.summarize(rollouts(env, policy, episodes, tok=tok).totals)
         if not best or metrics.get("return", 0.0) > best.get("return", 0.0):
             best = {**metrics, "floor_by": name}
