@@ -54,6 +54,9 @@ def _add_train_flags(p: argparse.ArgumentParser) -> None:
     p.add_argument("--n-train", dest="n_train", type=int)
     p.add_argument("--n-eval", dest="n_eval", type=int)
     p.add_argument("--language")
+    p.add_argument("--languages",
+                   help="comma-separated packs; renders the same seeds in each "
+                        "and interleaves them (an exact parallel corpus)")
     p.add_argument("--steps", type=int)
     p.add_argument("--batch-size", dest="batch_size", type=int)
     p.add_argument("--lr", type=float)

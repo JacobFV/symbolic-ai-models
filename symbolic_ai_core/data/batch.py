@@ -350,4 +350,13 @@ def collate_graph(episodes: Sequence[Episode], tok: SymbolTokenizer, *,
               # and pins it down 0.000% of the time, so it carries the symbol
               # without carrying its position. The answer string would carry
               # both.
-              "prompts": [ep.prompt for ep in episodes]})
+              "prompts": [ep.prompt for ep in episodes],
+              # Which language each prompt was rendered in. Carried because the
+              # graph is *not* a function of it -- `Lesson.structured` takes no
+              # language, so the term tree is byte-identical across all seven
+              # packs -- which makes the language a fact about the surface and
+              # nothing else. A model that conditions on it is conditioning on
+              # the only thing that varies. Not an answer and not a shortcut:
+              # the label is identical in every language, so knowing which
+              # language cannot name the hidden symbol.
+              "languages": [ep.language for ep in episodes]})

@@ -37,7 +37,7 @@ from .models.base import FitContext, autocast
 from .tasks import Task, Totals, make_task
 
 __all__ = ["TrainConfig", "train", "evaluate_model", "load_run", "make_model",
-           "batches", "load_data", "build_tokenizer"]
+           "batches", "load_data", "build_tokenizer", "language_packs"]
 
 
 @dataclass
@@ -55,6 +55,18 @@ class TrainConfig:
     n_train: int = 32
     n_eval: int = 8
     language: str = "english"
+    #: Several languages at once, comma-separated, overriding ``language``.
+    #:
+    #: Empty (the default) leaves every existing run exactly as it was. When
+    #: set, the *same seeds* are rendered in each pack and the results are
+    #: interleaved language-by-language, which is what makes the corpus an exact
+    #: parallel one: the term graph is byte-identical across packs, so the only
+    #: thing that varies within a seed is the prose. Interleaving is not
+    #: cosmetic — several rule-based models cap how many examples they observe
+    #: (``OmegaClaw.max_examples`` defaults to 4,000), and a language-major
+    #: order would spend the whole cap on English and then report a
+    #: "multilingual" model that had never seen another language.
+    languages: str = ""
     max_len: int = 512
     max_nodes: int = 256
     mask_rate: float = 0.15
@@ -132,9 +144,35 @@ def load_data(cfg: TrainConfig) -> tuple[list[Episode], list[Episode]]:
         root = Path(cfg.data)
         return read_jsonl(root / "train.jsonl"), read_jsonl(root / "eval.jsonl")
     lessons = resolve_lessons(cfg.lessons)
-    kw = dict(language=cfg.language, max_nodes=cfg.max_nodes)
-    return (list(generate(lessons, n=cfg.n_train, seed0=0, **kw)),
-            list(generate(lessons, n=cfg.n_eval, seed0=1_000_000, **kw)))
+    packs = language_packs(cfg)
+    if len(packs) == 1:
+        kw = dict(language=packs[0], max_nodes=cfg.max_nodes)
+        return (list(generate(lessons, n=cfg.n_train, seed0=0, **kw)),
+                list(generate(lessons, n=cfg.n_eval, seed0=1_000_000, **kw)))
+    return (_parallel_corpus(lessons, packs, n=cfg.n_train, seed0=0,
+                             max_nodes=cfg.max_nodes),
+            _parallel_corpus(lessons, packs, n=cfg.n_eval, seed0=1_000_000,
+                             max_nodes=cfg.max_nodes))
+
+
+def language_packs(cfg: TrainConfig) -> list[str]:
+    """The language packs a run draws from, in order. One unless asked."""
+    if not cfg.languages.strip():
+        return [cfg.language]
+    return [p.strip() for p in cfg.languages.split(",") if p.strip()]
+
+
+def _parallel_corpus(lessons: Sequence[str], packs: Sequence[str], *, n: int,
+                     seed0: int, max_nodes: int) -> list[Episode]:
+    """The same seeds in every pack, interleaved so no prefix is monolingual.
+
+    Interleaved rather than concatenated because a model with an example budget
+    reads a prefix, and a language-major prefix is English. See
+    ``TrainConfig.languages``.
+    """
+    drawn = [list(generate(lessons, n=n, seed0=seed0, language=p,
+                           max_nodes=max_nodes)) for p in packs]
+    return [ep for row in zip(*drawn) for ep in row]
 
 
 def _task_kwargs(cfg: TrainConfig, name: str) -> dict[str, Any]:

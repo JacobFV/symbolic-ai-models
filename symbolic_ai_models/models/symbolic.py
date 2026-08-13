@@ -91,6 +91,16 @@ class GraphView:
     #: is never here: it names the hidden symbol *and* locates it, which the
     #: prompt does not (see `shortcuts.node_text_leak`).
     text: str = ""
+    #: Which language pack rendered :attr:`text`, or "" when unknown.
+    #:
+    #: This is a fact about the surface and about nothing else, which is worth
+    #: stating because it is easy to assume otherwise. ``Lesson.structured``
+    #: takes no language, so every field above except ``text`` is byte-identical
+    #: across all seven packs for a given seed — measured on 179 lessons x 3
+    #: seeds. A rule reading only the graph therefore has the same reliability
+    #: in every language *by construction*, and conditioning on this field can
+    #: only pay for a rule that reads ``text``.
+    language: str = ""
 
     def __len__(self) -> int:
         return len(self.labels)
@@ -617,7 +627,8 @@ class RuleBasedModel(Model):
                    for i in range(n)],
             parent=parent, slot=slot, depth=batch.depth[b, :n].tolist(),
             rel=rel, hidden=hidden, tok=self.tok,
-            text=((batch.meta or {}).get("prompts") or [""] * (b + 1))[b])
+            text=((batch.meta or {}).get("prompts") or [""] * (b + 1))[b],
+            language=((batch.meta or {}).get("languages") or [""] * (b + 1))[b])
 
     @staticmethod
     def _mix(backoff: torch.Tensor, shape: tuple[int, int], conf: np.ndarray,
