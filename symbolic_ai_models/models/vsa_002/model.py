@@ -302,10 +302,59 @@ class VSAModel(RuleBasedModel):
             return {int(top): 1.0}, min(0.15 + 0.8 * n / total, 0.95)
         return ABSTAIN
 
+    #: Whether the codebook is a pure function of ``vsa_seed`` and the vocabulary
+    #: size. True for random codes, and the reason they cost nothing to store or
+    #: to count. ``VSASeeded`` sets it False: its codebook is derived from data.
+    codebook_is_reconstructible = True
+
+    # ---- what this model actually costs ---------------------------------
+    def symbolic_state(self) -> dict:
+        """Store the seed, not 134MB of random numbers.
+
+        A random codebook is ``_bipolar(default_rng(seed), len(tok), d)`` — a
+        pure function of an integer — and pickling it wrote **177MB per
+        checkpoint** for a model whose parameter count is 8,254. Three VSA runs
+        came to 533MB of regenerable noise.
+
+        Dropped from the state and rebuilt on load, which must be *bit*
+        identical or every published VSA row silently moves; a test asserts it.
+        A data-derived codebook is stored, because it genuinely is data.
+        """
+        state = super().symbolic_state()
+        if self.codebook_is_reconstructible:
+            state["codebook"] = None
+            state["_vocab"] = 0 if self.codebook is None else len(self.codebook)
+        return state
+
+    def load_symbolic_state(self, state, tok) -> None:
+        super().load_symbolic_state(state, tok)
+        if self.codebook is None and self.codebook_is_reconstructible:
+            vocab = int(state.get("_vocab") or len(tok))
+            self.codebook = _bipolar(np.random.default_rng(self.seed), vocab,
+                                     self._d)
+
     def n_symbolic_parameters(self) -> int:
-        """One hypervector per symbol plus the role atoms, counted as vectors."""
-        symbols = 0 if self.codebook is None else len(self.codebook)
-        return symbols + len(self.roles)
+        """What the model must be *given* to reproduce itself.
+
+        The two variants are deliberately **not** counted the same way, because
+        they do not cost the same thing, and reporting one number for both put
+        them in a column that meant different things per row.
+
+        A random codebook is one integer plus a vocabulary size, so the honest
+        count is the *vectors* the model reaches into — one per symbol, plus the
+        role atoms. The 33.5M signs inside them carry no information: regenerate
+        them from the seed and you have the same model.
+
+        A seeded codebook is co-occurrence statistics compressed into signs, and
+        every one of those signs had to be measured. Counting it as 8,254 would
+        understate it about four thousandfold and would let a data-fitted model
+        advertise itself as tiny next to one that genuinely is.
+        """
+        if self.codebook is None:
+            return len(self.roles)
+        if self.codebook_is_reconstructible:
+            return len(self.codebook) + len(self.roles)
+        return int(self.codebook.size) + len(self.roles)
 
     def render(self) -> str:
         return "\n".join([
@@ -380,6 +429,9 @@ class VSASeeded(VSAModel):
     """
 
     codebook_source = "distributional"
+    #: Derived from data, so it is stored rather than regenerated, and counted
+    #: as the 33.5M measured signs it is rather than as 8,254 vectors.
+    codebook_is_reconstructible = False
 
     def _build_codebook(self, episodes: Sequence[Episode],
                         tok: SymbolTokenizer) -> np.ndarray:

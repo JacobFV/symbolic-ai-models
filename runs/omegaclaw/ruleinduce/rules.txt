@@ -1,0 +1,34 @@
+=== label ===
+DecisionList(6 rules, 22 params)
+  IF depth(=3) ∧ slot(>0) ∧ sibling_type(_,=pred) THEN ('prev',)  [1325/1527]
+  IF parent_type(=pred) ∧ ¬n_siblings(=1) ∧ slot(>0) THEN ('peer',)  [582/905]
+  IF sibling_type(>0,=pred) ∧ sibling_type(=0,_) THEN ('sibling', 0)  [129/134]
+  IF depth(=1) THEN ('const', 1309)  [108/108]
+  IF n_siblings(=0) ∧ ¬parent_type(=pred) ∧ ¬has_peer() THEN ('parent',)  [104/108]
+  IF depth(=5) ∧ arity(=0) ∧ has_peer() THEN ('peer',)  [98/112]
+  ELSE ('peer',)
+=== type ===
+DecisionList(17 rules, 52 params)
+  IF sibling_type(_,=ident) ∧ arity(=0) ∧ ¬sibling_type(=1,=num) THEN 6  [1647/1877]
+  IF sibling_type(_,=pred) ∧ ¬depth(=4) THEN 12  [926/926]
+  IF arity(=0) ∧ depth(=4) ∧ n_siblings(>0) THEN 6  [254/263]
+  IF depth(=1) THEN 15  [169/169]
+  IF arity(>0) ∧ depth(>0) ∧ ¬arity(=1) THEN 9  [155/229]
+  IF sibling_type(_,=token) ∧ ¬n_siblings(=1) THEN 3  [81/81]
+  IF sibling_type(_,=num) ∧ depth(=5) THEN 5  [63/63]
+  IF parent_type(=str) THEN 16  [52/52]
+  IF arity(=0) ∧ ¬depth(=4) ∧ ¬sibling_type(_,_) THEN 6  [107/135]
+  IF depth(=0) THEN 10  [47/47]
+  IF sibling_type(_,=str) THEN 4  [27/27]
+  IF parent_head(=1309) THEN 12  [24/24]
+  IF sibling_type(=1,_) THEN 9  [18/18]
+  IF arity(=1) ∧ ¬slot(=1) ∧ ¬depth(=2) THEN 4  [33/37]
+  IF arity(=0) ∧ ¬sibling_type(_,=num) ∧ parent_head(_) THEN 5  [15/15]
+  IF n_siblings(=1) ∧ arity(=1) THEN 12  [6/6]
+  IF parent_head(_) ∧ arity(=1) THEN 4  [12/20]
+  ELSE 4
+=== text ===
+DecisionList(2 rules, 8 params)
+  IF back1(=263) ∧ ¬back3(=264) THEN ('const', 264)  [256/256]
+  IF back2(=265) ∧ alpha(==0) ∧ repeats(=True) THEN ('const', 262)  [137/137]
+  ELSE ('const', 263)

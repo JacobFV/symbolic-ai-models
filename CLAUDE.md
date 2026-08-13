@@ -3,6 +3,26 @@
 Standing instructions for autonomous work in this repo. `ROADMAP.md` holds the
 task list and the experimental rules; this file holds the workflow ones.
 
+## You are the overseer. Decide, do not ask.
+
+Standing instruction from the user: **do whatever you judge needs doing, and do
+not ask questions to get permission.** Judgement calls are yours — which
+experiment is worth running, what to refactor, when to delegate, what to fix on
+sight. Presenting a menu of options and waiting is the failure mode to avoid;
+so is asking "shall I?" about work you already believe in.
+
+This does not license carelessness, and it does not repeal anything below. The
+bar stays: state what you expect before you run it, keep the tests green, put a
+new model beside the old one, and report what you actually found — including
+when it contradicts what you said an hour ago. Autonomy is about not needing
+permission, not about not needing evidence.
+
+Two things still go to the user rather than being decided alone: anything
+outward-facing or hard to reverse (publishing, deleting work, rewriting shared
+history), and a genuine fork in the *research direction* where the evidence does
+not pick a side — say which way you lean and why, then proceed on your own
+recommendation unless told otherwise.
+
 ## This is research, not a queue of tickets
 
 The task list is a record of what looked worth doing when it was written. It is

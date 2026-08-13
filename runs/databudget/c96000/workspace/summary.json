@@ -1,0 +1,80 @@
+{
+  "config": {
+    "model": "workspace",
+    "tasks": [
+      "node"
+    ],
+    "task_weights": {
+      "node": 1.0
+    },
+    "data": null,
+    "lessons": "all",
+    "n_train": 20,
+    "n_eval": 4,
+    "language": "english",
+    "max_len": 320,
+    "max_nodes": 128,
+    "mask_rate": 0.15,
+    "type_weight": 0.5,
+    "vocab_size": 8192,
+    "label_vocab_fraction": 0.3,
+    "d_model": 96,
+    "n_layers": 3,
+    "n_heads": 4,
+    "d_ff": 256,
+    "dropout": 0.1,
+    "extra": {
+      "max_examples": 96000
+    },
+    "steps": 2000,
+    "batch_size": 16,
+    "lr": 0.0003,
+    "min_lr_ratio": 0.1,
+    "warmup": 100,
+    "weight_decay": 0.01,
+    "grad_clip": 1.0,
+    "eval_every": 250,
+    "log_every": 50,
+    "seed": 0,
+    "resume": false,
+    "device": "cpu",
+    "amp": true,
+    "out": "runs/databudget/c96000/workspace"
+  },
+  "model": "workspace",
+  "family": "rule-based",
+  "steps": 0,
+  "parameters": 10071,
+  "n_train": 3580,
+  "n_eval": 716,
+  "vocab_size": 8192,
+  "floors": {
+    "node": {
+      "type_acc": 0.7949008720134517,
+      "type_bits": 2.3292035662165547,
+      "type_n": 51146.0,
+      "label_acc": 0.10507649019932376,
+      "label_bits": 9.369476110181317,
+      "label_n": 42293.0
+    }
+  },
+  "final": {
+    "node": {
+      "label_acc": 0.3560099369386585,
+      "label_bits": 7.820058181320896,
+      "label_n": 5233.0,
+      "type_acc": 0.7791614123581336,
+      "type_bits": 1.295037900881686,
+      "type_n": 6344.0,
+      "label_coverage": 0.824873896595208,
+      "label_floor": 0.10507649019932376,
+      "label_lift": 0.2803965299729632,
+      "type_floor": 0.7949008720134517,
+      "type_lift": -0.07674074390189696,
+      "label_floor_bits": 9.369476110181317,
+      "type_floor_bits": 2.3292035662165547
+    }
+  },
+  "seconds": 20.85436177253723,
+  "device": "cpu"
+}

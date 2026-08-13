@@ -1,0 +1,4 @@
+=== vsa_seeded-002: distributional codebook, d=4096 ===
+  symbols 8192, role atoms 62
+  gate: fitted
+  (no learned layers; binding, superposition and cleanup only)

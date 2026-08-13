@@ -1,0 +1,79 @@
+{
+  "config": {
+    "model": "tpr",
+    "tasks": [
+      "node"
+    ],
+    "task_weights": {
+      "node": 1.0
+    },
+    "data": null,
+    "lessons": "all",
+    "n_train": 20,
+    "n_eval": 4,
+    "language": "english",
+    "max_len": 320,
+    "max_nodes": 128,
+    "mask_rate": 0.15,
+    "type_weight": 0.5,
+    "vocab_size": 8192,
+    "label_vocab_fraction": 0.3,
+    "d_model": 96,
+    "n_layers": 3,
+    "n_heads": 4,
+    "d_ff": 256,
+    "dropout": 0.1,
+    "extra": {},
+    "steps": 2000,
+    "batch_size": 16,
+    "lr": 0.0003,
+    "min_lr_ratio": 0.1,
+    "warmup": 100,
+    "weight_decay": 0.01,
+    "grad_clip": 1.0,
+    "eval_every": 100,
+    "log_every": 100,
+    "seed": 0,
+    "resume": true,
+    "device": "cpu",
+    "amp": true,
+    "out": "runs/full179/tpr"
+  },
+  "model": "tpr-001",
+  "family": "neural",
+  "steps": 2000,
+  "parameters": 1159085,
+  "n_train": 3580,
+  "n_eval": 716,
+  "vocab_size": 8192,
+  "floors": {
+    "node": {
+      "type_acc": 0.7949008720134517,
+      "type_bits": 2.3292035662165547,
+      "type_n": 51146.0,
+      "label_acc": 0.10507649019932376,
+      "label_bits": 9.369476110181317,
+      "label_n": 42293.0
+    }
+  },
+  "final": {
+    "node": {
+      "label_acc": 0.14504108541945346,
+      "label_bits": 7.015109625653328,
+      "label_n": 5233.0,
+      "type_acc": 0.7895649432534678,
+      "type_bits": 0.7905893144305332,
+      "type_n": 6344.0,
+      "label_coverage": 0.824873896595208,
+      "label_floor": 0.10507649019932376,
+      "label_lift": 0.044656995578349366,
+      "type_floor": 0.7949008720134517,
+      "type_lift": -0.026016340548916734,
+      "label_floor_bits": 9.369476110181317,
+      "type_floor_bits": 2.3292035662165547
+    }
+  },
+  "seconds": 2806.6772277355194,
+  "device": "cpu",
+  "renamed_from": "tpr"
+}

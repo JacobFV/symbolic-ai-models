@@ -156,3 +156,51 @@ def test_seeding_makes_similar_symbols_similar(fixtures, cfg):
     # pretrained table would be far stronger. If that ratio ever climbs, the
     # seed got better and the scores below should move with it.
     assert ratio < 20.0, f"unexpectedly strong seed ({ratio:.1f}x); re-read the results"
+
+
+# ---------------------------------------------------------------------------
+# what the model costs to store, and to state
+# ---------------------------------------------------------------------------
+def test_a_random_codebook_survives_a_round_trip_bit_identically(fixtures, cfg):
+    """It is dropped from the checkpoint and rebuilt from the seed, so it has to
+    come back *identical* -- anything else silently moves every published row."""
+    train, _, tok = fixtures
+    model = build("vsa-002", cfg)
+    model.fit_on(train, tok)
+    before = model.codebook.copy()
+
+    state = model.symbolic_state()
+    assert state["codebook"] is None, "the random codebook was stored anyway"
+
+    restored = build("vsa-002", cfg)
+    restored.load_symbolic_state(state, tok)
+    assert restored.codebook is not None
+    assert np.array_equal(restored.codebook, before), "the codebook moved"
+
+
+def test_a_seeded_codebook_is_stored_because_it_is_data(fixtures, cfg):
+    train, _, tok = fixtures
+    model = build("vsa_seeded-002", cfg)
+    model.fit_on(train, tok)
+    state = model.symbolic_state()
+    assert state["codebook"] is not None, "a data-derived codebook was dropped"
+    restored = build("vsa_seeded-002", cfg)
+    restored.load_symbolic_state(state, tok)
+    assert np.array_equal(restored.codebook, model.codebook)
+
+
+def test_the_two_variants_are_not_counted_the_same_way(fixtures, cfg):
+    """A random codebook is a seed; a seeded one is 33.5M measured signs.
+
+    Reporting 8,254 for both let a data-fitted model advertise itself as tiny
+    beside one that genuinely is.
+    """
+    train, _, tok = fixtures
+    random_model = build("vsa-002", cfg)
+    random_model.fit_on(train, tok)
+    seeded = build("vsa_seeded-002", cfg)
+    seeded.fit_on(train, tok)
+
+    assert random_model.n_symbolic_parameters() == \
+        len(random_model.codebook) + len(random_model.roles)
+    assert seeded.n_symbolic_parameters() > 100 * random_model.n_symbolic_parameters()

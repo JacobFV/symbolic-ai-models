@@ -1,0 +1,37 @@
+=== label ===
+DecisionList(0 rules, 1 params)
+
+  ELSE ('prev',)
+=== type ===
+DecisionList(14 rules, 36 params)
+  IF sibling_type(_,=ident) ∧ ¬slot(=4) ∧ ¬slot(=3) THEN 6  [1104/1104]
+  IF sibling_type(_,=ident) THEN 5  [598/598]
+  IF depth(=1) THEN 15  [497/497]
+  IF sibling_type(_,=token) THEN 3  [432/432]
+  IF arity(=5) ∧ depth(=3) THEN 12  [305/305]
+  IF sibling_type(_,=char) THEN 16  [255/255]
+  IF depth(=0) THEN 10  [236/236]
+  IF arity(=0) ∧ ¬n_siblings(=2) ∧ ¬slot(=3) THEN 6  [202/202]
+  IF parent_head(=396) THEN 12  [107/107]
+  IF ¬arity(=2) ∧ ¬arity(=1) ∧ ¬has_peer() THEN 9  [134/162]
+  IF parent_head(=422) THEN 12  [33/33]
+  IF parent_head(=423) THEN 12  [31/31]
+  IF ¬parent_head(_) THEN 12  [29/29]
+  IF ¬has_peer() THEN 4  [7/7]
+  ELSE 3
+=== text ===
+DecisionList(13 rules, 38 params)
+  IF back1(=271) THEN ('const', 262)  [102/102]
+  IF back3(=262) ∧ alpha(=True) THEN ('const', 268)  [117/157]
+  IF back1(=263) ∧ ¬pos(=3) ∧ repeats(==0) THEN ('const', 274)  [83/98]
+  IF newline(=True) ∧ ¬back1(=262) ∧ repeats(=True) THEN ('back', 3)  [108/147]
+  IF back2(=269) ∧ ¬back1(=268) THEN ('const', 282)  [68/68]
+  IF back2(=269) THEN ('const', 284)  [64/64]
+  IF back3(=269) ∧ back2(=268) THEN ('const', 285)  [62/62]
+  IF back3(=268) ∧ alpha(=True) THEN ('const', 271)  [74/98]
+  IF back1(=269) THEN ('const', 278)  [61/61]
+  IF back2(=262) ∧ ¬back3(=271) THEN ('const', 269)  [73/97]
+  IF back3(=269) THEN ('const', 277)  [59/59]
+  IF back1(=262) ∧ back3(=266) THEN ('const', 283)  [58/58]
+  IF back3(=277) ∧ alpha(=True) THEN ('const', 266)  [47/58]
+  ELSE ('back', 3)

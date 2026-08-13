@@ -4,9 +4,28 @@ __pycache__/
 .pytest_cache/
 *.egg-info/
 
-# runs and caches are rebuildable from a config and a seed. Both anchored to
-# the repo root: a bare `data/` matches a directory of that name at ANY depth,
-# and quietly excluded `symbolic_ai_models/data/` -- the harness itself -- from
-# every commit this repo has ever made.
-/runs/
+# Caches are rebuildable from a config and a seed. Anchored to the repo root: a
+# bare `data/` matches a directory of that name at ANY depth, and quietly
+# excluded `symbolic_ai_models/data/` -- the harness itself -- from every commit
+# this repo has ever made.
 /data/
+
+# Runs: keep the evidence, drop the weights.
+#
+# `README.md` and `RESEARCH_LOG.md` cite eight run directories as the source of
+# every published number, and all of it was untracked -- so on a fresh clone the
+# floors, the configs each row was measured under, and the numbers themselves
+# were simply gone. For a repo whose rule is that a number without a floor is
+# not a result, the floors have to survive a clone.
+#
+# `summary.json` carries the config, the floors and the metrics; `rules.txt` is
+# the legible artifact a reader is invited to argue with. Together they are 332K
+# against 732M of checkpoints, and they make the "did these rows share a config?"
+# audit possible after the fact -- a check this repo has already been bitten by.
+#
+# Directories must be re-included explicitly or git will not descend into them
+# to find the negations.
+/runs/**
+!/runs/**/
+!/runs/**/summary.json
+!/runs/**/rules.txt

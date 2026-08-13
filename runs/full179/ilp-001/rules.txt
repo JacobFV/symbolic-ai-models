@@ -1,0 +1,22 @@
+% label
+answer(X,L) :- sibling(X,V1), type(V1)=12, child(X,V2), label(V1,L).   [3754/4684]
+answer(X,L) :- peer(X,V1), type(V1)=6, slot(X)=2, label(V1,L).   [289/1092]
+answer(X,L) :- peer(X,V1), type(V1)=6, slot(X)=1, label(V1,L).   [539/2480]
+answer(X,L) :- peer(X,V1), type(V1)=5, slot(X)=1, label(V1,L).   [134/713]
+answer(X,L) :- peer(X,V1), type(V1)=6, slot(X)=3, label(V1,L).   [128/434]
+answer(X,L) :- sibling(X,V1), type(V1)=12, slot(V1)=2, label(V1,L).   [531/713]
+answer(X,L) :- peer(X,V1), type(V1)=5, slot(X)=2, label(V1,L).   [87/467]
+answer(X,L) :- peer(X,V1), type(V1)=5, slot(X)=3, label(V1,L).   [39/220]
+answer(X,L) :- peer(X,V1), type(V1)=5, label(V1,L).   [165/927]
+answer(X,L) :- sibling(X,V1), type(V1)=12, slot(V1)=3, label(V1,L).   [86/117]
+answer(X,L) :- peer(X,V1), slot(X)=1, type(V1)=12, label(V1,L).   [117/584]
+answer(X,L) :- sibling(X,V1), type(V1)=3, slot(V1)=3, label(V1,L).   [58/222]
+
+% type
+type(X,6) :- peer(X,V1), type(V1)=6, slot(X)=0.   [3171/3590]
+type(X,12) :- child(X,V1), type(V1)=6, sibling(V1,V2).   [3713/4005]
+type(X,5) :- peer(X,V1), type(V1)=5.   [2341/2580]
+type(X,9) :- child(X,V1), slot(V1)=3, type(V1)=12.   [540/594]
+type(X,15) :- child(X,V1), type(V1)=9, slot(V1)=0.   [811/958]
+type(X,3) :- sibling(X,V1), type(V1)=3, slot(V1)=0.   [311/316]
+type(X,10) :- child(X,V1), type(V1)=15.   [422/422]

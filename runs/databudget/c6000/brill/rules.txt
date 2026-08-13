@@ -1,0 +1,12 @@
+=== label ===
+  baseline: 668 context defaults
+  1. IF depth=3 THEN label := prev_sibling   [+684 -242]
+  2. IF arity=3 THEN label := prev_sibling   [+13 -1]
+  3. IF parent_head=5736 THEN label := first_child   [+6 -0]
+  4. IF parent_head=5760 THEN label := first_child   [+5 -0]
+=== type ===
+  baseline: 7 context defaults
+  1. IF parent_type='pred' THEN label := peer   [+744 -37]
+  2. IF has_peer=False THEN label := prev_sibling   [+364 -74]
+  3. IF parent_head=1 THEN label := prev_sibling   [+203 -0]
+  4. IF parent_type='field' THEN label := peer   [+10 -4]

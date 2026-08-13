@@ -1,0 +1,101 @@
+{
+  "config": {
+    "model": "hrr",
+    "tasks": [
+      "lm",
+      "node"
+    ],
+    "task_weights": {
+      "lm": 1.0,
+      "node": 1.0
+    },
+    "data": null,
+    "lessons": "unification,symbol_grounding,center_embedding,context_free_language,palindrome,quantification",
+    "n_train": 200,
+    "n_eval": 40,
+    "language": "english",
+    "max_len": 320,
+    "max_nodes": 128,
+    "mask_rate": 0.15,
+    "type_weight": 0.5,
+    "vocab_size": 2048,
+    "label_vocab_fraction": 0.3,
+    "d_model": 128,
+    "n_layers": 4,
+    "n_heads": 8,
+    "d_ff": 1024,
+    "dropout": 0.1,
+    "extra": {},
+    "steps": 400,
+    "batch_size": 32,
+    "lr": 0.0003,
+    "min_lr_ratio": 0.1,
+    "warmup": 100,
+    "weight_decay": 0.01,
+    "grad_clip": 1.0,
+    "eval_every": 400,
+    "log_every": 400,
+    "seed": 0,
+    "device": "auto",
+    "amp": true,
+    "out": "runs/both/hrr"
+  },
+  "model": "hrr",
+  "family": "neural",
+  "steps": 400,
+  "parameters": 1784977,
+  "n_train": 1200,
+  "n_eval": 240,
+  "vocab_size": 535,
+  "floors": {
+    "lm": {
+      "token_acc": 0.049155940754155615,
+      "token_bits": 6.115295381042536,
+      "token_n": 15461.0,
+      "answer_acc": 0.21071428571428572,
+      "answer_bits": 4.071782316351887,
+      "answer_n": 280.0
+    },
+    "node": {
+      "type_acc": 0.9437109103544128,
+      "type_bits": 2.748029381981476,
+      "type_n": 5756.0,
+      "label_acc": 0.3120486507031547,
+      "label_bits": 5.865664302314301,
+      "label_n": 5262.0
+    }
+  },
+  "final": {
+    "lm": {
+      "token_acc": 0.7243386585602484,
+      "token_bits": 1.8342492471341654,
+      "token_n": 15461.0,
+      "answer_acc": 0.05,
+      "answer_bits": 5.083084794289126,
+      "answer_n": 280.0,
+      "token_floor": 0.049155940754155615,
+      "token_lift": 0.7100877491327121,
+      "answer_floor": 0.21071428571428572,
+      "answer_lift": -0.20361990950226244,
+      "token_floor_bits": 6.115295381042536,
+      "answer_floor_bits": 4.071782316351887
+    },
+    "node": {
+      "label_acc": 0.42289348171701113,
+      "label_bits": 3.156998553078287,
+      "label_n": 629.0,
+      "type_acc": 1.0,
+      "type_bits": 0.1305007656042975,
+      "type_n": 686.0,
+      "label_coverage": 0.9169096209912536,
+      "label_floor": 0.3120486507031547,
+      "label_lift": 0.16112306651793165,
+      "type_floor": 0.9437109103544128,
+      "type_lift": 1.0,
+      "label_floor_bits": 5.865664302314301,
+      "type_floor_bits": 2.748029381981476
+    }
+  },
+  "seconds": 40.39753770828247,
+  "device": "cuda"
+}

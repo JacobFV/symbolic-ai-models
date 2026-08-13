@@ -1,0 +1,24 @@
+=== 7 induced classes (text) ===
+  { ' watched', ' avoided', ' praised', ' followed', ' chased', ' greeted' }
+  { ' purple', ' green', ' blue', ' red', ' yellow', ' orange' }
+  { ' prism', ' sphere', ' cone', ' cube', ' rod', ' disc' }
+  { '2', '0', '1', '3', '4' }
+  { ';', ' parent', ' |' }
+  { ' the', ' a' }
+  { ')', '(' }
+=== 24 promoted patterns ===
+  N2 -> '\n  ' '-'
+  N3 -> ' o' C288
+  N4 -> ' is' C268
+  N5 -> '.' '\n'
+  N6 -> C302 C307
+  N7 -> N4 N6
+  N8 -> ' at' ' ('
+  N9 -> N7 N8
+  N10 -> N3 N9
+  N11 -> '?' '\n\n'
+  N12 -> N11 'Answer'
+  N13 -> N12 ' with'
+=== 2 induced classes (graph) ===
+  { 'purple', 'green', 'blue', 'red', 'yellow', 'orange' }
+  { ')', '(' }

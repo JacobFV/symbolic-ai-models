@@ -1,0 +1,8 @@
+=== label ===
+  baseline: 158 context defaults
+  1. IF arity=4 THEN label := prev_sibling   [+8 -0]
+=== type ===
+  baseline: 7 context defaults
+  1. IF parent_head=395 THEN label := peer   [+300 -0]
+  2. IF has_peer=False THEN label := prev_sibling   [+214 -0]
+  3. IF arity=4 THEN label := prev_sibling   [+28 -0]

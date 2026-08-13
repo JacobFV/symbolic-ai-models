@@ -1,0 +1,126 @@
+{
+  "config": {
+    "model": "corefer-001",
+    "tasks": [
+      "lm",
+      "node"
+    ],
+    "task_weights": {
+      "lm": 1.0,
+      "node": 1.0
+    },
+    "data": null,
+    "lessons": "all",
+    "n_train": 20,
+    "n_eval": 4,
+    "language": "english",
+    "max_len": 320,
+    "max_nodes": 128,
+    "mask_rate": 0.15,
+    "type_weight": 0.5,
+    "vocab_size": 8192,
+    "label_vocab_fraction": 0.3,
+    "d_model": 96,
+    "n_layers": 3,
+    "n_heads": 4,
+    "d_ff": 256,
+    "dropout": 0.1,
+    "extra": {},
+    "steps": 2000,
+    "batch_size": 16,
+    "lr": 0.0003,
+    "min_lr_ratio": 0.1,
+    "warmup": 100,
+    "weight_decay": 0.01,
+    "grad_clip": 1.0,
+    "eval_every": 250,
+    "log_every": 50,
+    "seed": 0,
+    "resume": false,
+    "device": "cpu",
+    "amp": true,
+    "out": "runs/ptrgen/corefer-001"
+  },
+  "model_config": {
+    "vocab_size": 8192,
+    "d_model": 96,
+    "n_layers": 3,
+    "n_heads": 4,
+    "d_ff": 256,
+    "dropout": 0.1,
+    "max_len": 328,
+    "max_nodes": 128,
+    "extra": {}
+  },
+  "model": "corefer-001",
+  "family": "rule-based",
+  "steps": 0,
+  "parameters": 4115,
+  "n_train": 3580,
+  "n_eval": 716,
+  "vocab_size": 8192,
+  "floors": {
+    "lm": {
+      "token_acc": 0.05290103616138519,
+      "token_bits": 8.183218009733261,
+      "token_n": 139071.0,
+      "answer_acc": 0.06088992974238876,
+      "answer_bits": 8.04795909284485,
+      "answer_n": 1281.0
+    },
+    "node": {
+      "type_acc": 0.8601454659210886,
+      "type_bits": 2.3292035662165547,
+      "type_n": 51146.0,
+      "label_acc": 0.14321518927482088,
+      "label_bits": 9.369476110181317,
+      "label_n": 42293.0,
+      "copy_acc": 0.26580813816452037
+    }
+  },
+  "final": {
+    "lm": {
+      "token_acc": 0.04609823769483357,
+      "token_bits": 8.505722615845102,
+      "token_n": 117857.0,
+      "answer_acc": 0.0,
+      "answer_bits": 10.758088883918486,
+      "answer_n": 1281.0,
+      "token_floor": 0.05290103616138519,
+      "token_lift": -0.007182774690175682,
+      "answer_floor": 0.06088992974238876,
+      "answer_lift": -0.06483790523690773,
+      "token_floor_bits": 8.183218009733261,
+      "answer_floor_bits": 8.04795909284485
+    },
+    "node": {
+      "label_acc": 0.35715650678387156,
+      "label_bits": 6.951828892893482,
+      "label_n": 5233.0,
+      "type_acc": 0.9457755359394704,
+      "type_bits": 0.34792243718619786,
+      "type_n": 6344.0,
+      "label_coverage": 0.824873896595208,
+      "copy_acc": 0.3362143474503025,
+      "copy_scored_n": 5785.0,
+      "copy_ceiling": 0.721574622587426,
+      "copy_censored": 450.0,
+      "label_floor": 0.14321518927482088,
+      "label_lift": 0.24970250969782207,
+      "type_floor": 0.8601454659210886,
+      "type_lift": 0.6122795416133304,
+      "copy_floor": 0.26580813816452037,
+      "copy_lift": 0.0958961995434907,
+      "label_floor_bits": 9.369476110181317,
+      "type_floor_bits": 2.3292035662165547
+    }
+  },
+  "seconds": 208.05507636070251,
+  "device": "cpu",
+  "renaming": {
+    "label_acc": 0.3531073331832886,
+    "renamed_label_acc": 0.3499058485031128,
+    "drop": 0.0032014846801757812,
+    "symbols": 2105.0
+  }
+}
