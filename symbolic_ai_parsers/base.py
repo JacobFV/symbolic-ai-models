@@ -32,21 +32,21 @@ in the table rather than an opinion.
 The registry
 ------------
 
-Mirrors :mod:`symbolic_ai_models.models.registry`, *including* its bug fix: a
-bare name resolves over ``-001``, ``-002``, … only, never over a word-suffixed
-variant. That registry learned it the expensive way — ``ptrgen-argmax``, a
-control, became what ``ptrgen`` meant, because a plain string sort puts every
-word above every number. The same convention is wanted here for the same reason
-(``template-seeded`` is a knob, not the model), so the same rule is enforced.
+:mod:`symbolic_ai_core.registry`, which is where the resolution rule and the
+``ptrgen-argmax`` story behind it are written down. This package used to carry a
+hand-copied second implementation of that rule — copied *including* the bug fix,
+which is the tell that it should never have been copied at all. The convention is
+wanted here for the same reason it is wanted for models: ``template-seeded`` is a
+knob, not the model.
 """
 
 from __future__ import annotations
 
-import re
 from typing import Any, Callable, Sequence, TypeVar
 
 from symbolic_ai_core.data.curriculum import Episode
 from symbolic_ai_core.data.graph import Graph
+from symbolic_ai_core.registry import VersionedRegistry, base_name
 
 __all__ = ["Parser", "register", "get", "build", "parser_names", "base_name",
            "REGISTRY"]
@@ -83,29 +83,22 @@ class Parser:
         return f"{self.name}: {self.summary}"
 
 
-REGISTRY: dict[str, type[Parser]] = {}
+_REGISTRY: VersionedRegistry[Parser] = VersionedRegistry("parser")
+
+#: The same dict the registry holds, not a copy — the CLI and the tests read it
+#: directly and would otherwise see a snapshot taken at import time.
+REGISTRY: dict[str, type[Parser]] = _REGISTRY.entries
+
 T = TypeVar("T", bound=type[Parser])
-
-#: ``name-001``, ``name-002``, ``name-seeded``. Free-form after the dash so a
-#: variant can be named for what it changed rather than counted.
-_VERSIONED = re.compile(r"^(?P<base>.+?)-(?P<version>[A-Za-z0-9_]+)$")
-
-
-def base_name(name: str) -> str:
-    """``template-001`` -> ``template``; an unversioned name is its own base."""
-    m = _VERSIONED.match(name)
-    return m.group("base") if m else name
 
 
 def register(name: str, *, doc: str = "", learned: bool = False
              ) -> Callable[[T], T]:
     def deco(cls: T) -> T:
-        if name in REGISTRY:
-            raise ValueError(f"parser {name!r} is already registered")
+        _REGISTRY.add(name, cls)
         cls.name = name
         cls.summary = doc or (cls.__doc__ or "").strip().split("\n")[0]
         cls.learned = learned
-        REGISTRY[name] = cls
         return cls
     return deco
 
@@ -113,26 +106,12 @@ def register(name: str, *, doc: str = "", learned: bool = False
 def get(name: str) -> type[Parser]:
     """Exact match first, then the highest *numbered* version of a bare name.
 
-    Exact-first matters: a parser literally registered as ``foo`` must win over
-    resolution, or a later ``foo-002`` would hijack a name someone pinned.
-
-    **Numbered, not merely highest** — see the module docstring. A word-suffixed
-    variant such as ``template-seeded`` is a side experiment and has to be asked
-    for in full, which is exactly what naming it for a knob implies.
+    **Numbered, not merely highest** — see :mod:`symbolic_ai_core.registry`. A
+    word-suffixed variant such as ``template-seeded`` is a side experiment and
+    has to be asked for in full, which is exactly what naming it for a knob
+    implies.
     """
-    if name in REGISTRY:
-        return REGISTRY[name]
-    numbered = [(int(m.group("version")), n) for n in REGISTRY
-                if (m := _VERSIONED.match(n)) and m.group("base") == name
-                and m.group("version").isdigit()]
-    if numbered:
-        return REGISTRY[max(numbered)[1]]
-    named = sorted(n for n in REGISTRY if base_name(n) == name)
-    if named:
-        raise KeyError(
-            f"{name!r} has no numbered version; its variants are "
-            f"{named} and must be named in full") from None
-    raise KeyError(f"unknown parser {name!r}; have {parser_names()}") from None
+    return _REGISTRY.get(name)
 
 
 def build(name: str, **kw: Any) -> Parser:
@@ -140,4 +119,4 @@ def build(name: str, **kw: Any) -> Parser:
 
 
 def parser_names() -> list[str]:
-    return sorted(REGISTRY)
+    return _REGISTRY.names()
