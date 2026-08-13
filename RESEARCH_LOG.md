@@ -329,6 +329,56 @@ estimator's resolution here. What it can support is the *contrast* in order
 structure, which is an order of magnitude and survives any reasonable correction;
 what it cannot support is a claim about natural language in general.
 
+## Vector-symbolic models: good at bits, weak at deciding, exactly equivariant
+
+`runs/vsa`, all 179 lessons, same config and floors as every other row. An
+episode is encoded as `trace = sum_j role(j) * filler(j)` over bipolar
+hypervectors and a masked node is answered by unbinding at its role and cleaning
+up against the candidates. No learned layers — elementwise multiply, add and
+sign over one 4096-vector.
+
+| model | lbl acc | lbl lift | bits | bits lift | typ lift | copy lift | rename | secs |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| `vsa-002` | 0.219 | +0.089 | 6.80 | +0.275 | -0.486 | -0.115 | 0.029 | 37 |
+| `vsa_seeded-002` | 0.212 | +0.081 | 6.76 | +0.278 | -0.486 | -0.122 | 0.035 | 37 |
+| `vsa_pure-002` | 0.200 | +0.066 | 6.94 | +0.259 | -0.486 | -0.115 | **0.002** | 38 |
+| `corefer-001` | **0.357** | +0.250 | 6.95 | +0.258 | +0.612 | +0.096 | 0.003 | 208 |
+| `ptrgen_joint-001` | 0.340 | +0.230 | **5.87** | **+0.374** | +0.681 | +0.078 | 0.004 | 156 |
+
+- **Weak at deciding, respectable at estimating.** +0.089 label lift puts it near
+  the bottom; +0.275 bits lift puts it fourth of everything measured, ahead of
+  `corefer` and every `omegaclaw`. That is the graded-by-construction claim
+  doing what it said: cleanup returns a similarity to every candidate, so the
+  output is a distribution rather than a winner with a confidence attached.
+- **Exactly equivariant, at full scale.** `vsa_pure-002` drops **0.002** under a
+  permutation of every symbol. The proof holds: the winning cleanup score
+  reduces to `sum(role_i * role_j)` because `cb[s]**2 == 1`, so it cannot depend
+  on which symbol won. No other model here is equivariant *by construction*
+  rather than by measurement.
+- **The seed is a null.** `vsa_seeded-002` is -0.007 accuracy, +0.003 bits lift,
+  and +0.006 renaming drop against the random codebook. Consistent with the
+  codebook test: sign-quantising a random projection of sparse co-occurrence
+  only doubles the average off-diagonal similarity, so the seed is weak by
+  construction. A real pretrained table drops into the same interface and is the
+  experiment this null is asking for, not a refutation of seeding.
+- **The copy head is below its floor** (-0.115). Reading the cleanup as a
+  pointer is worse than copying from a fixed relative offset. Reported rather
+  than dropped; it is the sharpest thing wrong with the model.
+- **Cheap.** 37s against `corefer`'s 208s, at 8,254 parameters (one hypervector
+  per symbol plus 62 role atoms).
+
+**Correction, and it is the sixth of its kind here.** On a three-lesson slice,
+turning off the shared `structural_fallback` took `vsa-002` from 0.305 to 0.102
+— two thirds of its accuracy — and that was written into a commit message and a
+docstring before the sweep ran. On 179 lessons it is 0.219 to 0.200: **9%, not
+67%.** The slice overstated it sevenfold.
+
+What survives the correction is still worth having: the fallback is a memorising
+component every rule-based model inherits, and it is where this model's renaming
+sensitivity lives (+0.029 with it, +0.002 without). Separating mechanism from
+shared floor is a harness change worth making for the whole table — but the
+claim that it dominates any model's score is not supported.
+
 ## What is shaky
 
 - **Every neural number is a lower bound.** All four re-run networks were still

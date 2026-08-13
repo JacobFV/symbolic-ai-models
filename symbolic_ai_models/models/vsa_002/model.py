@@ -335,27 +335,28 @@ class VSAPure(VSARandom):
     thing for a fair *comparison* and it means a published accuracy is the
     model's mechanism **plus** a shared lookup table nobody attributes.
 
-    Measured by turning it off, on a three-lesson slice:
+    **Read the full-curriculum row, not the slice.** Turning the fallback off on
+    a three-lesson slice took ``vsa-002`` from 0.305 to 0.102 — two thirds of
+    its accuracy — and that number was written up before the sweep ran. On all
+    179 lessons (``runs/vsa``, the authority) it is 0.219 to 0.200: **9%, not
+    67%.** The slice overstated the effect by a factor of seven, and this is the
+    sixth time in this repo's history that a small slice has produced a
+    confident wrong reading. The claim that survives is narrower and still worth
+    the row.
 
-    ======================  ========  ========  ==============
-    model                   with      without   renaming drop
-    ======================  ========  ========  ==============
-    ``vsa-002``             0.305     0.102     +0.136 -> +0.000
-    ``omegaclaw_ctx-001``   0.356     0.305     +0.085 -> +0.000
-    ``ptrgen-001``          0.390     0.322     +0.034 -> +0.034
-    ======================  ========  ========  ==============
+    ==================  =========  =========  =========  ==============
+    model               with       without    delta      renaming drop
+    ==================  =========  =========  =========  ==============
+    ``vsa-002``         0.219      0.200      0.019      +0.029 -> +0.002
+    ==================  =========  =========  =========  ==============
 
-    Two things fall out. **The fallback is where most of this repo's measured
-    renaming sensitivity lives** — it memorises which symbol sits in which
-    structural slot, so permuting the symbols breaks it, and the models were
-    being charged for it. With it off, both structural models are *exactly*
-    equivariant; ``ptrgen`` keeps +0.034, which is its prose feature reading
-    symbol identity and is genuinely its own.
-
-    And **the VSA leans on it hardest**: two thirds of ``vsa-002``'s accuracy is
-    the shared table rather than the binding algebra. That is the number this
-    row exists to expose. 0.102 is what unbinding and cleanup are worth here on
-    their own, and it is the honest starting point for the approach.
+    What is real: the fallback is a memorising component every rule-based model
+    inherits, it is worth a real if modest slice of accuracy, and **it is where
+    this model's renaming sensitivity lives**. With it off the drop is +0.002 —
+    which is the proof in ``tests/test_vsa.py`` holding at full scale: the
+    winning cleanup score reduces to ``sum(role_i * role_j)`` and cannot depend
+    on which symbol won. ``vsa_pure-002`` is therefore the row to quote when the
+    question is what the *algebra* is worth, and 0.200 is that number.
     """
 
     structural_fallback = False
