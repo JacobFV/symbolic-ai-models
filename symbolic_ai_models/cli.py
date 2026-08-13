@@ -185,6 +185,24 @@ def _already_ran(out: Path, args: argparse.Namespace) -> bool:
     return ran == 0 or ran >= int(args.steps)
 
 
+def _sweep_root(args: argparse.Namespace) -> Path:
+    """Where a sweep writes: ``--out``, then the config's ``out``, then default.
+
+    The config's was ignored until now, so ``sweep --config
+    configs/full179.toml`` wrote to ``runs/sweep`` while the file said
+    ``runs/full179`` — silently, and into a directory some *previous* sweep may
+    already have filled, where ``--resume`` would then skip models on the
+    strength of another run's summaries. That is the same failure ``_already_ran``
+    exists to prevent, arriving by a different door.
+
+    Read out of the TOML rather than off the built :class:`TrainConfig`, because
+    ``TrainConfig.out`` has a default of its own and an unset field is
+    indistinguishable from a set one once the config exists.
+    """
+    from_config = _load_toml(args.config).get("out") if args.config else None
+    return Path(args.out or from_config or "runs/sweep")
+
+
 def cmd_sweep(args: argparse.Namespace) -> int:
     """Train several architectures under one identical config."""
     from .models import model_names
@@ -192,7 +210,7 @@ def cmd_sweep(args: argparse.Namespace) -> int:
     from .train import train
 
     names = _select_models(args.models)
-    root = Path(args.out or "runs/sweep")
+    root = _sweep_root(args)
     done: list[Path] = []
     if args.resume:
         # A sweep over the whole curriculum takes long enough that it will not

@@ -200,7 +200,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     print(f"{args.run}: {model.name}, {len(train_eps)} training episodes, "
           f"max_examples={model.max_examples}", flush=True)
 
-    records, languages = observe(model, train_eps, tok, cfg.max_nodes)
+    records, languages = observe(model, train_eps, tok, model.cfg.max_nodes)
     langs = sorted(set(languages))
     claws = list(model.claws())
     asked, cells = tally(records, languages, languages)
@@ -208,7 +208,14 @@ def main(argv: Sequence[str] | None = None) -> int:
           + ", ".join(f"{l}={asked.get(l, 0)}" for l in langs), flush=True)
 
     # --- the guard: this must be the model's own table -------------------
-    if model.perceive.__func__ is not None and cells:
+    # Only a model whose context key *starts* with the language can be checked
+    # this way. Running against `omegaclaw_text-002` is legitimate — the same
+    # clustering, from a model that was never told the language — and there the
+    # marginal is simply not recoverable from `claw_evidence`, so the guard
+    # steps aside and says so rather than checking something else.
+    keyed_by_language = all(isinstance(ctx, tuple) and ctx and ctx[0] in set(langs)
+                            for ctx, _ in model.claw_evidence)
+    if keyed_by_language and model.claw_evidence:
         rebuilt: dict[tuple[str, str], list[float]] = {}
         for (ctx, name), (fired, right) in model.claw_evidence.items():
             key = (ctx[0], name)
@@ -223,6 +230,9 @@ def main(argv: Sequence[str] | None = None) -> int:
                   f"{len(mismatch)} cells, e.g. {mismatch[:3]}", file=sys.stderr)
             return 1
         print("re-derivation reproduces model.claw_evidence exactly", flush=True)
+    else:
+        print("note: this model does not key on language, so the re-derivation "
+              "cannot be checked against its own table", flush=True)
 
     vecs = vectors(asked, cells, langs, claws)
     dist = distances(vecs)
