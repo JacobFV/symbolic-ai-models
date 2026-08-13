@@ -26,13 +26,15 @@ import numpy as np
 import torch
 
 from symbolic_ai_core.data.batch import SymbolicBatch
+from symbolic_ai_core.data.curriculum import (Episode, generate, read_jsonl,
+                                              resolve_lessons)
 from symbolic_ai_core.data.sampler import batches
-from symbolic_ai_core.data.curriculum import Episode, generate, read_jsonl, resolve_lessons
 from symbolic_ai_core.data.tokenizer import SymbolTokenizer
+from symbolic_ai_core.floors import lift
+
 from .models import Model, ModelConfig, RuleBasedModel, build
 from .models.base import FitContext, autocast
 from .tasks import Task, Totals, make_task
-from .tasks.base import lift
 
 __all__ = ["TrainConfig", "train", "evaluate_model", "load_run", "make_model",
            "batches", "load_data", "build_tokenizer"]

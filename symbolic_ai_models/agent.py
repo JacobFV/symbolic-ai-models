@@ -32,8 +32,9 @@ import torch
 from symbolic_ai_core.data.batch import text_batch
 from symbolic_ai_core.data.curriculum import Episode
 from symbolic_ai_core.data.tokenizer import SymbolTokenizer
+from symbolic_ai_core.floors import lift
+
 from .models.base import Model
-from .tasks.base import lift
 
 __all__ = ["ChoiceResult", "CurriculumReport", "score_choices",
            "evaluate_choices", "as_text_agent"]
