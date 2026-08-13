@@ -122,6 +122,32 @@ Two traps this repo has already hit:
   swept a parallel agent's untracked files into an unrelated commit. Stage
   explicit paths.
 
+### Green at every commit, without paying for the whole suite every time
+
+"Never commit with tests failing" is not "run `pytest tests/` before every
+commit". The suite is minutes of wall clock and the user's time is the scarce
+resource here — the point of this repo is research, not re-running results that
+already passed twenty minutes ago.
+
+The `symbolic_ai_core` refactor got this wrong: six commits, the full suite run
+before each, when almost all of them touched a handful of modules whose tests
+run in seconds. Roughly an hour of waiting bought nothing that this would not
+have:
+
+- **Between commits in a series, run the tests that could possibly notice.**
+  Pick them from what the commit touched — a registry change runs
+  `test_registry.py test_models.py test_graph_parsers.py`, not the training
+  loop. Say which subset you chose and why, so the choice is reviewable.
+- **Run the full suite once**: before the *first* commit of a series, to
+  establish the baseline is green, and after the *last*, which is the run that
+  actually licenses the merge.
+- **A green subset is not a green suite.** If a series ends and the full run has
+  not happened, the branch is not merge-ready however many subsets passed.
+- The expensive tests are the ones that generate the curriculum —
+  `test_curriculum_fingerprint.py` draws 179 lessons x 5 seeds x 7 languages.
+  Run it when generation or the data plumbing could have moved, which for most
+  commits is never.
+
 ## Scope
 
 The **symbolic models are the subject**. The neural half is a control, kept for
