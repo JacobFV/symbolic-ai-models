@@ -108,8 +108,10 @@ MOVED = [
     ("symbolic_ai_models.data.graph", "symbolic_ai_core.data.graph"),
     ("symbolic_ai_models.data.sampler", "symbolic_ai_core.data.sampler"),
     ("symbolic_ai_models.data.tokenizer", "symbolic_ai_core.data.tokenizer"),
+    ("symbolic_ai_models.asymptotics", "symbolic_ai_core.asymptotics"),
     ("symbolic_ai_models.calibration", "symbolic_ai_core.calibration"),
     ("symbolic_ai_models.invariance", "symbolic_ai_core.invariance"),
+    ("symbolic_ai_models.shortcuts", "symbolic_ai_core.shortcuts"),
     ("symbolic_ai_models.tasks.base", "symbolic_ai_core.floors"),
 ]
 

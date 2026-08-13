@@ -13,7 +13,7 @@ import math
 import numpy as np
 import pytest
 
-from symbolic_ai_models.asymptotics import (effective_rank, mi_curve,
+from symbolic_ai_core.asymptotics import (effective_rank, mi_curve,
                                             mutual_information)
 
 

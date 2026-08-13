@@ -89,7 +89,7 @@ class CurriculumReport:
         Three baselines, whichever is highest: guessing uniformly inside each
         episode's own answer set, always answering the most common gold label,
         and the strongest of the parameter-free shortcuts in
-        :mod:`symbolic_ai_models.shortcuts` — pick the longest option, the one
+        :mod:`symbolic_ai_core.shortcuts` — pick the longest option, the one
         sharing most words with the question, the one written unlike the others.
 
         Including the shortcuts is what stops a model being credited for
@@ -102,7 +102,7 @@ class CurriculumReport:
 
     def shortcut_floor(self) -> tuple[str, float]:
         """``(which cheat, what it scores)`` over these episodes."""
-        from .shortcuts import best_shortcut
+        from symbolic_ai_core.shortcuts import best_shortcut
         return best_shortcut([r for r in self.results if r.choices])
 
     def _uniform_floor(self) -> float:
