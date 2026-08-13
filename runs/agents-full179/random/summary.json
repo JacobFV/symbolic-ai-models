@@ -1,0 +1,137 @@
+{
+  "config": {
+    "agent": "random",
+    "envs": [
+      "choice",
+      "retry",
+      "repair",
+      "probe"
+    ],
+    "data": null,
+    "lessons": "all",
+    "n_train": 20,
+    "n_eval": 8,
+    "language": "english",
+    "max_nodes": 256,
+    "vocab_size": 8192,
+    "label_vocab_fraction": 0.3,
+    "tries": 3,
+    "mask_rate": 0.15,
+    "max_steps": 8,
+    "max_actions": 24,
+    "probe_cost": 0.1,
+    "max_probes": 6,
+    "extra": {},
+    "seed": 0,
+    "keep": 32,
+    "out": "runs/agents-full179/random"
+  },
+  "agent": "random",
+  "family": "rule-based",
+  "steps": 0,
+  "parameters": 0,
+  "n_train": 3580,
+  "n_eval": 1432,
+  "vocab_size": 8192,
+  "floors": {
+    "choice": {
+      "return": 0.2639664804469274,
+      "success": 0.2639664804469274,
+      "moves": 1.0,
+      "probes": 0.0,
+      "n": 1432.0,
+      "floor_by": "shortcut"
+    },
+    "retry": {
+      "return": 0.46613128491620176,
+      "success": 0.7458100558659218,
+      "moves": 2.210195530726257,
+      "probes": 0.0,
+      "n": 1432.0,
+      "floor_by": "context"
+    },
+    "repair": {
+      "return": 0.2589393788241549,
+      "success": 0.08170391061452514,
+      "moves": 3.869413407821229,
+      "probes": 0.0,
+      "n": 1432.0,
+      "label_acc": 0.26428703532457926,
+      "recoverable": 0.6698463825569871,
+      "fills": 5407.0,
+      "floor_by": "context"
+    },
+    "probe": {
+      "return": 0.2639664804469274,
+      "success": 0.2639664804469274,
+      "moves": 1.0,
+      "probes": 0.0,
+      "n": 1432.0,
+      "revealed": 0.0,
+      "blind": 0.0,
+      "answered": 1.0,
+      "seen": 0.0,
+      "floor_by": "shortcut"
+    }
+  },
+  "final": {
+    "choice": {
+      "return": 0.2541899441340782,
+      "success": 0.2541899441340782,
+      "moves": 1.0,
+      "probes": 0.0,
+      "n": 1432.0,
+      "return_floor": 0.2639664804469274,
+      "return_lift": -0.01328273244781788,
+      "success_floor": 0.2639664804469274,
+      "success_lift": -0.01328273244781788,
+      "floor_by": "shortcut"
+    },
+    "retry": {
+      "return": 0.45332867783985137,
+      "success": 0.7276536312849162,
+      "moves": 2.243715083798883,
+      "probes": 0.0,
+      "n": 1432.0,
+      "return_floor": 0.46613128491620176,
+      "return_lift": -0.023980815347722412,
+      "success_floor": 0.7458100558659218,
+      "success_lift": -0.07142857142857117,
+      "floor_by": "context"
+    },
+    "repair": {
+      "return": 0.05733739026336795,
+      "success": 0.006284916201117319,
+      "moves": 3.869413407821229,
+      "probes": 0.0,
+      "n": 1432.0,
+      "label_acc": 0.060107268355835027,
+      "recoverable": 0.6698463825569871,
+      "fills": 5407.0,
+      "return_floor": 0.2589393788241549,
+      "return_lift": -0.27204520494005463,
+      "success_floor": 0.08170391061452514,
+      "success_lift": -0.08212927756653993,
+      "label_acc_floor": 0.26428703532457926,
+      "label_acc_lift": -0.277526395173454,
+      "floor_by": "context"
+    },
+    "probe": {
+      "return": 0.1773743016759791,
+      "success": 0.2779329608938548,
+      "moves": 2.005586592178771,
+      "probes": 1.005586592178771,
+      "n": 1432.0,
+      "revealed": 1.005586592178771,
+      "blind": 0.0,
+      "answered": 1.0,
+      "seen": 0.20618556701030927,
+      "return_floor": 0.2639664804469274,
+      "return_lift": -0.11764705882352748,
+      "success_floor": 0.2639664804469274,
+      "success_lift": 0.018975332068311212,
+      "floor_by": "shortcut"
+    }
+  },
+  "seconds": 10.123160123825073
+}
