@@ -47,9 +47,21 @@ whole structure — `str -> Graph`, the term the text was rendered from — whic
 the same supervision used harder. It supersedes the layer above for that
 objective rather than wrapping it, and both stay registered; `legacy-001`
 bridges the old `facts` into a graph as a control and finishes below the
-text-blind floor on node type. Six metrics, six fitted floors,
+text-blind floor on node type. Ten metrics, a fitted floor for each,
 `symbolic-ai-parsers sweep` is its authority, and `RESEARCH_LOG.md` has the
-numbers. Three things from it that generalise beyond parsing:
+numbers.
+
+Layout follows `models/`: one package per parser under
+`symbolic_ai_parsers/parsers/`, **named for the row it produces, version suffix
+and all**, with an unversioned skeleton package for a family that shares
+machinery (`template/`, `classical/` — as `omegaclaw/` does there). A test
+enforces the correspondence in both directions, so a registered parser without
+a directory and a directory without a row are both build failures. Eleven
+parsers are registered: four controls, four template-induction variants, and
+three classical ones that share a single induced grammar and differ only in how
+they search it (chart, deterministic LR, learned oracle).
+
+Four things from it that generalise beyond parsing:
 
 - **A tree alignment cannot score attachment.** The top-down mapping only pairs
   nodes whose parents are paired, so UAS over it is 1 by construction. It
@@ -61,6 +73,11 @@ numbers. Three things from it that generalise beyond parsing:
   almost nothing and Chinese costs everything that touched a token count. A
   feature set built to be language-independent collapsed to 0.02 lesson
   identification in Chinese because it counted tokens.
+- **A greedy learned oracle matched an exhaustive chart.** Same grammar, same
+  lexicon: `shiftreduce-001` equals `cky-001` on every metric in one
+  left-to-right pass and over-generates a third as much, while a deterministic
+  LR pass over the same automaton reaches a quarter of the chart's bracket F1.
+  The search matters and the *exhaustiveness* of it does not.
 
 ## Measured, so nobody re-derives it
 

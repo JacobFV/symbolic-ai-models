@@ -50,9 +50,39 @@ directions:
     supposed to move, and separating it from ``bracket_f1`` is what makes
     "learned the grammar" and "learned the words" separately visible.
 
-``bracket_f1`` and ``label_f1`` never call the aligner. That is the point of
-them: if the alignment-based scores and the alignment-free scores rank two
-parsers differently, the disagreement is the finding and both get reported.
+``edge_f1``
+    Multiset F1 over ``(parent, slot, child)`` triples, where a node is written
+    as ``label:type``. The graph-parsing standard — this is Smatch's triple set,
+    and it needs no hill-climbing search here because a label plus a type
+    already names a node. Local where ``bracket_f1`` is global: a parser that
+    gets every mother-daughter pair right and assembles them into the wrong
+    document scores well here and badly there.
+
+``path_f1``
+    Multiset F1 over root-to-node label paths. The opposite failure mode to
+    ``edge_f1``: it sees nothing local and everything about depth and lineage,
+    so hanging a correct subtree off the wrong field costs every path in it.
+
+``wl_f1``
+    Weisfeiler-Lehman subtree kernel, two refinement rounds, multiset F1 over
+    the refined labels of all rounds. The standard graph-similarity primitive,
+    and the only score here that is a statement about neighbourhoods rather
+    than about trees; it is the one that would survive if these graphs ever
+    stopped being trees.
+
+``ted_sim``
+    ``1 - cost / (|P| + |G|)`` where cost is the edit cost of the top-down
+    mapping — deletions, insertions and relabellings. An *upper bound* on true
+    tree edit distance, because the mapping is constrained; quoted as a
+    similarity so that all ten metrics run the same direction.
+
+``bracket_f1``, ``label_f1``, ``edge_f1``, ``path_f1`` and ``wl_f1`` never call
+the aligner. That is the point of them: if the alignment-based scores and the
+alignment-free scores rank two parsers differently, the disagreement is the
+finding and both get reported. Ten metrics is not thoroughness for its own
+sake — this repo's standing rule is that a ranking is a property of a metric,
+and the cheapest way to keep that in view is to make disagreement visible in
+every table.
 
 Aggregation is **per episode, then macro over lessons**. Never pooled over
 nodes. A pooled node average is a weighted vote in which one 128-node episode
@@ -70,12 +100,19 @@ from symbolic_ai_models.data.graph import Graph
 
 from .align import align, canonical, children_of, content_align
 
-__all__ = ["METRICS", "score_graph", "Scores", "mean_scores", "macro_scores",
-           "brackets", "label_bag"]
+__all__ = ["METRICS", "SHORT", "score_graph", "Scores", "mean_scores",
+           "macro_scores", "brackets", "label_bag", "edges", "paths", "wl_bag"]
 
 #: Every metric this package reports, in table order. A parser is never quoted
 #: on one of these without saying which; a ranking is a property of a metric.
-METRICS = ("exact", "uas", "las", "type_acc", "bracket_f1", "label_f1")
+METRICS = ("exact", "uas", "las", "type_acc", "bracket_f1", "label_f1",
+           "edge_f1", "path_f1", "wl_f1", "ted_sim")
+
+#: Column headings. Ten metrics do not fit a terminal at their full names, and
+#: abbreviating in the table is better than dropping any of them from it.
+SHORT = {"exact": "exact", "uas": "uas", "las": "las", "type_acc": "type",
+         "bracket_f1": "brack", "label_f1": "label", "edge_f1": "edge",
+         "path_f1": "path", "wl_f1": "wl", "ted_sim": "ted"}
 
 
 def _f1(correct: int, n_pred: int, n_gold: int) -> float:
@@ -119,6 +156,58 @@ def label_bag(g: Graph) -> collections.Counter:
     return collections.Counter(l for l in g.labels if l)
 
 
+def _name(g: Graph, i: int) -> str:
+    """How a node is written in a triple: ``label:type``, or just the type."""
+    return f"{g.labels[i]}:{g.types[i]}" if g.labels[i] else g.types[i]
+
+
+def edges(g: Graph) -> collections.Counter:
+    """``(parent, slot, child)`` for every edge. Smatch's triple set.
+
+    Smatch needs a hill-climbing search over variable bindings because AMR nodes
+    are anonymous. These are not — a node carries a label and a type — so the
+    same score is exact here and costs nothing.
+    """
+    return collections.Counter(
+        (_name(g, g.parent[i]), g.slot[i], _name(g, i))
+        for i in range(len(g)) if 0 <= g.parent[i] < len(g))
+
+
+def paths(g: Graph) -> collections.Counter:
+    """Root-to-node paths of ``label:type``. Lineage, at every depth."""
+    out: list[tuple[str, ...]] = [()] * len(g)
+    bag: collections.Counter = collections.Counter()
+    for i in range(len(g)):                      # canonical order is top-down
+        p = g.parent[i]
+        out[i] = (out[p] + (_name(g, i),)) if 0 <= p < i else (_name(g, i),)
+        bag[out[i]] += 1
+    return bag
+
+
+def wl_bag(g: Graph, rounds: int = 2) -> collections.Counter:
+    """Weisfeiler-Lehman subtree kernel: refined labels from every round.
+
+    Round 0 is the node's own ``label:type``; each further round replaces it
+    with a hash of itself and its sorted neighbourhood. Neighbourhood, not
+    children — the parent is in it too, so this is a statement about the graph
+    and not about the tree, and it is the one metric here that would still mean
+    something if the curriculum ever emitted a structure with sharing in it.
+    """
+    kids = children_of(g)
+    cur = [_name(g, i) for i in range(len(g))]
+    bag: collections.Counter = collections.Counter(cur)
+    for _ in range(rounds):
+        nxt = []
+        for i in range(len(g)):
+            p = g.parent[i]
+            neigh = sorted([cur[c] for c in kids[i]]
+                           + ([f"^{cur[p]}"] if 0 <= p < len(g) else []))
+            nxt.append(f"{cur[i]}({','.join(neigh)})")
+        cur = nxt
+        bag.update(cur)
+    return bag
+
+
 @dataclass
 class Scores:
     """One parse, scored. ``size_ratio`` travels with the scores, never apart."""
@@ -129,6 +218,10 @@ class Scores:
     type_acc: float = 0.0
     bracket_f1: float = 0.0
     label_f1: float = 0.0
+    edge_f1: float = 0.0
+    path_f1: float = 0.0
+    wl_f1: float = 0.0
+    ted_sim: float = 0.0
     size_ratio: float = 0.0
     #: gold nodes the tree alignment found a counterpart for. Not a metric —
     #: the diagnostic that ``uas`` used to be by accident, kept where it can be
@@ -153,7 +246,10 @@ def score_graph(pred: Graph, gold: Graph) -> Scores:
     s = Scores(n_gold=float(n_gold), size_ratio=len(pred) / n_gold,
                exact=float(cp.to_dict() == cg.to_dict()),
                bracket_f1=_multiset_f1(brackets(cp), brackets(cg)),
-               label_f1=_multiset_f1(label_bag(cp), label_bag(cg)))
+               label_f1=_multiset_f1(label_bag(cp), label_bag(cg)),
+               edge_f1=_multiset_f1(edges(cp), edges(cg)),
+               path_f1=_multiset_f1(paths(cp), paths(cg)),
+               wl_f1=_multiset_f1(wl_bag(cp), wl_bag(cg)))
 
     n_pred = len(cp)
 
@@ -169,11 +265,18 @@ def score_graph(pred: Graph, gold: Graph) -> Scores:
     s.uas = _f1(uas_ok, n_pred, n_gold)
     s.las = _f1(las_ok, n_pred, n_gold)
 
-    # Node type, under the tree alignment.
+    # Node type and edit cost, under the tree alignment.
     tree = align(cp, cg)
     s.node_cov = len(tree) / n_gold
     s.type_acc = sum(cp.types[i] == cg.types[j]
                      for i, j in tree.items()) / n_gold
+    # Deletions + insertions + relabellings. Unaligned nodes cost one each on
+    # whichever side they sit; an aligned pair costs one if either the label or
+    # the type differs, which is the usual unit relabelling cost.
+    relabel = sum(cp.labels[i] != cg.labels[j] or cp.types[i] != cg.types[j]
+                  for i, j in tree.items())
+    cost = (n_pred - len(tree)) + (n_gold - len(tree)) + relabel
+    s.ted_sim = max(0.0, 1.0 - cost / (n_pred + n_gold))
     return s
 
 

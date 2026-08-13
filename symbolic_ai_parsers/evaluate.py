@@ -40,7 +40,7 @@ from symbolic_ai_models.data.curriculum import Episode, generate, resolve_lesson
 
 from .base import Parser, build, parser_names
 from .floors import ConstantFloor, fit_floor
-from .scoring import METRICS, Scores, macro_scores, score_graph
+from .scoring import METRICS, SHORT, Scores, macro_scores, score_graph
 
 __all__ = ["ParserReport", "evaluate_parser", "run_sweep", "LANGUAGES",
            "EVAL_SEED0"]
@@ -85,23 +85,23 @@ class ParserReport:
 
     @staticmethod
     def header() -> str:
-        cols = (f"{'parser':<17}{'lang':<9}{'retr':>7}{'size':>7}"
-                + "".join(f"{m:>11}" for m in METRICS))
+        cols = (f"{'parser':<17}{'lang':<9}{'retr':>7}{'size':>6}"
+                + "".join(f"{SHORT[m]:>8}" for m in METRICS))
         return cols + "\n" + "-" * len(cols)
 
     def row(self) -> str:
         r = "  n/a" if self.retrieval_acc != self.retrieval_acc else f"{self.retrieval_acc:>7.3f}"
-        return (f"{self.parser:<17}{self.language:<9}{r:>7}{self.size_ratio:>7.2f}"
-                + "".join(f"{self.scores.get(m, float('nan')):>11.3f}" for m in METRICS))
+        return (f"{self.parser:<17}{self.language:<9}{r:>7}{self.size_ratio:>6.2f}"
+                + "".join(f"{self.scores.get(m, float('nan')):>8.3f}" for m in METRICS))
 
     def lift_row(self) -> str:
-        return (f"{self.parser:<17}{self.language:<9}{'':>7}{'':>7}"
-                + "".join(f"{self.lift(m):>11.3f}" for m in METRICS))
+        return (f"{self.parser:<17}{self.language:<9}{'':>7}{'':>6}"
+                + "".join(f"{self.lift(m):>8.3f}" for m in METRICS))
 
 
 def floor_row(floors: dict[str, float], language: str) -> str:
-    return (f"{'FLOOR (constant)':<17}{language:<9}{'':>7}{'':>7}"
-            + "".join(f"{floors.get(m, float('nan')):>11.3f}" for m in METRICS))
+    return (f"{'FLOOR (constant)':<17}{language:<9}{'':>7}{'':>6}"
+            + "".join(f"{floors.get(m, float('nan')):>8.3f}" for m in METRICS))
 
 
 def evaluate_parser(parser: Parser, episodes: Sequence[Episode],

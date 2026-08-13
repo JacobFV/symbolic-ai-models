@@ -24,8 +24,8 @@ from typing import Sequence
 from symbolic_ai_models.data.curriculum import Episode
 from symbolic_ai_models.data.graph import Graph
 
-from ..base import Parser, register
-from ..retrieval import WordIndex
+from ...base import Parser, register
+from ...retrieval import WordIndex
 
 
 @register("retrieve-001", learned=True,

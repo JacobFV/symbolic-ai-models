@@ -1,6 +1,12 @@
-"""``template-001`` and its two knobs: recognise the template, refill the slots.
+"""One skeleton, four registered variants: recognise the template, refill it.
 
-The learned parser. It rests on one fact about this corpus, which is checkable
+Shared machinery only — nothing here is registered. Each variant is its own
+package beside this one (``template_001``, ``template_002``, ``template_lex``,
+``template_seeded``), exactly as ``omegaclaw/`` carries the skeleton for the
+``omegaclaw_*_001`` models. The directory is named for the row it produces, so
+the tree cannot drift away from the registry.
+
+It rests on one fact about this corpus, which is checkable
 rather than assumed: an episode is a template plus a draw. Two episodes of
 ``adversarial_argumentation`` have the same record, the same field names and the
 same predicate heads; they differ in twelve nonce symbols. So a parser that can
@@ -59,10 +65,10 @@ from typing import Sequence
 from symbolic_ai_models.data.curriculum import Episode
 from symbolic_ai_models.data.graph import Graph
 
-from ..base import Parser, register
-from ..features import words_of
-from ..lexicon import Lexicon
-from ..retrieval import LayoutIndex, ShapeIndex, WordIndex
+from ...base import Parser
+from ...features import words_of
+from ...lexicon import Lexicon
+from ...retrieval import LayoutIndex, ShapeIndex, WordIndex
 
 _INDEXES = {"layout": LayoutIndex, "shape": ShapeIndex, "words": WordIndex}
 
@@ -102,7 +108,7 @@ class TemplateParser(Parser):
             return Graph()
         ex = self._episodes[i]
         self.last_lesson = ex.lesson_id
-        return _refill(ex.graph, text, self._lex.words_for(ex.lesson_id),
+        return refill(ex.graph, text, self._lex.words_for(ex.lesson_id),
                        self._lex.labels_for(ex.lesson_id))
 
     def n_parameters(self) -> int:
@@ -113,7 +119,7 @@ class TemplateParser(Parser):
                 f"({self._lex.size():,} frame words)")
 
 
-def _refill(template: Graph, text: str, frame_words: frozenset[str],
+def refill(template: Graph, text: str, frame_words: frozenset[str],
             frame_labels: frozenset[str]) -> Graph:
     """Copy ``template``, replacing its content labels with this text's.
 
@@ -144,43 +150,3 @@ def _refill(template: Graph, text: str, frame_words: frozenset[str],
     out = Graph.from_dict(template.to_dict())
     out.labels = [sub.get(l, l) for l in out.labels]
     return out
-
-
-@register("template-001", learned=True,
-          doc="Layout lookup, lexicon estimated from training episodes.")
-class TemplateLayout(TemplateParser):
-    lookup = "layout"
-    seeded = False
-
-
-@register("template-lex", learned=True,
-          doc="Layout lookup, lexicon seeded from the full curriculum vocabulary.")
-class TemplateSeededLexicon(TemplateParser):
-    lookup = "layout"
-    seeded = True
-
-
-@register("template-seeded", learned=True,
-          doc="Word lookup and seeded lexicon: the whole dictionary shortcut.")
-class TemplateSeeded(TemplateParser):
-    lookup = "words"
-    seeded = True
-
-
-@register("template-002", learned=True,
-          doc="Shape lookup (punctuation and lines only), lexicon from training episodes.")
-class TemplateShape(TemplateParser):
-    """``template-001`` with the token-counting features taken out of its lookup.
-
-    Registered as a new version rather than as an edit to ``-001``, so the
-    correction is a row in the same sweep. What changed and why is in
-    :mod:`symbolic_ai_parsers.features`: the features ``-001`` calls "layout"
-    include token counts and token lengths, which are facts about the
-    tokenisation rather than the document, and Chinese retokenises the same
-    document wholesale. Settled on held-out **training** episodes rendered in
-    each language — seeds 200-201, nowhere near the eval range — and only then
-    run on eval.
-    """
-
-    lookup = "shape"
-    seeded = False
