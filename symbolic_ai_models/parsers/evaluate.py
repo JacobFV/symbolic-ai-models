@@ -39,8 +39,8 @@ import itertools
 from dataclasses import dataclass, field
 from typing import Any, Sequence
 
-from ..data.curriculum import Episode
-from ..data.tokenizer import SymbolTokenizer, split_words
+from symbolic_ai_core.data.curriculum import Episode
+from symbolic_ai_core.data.tokenizer import SymbolTokenizer, split_words
 from .base import ParseResult, Parser
 
 __all__ = ["ParserReport", "true_roles", "evaluate_parser", "class_agreement"]

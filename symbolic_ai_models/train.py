@@ -25,10 +25,10 @@ from typing import Any, Iterator, Sequence
 import numpy as np
 import torch
 
-from .data.batch import SymbolicBatch
-from .data.sampler import batches
-from .data.curriculum import Episode, generate, read_jsonl, resolve_lessons
-from .data.tokenizer import SymbolTokenizer
+from symbolic_ai_core.data.batch import SymbolicBatch
+from symbolic_ai_core.data.sampler import batches
+from symbolic_ai_core.data.curriculum import Episode, generate, read_jsonl, resolve_lessons
+from symbolic_ai_core.data.tokenizer import SymbolTokenizer
 from .models import Model, ModelConfig, RuleBasedModel, build
 from .models.base import FitContext, autocast
 from .tasks import Task, Totals, make_task

@@ -24,9 +24,9 @@ import numpy as np
 import pytest
 import torch
 
-from symbolic_ai_models.data.batch import collate_graph, collate_text
-from symbolic_ai_models.data.curriculum import generate
-from symbolic_ai_models.data.tokenizer import SymbolTokenizer
+from symbolic_ai_core.data.batch import collate_graph, collate_text
+from symbolic_ai_core.data.curriculum import generate
+from symbolic_ai_core.data.tokenizer import SymbolTokenizer
 from symbolic_ai_models.models import ModelConfig, RuleBasedModel, build, model_names
 from symbolic_ai_models.tasks import make_task
 from symbolic_ai_models.train import TrainConfig, build_tokenizer
@@ -317,8 +317,8 @@ def test_fitting_is_stable_across_processes(name, fixtures, cfg, tmp_path):
     script = tmp_path / "fit.py"
     script.write_text(
         "import hashlib, torch\n"
-        "from symbolic_ai_models.data.curriculum import generate\n"
-        "from symbolic_ai_models.data.batch import collate_graph\n"
+        "from symbolic_ai_core.data.curriculum import generate\n"
+        "from symbolic_ai_core.data.batch import collate_graph\n"
         "from symbolic_ai_models.train import TrainConfig, build_tokenizer\n"
         "from symbolic_ai_models.models import build, ModelConfig\n"
         "eps = list(generate(['unification', 'symbol_grounding'], n=4))\n"
@@ -371,7 +371,7 @@ def test_a_model_with_a_pointer_is_scored_on_copying(fixtures, cfg):
     """
     import numpy as np
 
-    from symbolic_ai_models.data.batch import collate_graph
+    from symbolic_ai_core.data.batch import collate_graph
     from symbolic_ai_models.tasks import make_task
 
     episodes, tok = fixtures

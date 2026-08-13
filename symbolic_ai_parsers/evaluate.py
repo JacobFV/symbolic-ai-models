@@ -36,7 +36,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Sequence
 
-from symbolic_ai_models.data.curriculum import Episode, generate, resolve_lessons
+from symbolic_ai_core.data.curriculum import Episode, generate, resolve_lessons
 
 from .base import Parser, build, parser_names
 from .floors import ConstantFloor, fit_floor
@@ -118,7 +118,7 @@ def evaluate_parser(parser: Parser, episodes: Sequence[Episode],
             # A parser that raises must still be scored on that episode.
             # Dropping it would silently exclude exactly the inputs it cannot
             # handle and report the rest as if they were the whole set.
-            from symbolic_ai_models.data.graph import Graph
+            from symbolic_ai_core.data.graph import Graph
             pred = Graph()
         rows.append(score_graph(pred, ep.graph))
         got = getattr(parser, "last_lesson", None)

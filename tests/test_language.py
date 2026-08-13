@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import pytest
 
-from symbolic_ai_models.data.curriculum import generate
+from symbolic_ai_core.data.curriculum import generate
 
 LESSONS = ["symbol_grounding", "unification"]
 LANGUAGES = ["english", "chinese", "turkish"]

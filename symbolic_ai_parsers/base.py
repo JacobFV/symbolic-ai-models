@@ -13,7 +13,7 @@ without ever committing to a structure.
 
 This package asks the other question. ``langcurriculum`` renders every episode
 from a typed term and hands the term over, so for every string there is exactly
-one right answer of type :class:`~symbolic_ai_models.data.graph.Graph`, with no
+one right answer of type :class:`~symbolic_ai_core.data.graph.Graph`, with no
 annotator and an unbounded supply of fresh episodes. A parser here has to
 produce that object: the nodes, their types, their labels, and who each node's
 parent is. Nothing partial, nothing optional.
@@ -45,8 +45,8 @@ from __future__ import annotations
 import re
 from typing import Any, Callable, Sequence, TypeVar
 
-from symbolic_ai_models.data.curriculum import Episode
-from symbolic_ai_models.data.graph import Graph
+from symbolic_ai_core.data.curriculum import Episode
+from symbolic_ai_core.data.graph import Graph
 
 __all__ = ["Parser", "register", "get", "build", "parser_names", "base_name",
            "REGISTRY"]

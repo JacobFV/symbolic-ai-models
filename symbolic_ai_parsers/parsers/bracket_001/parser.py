@@ -25,7 +25,7 @@ from __future__ import annotations
 
 import re
 
-from symbolic_ai_models.data.graph import Graph
+from symbolic_ai_core.data.graph import Graph
 
 from ...base import Parser, register
 from ...features import normalise

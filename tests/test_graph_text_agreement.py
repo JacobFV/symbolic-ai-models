@@ -29,7 +29,7 @@ from symbolic_ai_data.context import GenerationContext
 from symbolic_ai_data.generators.extra import ACTIVE_LANGUAGE
 from symbolic_ai_data.lesson import to_json
 
-from symbolic_ai_models.data import curriculum as C
+from symbolic_ai_core.data import curriculum as C
 
 #: The languages with hand-written packs, minus English which is the baseline.
 OTHER_LANGUAGES = ("chinese", "english_synonym", "spanish", "swahili",

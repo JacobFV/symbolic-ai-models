@@ -20,7 +20,7 @@ expectation is measured.
 
 from __future__ import annotations
 
-from symbolic_ai_models.data.graph import Graph
+from symbolic_ai_core.data.graph import Graph
 from symbolic_ai_models.parsers import build as build_legacy
 
 from ...base import Parser, register

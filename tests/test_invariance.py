@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import pytest
 
-from symbolic_ai_models.data.curriculum import generate
+from symbolic_ai_core.data.curriculum import generate
 from symbolic_ai_models.invariance import (build_renaming, label_accuracy,
                                            rename_episodes)
 from symbolic_ai_models.models import ModelConfig, build

@@ -48,10 +48,10 @@ import re
 import numpy as np
 import torch
 
-from ..data.batch import SymbolicBatch
-from ..data.curriculum import Episode
-from ..data.graph import NODE_TYPES, TYPE_TO_ID
-from ..data.tokenizer import SymbolTokenizer
+from symbolic_ai_core.data.batch import SymbolicBatch
+from symbolic_ai_core.data.curriculum import Episode
+from symbolic_ai_core.data.graph import NODE_TYPES, TYPE_TO_ID
+from symbolic_ai_core.data.tokenizer import SymbolTokenizer
 from ..parsers import build as build_parser
 from .base import FitContext, Model, ModelConfig, ModelOutput, N_TYPES
 
@@ -75,7 +75,7 @@ class GraphView:
     asked to predict. There is no second field holding the true value: a model
     that wanted to cheat would have nothing to read. The relations in ``rel``
     have already had the coreference edges of hidden nodes withheld by
-    :func:`~symbolic_ai_models.data.batch.relation_matrix`, so the shape of the tree is
+    :func:`~symbolic_ai_core.data.batch.relation_matrix`, so the shape of the tree is
     visible and the identity of the hidden symbol is not.
     """
 
@@ -249,7 +249,7 @@ class RuleBasedModel(Model):
         self.temperature = best_t
 
     def _masked_batch(self, episodes: Sequence[Episode], tok: SymbolTokenizer):
-        from ..data.batch import collate_graph
+        from symbolic_ai_core.data.batch import collate_graph
         if not episodes:
             return None
         return collate_graph(episodes, tok, max_nodes=self.cfg.max_nodes,
@@ -393,7 +393,7 @@ class RuleBasedModel(Model):
         be a target at some point without any of them ever being visible while
         it is.
         """
-        from ..data.batch import collate_graph
+        from symbolic_ai_core.data.batch import collate_graph
         rng = np.random.default_rng(seed)
         for _ in range(max(repeats, 1)):
             for start in range(0, len(episodes), 32):
@@ -751,7 +751,7 @@ def _tree_from_relations(rel: np.ndarray, n: int) -> tuple[list[int], list[int],
     instead of off the episode is deliberate: it guarantees these models see
     precisely what the networks see and not one field more.
     """
-    from ..data.batch import MAX_SLOT, REL
+    from symbolic_ai_core.data.batch import MAX_SLOT, REL
     parent = [-1] * n
     slot = [0] * n
     first = REL["parent_0"]

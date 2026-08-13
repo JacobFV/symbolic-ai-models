@@ -20,10 +20,10 @@ on. See https://jacobfv.github.io/formal-language-cirriculum/.
 
 from __future__ import annotations
 
-from .data.batch import SymbolicBatch, collate_graph, collate_text
-from .data.curriculum import Episode, build_split, generate, resolve_lessons
-from .data.graph import Graph, graph_from_json
-from .data.tokenizer import SymbolTokenizer
+from symbolic_ai_core.data.batch import SymbolicBatch, collate_graph, collate_text
+from symbolic_ai_core.data.curriculum import Episode, build_split, generate, resolve_lessons
+from symbolic_ai_core.data.graph import Graph, graph_from_json
+from symbolic_ai_core.data.tokenizer import SymbolTokenizer
 from .models import Model, ModelConfig, NeuralModel, RuleBasedModel, build, model_names
 from .tasks import LanguageModelling, MaskedNode, Task, make_task, task_names
 from .train import TrainConfig, evaluate_model, load_run, train

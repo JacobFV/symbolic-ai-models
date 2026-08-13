@@ -37,8 +37,8 @@ from typing import Sequence
 import numpy as np
 import torch
 
-from .data.curriculum import Episode
-from .data.tokenizer import SymbolTokenizer
+from symbolic_ai_core.data.curriculum import Episode
+from symbolic_ai_core.data.tokenizer import SymbolTokenizer
 
 __all__ = ["Bucket", "CalibrationReport", "MassCalibrator", "ScoreCalibrator",
            "calibrate", "calibrate_model"]

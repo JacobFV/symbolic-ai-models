@@ -51,7 +51,7 @@ import unicodedata
 
 import numpy as np
 
-from symbolic_ai_models.data.tokenizer import split_words
+from symbolic_ai_core.data.tokenizer import split_words
 
 __all__ = ["normalise", "fold", "words_of", "layout_features", "LAYOUT_DIM",
            "shape_features", "SHAPE_DIM", "word_features", "WORD_DIM",

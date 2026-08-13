@@ -45,7 +45,7 @@ from __future__ import annotations
 
 from typing import Sequence
 
-from symbolic_ai_models.data.graph import Graph
+from symbolic_ai_core.data.graph import Graph
 
 __all__ = ["children_of", "canonical", "align", "content_align"]
 

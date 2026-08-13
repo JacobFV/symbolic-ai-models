@@ -17,8 +17,8 @@ from __future__ import annotations
 
 from typing import Sequence
 
-from ..data.curriculum import Episode, generate, resolve_lessons
-from ..data.tokenizer import SymbolTokenizer
+from symbolic_ai_core.data.curriculum import Episode, generate, resolve_lessons
+from symbolic_ai_core.data.tokenizer import SymbolTokenizer
 from .base import build, parser_names
 from .evaluate import ParserReport, evaluate_parser
 

@@ -151,7 +151,7 @@ class JointDecoding:
             view.labels[node] = int(max(table, key=lambda s: (table[s], -s)))
         types, type_confidence = type_votes if type_votes else ({}, 0.0)
         if types and type_confidence > 0.0:
-            from ...data.graph import NODE_TYPES
+            from symbolic_ai_core.data.graph import NODE_TYPES
             best = int(max(types, key=lambda t: (types[t], -t)))
             if 0 <= best < len(NODE_TYPES):
                 view.types[node] = NODE_TYPES[best]

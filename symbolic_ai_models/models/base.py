@@ -3,7 +3,7 @@
 Two families live in this repo and both answer to :class:`Model`: networks that
 are trained by gradient descent, and rule-based systems that are *fitted* by
 counting, parsing and searching. They meet at one interface — a
-:class:`~symbolic_ai_models.data.batch.SymbolicBatch` in, a :class:`ModelOutput` of logits
+:class:`~symbolic_ai_core.data.batch.SymbolicBatch` in, a :class:`ModelOutput` of logits
 out — which is what lets a decision list and a transformer appear in the same
 table under the same floors. See :mod:`symbolic_ai_models.models.symbolic` for the other
 half.
@@ -42,12 +42,12 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from ..data.batch import N_RELATIONS, SymbolicBatch
-from ..data.curriculum import Episode
-from ..data.graph import NODE_TYPES
+from symbolic_ai_core.data.batch import N_RELATIONS, SymbolicBatch
+from symbolic_ai_core.data.curriculum import Episode
+from symbolic_ai_core.data.graph import NODE_TYPES
 
 if TYPE_CHECKING:                     # avoids a cycle: tasks imports ModelOutput
-    from ..data.tokenizer import SymbolTokenizer
+    from symbolic_ai_core.data.tokenizer import SymbolTokenizer
 
 __all__ = ["ModelConfig", "Model", "NeuralModel", "SymbolicModel", "ModelOutput",
            "FitContext", "Attention", "FeedForward", "RelationBias",
@@ -383,7 +383,7 @@ class NeuralModel(Model):
         """
         import os
 
-        from ..data.sampler import cycle
+        from symbolic_ai_core.data.sampler import cycle
 
         self.to(ctx.device).train()
         opt = torch.optim.AdamW(self.parameters(), lr=ctx.lr,

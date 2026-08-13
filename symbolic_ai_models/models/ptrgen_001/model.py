@@ -79,9 +79,9 @@ from typing import Sequence
 import numpy as np
 
 from ...calibration import MassCalibrator, ScoreCalibrator
-from ...data.curriculum import Episode
-from ...data.graph import TYPE_TO_ID
-from ...data.tokenizer import SymbolTokenizer
+from symbolic_ai_core.data.curriculum import Episode
+from symbolic_ai_core.data.graph import TYPE_TO_ID
+from symbolic_ai_core.data.tokenizer import SymbolTokenizer
 from ..base import ModelConfig
 from ..corefer_001.model import _pair_features, _type_keys
 from ..registry import register

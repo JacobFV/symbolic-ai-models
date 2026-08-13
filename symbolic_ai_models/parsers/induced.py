@@ -44,8 +44,8 @@ import collections
 import itertools
 from typing import Iterable, Sequence
 
-from ..data.curriculum import Episode
-from ..data.tokenizer import SymbolTokenizer, split_words
+from symbolic_ai_core.data.curriculum import Episode
+from symbolic_ai_core.data.tokenizer import SymbolTokenizer, split_words
 from .base import ParseResult, Parser, register
 
 __all__ = ["InducedClassParser"]

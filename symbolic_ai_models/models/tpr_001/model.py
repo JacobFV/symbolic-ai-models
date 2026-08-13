@@ -34,7 +34,7 @@ from __future__ import annotations
 import torch
 import torch.nn as nn
 
-from ...data.batch import N_RELATIONS, SymbolicBatch
+from symbolic_ai_core.data.batch import N_RELATIONS, SymbolicBatch
 from ..base import (Attention, FeedForward, ModelConfig, SymbolicModel,
                    attention_bias)
 from ..registry import register

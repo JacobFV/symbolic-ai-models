@@ -25,9 +25,9 @@ from typing import Any, Protocol, Sequence
 
 import torch
 
-from ..data.batch import SymbolicBatch
-from ..data.curriculum import Episode
-from ..data.tokenizer import SymbolTokenizer
+from symbolic_ai_core.data.batch import SymbolicBatch
+from symbolic_ai_core.data.curriculum import Episode
+from symbolic_ai_core.data.tokenizer import SymbolTokenizer
 from ..models.base import ModelOutput
 
 __all__ = ["Task", "TaskOutput", "Totals", "lift", "bits"]

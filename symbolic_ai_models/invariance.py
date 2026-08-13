@@ -33,8 +33,8 @@ import re
 from dataclasses import dataclass
 from typing import Sequence
 
-from .data.curriculum import Episode
-from .data.tokenizer import SymbolTokenizer
+from symbolic_ai_core.data.curriculum import Episode
+from symbolic_ai_core.data.tokenizer import SymbolTokenizer
 
 __all__ = ["Renaming", "build_renaming", "rename_episodes"]
 
@@ -120,7 +120,7 @@ def label_accuracy(model, episodes: Sequence[Episode], tok: SymbolTokenizer, *,
     import numpy as np
     import torch
 
-    from .data.batch import collate_graph
+    from symbolic_ai_core.data.batch import collate_graph
 
     batch = collate_graph(episodes, tok, max_nodes=max_nodes,
                           mask_rate=mask_rate,

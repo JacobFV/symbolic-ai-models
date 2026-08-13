@@ -8,9 +8,9 @@ from typing import Sequence
 
 import torch
 
-from ..data.batch import IGNORE, collate_text
-from ..data.curriculum import Episode
-from ..data.tokenizer import SymbolTokenizer
+from symbolic_ai_core.data.batch import IGNORE, collate_text
+from symbolic_ai_core.data.curriculum import Episode
+from symbolic_ai_core.data.tokenizer import SymbolTokenizer
 from ..models.base import ModelOutput
 from .base import Task, TaskOutput, Totals, ratio, score_block
 

@@ -8,7 +8,7 @@ of the comparison.
 
 from __future__ import annotations
 
-from ..data.tokenizer import split_words
+from symbolic_ai_core.data.tokenizer import split_words
 from .base import ParseResult, Parser, register
 
 __all__ = ["NoParser"]

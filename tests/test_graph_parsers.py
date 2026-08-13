@@ -17,8 +17,8 @@ import sys
 
 import pytest
 
-from symbolic_ai_models.data.curriculum import generate
-from symbolic_ai_models.data.graph import Graph
+from symbolic_ai_core.data.curriculum import generate
+from symbolic_ai_core.data.graph import Graph
 from symbolic_ai_parsers import (METRICS, REGISTRY, build, fit_floor, get,
                                  parser_names, score_graph)
 from symbolic_ai_parsers.align import align, canonical, children_of, content_align
@@ -268,7 +268,7 @@ def test_parsing_is_stable_across_processes(tmp_path):
     number flap for that reason, so the parses are digested under two seeds."""
     script = (
         "import json,hashlib;"
-        "from symbolic_ai_models.data.curriculum import generate;"
+        "from symbolic_ai_core.data.curriculum import generate;"
         "from symbolic_ai_parsers import build,parser_names;"
         f"tr=list(generate({LESSONS!r},n=3,seed0=0,max_nodes=128));"
         f"ev=list(generate({LESSONS!r},n=2,seed0={EVAL_SEED0},max_nodes=128));"

@@ -55,7 +55,7 @@ import re
 from dataclasses import dataclass, field
 from typing import Iterable, Sequence
 
-from symbolic_ai_models.data.graph import Graph
+from symbolic_ai_core.data.graph import Graph
 
 from .treebank import ClauseSample, Segment, Treebank
 

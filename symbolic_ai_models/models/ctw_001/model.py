@@ -35,8 +35,8 @@ import collections
 import math
 from typing import Sequence
 
-from ...data.curriculum import Episode
-from ...data.tokenizer import SymbolTokenizer
+from symbolic_ai_core.data.curriculum import Episode
+from symbolic_ai_core.data.tokenizer import SymbolTokenizer
 from ..base import ModelConfig, N_TYPES
 from ..registry import register
 from ..symbolic import ABSTAIN, GraphView, RuleBasedModel, Votes

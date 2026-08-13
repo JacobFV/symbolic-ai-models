@@ -37,10 +37,10 @@ from typing import Sequence
 import numpy as np
 import torch
 
-from ..data.batch import IGNORE, collate_graph
-from ..data.curriculum import Episode
-from ..data.graph import STRUCTURAL, TYPE_TO_ID
-from ..data.tokenizer import SymbolTokenizer
+from symbolic_ai_core.data.batch import IGNORE, collate_graph
+from symbolic_ai_core.data.curriculum import Episode
+from symbolic_ai_core.data.graph import STRUCTURAL, TYPE_TO_ID
+from symbolic_ai_core.data.tokenizer import SymbolTokenizer
 from ..models.base import ModelOutput
 from .base import Task, TaskOutput, Totals, empirical_floor, ratio, score_block
 

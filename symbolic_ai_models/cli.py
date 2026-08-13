@@ -112,7 +112,7 @@ def cmd_tasks(args: argparse.Namespace) -> int:
 
 
 def cmd_lessons(args: argparse.Namespace) -> int:
-    from .data.curriculum import resolve_lessons
+    from symbolic_ai_core.data.curriculum import resolve_lessons
     names = resolve_lessons(args.select)
     for n in names:
         print(n)
@@ -121,7 +121,7 @@ def cmd_lessons(args: argparse.Namespace) -> int:
 
 
 def cmd_data(args: argparse.Namespace) -> int:
-    from .data.curriculum import build_split
+    from symbolic_ai_core.data.curriculum import build_split
     counts = build_split(args.out, lessons=args.lessons, n_train=args.n_train,
                          n_eval=args.n_eval, language=args.language,
                          max_nodes=args.max_nodes)
@@ -132,7 +132,7 @@ def cmd_data(args: argparse.Namespace) -> int:
 
 def cmd_inspect(args: argparse.Namespace) -> int:
     """Show one episode in both surfaces — the clearest picture of the setup."""
-    from .data.curriculum import generate
+    from symbolic_ai_core.data.curriculum import generate
     for ep in generate([args.lesson], n=1, seed0=args.seed, language=args.language):
         print(f"=== {ep.lesson_id}  seed={ep.seed}  instance={ep.instance_id}\n")
         print("--- text (next-token task) ---")
@@ -253,7 +253,7 @@ def _select_models(spec: str | None) -> list[str]:
 
 def cmd_eval(args: argparse.Namespace) -> int:
     from .agent import evaluate_choices
-    from .data.curriculum import resolve_lessons
+    from symbolic_ai_core.data.curriculum import resolve_lessons
     from .tasks import make_task
     from .train import _add_lift, _task_kwargs, evaluate_model, load_data, load_run
 
@@ -303,7 +303,7 @@ def cmd_parsers(args: argparse.Namespace) -> int:
 
 def cmd_parse_eval(args: argparse.Namespace) -> int:
     """Score parsers against the structure the curriculum generated the text from."""
-    from .data.curriculum import generate, resolve_lessons
+    from symbolic_ai_core.data.curriculum import generate, resolve_lessons
     from .parsers import build, evaluate_parser, parser_names
     from .parsers.evaluate import ParserReport
     from .parsers.scale import curve_table, scaling_curve
@@ -339,7 +339,7 @@ def cmd_parse_eval(args: argparse.Namespace) -> int:
 def cmd_sample(args: argparse.Namespace) -> int:
     """Decode continuations and print them, for a person or a reviewing model."""
     from .decode import SamplingConfig, sample_episodes, transcript, write_json
-    from .data.curriculum import resolve_lessons
+    from symbolic_ai_core.data.curriculum import resolve_lessons
     from .train import load_data, load_run
 
     device = args.device or "cpu"

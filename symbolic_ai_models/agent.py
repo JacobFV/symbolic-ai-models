@@ -29,9 +29,9 @@ from typing import Sequence
 
 import torch
 
-from .data.batch import text_batch
-from .data.curriculum import Episode
-from .data.tokenizer import SymbolTokenizer
+from symbolic_ai_core.data.batch import text_batch
+from symbolic_ai_core.data.curriculum import Episode
+from symbolic_ai_core.data.tokenizer import SymbolTokenizer
 from .models.base import Model
 from .tasks.base import lift
 
