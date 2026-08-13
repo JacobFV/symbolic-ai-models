@@ -44,6 +44,25 @@ What that means concretely, all of it learned here the expensive way:
   `symbolic-ai-models sweep` twice, both times flattering the write-up. Use
   them to form hypotheses, never to report.
 
+## Write it down in `notes/`, even when you are not going to chase it
+
+`notes/` is the lab notebook; `RESEARCH_LOG.md` is the paper. **One file per
+note** — several agents work in separate worktrees at once, and a shared file is
+the one thing that cannot survive that. Two agents appending to
+`RESEARCH_LOG.md` conflict; two agents creating different filenames merge
+silently.
+
+- `notes/questions/` is a **parking lot**. Pile ideas up without opening a thread
+  on each. A three-line note with `status: idea` is a complete note — capture is
+  meant to be cheap, and the rigour bar applies to findings, not to hunches.
+  Ideas that live only in one agent's context die there, and several already have.
+- `notes/findings/` needs the floor, the control, and what would have refuted it.
+- `notes/decisions/` records a fork *before* the work, including what was rejected.
+
+Read `notes/README.md` before writing one. Findings get promoted into
+`RESEARCH_LOG.md` — rewritten, not copied — once something independent has tried
+to break them.
+
 ## New models go beside the old ones, never in place of them
 
 Register a variant as `name-002` or `name-noprose` and leave its predecessor
