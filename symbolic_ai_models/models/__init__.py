@@ -53,6 +53,7 @@ from . import omegaclaw_flat_001, omegaclaw_rank_001  # noqa: F401
 from . import ensemble_001, joint, omegaclaw_reach_001, ptrgen_001  # noqa: F401
 from . import omegaclaw_const_002, omegaclaw_lang_002  # noqa: F401
 from . import omegaclaw_text_002, omegaclaw_textlang_002  # noqa: F401
+from . import omegaclaw_pure_002  # noqa: F401
 from . import synthex_002, vsa_002, vsa_perm_002  # noqa: F401
 
 #: The neural half is **not registered by default**. It is not the subject of
