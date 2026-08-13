@@ -62,7 +62,9 @@ from symbolic_ai_models.data.graph import Graph
 from ..base import Parser, register
 from ..features import words_of
 from ..lexicon import Lexicon
-from ..retrieval import LayoutIndex, WordIndex
+from ..retrieval import LayoutIndex, ShapeIndex, WordIndex
+
+_INDEXES = {"layout": LayoutIndex, "shape": ShapeIndex, "words": WordIndex}
 
 
 class TemplateParser(Parser):
@@ -76,7 +78,7 @@ class TemplateParser(Parser):
     seed_n: int = 64
 
     def __init__(self) -> None:
-        self._index = LayoutIndex() if self.lookup == "layout" else WordIndex()
+        self._index = _INDEXES[self.lookup]()
         self._episodes: list[Episode] = []
         self._lex = Lexicon()
         #: set by ``parse``; read by the evaluator to report ``retrieval_acc``
@@ -163,3 +165,22 @@ class TemplateSeededLexicon(TemplateParser):
 class TemplateSeeded(TemplateParser):
     lookup = "words"
     seeded = True
+
+
+@register("template-002", learned=True,
+          doc="Shape lookup (punctuation and lines only), lexicon from training episodes.")
+class TemplateShape(TemplateParser):
+    """``template-001`` with the token-counting features taken out of its lookup.
+
+    Registered as a new version rather than as an edit to ``-001``, so the
+    correction is a row in the same sweep. What changed and why is in
+    :mod:`symbolic_ai_parsers.features`: the features ``-001`` calls "layout"
+    include token counts and token lengths, which are facts about the
+    tokenisation rather than the document, and Chinese retokenises the same
+    document wholesale. Settled on held-out **training** episodes rendered in
+    each language — seeds 200-201, nowhere near the eval range — and only then
+    run on eval.
+    """
+
+    lookup = "shape"
+    seeded = False

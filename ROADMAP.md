@@ -40,6 +40,28 @@ Metric: pairwise clustering F1 between "same induced class" and "same true
 role", where a word's true role is the multiset of (parent label, slot) it
 occupies in the term graph.
 
+### The other codomain: `symbolic_ai_parsers`
+
+That metric scores *classes*. A second, separate package asks a parser for the
+whole structure — `str -> Graph`, the term the text was rendered from — which is
+the same supervision used harder. It supersedes the layer above for that
+objective rather than wrapping it, and both stay registered; `legacy-001`
+bridges the old `facts` into a graph as a control and finishes below the
+text-blind floor on node type. Six metrics, six fitted floors,
+`symbolic-ai-parsers sweep` is its authority, and `RESEARCH_LOG.md` has the
+numbers. Three things from it that generalise beyond parsing:
+
+- **A tree alignment cannot score attachment.** The top-down mapping only pairs
+  nodes whose parents are paired, so UAS over it is 1 by construction. It
+  reported 0.95 for a parser that does no parsing.
+- **Memorisation is most of the score on a templated corpus.** A nearest-prompt
+  lookup with no parsing in it reaches 0.758 label F1; the best parser reaches
+  0.832. Any parser number here not read against that one is unreadable.
+- **The cross-language probe is a script-and-tokenisation probe.** Swahili costs
+  almost nothing and Chinese costs everything that touched a token count. A
+  feature set built to be language-independent collapsed to 0.02 lesson
+  identification in Chinese because it counted tokens.
+
 ## Measured, so nobody re-derives it
 
 - **The parser metric has headroom.** A concern was raised that scoring two

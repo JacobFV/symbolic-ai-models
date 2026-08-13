@@ -379,6 +379,171 @@ sensitivity lives (+0.029 with it, +0.002 without). Separating mechanism from
 shared floor is a harness change worth making for the whole table — but the
 claim that it dominates any model's score is not supported.
 
+## Parsing text back into the graph: `symbolic_ai_parsers`
+
+A second, separate package, because the parser layer in `symbolic_ai_models`
+answers a different question. There a `Parser` is `text -> ParseResult` — word
+classes, brackets, facts — scored by pairwise class agreement. Here a parser is
+`str -> Graph` and has to produce the term the text was rendered from: nodes,
+types, labels, parents. The old layer is not deleted and its four reasoners keep
+using it; it is **superseded for this objective, not wrapped**, because a
+`ParseResult` cannot be turned into a `Graph` without inventing the structure it
+declined to commit to. One bridge is registered as a control (`legacy-001`,
+lifting the old `regex` parser's `facts`), and it loses — see the table.
+
+Numbers below are from `runs/parsers_full179.json`: all 179 generatable lessons,
+16 training episodes each, 8 eval episodes each at seeds a million away, macro
+averaged over lessons, four rendering languages. `symbolic-ai-parsers sweep` is
+the authority.
+
+### A tree alignment cannot be used to score attachment
+
+Written first, and it read as a strong result. Comparing a predicted graph to
+the true one needs an alignment, and the natural one is the top-down /
+isolated-subtree mapping: roots align, and the children of two aligned nodes are
+aligned to each other. That mapping only ever adds a pair once the pair's
+parents are paired — so **every aligned node has a correct head by
+construction**, and the UAS computed over it is identically 1 wherever it is
+defined. It reported 0.95 for a parser that copies a remembered graph and does
+no parsing at all. What it measures is how many nodes were *alignable*.
+
+`uas` and `las` now use a content alignment — the k-th node carrying a label is
+the k-th gold node carrying it, which is the exact analogue of dependency
+parsing comparing two analyses token index by token index. The tree alignment is
+kept for `type_acc`, where identifying a node by where it sits is what makes
+agreeing about its type a real question. Both degeneracies are pinned by tests.
+
+A smaller one, caught by a test rather than by reading: counting occurrences is
+a statement about node numbering, so scoring canonicalises both graphs
+breadth-first before anything else.
+
+### Six metrics, six floors, and they do not agree
+
+`exact`, `uas`, `las`, `type_acc`, `bracket_f1` (PARSEVAL over `(type, label,
+leaf yield)`) and `label_f1` (multiset of labels, structure ignored). The last
+two never call an aligner, deliberately, so a result resting on the alignment
+has a witness that does not. Each gets its own text-blind constant floor, fitted
+by search over training graphs held out against each other — per metric, because
+the constant maximising `label_f1` is not the one maximising `bracket_f1`.
+
+The floor search itself was checked rather than trusted: quadrupling it to 200
+candidates against 120 targets moves the floor by at most 0.013, so the lifts
+above it are not an artefact of a thin search. The larger setting is the
+default.
+
+English, 179 lessons:
+
+| parser | uas | las | type_acc | bracket_f1 | label_f1 | exact |
+|---|---:|---:|---:|---:|---:|---:|
+| **floor** (text-blind constant) | 0.075 | 0.051 | **0.548** | 0.004 | 0.123 | 0.000 |
+| `prior-001` (one constant graph) | 0.050 | 0.035 | 0.449 | 0.001 | 0.077 | 0.000 |
+| `legacy-001` (the old layer's facts) | 0.065 | 0.041 | **0.410** | 0.067 | 0.382 | 0.000 |
+| `bracket-001` (layout, written down) | 0.145 | 0.084 | 0.644 | 0.020 | 0.455 | 0.000 |
+| `retrieve-001` (memorise, no parsing) | 0.568 | 0.511 | 0.943 | 0.228 | 0.758 | 0.008 |
+| `template-001` | 0.576 | 0.515 | 0.958 | 0.234 | **0.832** | **0.016** |
+| `template-002` | 0.545 | 0.487 | 0.935 | 0.214 | 0.798 | 0.008 |
+| `template-seeded` | 0.575 | 0.512 | 0.939 | **0.241** | 0.839 | 0.015 |
+
+Three things to read off it, none of them the ranking:
+
+- **`type_acc` has a floor of 0.548 and `bracket_f1` has one of 0.004.** They
+  are not comparable numbers and a parser quoted on one of them without the
+  other is being quoted selectively. `legacy-001` sits *below* the type floor
+  (lift **-0.307**) while clearing the bracket floor (+0.063); `bracket-001` is
+  the reverse shape. This is the same pattern the model half of the repo has —
+  seven rule-based models below the type floor while clearing the label floor.
+- **Exact graph recovery is essentially unachieved.** The best row is 0.016.
+  Whatever these parsers are doing, it is not parsing in the sense of getting
+  the answer right.
+- **Memorisation gets most of it.** `retrieve-001` does no parsing whatsoever —
+  nearest training prompt by word overlap, emit its graph — and reaches 0.758
+  label F1. `template-001`'s refill step is worth **+0.074 label F1 and +0.008
+  exact** over that, and nothing at all on `bracket_f1` (0.234 vs 0.228). On a
+  templated corpus, recall is most of the score, and any parser number here that
+  is not read against `retrieve-001` is unreadable.
+
+### Cross-language: the clean test, and my prediction was wrong
+
+`langcurriculum` takes a language when it renders and takes none when it
+structures, so the same seed gives a different string in every language and a
+**byte-identical graph**. For the masked-node task that is a disappointment
+(`tests/test_language.py`). For a parser it is the ideal experiment: the target
+is fixed, the input is translated, nothing else changed.
+
+The pre-registered prediction, written into `parsers/template.py` and committed
+before the sweep ran, was that a dictionary-seeded parser would collapse in
+Chinese and a grammar-learning one would not. **The opposite happened.** Share
+of the English score kept:
+
+| parser | lookup signal | zh retrieval | zh label F1 kept | tr | sw |
+|---|---|---:|---:|---:|---:|
+| `template-001` | "layout" | **0.02** | **0.16** | 0.29 | 0.87 |
+| `retrieve-001` | word identity | 0.34 | 0.47 | 0.89 | 0.90 |
+| `template-seeded` | word identity | 0.34 | 0.38 | 0.79 | 0.80 |
+| `template-002` | punctuation and lines | **0.74** | **0.60** | 0.82 | 0.84 |
+
+The parser designed to be language-independent was the one that collapsed
+hardest, and word identity — the thing translation is supposed to destroy —
+transferred better than it did. The cause is worth writing down because it is
+not about parsing at all:
+
+**`layout_features` was not measuring layout.** It counted tokens, measured
+their mean length, and counted how many were ASCII. Every one of those is a fact
+about the *tokenisation*, and Chinese retokenises the same document into far
+more, far shorter, non-ASCII pieces. The feature vector moved wholesale and the
+nearest-neighbour lookup went to the wrong lesson 98% of the time.
+
+`template-002` is registered beside `-001` rather than replacing it, and uses
+punctuation counts and line structure only. Settled on **held-out training
+episodes** rendered in each language (seeds 200-201) before it was ever run on
+eval:
+
+| feature set | en | zh | tr | sw |
+|---|---:|---:|---:|---:|
+| `layout_features` (token shape included) | 0.983 | 0.014 | 0.084 | 0.966 |
+| `shape_features` (punctuation and lines) | 0.933 | **0.690** | 0.860 | 0.860 |
+
+Two more from the same measurement:
+
+- **NFKC is not enough for CJK punctuation.** It folds `：` and `；`, which are
+  compatibility forms, and leaves `、` and `。` alone, which are not. The
+  ideographic comma is the list separator in the Chinese rendering, so without
+  an explicit fold the document reads as having no separators: Chinese lesson
+  identification is **0.212 unfolded and 0.690 folded**.
+- **Counting identifiers looks language-independent and is not.** Adding "how
+  many ASCII identifier tokens" took English to 0.969 and Chinese to 0.159,
+  because in English that count includes every English word and in Chinese only
+  the untranslated symbols. It is a vocabulary-size feature wearing a shape
+  feature's name. Not used.
+
+The honest summary of the language axis is that **script and tokenisation
+dominate it, not grammar versus vocabulary**. Swahili costs almost nothing to
+anything (0.80-0.90 kept across the board, and 0.87 even for the broken
+`template-001`), because it keeps the Latin script, the layout and a good deal
+of untranslated English. Chinese costs everything that touched a token. A
+cross-language claim in this repo should say which of those two it is testing.
+
+### Dictionary seeding: a null that shrinks to zero
+
+The knob is `Lexicon.from_curriculum` — build the frame/content judgement from
+the whole curriculum's vocabulary instead of estimating it from the training
+episodes. It is registered as `template-lex` with `template-001` as the
+unseeded control on the identical lookup, and the bare name `template` resolves
+over numbered versions only, so nothing can ask for "the template parser" and
+get the seeded one.
+
+| training episodes per lesson | `template-001` label F1 | `template-lex` label F1 |
+|---:|---:|---:|
+| 2 | 0.787 | 0.798 |
+| 16 | 0.832 | 0.832 |
+
+**+0.011 at two episodes per lesson, and identical to three decimals at
+sixteen** — on every metric and in every language. The judgement it seeds
+saturates almost immediately: a template constant appears in *all* of a lesson's
+episodes, so two draws already separate it from a content word most of the time.
+A curriculum-wide dictionary buys nothing a handful of examples does not, and
+`FRAME_THRESHOLD` was not swept to rescue it.
+
 ## What is shaky
 
 - **Every neural number is a lower bound.** All four re-run networks were still
@@ -465,3 +630,20 @@ redefined what an earlier published row had meant.
   and the parser layer — built, tested, scored — has never been tried inside the
   one model where prose demonstrably helps.
 - What budget would settle the neural comparison? Parked; it is a control.
+- **Can anything beat `retrieve-001` by more than the refill step does?** On the
+  `str -> Graph` task a lookup with no parsing in it reaches 0.758 label F1 and
+  the best parser reaches 0.832. Until something opens that gap, "parsing this
+  curriculum" and "recognising which of 179 lessons this is" are the same
+  measurement, and the second one is not interesting.
+- **Exact graph recovery is 0.016 at best.** Every other number in the parser
+  table is partial credit. Nothing here has actually parsed an episode.
+- **Is `template-002`'s Chinese score grammar or is it punctuation?** It keeps
+  0.60 of its English label F1 across a full script change, on punctuation
+  counts and line structure alone. That is either a real structural signal or a
+  fingerprint of 179 distinct document layouts, and the two are distinguishable:
+  render with the layout perturbed — bullets to numbers, semicolons to newlines —
+  and see whether identification survives. It has not been run.
+- **Nothing has tried to *build* a graph rather than retrieve one.** All five
+  registered parsers either emit a fixed structure or copy a training graph and
+  substitute words. A parser that composes a term from the text is the obvious
+  next thing and would be the first row in the table that is not a lookup.

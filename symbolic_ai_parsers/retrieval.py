@@ -23,35 +23,54 @@ from typing import Sequence
 
 import numpy as np
 
-from .features import layout_features, standardise, word_features
+from .features import (layout_features, shape_features, standardise,
+                       word_features)
 
-__all__ = ["LayoutIndex", "WordIndex"]
+__all__ = ["LayoutIndex", "ShapeIndex", "WordIndex"]
 
 
-class LayoutIndex:
-    """Nearest neighbour on standardised layout features. Language-independent."""
+class _EuclideanIndex:
+    """Nearest neighbour on a standardised dense feature vector."""
 
-    kind = "layout"
+    kind = "dense"
+    _feature = staticmethod(layout_features)
 
     def __init__(self) -> None:
         self._m: np.ndarray | None = None
         self._mean = self._scale = None
 
     def fit(self, texts: Sequence[str]) -> None:
-        raw = np.stack([layout_features(t) for t in texts]) if texts else np.zeros((0, 1))
+        raw = (np.stack([self._feature(t) for t in texts]) if texts
+               else np.zeros((0, 1)))
         self._mean, self._scale = standardise(raw)
         self._m = (raw - self._mean) / self._scale
 
     def query(self, text: str) -> int:
         if self._m is None or not len(self._m):
             return -1
-        v = (layout_features(text) - self._mean) / self._scale
+        v = (self._feature(text) - self._mean) / self._scale
         # Squared Euclidean, argmin. ``argmin`` breaks ties toward the lower
         # index, which is deterministic and does not depend on hash order.
         return int(np.argmin(((self._m - v) ** 2).sum(axis=1)))
 
     def n_parameters(self) -> int:
         return 0 if self._m is None else int(self._m.size)
+
+
+class LayoutIndex(_EuclideanIndex):
+    """Punctuation, lines *and token shape*. Meant to be language-independent
+    and measured not to be — see :mod:`symbolic_ai_parsers.features`. Kept
+    registered under ``template-001`` so the correction stays measurable."""
+
+    kind = "layout"
+    _feature = staticmethod(layout_features)
+
+
+class ShapeIndex(_EuclideanIndex):
+    """Punctuation and line structure only. The one that survives translation."""
+
+    kind = "shape"
+    _feature = staticmethod(shape_features)
 
 
 class WordIndex:

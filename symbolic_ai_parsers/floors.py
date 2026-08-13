@@ -67,14 +67,31 @@ class ConstantFloor:
         return out
 
 
-def fit_floor(train: Sequence[Episode], *, n_candidates: int = 48,
-              n_targets: int = 64, seed: int = 12345) -> ConstantFloor:
+def fit_floor(train: Sequence[Episode], *, n_candidates: int = 200,
+              n_targets: int = 120, seed: int = 12345) -> ConstantFloor:
     """Search training graphs for the best constant, per metric.
 
     ``n_candidates`` and ``n_targets`` bound an inherently quadratic search. They
     are sampled without replacement from disjoint halves and the sampling is
     seeded, so the floor is reproducible; they are not tuned, and raising them
     can only raise the floor, which is the safe direction for a control.
+
+    Their size is not a guess. This repo has published a lift that was an
+    artefact of a floor 0.065 too low, so the search was measured against a four
+    times larger one on all 179 lessons before the defaults were set:
+
+    ==============  =====  =====  ========  ==========  ========
+    candidates x    uas    las    type_acc  bracket_f1  label_f1
+    targets
+    ==============  =====  =====  ========  ==========  ========
+    48 x 64         0.071  0.048  0.535     0.0015      0.118
+    200 x 120       0.075  0.051  0.548     0.0040      0.123
+    ==============  =====  =====  ========  ==========  ========
+
+    Fifteen seconds, and it moves the floor by at most 0.013 — so the search is
+    close to converged and the lifts above it are not an artefact of a thin one.
+    The larger setting is the default anyway, because there is no reason to
+    quote the weaker of two floors you have both of.
     """
     eps = list(train)
     if len(eps) < 4:

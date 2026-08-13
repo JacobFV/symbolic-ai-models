@@ -60,7 +60,10 @@ def test_a_bare_name_resolves_over_numbers_not_over_words():
     every word above every number. It is repeated here because the same naming
     convention is in use and the same mistake is therefore available.
     """
-    assert get("template").name == "template-001"
+    numbered = sorted(n for n in REGISTRY
+                      if n.startswith("template-") and n.split("-")[-1].isdigit())
+    assert get("template").name == numbered[-1]
+    assert get("template").name not in ("template-seeded", "template-lex")
     assert get("template-seeded").name == "template-seeded"
     assert get("template-001").name == "template-001"
 
@@ -74,6 +77,41 @@ def test_an_unnumbered_family_refuses_to_resolve():
             get("ghost")
     finally:
         del R["ghost-alpha"]
+
+
+def test_the_shape_features_do_not_count_tokens(evals):
+    """The correction ``template-002`` exists for, asserted as a property.
+
+    ``layout_features`` moves wholesale between an English prompt and its
+    Chinese rendering because it counts and measures tokens, and Chinese
+    retokenises the same document into far more, far shorter pieces.
+    ``shape_features`` reads punctuation and lines, so it should move far less.
+    Relative distance, not an absolute one, so this is a claim about the two
+    feature sets and not a number measured on this fixture.
+    """
+    import numpy as np
+
+    from symbolic_ai_parsers.features import layout_features, shape_features
+
+    def drift(f) -> float:
+        num = den = 0.0
+        for a, b in zip(evals["english"], evals["chinese"]):
+            va, vb = f(a.prompt), f(b.prompt)
+            num += float(np.abs(va - vb).sum())
+            den += float(np.abs(va).sum()) + 1e-9
+        return num / den
+
+    assert drift(shape_features) < drift(layout_features)
+
+
+def test_cjk_punctuation_is_folded_onto_its_ascii_role():
+    """NFKC folds ``：`` because it is a compatibility form and leaves ``、``
+    alone because it is not — and ``、`` is the Chinese list separator."""
+    from symbolic_ai_parsers.features import fold, normalise
+
+    assert "、" in normalise("alice、bob")
+    assert fold("alice、bob和dave") .count(",") == 1
+    assert fold("图如下：").endswith(":")
 
 
 def test_both_seeding_arms_stay_registered():
