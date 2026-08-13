@@ -323,8 +323,15 @@ symbolic-ai-models/
       graph.py            # term JSON -> flat node array + parent pointer
       tokenizer.py        # one vocabulary, byte fallback, lossless
       batch.py            # SymbolicBatch + the relation algebra  <- the harness
+    registry.py           # the versioned-name rule, written once for everyone
+    floors.py             # empirical_floor, lift, and exact per-head counting
+    shortcuts.py          # what an unthinking cheat scores: a floor and an audit
+    calibration.py        # is the confidence worth anything
+    invariance.py         # rename every symbol and see who notices
+    asymptotics.py        # I(d) and effective rank: observables of the corpus
   symbolic_ai_models/
-    data/                 # re-export shims at the pre-split import paths
+    data/ calibration.py  # re-export shims at the pre-split import paths
+    invariance.py shortcuts.py asymptotics.py
     models/
       base.py             # Model (the interface) + NeuralModel (embeddings, heads)
       symbolic.py         # RuleBasedModel: votes -> distribution, redacted views
