@@ -29,7 +29,7 @@ from __future__ import annotations
 import collections
 from typing import Sequence
 
-from symbolic_ai_models.data.curriculum import Episode
+from symbolic_ai_core.data.curriculum import Episode
 
 from ...base import register
 from ...grammar import Derivation

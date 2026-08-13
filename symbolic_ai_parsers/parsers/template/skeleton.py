@@ -62,8 +62,8 @@ from __future__ import annotations
 
 from typing import Sequence
 
-from symbolic_ai_models.data.curriculum import Episode
-from symbolic_ai_models.data.graph import Graph
+from symbolic_ai_core.data.curriculum import Episode
+from symbolic_ai_core.data.graph import Graph
 
 from ...base import Parser
 from ...features import words_of

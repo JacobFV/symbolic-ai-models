@@ -31,7 +31,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from ..data.tokenizer import split_words
+from symbolic_ai_core.data.tokenizer import split_words
 from .primitives import lexicon
 from .primitives.syllogistic import (Categorical, Fact, Statement,
                                        parse_prompt, parse_statement)

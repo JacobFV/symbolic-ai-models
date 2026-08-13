@@ -17,7 +17,7 @@ import numpy as np
 import pytest
 import torch
 
-from symbolic_ai_models.data.curriculum import generate
+from symbolic_ai_core.data.curriculum import generate
 from symbolic_ai_models.models import ModelConfig, build
 from symbolic_ai_models.tasks import make_task
 from symbolic_ai_models.train import TrainConfig, build_tokenizer

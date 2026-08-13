@@ -12,7 +12,7 @@ from __future__ import annotations
 import torch
 import torch.nn as nn
 
-from ...data.batch import N_RELATIONS, SymbolicBatch
+from symbolic_ai_core.data.batch import N_RELATIONS, SymbolicBatch
 from ..base import ModelConfig, NeuralModel
 from ..registry import register
 from ..transformer_001.model import Block

@@ -69,8 +69,8 @@ from typing import Sequence
 
 import numpy as np
 
-from ...data.curriculum import Episode
-from ...data.tokenizer import SymbolTokenizer
+from symbolic_ai_core.data.curriculum import Episode
+from symbolic_ai_core.data.tokenizer import SymbolTokenizer
 from ..base import ModelConfig
 from ..registry import build as build_model
 from ..registry import register

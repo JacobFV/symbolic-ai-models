@@ -13,7 +13,7 @@ from __future__ import annotations
 import torch
 import torch.nn as nn
 
-from ...data.batch import SymbolicBatch
+from symbolic_ai_core.data.batch import SymbolicBatch
 from ..base import Attention, FeedForward, ModelConfig, NeuralModel
 from ..registry import register
 

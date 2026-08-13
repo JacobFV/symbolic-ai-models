@@ -11,8 +11,8 @@ from __future__ import annotations
 import pytest
 
 from symbolic_ai_models.agent import ChoiceResult, CurriculumReport
-from symbolic_ai_models.data.curriculum import generate
-from symbolic_ai_models.shortcuts import (SHORTCUTS, best_shortcut,
+from symbolic_ai_core.data.curriculum import generate
+from symbolic_ai_core.shortcuts import (SHORTCUTS, best_shortcut,
                                           shortcut_scores, shortcut_table)
 
 
@@ -97,8 +97,8 @@ def test_the_prompt_does_not_leak_hidden_node_labels():
     distinction the whole task rests on: the question is which node, not which
     symbol.
     """
-    from symbolic_ai_models.data.curriculum import generate, lesson_ids
-    from symbolic_ai_models.shortcuts import node_text_leak
+    from symbolic_ai_core.data.curriculum import generate, lesson_ids
+    from symbolic_ai_core.shortcuts import node_text_leak
 
     episodes = list(generate(lesson_ids()[:12], n=6))
     got = node_text_leak(episodes, mask_rate=0.15, max_nodes=128)

@@ -10,11 +10,11 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from symbolic_ai_models.data.batch import (REL, collate_graph, collate_text,
+from symbolic_ai_core.data.batch import (REL, collate_graph, collate_text,
                                            relation_matrix)
-from symbolic_ai_models.data.curriculum import Episode, generate, resolve_lessons
-from symbolic_ai_models.data.graph import TYPE_TO_ID, Graph, graph_from_json
-from symbolic_ai_models.data.tokenizer import SymbolTokenizer
+from symbolic_ai_core.data.curriculum import Episode, generate, resolve_lessons
+from symbolic_ai_core.data.graph import TYPE_TO_ID, Graph, graph_from_json
+from symbolic_ai_core.data.tokenizer import SymbolTokenizer
 
 LESSONS = ["unification", "symbol_grounding", "context_free_language"]
 
@@ -240,9 +240,9 @@ def test_target_source_points_at_a_visible_node_with_the_same_label():
     """
     import numpy as np
 
-    from symbolic_ai_models.data.batch import IGNORE, collate_graph
-    from symbolic_ai_models.data.curriculum import generate, lesson_ids
-    from symbolic_ai_models.data.graph import STRUCTURAL, TYPE_TO_ID
+    from symbolic_ai_core.data.batch import IGNORE, collate_graph
+    from symbolic_ai_core.data.curriculum import generate, lesson_ids
+    from symbolic_ai_core.data.graph import STRUCTURAL, TYPE_TO_ID
     from symbolic_ai_models.train import TrainConfig, build_tokenizer
 
     eps = list(generate(lesson_ids()[:6], n=6))
@@ -274,8 +274,8 @@ def test_the_copy_ceiling_is_reported_and_bounded():
     """A ceiling nobody prints is a ceiling nobody checks against."""
     import numpy as np
 
-    from symbolic_ai_models.data.batch import collate_graph
-    from symbolic_ai_models.data.curriculum import generate, lesson_ids
+    from symbolic_ai_core.data.batch import collate_graph
+    from symbolic_ai_core.data.curriculum import generate, lesson_ids
     from symbolic_ai_models.tasks import make_task
     from symbolic_ai_models.tasks.base import Totals
     from symbolic_ai_models.train import TrainConfig, build_tokenizer
@@ -307,7 +307,7 @@ def test_the_pretokenizer_is_total():
     covering it is the same mistake that let a six-lesson slice rank this repo's
     models backwards, and the fix is the same: assert on the alphabet.
     """
-    from symbolic_ai_models.data.tokenizer import _split_pieces
+    from symbolic_ai_core.data.tokenizer import _split_pieces
 
     alphabet = (
         "abcXYZ0189"
@@ -340,7 +340,7 @@ def test_underscored_identifiers_survive_a_round_trip():
 def test_split_words_is_total_too():
     """The graph side explodes string terms with this; a dropped character
     there silently changes a node label rather than a token."""
-    from symbolic_ai_models.data.tokenizer import split_words
+    from symbolic_ai_core.data.tokenizer import split_words
 
     for text in ["opt_a", "a_b", "__x__", "p_dun"]:
         assert "".join(split_words(text)) == text.replace(" ", "")

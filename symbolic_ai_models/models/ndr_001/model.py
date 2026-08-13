@@ -28,7 +28,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from ...data.batch import SymbolicBatch
+from symbolic_ai_core.data.batch import SymbolicBatch
 from ..base import (FeedForward, ModelConfig, RelationBias, SymbolicModel,
                    attention_bias)
 from ..registry import register

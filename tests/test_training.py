@@ -11,7 +11,7 @@ import pytest
 import torch
 
 from symbolic_ai_models.agent import evaluate_choices, as_text_agent, score_choices
-from symbolic_ai_models.data.curriculum import generate
+from symbolic_ai_core.data.curriculum import generate
 from symbolic_ai_models.report import comparison_table, load_summaries
 from symbolic_ai_models.models import ModelConfig, build
 from symbolic_ai_models.tasks import Totals, make_task
@@ -187,7 +187,7 @@ def test_answer_positions_are_marked_and_scored_apart(episodes):
     `token_bits` measures template reproduction and a model can look excellent
     on it while never getting an answer right.
     """
-    from symbolic_ai_models.data.batch import collate_text
+    from symbolic_ai_core.data.batch import collate_text
     cfg = small_config(Path("."))
     tok = build_tokenizer(cfg, episodes)
     b = collate_text(episodes, tok, max_len=256)
@@ -207,7 +207,7 @@ def test_answer_positions_are_marked_and_scored_apart(episodes):
 
 def test_marking_the_answer_does_not_change_the_input(episodes):
     """`answer_mask` is reporting only — the sequence must be untouched."""
-    from symbolic_ai_models.data.batch import collate_text
+    from symbolic_ai_core.data.batch import collate_text
     cfg = small_config(Path("."))
     tok = build_tokenizer(cfg, episodes)
     b = collate_text(episodes, tok, max_len=512)
@@ -597,7 +597,7 @@ def test_the_copy_head_is_scored_by_what_it_picked_not_by_index(episodes):
     import numpy as np
     import torch
 
-    from symbolic_ai_models.data.batch import IGNORE, collate_graph
+    from symbolic_ai_core.data.batch import IGNORE, collate_graph
     from symbolic_ai_models.models.base import ModelOutput
     from symbolic_ai_models.tasks.masked_node import _pointer_counts
 

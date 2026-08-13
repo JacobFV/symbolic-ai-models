@@ -96,7 +96,7 @@ import collections
 from dataclasses import dataclass, field
 from typing import Any, Iterable, Sequence
 
-from symbolic_ai_models.data.graph import Graph
+from symbolic_ai_core.data.graph import Graph
 
 from .align import align, canonical, children_of, content_align
 

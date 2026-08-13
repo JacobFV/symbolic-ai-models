@@ -21,8 +21,8 @@ import numpy as np
 import pytest
 import torch
 
-from symbolic_ai_models.data.batch import collate_graph
-from symbolic_ai_models.data.curriculum import generate
+from symbolic_ai_core.data.batch import collate_graph
+from symbolic_ai_core.data.curriculum import generate
 from symbolic_ai_models.models import ModelConfig, build
 from symbolic_ai_models.models.omegaclaw import CLAWS, Claim, OmegaClaw, Scan
 from symbolic_ai_models.models.omegaclaw_ctx_001 import OmegaClawContext

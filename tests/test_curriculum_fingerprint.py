@@ -19,8 +19,8 @@ import sys
 
 import pytest
 
-from symbolic_ai_models.data import curriculum as C
-from symbolic_ai_models.data import fingerprint as F
+from symbolic_ai_core.data import curriculum as C
+from symbolic_ai_core.data import fingerprint as F
 
 
 @pytest.fixture(scope="module")
@@ -44,7 +44,7 @@ def test_the_curriculum_still_hashes_to_what_the_published_runs_used(golden):
         + "\n  ".join(problems[:10])
         + "\n\nThis invalidates every published number unless the change was "
           "intended, in which case re-record with "
-          "`python -m symbolic_ai_models.data.fingerprint --write` and say so "
+          "`python -m symbolic_ai_core.data.fingerprint --write` and say so "
           "in RESEARCH_LOG.md.")
     assert got["global"] == golden["global"]
 
@@ -72,7 +72,7 @@ def test_generation_does_not_depend_on_hash_randomisation():
     import os
 
     code = ("import json,sys;"
-            "from symbolic_ai_models.data import fingerprint as F;"
+            "from symbolic_ai_core.data import fingerprint as F;"
             "print(F.curriculum_fingerprint("
             "lessons=sorted(F.C.lesson_ids())[:12])['global'])")
     out = []

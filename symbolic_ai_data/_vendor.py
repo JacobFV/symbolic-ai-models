@@ -29,7 +29,7 @@ The rule for changing it
 Vendoring means the generator can now be modified, and the repo's convention for
 models applies to lessons and render modes with more force, because editing a
 model in place invalidates one row and editing the generator in place
-invalidates every row at once. ``symbolic_ai_models/data/fingerprint.py`` holds
+invalidates every row at once. ``symbolic_ai_core/data/fingerprint.py`` holds
 a checksum of the corpus and ``tests/test_curriculum_fingerprint.py`` fails if
 it moves.
 

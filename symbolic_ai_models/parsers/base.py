@@ -41,8 +41,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Callable, Sequence, TypeVar
 
-from ..data.curriculum import Episode
-from ..data.tokenizer import SymbolTokenizer
+from symbolic_ai_core.data.curriculum import Episode
+from symbolic_ai_core.data.tokenizer import SymbolTokenizer
 
 __all__ = ["Parser", "ParseResult", "Constituent", "register", "get", "build",
            "parser_names", "REGISTRY"]

@@ -4,7 +4,7 @@
 
 The premise is that these are the same question asked of two surfaces. The generator — [`langcurriculum`](https://jacobfv.github.io/formal-language-cirriculum/), vendored here as `symbolic_ai_data/` — builds every episode as a **typed term** and only then renders it as prose, so for each episode there is a graph that is not a parse of the text but the thing the text was generated *from*. That gives a rare pairing: running text and exact structure, describing the same world, generated from the same seed, in unbounded quantity.
 
-An episode is a pure function of its seed, so a "dataset" here is only a cache and the train/eval split is a seed range rather than a file. That also means nothing on disk would change if generation drifted, which is why the corpus carries a checksum: `symbolic_ai_models/data/fingerprint.py` hashes 179 lessons × 5 seeds × 7 languages, and a test fails if any cell moves.
+An episode is a pure function of its seed, so a "dataset" here is only a cache and the train/eval split is a seed range rather than a file. That also means nothing on disk would change if generation drifted, which is why the corpus carries a checksum: `symbolic_ai_core/data/fingerprint.py` hashes 179 lessons × 5 seeds × 7 languages, and a test fails if any cell moves.
 
 So every model here is asked both:
 
@@ -315,14 +315,23 @@ symbolic-ai-models/
                           #   episode, in both surfaces
     grammar/ languages/   #   deterministic realization, seven language packs
     _vendor.py            #   provenance, and the rule for changing any of it
-  symbolic_ai_models/
-    data/
+  symbolic_ai_core/       # what every package here shares; depends on nothing
+    data/                 #   above it
       curriculum.py       # symbolic_ai_data -> Episode (text + graph, one seed)
       fingerprint.py      # a checksum of the corpus; the generator cannot move
                           #   without a test saying so
       graph.py            # term JSON -> flat node array + parent pointer
       tokenizer.py        # one vocabulary, byte fallback, lossless
       batch.py            # SymbolicBatch + the relation algebra  <- the harness
+    registry.py           # the versioned-name rule, written once for everyone
+    floors.py             # empirical_floor, lift, and exact per-head counting
+    shortcuts.py          # what an unthinking cheat scores: a floor and an audit
+    calibration.py        # is the confidence worth anything
+    invariance.py         # rename every symbol and see who notices
+    asymptotics.py        # I(d) and effective rank: observables of the corpus
+  symbolic_ai_models/
+    data/ calibration.py  # re-export shims at the pre-split import paths
+    invariance.py shortcuts.py asymptotics.py
     models/
       base.py             # Model (the interface) + NeuralModel (embeddings, heads)
       symbolic.py         # RuleBasedModel: votes -> distribution, redacted views

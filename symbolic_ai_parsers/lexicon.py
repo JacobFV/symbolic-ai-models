@@ -41,7 +41,7 @@ import collections
 from dataclasses import dataclass, field
 from typing import Sequence
 
-from symbolic_ai_models.data.curriculum import Episode, generate, lesson_ids
+from symbolic_ai_core.data.curriculum import Episode, generate, lesson_ids
 
 from .features import words_of
 

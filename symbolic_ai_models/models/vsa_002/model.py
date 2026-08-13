@@ -81,10 +81,10 @@ from typing import Sequence
 
 import numpy as np
 
-from ...calibration import MassCalibrator
-from ...data.curriculum import Episode
-from ...data.graph import TYPE_TO_ID
-from ...data.tokenizer import SymbolTokenizer
+from symbolic_ai_core.calibration import MassCalibrator
+from symbolic_ai_core.data.curriculum import Episode
+from symbolic_ai_core.data.graph import TYPE_TO_ID
+from symbolic_ai_core.data.tokenizer import SymbolTokenizer
 from ..base import ModelConfig
 from ..registry import register
 from ..symbolic import ABSTAIN, GraphView, RuleBasedModel, Votes

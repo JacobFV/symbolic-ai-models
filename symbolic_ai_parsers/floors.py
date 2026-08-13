@@ -31,8 +31,8 @@ import random
 from dataclasses import dataclass, field
 from typing import Sequence
 
-from symbolic_ai_models.data.curriculum import Episode
-from symbolic_ai_models.data.graph import Graph
+from symbolic_ai_core.data.curriculum import Episode
+from symbolic_ai_core.data.graph import Graph
 
 from .scoring import METRICS, Scores, macro_scores, score_graph
 

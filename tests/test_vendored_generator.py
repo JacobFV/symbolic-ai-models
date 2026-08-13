@@ -48,7 +48,8 @@ def test_no_file_here_imports_anything_from_this_repo():
     rather than the runtime module graph, for the reason ``test_layering.py``
     gives: importing the top-level package pulls in everything and would measure
     the convenience surface instead of the layering."""
-    ours = {"symbolic_ai_models", "symbolic_ai_parsers", "symbolic_ai_agents"}
+    ours = {"symbolic_ai_core", "symbolic_ai_models", "symbolic_ai_parsers",
+            "symbolic_ai_agents"}
     offenders = []
     for path in _python_files():
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
@@ -83,7 +84,7 @@ def test_the_omitted_files_are_genuinely_unread():
 
 
 def test_the_seam_only_needs_names_that_are_actually_exported():
-    """Everything ``symbolic_ai_models.data.curriculum`` reaches for through
+    """Everything ``symbolic_ai_core.data.curriculum`` reaches for through
     ``_lc()``. A missing one is an ``AttributeError`` in the middle of a sweep
     rather than at import."""
     for name in ("lesson_ids", "get", "by_tag", "by_capability", "curriculum",
