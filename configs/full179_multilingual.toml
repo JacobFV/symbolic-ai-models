@@ -1,0 +1,53 @@
+# `configs/full179.toml`, rendered in every language the package can render.
+#
+#   uv run symbolic-ai-models sweep --config configs/full179_multilingual.toml \
+#       --models omegaclaw_ctx-001,omegaclaw_flat-001,omegaclaw_const-002,...
+#
+# Identical to `full179.toml` in every field it shares with it. The only change
+# is `languages`, which renders **the same seeds** in each pack and interleaves
+# the results. That makes this an exact parallel corpus rather than a bigger
+# one: `Lesson.structured` takes no language, so within a seed the term graph is
+# byte-identical across all seven packs and the prose is the only thing that
+# moves. Measured on 179 lessons x 3 seeds -- 537/537 episodes identical, per
+# pack.
+#
+# The consequence is worth stating where the config is, because it is what makes
+# the runs in this directory interpretable: a model that reads only the graph
+# sees this corpus as seven copies of `full179.toml`'s. Only a model that reads
+# `GraphView.text` sees seven different things.
+#
+# Every renderable pack is here. `symbolic_ai_data` ships five hand-written
+# natural grammars (english, spanish, chinese, turkish, swahili), one lexical
+# variant of English, and one formal notation. The thousand-odd derived
+# languages the registry advertises need `grammar/data/languages.db`, a 2 GB
+# gitignored build artefact that is not present, so seven is the whole of it --
+# which is why nothing in `runs/` here can support a claim about language
+# *families*. See the pre-registration note in `notes/decisions/`.
+
+tasks = "lm,node"
+lessons = "all"
+languages = "english,spanish,chinese,turkish,swahili,english_synonym,symbols"
+n_train = 20
+n_eval = 4
+
+vocab_size = 8192
+# Pinned for the same reason `full179.toml` pins them: a config that omits a
+# shape knob is a default with a filename.
+d_model = 96
+n_layers = 3
+n_heads = 4
+d_ff = 256
+dropout = 0.1
+max_len = 320
+max_nodes = 128
+batch_size = 16
+device = "cpu"
+
+# Seven times the default 4,000, so that a model splitting its evidence table
+# seven ways still gets ~4,000 observations per language -- the same budget
+# `full179.toml` gives a monolingual run. Without this the language-conditioned
+# rows would be measured on a seventh of the data and the comparison would be
+# about sample size rather than about language.
+extra = { max_examples = 28000 }
+
+out = "runs/full179_multilingual"

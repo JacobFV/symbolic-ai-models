@@ -52,6 +52,20 @@ deployment has no oracle. So **language ID must be measured as its own head with
 its own floor**, even when it is supplied at parse time. That is the difference
 between factoring a subproblem out and assuming it away.
 
+## The trap, priced
+
+`scripts/language_id_head.py` scores language ID as its own head, since this note
+insists it must be. Character-trigram nearest centroid, fitted on training seeds,
+2,506 evaluation prompts: **0.8388 against a 0.1429 majority floor, +0.8119
+lift.** Chinese, `symbols`, Spanish, Turkish and Swahili are 0.96-1.00; english
+and english_synonym are 0.377 and 0.578, and 342 of the 404 errors are those two
+confused with each other, because they render 511 of 537 prompts byte-identically.
+
+So supplying language as ground truth is nearly free for five packs and is a
+genuine oracle for one distinction — the system could not acquire it from the
+surface at any quality. Any result that leans on separating english from
+english_synonym is leaning on information that is not there.
+
 ## What would settle it
 
 Induce a grammar per language on the same terms, then score the *alignment*

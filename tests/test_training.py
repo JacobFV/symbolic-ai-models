@@ -423,6 +423,29 @@ def test_resume_reruns_a_model_that_ran_a_smaller_budget(tmp_path):
     assert not _already_ran(out, argparse.Namespace(steps=10))
 
 
+def test_a_sweep_writes_where_its_config_says(tmp_path):
+    """A config that names an output directory must be obeyed.
+
+    It was not: the sweep read `--out` and nothing else, so
+    `sweep --config configs/full179.toml` wrote to `runs/sweep` while the file
+    said `runs/full179`. That is worse than a wrong path -- two sweeps under
+    different configs land in one directory, and `--resume` then skips models on
+    the strength of the other run's summaries.
+    """
+    import argparse
+
+    from symbolic_ai_models.cli import _sweep_root
+
+    config = tmp_path / "run.toml"
+    config.write_text('out = "runs/named-by-config"\n')
+    assert _sweep_root(argparse.Namespace(out=None, config=None)) == Path("runs/sweep")
+    assert _sweep_root(argparse.Namespace(out=None, config=str(config))) \
+        == Path("runs/named-by-config")
+    # The flag still wins over the file.
+    assert _sweep_root(argparse.Namespace(out="runs/flag", config=str(config))) \
+        == Path("runs/flag")
+
+
 # ---- a table's rows must come from one config -----------------------------
 def test_comparison_table_flags_config_drift():
     """A table claims its rows differ only in the model. Nothing enforced it.
