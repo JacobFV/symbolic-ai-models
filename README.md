@@ -309,7 +309,10 @@ That output is real, and it is what a 400-step wiring check actually produces: a
 symbolic-ai-models/
   configs/
     small.toml            # finishes in minutes; checks the wiring
-    full.toml             # all 179 lessons
+    full.toml             # a slice, with the shape knobs pinned
+    full179.toml          # all 179 lessons: the config a result comes from
+    agents-small.toml     # the same two, for the interactive half
+    agents-full.toml
   symbolic_ai_data/       # the generator, vendored verbatim from langcurriculum
     lessons/ generators/  #   180 registered, 179 that generate; one seed = one
                           #   episode, in both surfaces
@@ -348,10 +351,29 @@ symbolic-ai-models/
     decode.py             # sampling, for reading; feeds no metric
     agent.py              # trained model -> multiple-choice answerer
     report.py cli.py
+  symbolic_ai_parsers/    # text -> Graph, the inverse of the generator
+    scoring.py floors.py  #   ten metrics, each with its own fitted floor
+    treebank.py grammar.py#   spans recovered from the corpus; induced productions
+    align.py              #   content alignment (a tree alignment cannot score
+                          #   attachment -- it scored 0.95 for a non-parser)
+    parsers/              #   one directory per registered row, version and all
+      bracket_001/ prior_001/ retrieve_001/
+      template_001/ template_002/ template_lex/ template_seeded/
+      cky_001/ lr_001/ shiftreduce_001/   # chart, SLR(1), learned oracle
+  symbolic_ai_agents/     # the interactive half: what happens when errors stay
+    envs/                 #   choice, retry, repair, probe
+    agents/               #   random, shortcut, context (floors); recall, careful
+    train.py trace.py     #   rollouts; trajectories, for reading, not a metric
+  notes/                  # the lab notebook; one file per note (worktrees merge)
+    questions/            #   the parking lot: ideas, whether or not chased
+    findings/ decisions/
   scripts/
     qualitative-sample.sh # decode every run; transcripts + JSON for a reviewer
   tests/
 ```
+
+`APPROACH.md` says what the whole thing is *for* and why it is a portfolio rather
+than a bet; `RESEARCH_LOG.md` says what is known.
 
 ## What the models are actually good at
 

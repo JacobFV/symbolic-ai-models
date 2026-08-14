@@ -227,7 +227,8 @@ def run(cfg: RunConfig, *, progress=None) -> dict[str, Any]:
     # agent, which is what a floor being a floor means.
     if progress:
         progress(f"floors for {len(envs)} environments")
-    floors = {name: env.floor(eval_eps, tok, train_eps) for name, env in envs.items()}
+    floors = {name: env.floor(eval_eps, tok, train_eps, envs=envs, seed=cfg.seed)
+              for name, env in envs.items()}
 
     agent = make_agent(cfg)
     if progress:

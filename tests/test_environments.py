@@ -222,3 +222,51 @@ def test_summarize_reports_a_return_and_a_success(name, fixtures):
     metrics = env.summarize(totals)
     assert "return" in metrics and "success" in metrics
     assert metrics["n"] == len(episodes)
+
+
+def test_a_policy_that_sets_the_floor_has_exactly_zero_lift():
+    """The invariant that would have caught a whole broken sweep.
+
+    The floor is the best of the reference policies, and those policies are
+    *also* registered agents. So whichever one wins the floor must score exactly
+    zero lift against it -- it is being compared to itself.
+
+    It was not. `reference_floor` fitted its copies with one environment and no
+    seed while the run fitted the scored agent with all four and `cfg.seed`, and
+    `ContextAgent.fit` stores `ctx.envs`, so the two copies learned different
+    tables. On the first full-curriculum sweep `context` scored 0.2589 on
+    `repair` against a floor of 0.2336 recorded as `floor_by: context` -- and
+    that +0.033 was the only positive number in the entire table.
+
+    Nothing caught it because a floor is the one number in a run that nothing
+    else is checked against. This is that check, and it is two lines.
+    """
+    from symbolic_ai_agents.envs import build as build_env
+    from symbolic_ai_agents.envs.base import lift
+
+    train = list(generate(LESSONS, n=12))
+    evaluation = list(generate(LESSONS, n=6, seed0=1_000_000))
+    tok = make_tokenizer(RunConfig(vocab_size=1200), train)
+    envs = {name: build_env(name) for name in ("choice", "repair")}
+
+    for name, env in envs.items():
+        floor = env.floor(evaluation, tok, train, envs=envs, seed=0)
+        winner = floor.get("floor_by")
+        assert winner, f"{name}: no policy won the floor"
+
+        scored = _score_policy(winner, env, envs, evaluation, train, tok)
+        assert lift(scored, floor["return"]) == pytest.approx(0.0, abs=1e-9), (
+            f"{name}: {winner} sets the floor at {floor['return']:.4f} and "
+            f"scores {scored:.4f} against it -- the floor is a differently "
+            f"fitted copy of the same policy")
+
+
+def _score_policy(name, env, envs, evaluation, train, tok):
+    """Run a policy the way the trainer does, not the way the floor does."""
+    from symbolic_ai_agents.agents import build as build_agent
+    from symbolic_ai_agents.agents.base import LearnContext
+    from symbolic_ai_agents.envs.rollout import rollouts
+
+    policy = build_agent(name, {})
+    policy.fit(LearnContext(episodes=list(train), tok=tok, envs=envs, seed=0))
+    return env.summarize(rollouts(env, policy, evaluation, tok=tok).totals)["return"]
