@@ -223,16 +223,24 @@ reasoner handed nothing to read.
 **How much of the registry can answer each readout** — static, from whether the
 class overrides the hook, so no slice can move it. Over the 90 registered
 rule-based models: `symbol` **79/90**, `node` **41/90**, `site` **5/90** (all
-five added with the readout; before it, zero), next token **14/90**.
+five added with the readout; before it, **zero**), next token **14/90**.
 
-Read that as the reason the split was needed. Eleven models cannot answer the
-one readout the whole repo has been scored on, and every one of them has still
-carried a `label_acc` in a published table — because a model that abstains is
-scored on the *shared back-off* under its own name. The `action` readout caught
-the same thing from the other side and named a case: `synth-001` publishes a
-symbol-readout `label_acc` of 0.2500 while its `node_votes` abstains on
-essentially every decision, and on `repair` it scores exactly the
+Read the columns carefully, because the obvious reading of the first one is
+wrong and was written that way here first. The eleven that cannot answer
+`symbol` are exactly the `gparse` and `gsite` families, which are text-surface
+models and abstain on the graph task **by design and in their own docstrings**.
+That is not a hidden problem. The real content of the table is the other three
+columns: two thirds of the registry has no pointer, six sevenths cannot emit a
+token, and until this work nothing at all could answer a question about the text
+surface's structure.
+
+The hidden problem is a *runtime* fact and the static table cannot see it: a
+model may implement a hook and still contribute nothing, because abstention is
+mixed against the shared back-off before any metric sees it. `synth-001`
+implements `node_votes`, publishes a symbol-readout `label_acc` of 0.2500, and
+on `repair` — where no shared back-off is in the way — scores exactly the
 abstain-everywhere control. **The number in the table is not always the model.**
+See `notes/lessons/2026-08-14-a-score-can-be-the-back-off-wearing-the-models-name.md`.
 
 **`site` is the new question, and the corpus is privileged for it.** A token may
 attach to the phrase before it or the one after, at different depths of the

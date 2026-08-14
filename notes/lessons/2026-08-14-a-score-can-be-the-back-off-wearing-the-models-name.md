@@ -38,16 +38,30 @@ can move this:
 | `site` | 5 / 90 |
 | next token | 14 / 90 |
 
-**Eleven models cannot answer the readout the entire repo is scored on**, and
-every one of them has carried a `label_acc` in a published table.
+**A correction, written down because I made the mistake this file is about.**
+My first reading of that table was "eleven models cannot answer the readout the
+entire repo is scored on, and all eleven carry a published `label_acc`". It went
+into the README and a commit message before I checked *which* eleven. They are
+exactly the six `gparse` and five `gsite` rows — text-surface models that abstain
+on the graph task **by design, in their own docstrings**. Nothing hidden, and
+the drift was toward the more dramatic reading, which is precisely the failure
+mode `CLAUDE.md` warns about. The static table's real content is the other three
+columns: two thirds of the registry has no pointer, six sevenths cannot emit a
+token, and `site` was 0/90 before this work.
+
+The mechanism this note is about is **invisible to the static table**, because a
+model can implement a hook and still contribute nothing.
 
 **Empirically, from the agents side, arrived at independently.** `synth-001`
-publishes a symbol-readout `label_acc` of **0.2500**. Its `node_votes` abstains
-on essentially every decision, and on `repair` — where there is no shared
-back-off in the way — it scores **0.0431**, which is *exactly* the
-abstain-everywhere control, reached by two other rows via two unrelated routes
-(`gparse-003`, which emits no `node_votes`; `ngram-001` on `channel=node`, which
-has no `source_votes`).
+**implements** `node_votes` — the static table says it can answer — publishes a
+symbol-readout `label_acc` of **0.2500**, and abstains at runtime on essentially
+every decision. On `repair`, where there is no shared back-off in the way, it
+scores **0.0431**: *exactly* the abstain-everywhere control, reached by two other
+rows via two unrelated routes (`gparse-003`, which does not implement the hook;
+`ngram-001` on `channel=node`, which has no `source_votes`).
+
+That gap between "implements the hook" and "contributes to the number" is the
+whole mechanism, and it is why the static check is a screen and not a test.
 
 Three rows agreeing to the last digit by three different mechanisms is the
 control working. 0.2500 was never `synth-001`.

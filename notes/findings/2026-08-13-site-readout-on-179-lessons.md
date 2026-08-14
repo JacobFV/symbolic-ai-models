@@ -120,16 +120,24 @@ artifact. Over the **90 registered rule-based models**:
 | `site` | **5 / 90** — and all five are the `gsite` family added here. Before this work: **0**. |
 | next token | 14 / 90 |
 
-This is the sharpest form of the thing the readout split was built to expose.
-**Eleven of ninety models cannot answer the one readout the entire repo has been
-scored on**, and seventy-six cannot emit a token. Every one of them has
-nevertheless carried a `label_acc` in a published table, because a model that
-abstains is scored on the shared back-off under its own name — which is exactly
-what the agents-side `action` readout independently caught for `synth-001`
-(`notes/findings/2026-08-13-action-readout.md`).
+**Read the first row carefully — I got it wrong first.** The eleven that cannot
+answer `symbol` are exactly the six `gparse` and five `gsite` rows, which are
+text-surface models and abstain on the graph task *by design, in their own
+docstrings*. There is nothing hidden there, and my first reading of it ("eleven
+models cannot answer the readout the repo is scored on") drifted toward the more
+dramatic version before I checked which eleven. Recorded in
+`notes/lessons/2026-08-14-a-score-can-be-the-back-off-wearing-the-models-name.md`.
 
-The two findings arrive from opposite directions and say the same thing: *the
-number in the table is not always the model*.
+What the table actually says is in the other three rows: **two thirds of the
+registry has no pointer, six sevenths cannot emit a token, and until this work
+nothing at all could answer a question about the structure of the text surface.**
+That last one is the readout being new rather than the models being deficient —
+which is the honest form of "one readout is an assumption".
+
+The hidden version of the problem is a *runtime* fact this table cannot see, and
+the agents-side `action` readout caught it independently: `synth-001` implements
+`node_votes`, publishes 0.2500, and contributes nothing
+(`notes/findings/2026-08-13-action-readout.md`).
 
 ## What this does not show
 
