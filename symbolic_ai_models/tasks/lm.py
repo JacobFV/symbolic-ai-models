@@ -29,8 +29,22 @@ class LanguageModelling(Task):
 
     name = "lm"
 
-    def __init__(self, max_len: int = 512) -> None:
+    def __init__(self, max_len: int = 512, readouts: "dict | None" = None) -> None:
         self.max_len = max_len
+        # The site readout, scored beside `token_*` and `answer_*` rather than
+        # instead of them. It asks a different question of the same output --
+        # which already-read word is the head this one attaches under -- and a
+        # model that emits nothing on that channel is simply absent from the
+        # column. Built lazily: constructing a task must not import the readout
+        # package, which imports the models.
+        self._readouts = readouts
+
+    @property
+    def readouts(self) -> dict:
+        if self._readouts is None:
+            from ..readouts import REGISTRY
+            self._readouts = {"site": REGISTRY.get("site")(max_len=self.max_len)}
+        return self._readouts
 
     def collate(self, episodes: Sequence[Episode], tok: SymbolTokenizer):
         return collate_text(episodes, tok, max_len=self.max_len)
@@ -58,10 +72,16 @@ class LanguageModelling(Task):
                 _, answer_counts = score_block(out.symbol_logits.detach(),
                                                answer_targets, "answer")
             counts = {**counts, **answer_counts}
+        with torch.no_grad():
+            for readout in self.readouts.values():
+                counts = {**counts, **readout.score(out, batch)}
         return TaskOutput(loss=loss, counts=counts)
 
     def summarize(self, totals: Totals) -> dict[str, float]:
-        return {**ratio(totals, "token"), **ratio(totals, "answer")}
+        out = {**ratio(totals, "token"), **ratio(totals, "answer")}
+        for readout in self.readouts.values():
+            out.update(readout.summarize(totals))
+        return out
 
     def floor(self, episodes: Sequence[Episode], tok: SymbolTokenizer,
               train: Sequence[Episode]) -> dict[str, float]:
@@ -95,6 +115,11 @@ class LanguageModelling(Task):
         out = self._unigram_floor(eval_counts, train_counts, len(tok), "token")
         out.update(self._unigram_floor(answer_counts, train_answers, len(tok),
                                        "answer"))
+        # Every readout brings its own floor, because a readout without one is
+        # not a result. The site floor is three structure-free attachment rules,
+        # best of; see `symbolic_ai_models.readouts.site`.
+        for readout in self.readouts.values():
+            out.update(readout.floor(episodes, tok, train))
         return out
 
     @staticmethod

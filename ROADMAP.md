@@ -29,6 +29,35 @@ model where prose demonstrably helps, the abstraction has paid for itself; if
 they do not, "parsers buy ~1% of a bit" stands as the summary of this whole
 direction and should be said plainly at the top of the README.
 
+## Done: the readout is decoupled from the model, and there are three of them
+
+The mirror of the parser split, and it was built for the same reason: one
+readout is an assumption. `symbolic_ai_core/readout.py` holds a `Readout`
+protocol — `(model output, batch) -> counts`, plus `summarize` and a mandatory
+`floor` — a shared versioned registry, and the channel names. `ModelOutput`
+carries a `channels` mapping; `source_logits` **became** `channels["node"]`
+rather than staying a special case, and one assembler builds both pointer
+channels, which is the difference between generalising the seam and bolting a
+second one beside it.
+
+Four readouts are registered: `symbol-001` (the vocabulary head, which is what
+every published number in this repo has meant), `node-001` (the copy head),
+`site-001` (**new**: attachment on the text surface), and `action-001` (the same
+emission read as a move in an environment, in `symbolic_ai_agents`). A model
+emitting nothing on a channel is **unscored** rather than scored zero.
+
+`symbol` and `node` are required to reproduce `label_*` and `copy_*` bit for
+bit; `tests/test_readouts.py` compares the columns rather than trusting them.
+That is what says the refactor is behaviour-preserving.
+
+**What moved into the core**: `GraphView`, `Votes`, `ABSTAIN` and the structural
+`node_context` tuple, with re-export shims. `symbolic_ai_agents.envs.base` was
+importing `GraphView` out of `symbolic_ai_models.models.symbolic` — a package
+reaching into its sibling for a pure data type, which is the arrangement the
+core split exists to end. `FitContext`/`LearnContext` were **not** merged: they
+carry different fields and merging them is a rename with no measurement
+attached.
+
 ## Why parsers can be scored exactly here
 
 `langcurriculum` renders every episode from a typed term it also hands over, so

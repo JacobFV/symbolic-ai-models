@@ -40,10 +40,7 @@ from __future__ import annotations
 
 import collections
 import math
-from dataclasses import dataclass
 from typing import Any, Iterable, Mapping, Sequence
-
-import re
 
 import numpy as np
 import torch
@@ -52,97 +49,27 @@ from symbolic_ai_core.data.batch import SymbolicBatch
 from symbolic_ai_core.data.curriculum import Episode
 from symbolic_ai_core.data.graph import NODE_TYPES, TYPE_TO_ID
 from symbolic_ai_core.data.tokenizer import SymbolTokenizer
+from symbolic_ai_core.graphview import (ABSTAIN, GraphView, Votes,
+                                        node_context as _node_context)
 from ..parsers import build as build_parser
 from ..prefix import TextView, build_prefix_parser
 from .base import FitContext, Model, ModelConfig, ModelOutput, N_TYPES
 
 __all__ = ["RuleBasedModel", "GraphView", "TextView", "Votes", "ABSTAIN"]
 
-#: What a model returns when it has nothing to say: no votes, no confidence.
-#: The mixture then reduces exactly to the back-off, which is the honest reading
-#: of "I don't know" and is why abstention costs a model nothing beyond the
-#: prior it declined to improve on.
-ABSTAIN: "Votes" = ({}, 0.0)
-
-#: ``({symbol id: weight}, confidence in [0, 1])``
-Votes = tuple[Mapping[int, float], float]
-
-
-@dataclass
-class GraphView:
-    """A masked graph, as a rule-based model is allowed to see it.
-
-    ``labels[i]`` and ``types[i]`` are ``None`` exactly where the model is being
-    asked to predict. There is no second field holding the true value: a model
-    that wanted to cheat would have nothing to read. The relations in ``rel``
-    have already had the coreference edges of hidden nodes withheld by
-    :func:`~symbolic_ai_core.data.batch.relation_matrix`, so the shape of the tree is
-    visible and the identity of the hidden symbol is not.
-    """
-
-    labels: list[int | None]
-    types: list[str | None]
-    parent: list[int]
-    slot: list[int]
-    depth: list[int]
-    rel: np.ndarray
-    hidden: list[int]
-    tok: SymbolTokenizer
-    #: The episode's prompt, or "" when the collator supplied none. The answer
-    #: is never here: it names the hidden symbol *and* locates it, which the
-    #: prompt does not (see `shortcuts.node_text_leak`).
-    text: str = ""
-    #: Which language pack rendered :attr:`text`, or "" when unknown.
-    #:
-    #: This is a fact about the surface and about nothing else, which is worth
-    #: stating because it is easy to assume otherwise. ``Lesson.structured``
-    #: takes no language, so every field above except ``text`` is byte-identical
-    #: across all seven packs for a given seed — measured on 179 lessons x 3
-    #: seeds. A rule reading only the graph therefore has the same reliability
-    #: in every language *by construction*, and conditioning on this field can
-    #: only pay for a rule that reads ``text``.
-    language: str = ""
-
-    def __len__(self) -> int:
-        return len(self.labels)
-
-    def mentions(self, i: int) -> int:
-        """How often node ``i``'s symbol occurs in the prompt, or -1 if hidden.
-
-        Prompt frequency picks the right copy source over a random wrong one at
-        AUC 0.621 — weak on its own, and the four pointers are separated by only
-        0.023 of copy lift, so weak is not nothing here.
-        """
-        word = self.word(i)
-        if word is None or not self.text:
-            return -1
-        return len(re.findall(r"\b" + re.escape(word) + r"\b", self.text,
-                              flags=re.IGNORECASE))
-
-    def word(self, i: int) -> str | None:
-        """The label of node ``i`` as text, or ``None`` if it is hidden."""
-        v = self.labels[i]
-        return None if v is None else self.tok.itos[v]
-
-    def children(self, i: int) -> list[int]:
-        return [j for j, p in enumerate(self.parent) if p == i]
-
-    def siblings(self, i: int) -> list[int]:
-        p = self.parent[i]
-        return [] if p < 0 else [j for j in self.children(p) if j != i]
-
-    def parent_type(self, i: int) -> str:
-        p = self.parent[i]
-        return self.types[p] or "mask" if 0 <= p < len(self.types) else "ROOT"
-
-    def path(self, i: int, depth: int = 3) -> tuple:
-        """The chain of ancestor types above ``i``, nearest first."""
-        out: list[str] = []
-        p = self.parent[i]
-        while 0 <= p < len(self.types) and len(out) < depth:
-            out.append(self.types[p] or "mask")
-            p = self.parent[p]
-        return tuple(out)
+# `GraphView`, `Votes`, `ABSTAIN` and `_node_context` moved into
+# `symbolic_ai_core.graphview` and are re-exported here. Not decoration:
+# `symbolic_ai_agents.envs.base`, `envs.repair` and three agents import
+# `GraphView` from *this* module, and a merge that silently lost the name would
+# look green — a modify/delete conflict resolves toward the delete without a
+# word. `tests/test_layering.py` pins the re-export by identity, because a shim
+# rebinding a *copy* of `GraphView` would pass an equality check and then fail
+# every `isinstance` in the agents package.
+#
+# The move itself is the layering rule, not tidiness: a `GraphView` is what a
+# reader of a masked term may see, whether that reader is scored by a task or by
+# an environment, so the agents package was reaching into its sibling for a pure
+# data type.
 
 
 class RuleBasedModel(Model):
@@ -506,6 +433,33 @@ class RuleBasedModel(Model):
         """
         return {}
 
+    #: Whether this model points at *sites* on the text surface. Off by
+    #: default for the same reason ``reads_text_parser`` is: assembling a
+    #: ``[B, L, L]`` pointer costs a pass per sequence, and a model that never
+    #: points should not pay for one.
+    emits_site = False
+
+    def site_votes_view(self, view: TextView) -> dict[int, Votes]:
+        """``{position: votes over *earlier positions* of the same sequence}``.
+
+        The text-surface twin of :meth:`source_votes`, and the same seam: a
+        pointer over the sites of whichever surface the batch carries. Here the
+        question is **attachment** — "the head this token hangs under is that
+        one" — which is the one thing the corpus is uniquely privileged for and
+        which nothing in the repo has ever asked. The curriculum ships the true
+        term *and* its rendering, so the correct site has ground truth at every
+        position, for free, and
+        :class:`symbolic_ai_models.readouts.site.SiteReadout` derives it.
+
+        Causal on the same terms as :meth:`text_votes_view`: entry ``t`` may
+        depend on ``view.graph(t)`` and ``view.text(t)``, both of which are
+        functions of ``ids[:t + 1]``, and on nothing later. Votes naming a
+        position after ``t`` are dropped rather than trusted — a leak here would
+        make attachment look solved, so it is closed structurally rather than by
+        asking implementations to behave.
+        """
+        return {}
+
     def n_symbolic_parameters(self) -> int:
         """How many discrete things this model learned.
 
@@ -537,14 +491,19 @@ class RuleBasedModel(Model):
         truths = (batch.meta or {}).get("graphs") if self.text_parser.needs_truth \
             else None
 
+        sites: list[tuple[int, int, Mapping[int, float], float]] = []
         for b in range(B):
             ids = tokens[b][:lengths[b]]
             if not ids:
                 continue
             if self.reads_text_parser:
                 truth = truths[b] if truths and b < len(truths) else None
-                row = self.text_votes_view(
-                    self.text_parser.begin(ids, self.tok, truth))
+                view = self.text_parser.begin(ids, self.tok, truth)
+                row = self.text_votes_view(view)
+                if self.emits_site:
+                    for t, v in self.site_votes_view(view).items():
+                        if 0 <= t < L and v is not ABSTAIN:
+                            sites.append((b, int(t), v[0], float(v[1])))
             else:
                 row = self.text_votes(ids)
             for t, (votes, c) in enumerate(row):
@@ -562,8 +521,12 @@ class RuleBasedModel(Model):
 
         logits = self._mix(self.symbol_backoff, (B, L), conf, rows, cols, syms, weights)
         types = self.type_backoff.expand(B, L, N_TYPES).clone()
+        channels: dict[str, torch.Tensor] = {}
+        site = self._pointer_logits(sites, (B, L), batch.pad_mask, causal=True)
+        if site is not None:
+            channels["site"] = site
         return ModelOutput(symbol_logits=logits, type_logits=types,
-                           hidden=torch.zeros((B, L, 1)))
+                           hidden=torch.zeros((B, L, 1)), channels=channels)
 
     def _forward_graph(self, batch: SymbolicBatch) -> ModelOutput:
         B, L = batch.tokens.shape
@@ -633,15 +596,9 @@ class RuleBasedModel(Model):
 
     def _source_logits(self, batch: SymbolicBatch,
                        shape: tuple[int, int]) -> torch.Tensor | None:
-        """Assemble the pointer head, or ``None`` if this model has no pointer.
-
-        The back-off is flat over the visible nodes rather than learned. A
-        pointer's floor is already a structure-only rule scoring 0.266, so
-        giving the back-off structural knowledge here would quietly move the
-        thing every pointer is measured against.
-        """
+        """Assemble the pointer head, or ``None`` if this model has no pointer."""
         B, L = shape
-        votes: list[tuple[int, int, dict[int, float], float]] = []
+        votes: list[tuple[int, int, Mapping[int, float], float]] = []
         for b in range(B):
             for node, v in self.source_votes(self._view(batch, b)).items():
                 if v is ABSTAIN or not 0 <= node < L:
@@ -649,17 +606,47 @@ class RuleBasedModel(Model):
                 weights, confidence = v
                 if weights and confidence > 0.0:
                     votes.append((b, node, weights, float(confidence)))
+        return self._pointer_logits(votes, shape, batch.pad_mask)
+
+    @staticmethod
+    def _pointer_logits(votes: Sequence[tuple[int, int, Mapping[int, float], float]],
+                        shape: tuple[int, int], visible: torch.Tensor, *,
+                        causal: bool = False) -> torch.Tensor | None:
+        """``[B, L, L]`` for any pointer channel, or ``None`` if nothing pointed.
+
+        One assembler for both pointer channels rather than two, which is the
+        whole claim that ``site`` **generalises** ``source_logits`` instead of
+        sitting beside it as a second mechanism. The two differ in what a
+        position means — a node of a term, a token of a rendering — and in
+        nothing about how a vote becomes a score.
+
+        The back-off is flat over the legal targets rather than learned. A
+        pointer's floor is already a structure-only rule scoring 0.266, so
+        giving the back-off structural knowledge here would quietly move the
+        thing every pointer is measured against.
+
+        ``causal`` closes the text-surface leak structurally: on a running-text
+        batch a site at ``t`` may only name a position ``<= t``, so a vote
+        pointing forward is dropped rather than trusted. Attachment would look
+        solved if it were allowed to read ahead, and asking implementations not
+        to is not a guard.
+        """
+        B, L = shape
         if not votes:
             return None
-
         logits = torch.full((B, L, L), -1e9)
-        visible = batch.pad_mask
         logits[visible[:, None, :].expand(B, L, L)] = 0.0
-        for b, node, weights, confidence in votes:
+        if causal:
+            future = torch.ones((L, L), dtype=torch.bool).triu(1)
+            logits[future[None].expand(B, L, L)] = -1e9
+        for b, site, weights, confidence in votes:
             total = sum(weights.values()) or 1.0
             for j, w in weights.items():
-                if 0 <= j < L and bool(visible[b, j]):
-                    logits[b, node, j] += 1.0 + 9.0 * confidence * (w / total)
+                if not 0 <= j < L or not bool(visible[b, j]):
+                    continue
+                if causal and j > site:
+                    continue
+                logits[b, site, j] += 1.0 + 9.0 * confidence * (w / total)
         return logits
 
     def _view(self, batch: SymbolicBatch, b: int) -> GraphView:
@@ -756,18 +743,6 @@ def prune_tables(tables: Mapping[Any, "collections.Counter"], *,
         return kept
     ranked = sorted(kept.items(), key=lambda kv: (-sum(kv[1].values()), str(kv[0])))
     return dict(ranked[:max_entries])
-
-
-def _node_context(view: GraphView, node: int) -> tuple:
-    """The structural situation, symbol-free, keyed exactly as the floor keys it.
-
-    Deliberately the same tuple the floor uses. The back-off a model falls to
-    should be the baseline it is measured against, not some near-miss of it.
-    """
-    p = view.parent[node]
-    return ((view.types[p] or "mask") if p >= 0 else "ROOT",
-            min(view.slot[node], 8), min(view.depth[node], 8),
-            bool(view.children(node)))
 
 
 def _collect(votes: Votes, b: int, node: int, rows: list, cols: list,

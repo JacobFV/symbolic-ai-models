@@ -107,6 +107,28 @@ def cmd_models(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_readouts(args: argparse.Namespace) -> int:
+    """What a model's output can be *read as*, and which channel each one reads.
+
+    Listed alongside the models and the parsers because it is the same kind of
+    knob as either: swapping the readout under a fixed model measures the
+    readout, swapping the model under a fixed readout measures the model, and
+    neither comparison is available while there is only one of them.
+    """
+    from symbolic_ai_core.readout import REGISTRY
+
+    from . import readouts as _  # noqa: F401  (registration side effect)
+    try:
+        import symbolic_ai_agents.readouts as _agents  # noqa: F401
+    except ImportError:                                   # pragma: no cover
+        pass
+    for name in REGISTRY.names():
+        cls = REGISTRY.get(name)
+        mark = "  CEILING" if getattr(cls, "ceiling", False) else ""
+        print(f"  {name:<14}{cls.channel:<8}{cls.summary}{mark}")
+    return 0
+
+
 def cmd_tasks(args: argparse.Namespace) -> int:
     from .tasks import TASKS
     for name, cls in sorted(TASKS.items()):
@@ -425,6 +447,7 @@ def build_parser() -> argparse.ArgumentParser:
     sub = p.add_subparsers(dest="command", required=True)
 
     sub.add_parser("models", help="list architectures").set_defaults(fn=cmd_models)
+    sub.add_parser("readouts", help="list readouts").set_defaults(fn=cmd_readouts)
     sub.add_parser("tasks", help="list tasks").set_defaults(fn=cmd_tasks)
 
     q = sub.add_parser("lessons", help="list curriculum lessons")

@@ -51,7 +51,7 @@ from . import grammar_001, ilp_001, routes_001, workspace_001  # noqa: F401
 from . import omegaclaw_ctx_001, omegaclaw_em_001  # noqa: F401
 from . import omegaclaw_flat_001, omegaclaw_rank_001  # noqa: F401
 from . import ensemble_001, joint, omegaclaw_reach_001, ptrgen_001  # noqa: F401
-from . import gparse_003  # noqa: F401
+from . import gparse_003, gsite_001  # noqa: F401
 from . import omegaclaw_const_002, omegaclaw_lang_002  # noqa: F401
 from . import omegaclaw_text_002, omegaclaw_textlang_002  # noqa: F401
 from . import omegaclaw_pure_002, omegaclaw_split_002  # noqa: F401
