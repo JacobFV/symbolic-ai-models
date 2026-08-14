@@ -22,9 +22,15 @@
 # it never reads are the test.
 
 tasks = "lm,node"
+#
+# n_train is 5, not full179.toml's 20, and that is a deliberate scaling choice
+# rather than a shortcut. The estimand here is a *per-language* claw-reliability
+# vector, and at 46 languages n_train=5 still gives 895 episodes per language --
+# ample for a reliability estimate, where 20 would give 3,580 and 164,680 total,
+# 23x a standard full179 run. Two attempts at the larger size died mid-fit.
 lessons = "all"
-n_train = 20
-n_eval = 4
+n_train = 5
+n_eval = 2
 
 vocab_size = 8192
 # Pinned for the same reason `full179.toml` pins them: a config that omits a
