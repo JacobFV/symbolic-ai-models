@@ -50,15 +50,22 @@ are equivariant to within noise, which is the point of reading this column.
 With the fallback on: `vsa-002` 0.219/+0.089 at a +0.029 renaming drop,
 `vsa_sum-004` 0.228/+0.098 at +0.012, `vsa_hks-004` 0.242/+0.115 at +0.009,
 `vsa_perm-002` 0.326/+0.213 at +0.010, `vsa_perm_hks-004` 0.288/+0.169 at +0.008.
-The fallback is worth +0.014 to +0.023 of accuracy and carries essentially all
-of the family's renaming sensitivity, exactly as it does for `vsa-002`.
+
+The fallback carries essentially all of the family's renaming sensitivity, and
+what it is worth in accuracy **shrinks as the role Gram improves and then turns
+negative**: +0.019 for `vsa-002`, +0.014 for `vsa_sum-004`, +0.007 for both
+`vsa_hks-004` and `vsa_perm_hks-004`, and **−0.011** for `vsa_perm-002`. That
+reproduces on a third family what `vsa_perm_002`'s docstring found on its own —
+the shared memorising lookup is compensating for a retrieval that cannot find
+anything, and it charges the model its equivariance for the service. A model that
+can reach does not want it.
 
 ## Five things, and only the second was predicted
 
 ### 1. The pre-registered eigenmap is refuted, and the reason was available in advance
 
 `vsa_spec_pure-004` scores **−0.044 lift — below the floor**, and its own
-shuffled control is only 0.038 behind it. A diffusion kernel places its mass on
+shuffled control is only 0.045 behind it. A diffusion kernel places its mass on
 hop 1, and on 550 masked nodes of a training slice:
 
 | question | answer |
@@ -104,16 +111,18 @@ the hand-built partition's +0.066 and the hand-built graded ladder's +0.083.
 The control is decisive. `vsa_hks_shuf_pure-004` permutes the signature rows
 across nodes: the Gram's value multiset survives **bit-identically** (asserted in
 the tests), only the correspondence to the graph dies. It falls from **+0.107 to
-−0.071**, from the best non-permutation row in the family to below the shuffled
-eigenmap. The embedding's entire contribution is the correspondence between a
-coordinate and the node it describes.
+−0.071** — from the best non-permutation row in the family to below the refuted
+eigenmap itself. The embedding's entire contribution is the correspondence
+between a coordinate and the node it describes; the gradedness of the Gram,
+which the shuffle preserves exactly, contributes nothing on its own.
 
 ### 4. It does not reach permutation, and the metrics disagree about what happens when you compose them
 
 `vsa_perm_pure-002` remains the row to beat at +0.227, and reproduced its
 published numbers to three decimals in this sweep, as did `vsa-002` (0.219,
 +0.089, 6.796, 0.181, +0.029 — every digit). **A better role Gram is worth less
-than half of what a positional channel is worth**, at 11x the cost.
+than half of what a positional channel is worth** — and permutation is a cyclic
+shift, while the signature is an eigendecomposition per episode.
 
 Composing them is where the honest reading gets uncomfortable, because the three
 heads rank the pair differently:
@@ -128,6 +137,9 @@ bits lift. `vsa_perm_hks-004`'s +0.092 copy lift is the **second-best pointer in
 this repo**, behind `corefer-001`'s +0.096 and ahead of everything else. There is
 no single ranking of these two models; which one is better is a property of the
 metric, and quoting either alone would be the mistake this repo has made before.
+For scale on the copy column: the full-repo ordering is `corefer-001` +0.0959,
+**`vsa_perm_hks-004` +0.0921**, `ptrgen-001` +0.0775, `vsa_perm-002` +0.0599,
+`routes-001` +0.0509.
 
 ### 5. The harness trap I found was itself a slice artifact — the ninth
 
