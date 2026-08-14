@@ -1,7 +1,7 @@
 ---
 date: 2026-08-14
 author: agent-readout
-status: open
+status: measured
 related: [site-readout-on-179-lessons]
 ---
 
@@ -67,3 +67,44 @@ failure the registry docstring says has already happened twice.
 `models/symbolic.py` or `data/batch.py`. One run is ~200s, so the whole bisect
 is under an hour. Then either re-run the affected rows of `runs/full179` or say
 in `RESEARCH_LOG.md` which commit redefined them.
+
+
+---
+
+## Measured: the temperature is the *kind* of cause, but it did not move a grid step
+
+The note above guessed a one-step move in the fitted temperature. Checked
+directly, by re-fitting `corefer-001` on the published knobs and evaluating at
+both temperatures:
+
+| | `label_bits` |
+|---|---:|
+| fitted temperature (**T = 1.1**) | 6.954539 |
+| forced **T = 1.0** | 7.050756 |
+| **published** | **6.951829** |
+
+So the published run was *also* near T = 1.1 — at T = 1.0 it would have read
+7.05, a hundred times the observed drift. **The temperature did not step.** What
+moved is smaller: the back-off or the masking draw shifted enough to change bits
+in the fourth decimal while leaving every accuracy bit-identical, which is the
+signature of any monotone rescaling, not of this particular one.
+
+The reasoning was right in kind and wrong in specifics, which is worth keeping:
+"accuracies held and bits moved" *does* implicate a post-hoc monotone transform,
+and there is more than one in this path.
+
+## The defect this exposed, and the guard
+
+**The fitted temperature was never recorded anywhere.** It is fitted, applied to
+every reported probability, and absent from `summary.json` — so a drift in every
+`*_bits` column was unattributable without re-fitting the model to find out what
+temperature either run had used. That is what turned a four-decimal discrepancy
+into an investigation.
+
+`train.py` now writes `"temperature"` into every summary. It is one float, it is
+the only parameter that moves every `*_bits` and no `*_acc`, and recording it
+makes the next drift a subtraction rather than a bisect.
+
+**What stands:** `label_bits` is not stable to four decimals across unrelated
+harness changes, and `label_acc` is. Quote bits to three decimals, and treat a
+change below ~0.005 as noise rather than as a result.
