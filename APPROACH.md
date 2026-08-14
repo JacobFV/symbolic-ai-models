@@ -65,7 +65,7 @@ say *this* seed, *this* way, at *this* data scale, did not pay.
 | first-order (`ilp`) | relational chains, learned not enumerated | reaches novel routes 38% of the time, uniquely right on 2.2% |
 | vector-symbolic (`vsa_*`) | graded, compositional, capacity-dense, cheap | exactly equivariant; +0.227 lift at 40s once permutation was added |
 | parsers (`symbolic_ai_parsers`) | text → graph, the inverse of the generator | nothing has actually parsed: best exact recovery 0.016 |
-| seeding (`synthex_*`, `template-lex`, `vsa_seeded`) | import structure instead of re-deriving it | three independent nulls so far; balance untested |
+| seeding (`synthex_*`, `template-lex`, `vsa_seeded`) | import structure instead of re-deriving it | four independent nulls; balance now tested and it was not the mechanism |
 
 ## The design we are converging on
 

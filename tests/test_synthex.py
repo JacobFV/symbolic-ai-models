@@ -79,9 +79,15 @@ def test_the_curated_ontology_is_severely_imbalanced(fitted):
     The curriculum's node types are semantically correct and statistically
     useless as a conditioning context: the largest class holds most of the
     symbols, so most pairs land in the same cell and the context cannot
-    discriminate. The random partition is uniform by construction. That is why a
-    meaningless partition outscores a ground-truth ontology here, and it is a
-    fact about class *balance*, not about semantics being worthless.
+    discriminate. The random partition is uniform by construction.
+
+    **This imbalance is not why the control wins, and this docstring used to say
+    it was.** ``notes/findings/2026-08-13-balance-not-provenance-and-not-much-of-
+    either.md`` fills in the other two cells of the 2x2 on the full curriculum:
+    rebalancing the curated layer to the control's entropy leaves it 0.025 label
+    lift *below* the control, and stripping the semantics while keeping the skew
+    costs 0.008 -- nothing. The skew is real and worth pinning; it is not the
+    mechanism.
 
     Asserted as a *relation* rather than a threshold. The first version required
     the top class to hold >0.5, which is what it holds on the twelve-lesson
