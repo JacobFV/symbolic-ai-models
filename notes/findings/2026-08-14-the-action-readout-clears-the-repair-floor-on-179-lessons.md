@@ -1,0 +1,105 @@
+---
+date: 2026-08-14
+author: agent-readout
+status: provisional
+related: [action-readout, readout-is-a-knob,
+          abstention-on-repair-is-below-chance]
+---
+
+# Reading the graph head as an action clears the `repair` floor on 179 lessons
+
+**Full curriculum**, not a slice: all 179 generatable lessons, 716 evaluation
+episodes from seeds at 1,000,000, **2,632 scored fills**. Depth is `n_train=8`,
+`n_eval=4` — shallower than `configs/agents-full.toml`'s 20/8, and why that
+matters is in the caveats.
+
+## The standing claim this bears on
+
+`df40011` ("The interactive half, measured: only `repair` discriminates, and
+nothing clears it") records that **no agent in `symbolic_ai_agents` clears its
+floor**, and that `repair` is the only environment that separates agents at all
+(spread 0.29, against `choice`'s 0.014).
+
+## What was measured
+
+One agent, `graphread(corefer-001, channel=symbol)` — the `action` readout of
+`notes/findings/2026-08-13-action-readout.md`, which reads a model's
+`node_votes` emission as a move instead of scoring the rendered s-expression as
+text.
+
+`runs/agents-full179-readout/gr-corefer/`:
+
+| metric | agent | floor | lift |
+|---|---:|---:|---:|
+| `label_acc` (per filled node) | **0.5080** | 0.2025 | **+0.383** |
+| `return` | 0.4623 | 0.1963 | +0.331 |
+| `success` (every node in the episode right) | 0.2011 | 0.0698 | +0.141 |
+
+`floor_by: context` on all three — the strongest of `random`/`shortcut`/`context`,
+fitted on the training episodes and **run in the environment**, which is the only
+floor that cannot be wrong about what the policy scores.
+
+## It is not a coverage artifact
+
+The standing worry about every `graphread` number
+(`notes/questions/2026-08-13-coverage-versus-accuracy-in-an-agent-column.md`) is
+that an agent's column mixes *how often it spoke* with *how good it was*, and
+that abstaining on `repair` lands **below chance**. Here it does not apply:
+
+    spoke on 2,620 of 2,703 decisions (96.9%)
+
+read straight off `policy.txt`. The agent answered essentially everything, so
+0.5080 is a reasoning number and not a selection effect.
+
+## The caveat that has to be stated first, because it moves the floor
+
+This run is `n_train=8`; the published `runs/agents-full179` is `n_train=20`.
+The floor is refitted inside each run, so a **shallower run has a weaker floor**
+— `context` scores 0.2025 here and 0.2643 there. The lift above is therefore
+measured against a floor fitted on less data than the published one.
+
+Both readings, so nobody has to take the flattering one on trust:
+
+* against **its own** floor, fitted at the same depth as the agent: +0.383;
+* against the **published** `n_train=20` floor of 0.2643, which the agent did
+  not get to train against: `(0.5080 − 0.2643) / (1 − 0.2643)` = **+0.331**.
+
+The conclusion is the same either way, which is the only reason it is worth
+stating: **this is the first agent in the package to clear the `repair` floor,
+and it does so by a third of the headroom.**
+
+## Why it is a fact about the readout and not about `corefer`
+
+`corefer-001` is not new and has been in `runs/agents-full179`'s reach the whole
+time — through `wrap`, which reads the same fitted model as *text*. On the
+six-lesson slice `wrap` spans 0.0086–0.0603 across twelve architectures, a range
+that **straddles the abstain-everywhere baseline of 0.0431**: reading these
+models as text on `repair` is indistinguishable from saying nothing.
+
+So the model was always able to do this and the harness could not ask it. What
+changed is the readout. That is the claim
+`notes/decisions/2026-08-13-readout-is-a-knob.md` was written to test —
+*a representation that only works for one readout has been short-circuited* —
+and this is the strongest form of it the repo has: the same fitted model, the
+same environment, the same prior and calibrator, one thing swapped.
+
+## What would refute it
+
+1. **`wrap(corefer-001)` at these exact settings clears the floor too.** Then
+   the gain is depth or configuration, not the readout. *Running; this note is
+   `provisional` until it lands and it should be read with that pending.*
+2. **The abstain-everywhere control does not land at the floor here.** The
+   agents-side abstention path is measured to score *below chance* on `repair`
+   at slice scale, and if that holds at 179 lessons then part of any gap between
+   two agents is the abstention machinery rather than either agent. `graphread`
+   abstains on 3.1% of decisions, so this can move the number a little and
+   cannot produce it.
+3. **`floor_by` is not `context` at `n_train=20`.** The floor is a maximum over
+   three policies and a different winner at a different depth would mean the
+   floor family, not the depth, is what moved.
+
+## Refutation status
+
+`status: provisional`, and the reason is the one this repo keeps relearning:
+every control here was designed by the agent that built the readout. The
+independent check that matters most is (1), and it is the cheapest.
