@@ -631,6 +631,7 @@ gparse-retrieve   retrieve-001             1838708     0.322    +0.281      7.80
 gparse-003        template-002              112277     0.305    +0.263      7.985     -0.004
 gparse-nolex      oracle, symbol-free          148     0.299    +0.256      8.081     -0.016
 ngram-001         (no parser; counts)       358019     0.143    +0.090      6.137     +0.228
+ctw-001           (no parser; CTW mixture)  819616     0.047    -0.012      8.646     -0.087
 gparse-flat       prefix words, no structure    55     0.030    -0.030     10.368     -0.304
 gparse-none       nothing                        1     0.000    -0.062     10.608     -0.334
 ```
@@ -663,7 +664,9 @@ gparse-none       nothing                        1     0.000    -0.062     10.60
   decides; `ngram` estimates. `token_*` settles what `gparse` is not: `ngram`
   scores 0.580 / 3.21 bits against `gparse`'s 0.05 / 8.47. **`gparse` is not a
   language model** — it is an answer predictor sharing the LM head, and it does
-  nothing about prose.
+  nothing about prose. `ctw-001` is the same trap from the other end: `token_lift`
+  **+0.280** and `answer_lift` **−0.012**, below the floor on the 1.4% of
+  positions that carry the reasoning while looking respectable on the rest.
 
 `notes/findings/2026-08-13-a-perfect-parser-does-not-rescue-the-text-surface.md`
 carries the refutation conditions, the uncontrolled confound (the readers do not

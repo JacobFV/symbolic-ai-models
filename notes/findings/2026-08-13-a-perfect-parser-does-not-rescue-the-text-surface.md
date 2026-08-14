@@ -42,8 +42,9 @@ positions.
 | `gparse-oracle` | oracle — **CEILING** | 4,740 | 0.3871 | **+0.3494** | 7.169 | **+0.0984** |
 | `gparse-retrieve` | `retrieve-001` | 1,838,708 | 0.3224 | +0.2808 | 7.804 | +0.0186 |
 | `gparse-003` | `template-002` | 112,277 | 0.3053 | +0.2626 | 7.985 | −0.0042 |
-| `gparse-nolex` | oracle, **symbol-free** — CEILING | 148 | 0.2990 | +0.2560 | 8.081 | −0.0160 |
+| `gparse-nolex` | oracle, **symbol-free** — CEILING | 148 | 0.2994 | +0.2563 | 8.081 | −0.0163 |
 | `ngram-001` | (no parser; counts) | 358,019 | 0.1426 | +0.0899 | **6.137** | **+0.2282** |
+| `ctw-001` | (no parser; Bayesian mixture) | 819,616 | 0.0468 | −0.0118 | 8.646 | −0.0873 |
 | `gparse-flat` | prefix words, no structure | 55 | 0.0297 | −0.0300 | 10.368 | −0.3039 |
 | `gparse-none` | nothing | 1 | 0.0000 | −0.0615 | 10.608 | −0.3341 |
 
@@ -121,6 +122,15 @@ Anyone citing this table has to say which one they mean.
 3.21 bits against `gparse`'s 0.05 and 8.47. **`gparse` is not a language model.**
 It is an answer predictor sharing the LM head, and it does not touch the failure
 that 11 of 19 models cannot emit a token of prose.
+
+And `ctw-001` is the same trap from the other end, which is why it is in the
+table. It is the strongest density estimator in the counting family, it holds
+`token_lift` **+0.280** — and its `answer_lift` is **−0.012** and its
+`answer_bits_lift` **−0.087**. It is *below the floor on the only 1.4% of
+positions that carry the reasoning*, in both metrics, while looking respectable
+in the undifferentiated one. That is the pathology `README.md` already warned
+about, reproduced here on a model nobody had scored this way before, and it is
+the reason `token_*` is not quoted as a result anywhere in this note.
 
 ## What would refute this
 
