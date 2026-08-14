@@ -31,14 +31,37 @@ The parsers, by what they actually do:
 The last three are the only parsers here that *compose* an answer, and they all
 read one grammar out of :mod:`symbolic_ai_parsers.grammar`, so the comparison
 between them is a comparison of parsing strategies rather than of grammars.
+
+*Multilingual — one rule set over induced word classes*::
+
+    polycky_001     classes, mixture-trained, unconditioned
+    polycky_002     ... with rule weights conditioned on language
+    polycky_crc     control: conditioned on a crc32 bucket of the same size
+    polycky_1class  control: all abstracted frame tokens in one class
+    polycky_literal control: literal words in the RHS, abstraction off
+    polycky_v1seg   control: the shared split_words segmentation
+    polycky_hapax   control: the old hapax unseen-argument rate
+    polycky_wide    refuter: the wildcard search beam widened to 64
+
+Seven rows for one parser is not thoroughness for its own sake. The family
+changes four things at once relative to ``cky-001`` — segmentation, abstraction,
+training mixture and conditioning — and this repo's recorded failure mode is a
+gain attributed to the architecture that belonged to the harness. Each control
+turns exactly one knob back, so the sweep attributes rather than asserts. The
+skeleton is ``polyglot/`` and registers nothing.
 """
 
 from . import bracket_001, legacy_001, prior_001, retrieve_001  # noqa: F401
 from . import template_001, template_002, template_lex, template_seeded  # noqa: F401
 from . import cky_001, lr_001, shiftreduce_001  # noqa: F401
+from . import polycky_001, polycky_002, polycky_crc  # noqa: F401
+from . import polycky_1class, polycky_literal, polycky_v1seg  # noqa: F401
+from . import polycky_hapax, polycky_wide  # noqa: F401
 
 __all__ = [
     "bracket_001", "legacy_001", "prior_001", "retrieve_001",
     "template_001", "template_002", "template_lex", "template_seeded",
     "cky_001", "lr_001", "shiftreduce_001",
+    "polycky_001", "polycky_002", "polycky_crc", "polycky_1class",
+    "polycky_literal", "polycky_v1seg", "polycky_hapax", "polycky_wide",
 ]

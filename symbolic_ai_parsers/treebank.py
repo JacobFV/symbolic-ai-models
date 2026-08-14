@@ -47,7 +47,7 @@ from __future__ import annotations
 import collections
 import re
 from dataclasses import dataclass, field
-from typing import Iterator, Sequence
+from typing import Callable, Iterator, Sequence
 
 from symbolic_ai_core.data.curriculum import Episode
 from symbolic_ai_core.data.graph import Graph
@@ -94,6 +94,13 @@ class ClauseSample:
                      for i, w in enumerate(self.tokens))
 
 
+#: The default word splitter. Passed explicitly everywhere below rather than
+#: read from module scope, so that a parser can supply a different one without
+#: any other parser's segmentation moving with it. See
+#: :mod:`symbolic_ai_parsers.segment` for the alternative and why it exists.
+Splitter = Callable[[str], "list[str]"]
+
+
 def blocks(text: str) -> list[tuple[str, list[str]]]:
     """``(header, body lines)`` per block. Punctuation and indentation only.
 
@@ -121,17 +128,23 @@ def blocks(text: str) -> list[tuple[str, list[str]]]:
     return out
 
 
-def segments(text: str) -> list[Segment]:
-    """Every clause of the prompt, tagged with the block it belongs to."""
+def segments(text: str, words: Splitter = words_of) -> list[Segment]:
+    """Every clause of the prompt, tagged with the block it belongs to.
+
+    ``words`` defaults to the repo's shared splitter, so every existing parser
+    segments exactly as it did. It is an argument at all because that splitter
+    is script-dependent in a way that has nothing to do with parsing; see
+    :mod:`symbolic_ai_parsers.segment`.
+    """
     out: list[Segment] = []
     for b, (header, body) in enumerate(blocks(text)):
         for line in body:
             for piece in line.split(";"):
-                toks = tuple(words_of(piece))
+                toks = tuple(words(piece))
                 if toks:
                     out.append(Segment(toks, b, header))
         if not body:
-            toks = tuple(words_of(header))
+            toks = tuple(words(header))
             if toks:
                 out.append(Segment(toks, b, header))
     return out
@@ -163,6 +176,9 @@ class Treebank:
     n_clause_nodes: int = 0
     n_aligned: int = 0
     n_episodes: int = 0
+    #: the language each sample came from, parallel to :attr:`samples`. Empty
+    #: for a monolingual build; a conditioned grammar reads it.
+    languages: list[str] = field(default_factory=list)
 
     @property
     def coverage(self) -> float:
@@ -175,14 +191,24 @@ class Treebank:
         return self.n_aligned / self.n_clause_nodes if self.n_clause_nodes else 0.0
 
     @classmethod
-    def build(cls, episodes: Sequence[Episode]) -> "Treebank":
+    def build(cls, episodes: Sequence[Episode], words: Splitter = words_of
+              ) -> "Treebank":
         tb = cls(n_episodes=len(episodes))
         for ep in episodes:
-            tb._add(ep)
+            tb._add(ep, words)
         return tb
 
-    def _add(self, ep: Episode) -> None:
-        segs = segments(ep.prompt)
+    def extend(self, other: "Treebank") -> None:
+        """Fold another treebank in. Used to assemble a multilingual one from
+        per-language builds without re-segmenting anything."""
+        self.samples.extend(other.samples)
+        self.languages.extend(other.languages)
+        self.n_clause_nodes += other.n_clause_nodes
+        self.n_aligned += other.n_aligned
+        self.n_episodes += other.n_episodes
+
+    def _add(self, ep: Episode, words: Splitter = words_of) -> None:
+        segs = segments(ep.prompt, words)
         lowered = [tuple(t.lower() for t in s.tokens) for s in segs]
         nodes = list(_clause_nodes(ep.graph))
         self.n_clause_nodes += len(nodes)
@@ -213,6 +239,7 @@ class Treebank:
             if sample is not None:
                 self.n_aligned += 1
                 self.samples.append(sample)
+                self.languages.append(ep.language)
 
     @staticmethod
     def _sample(node: tuple[int, str, list[tuple[int, str]]], seg: Segment,
