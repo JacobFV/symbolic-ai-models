@@ -1,0 +1,16 @@
+gparse-retrieve: parser=retrieve-001 boundary contexts=1 fired=1.000 answer in parse=0.902 confidence by margin=[0.433, 0.423, 0.468, 0.607, 0.168]
+  ('pl', 'smaller', 1) +5.84
+  ('path', 'ex', 'green green') +5.25
+  ('path', 'ex', 'yellow yellow') +5.25
+  ('pl', 'green red green', 1) +5.25
+  ('pl.m', 'green green', 3) +5.25
+  ('pl.m', 'yellow yellow', 3) +5.25
+  ('pl', 'blue orange', 1) +4.74
+  ('pl', 'blue red', 1) +4.74
+  ('pl', 'blue yellow', 1) +4.74
+  ('pl', 'blue yellow blue', 1) +4.74
+  ('pl', 'green green', 0) +4.74
+  ('pl', 'green green', 1) +4.74
+  ('pl', 'green orange green', 1) +4.74
+  ('pl', 'green purple green', 0) +4.74
+  ('pl', 'green purple green', 2) +4.74

@@ -1,18 +1,21 @@
 """``gparse``: emit the answer by pointing into the parse of the prompt.
 
 The ``-003`` generation, and what makes it a generation rather than one more
-model: **the parser is a parameter**. One reasoner is registered five times
-against five different readers of the text surface, and the rows differ in
-nothing else, so the spread between them is a measurement of parsing and not a
-comparison of models.
+model: **the parser is a parameter**. One reasoner is registered against five
+different readers of the text surface, and those rows differ in nothing else, so
+the spread between them is a measurement of parsing and not a comparison of
+models. A sixth row is a declared ablation of the reasoner and says so.
 
-=================  ==================================================
-``gparse-003``     ``template-002`` — a real, learned graph parser
+===================  ================================================
+``gparse-003``       ``template-002`` — a real, learned graph parser
 ``gparse-retrieve``  ``retrieve-001`` — the memorisation control
-``gparse-flat``    the prefix's words, unstructured: the honest zero
-``gparse-none``    no reader at all: the reasoner with nothing to read
-``gparse-oracle``  **a ceiling, not a system** — see below
-=================  ==================================================
+``gparse-flat``      the prefix's words, unstructured: the honest zero
+``gparse-none``      no reader at all: the reasoner with nothing to read
+``gparse-oracle``    **a ceiling, not a system** — see below
+``gparse-nolex``     the ceiling with the two symbol-reading features
+                     removed: exactly renaming-invariant, and the only
+                     renaming evidence the text surface has
+===================  ================================================
 
 ``gparse-oracle`` is handed the episode's true term graph, restricted to the
 symbols the reader has already read (:mod:`symbolic_ai_models.prefix` carries
@@ -42,9 +45,11 @@ Three steps, each of them causal and each of them checkable.
    or its siblings'. Counted, not optimised: there is no learning rate and no
    stopping rule, so two rows differ in the parse they were given and in nothing
    that could have been tuned differently for one of them. Nothing in the
-   feature set is the node's own symbol, so the rule is about where the answer
-   sits in the term and not about which words are answer-shaped — and it is
-   exactly invariant under renaming.
+   feature set is the node's *own* symbol, so the rule is about where the answer
+   sits in the term and not about which words are answer-shaped. Two features do
+   read the parent's and grandparent's labels; ``gparse-nolex`` drops them and is
+   then exactly renaming-invariant, which is how much of the ceiling turns out to
+   be vocabulary.
 
    The repeat counts are what make this more than a slot lookup. In
    ``unification`` the fact is ``parent alice bob`` and the pattern
@@ -74,8 +79,7 @@ import math
 from typing import Sequence
 
 from symbolic_ai_core.data.curriculum import Episode
-from symbolic_ai_core.data.graph import STRUCTURAL
-from symbolic_ai_core.data.graph import Graph
+from symbolic_ai_core.data.graph import STRUCTURAL, Graph
 from symbolic_ai_core.data.tokenizer import SymbolTokenizer, split_words, word_spans
 from ..base import ModelConfig
 from ..registry import register
@@ -147,16 +151,18 @@ def _multiplicity(g: Graph) -> list[int]:
     return [min(counts.get(k, 0), 3) for k in keys]
 
 
-def _features(g: Graph, kids: list[list[int]], mult: list[int],
-              i: int) -> tuple[tuple, ...]:
+def _features(g: Graph, kids: list[list[int]], mult: list[int], i: int, *,
+              lexical: bool = True) -> tuple[tuple, ...]:
     """Everything the scorer may know about node ``i``. Never its own symbol.
 
     A rule allowed to read the node's own label would learn which *words* are
     answer-shaped — the shortcut family ``symbolic_ai_core.shortcuts`` already
-    measures, and not a claim about reading the episode. The parent's label is
-    admitted, on the same terms the ``ngram`` node contexts already admit it:
-    "the second argument of ``parent``" is a fact about the term, and it is the
-    single lexical key here.
+    measures, and not a claim about reading the episode. The parent's and
+    grandparent's labels are admitted, on the terms the ``ngram`` node contexts
+    already admit them: "the second argument of ``parent``" is a fact about the
+    term. They are the only lexical keys here, and ``lexical=False`` removes
+    them — what is left is exactly invariant under renaming every symbol in the
+    episode, and ``gparse-nolex`` is the row that says what that costs.
 
     These are summed rather than laddered. A ladder answers from the most
     specific context that has support and throws the rest away, which is right
@@ -176,16 +182,20 @@ def _features(g: Graph, kids: list[list[int]], mult: list[int],
     sm = max(sibs) if sibs else 0
     gp = g.parent[p] if inside else -1
     glabel = g.labels[gp] if 0 <= gp < len(g) else ""
-    return (
+    structural = (
         ("t", g.types[i]),
-        ("pl", plabel, slot),
         ("pt", ptype, slot),
         ("dp", depth, arity),
         ("m", m),
         ("sm", sm),
         ("t.m", g.types[i], m),
-        ("pl.m", plabel, m),
         ("m.sm", m, sm),
+    )
+    if not lexical:
+        return structural
+    return structural + (
+        ("pl", plabel, slot),
+        ("pl.m", plabel, m),
         ("path", glabel, plabel),
     )
 
@@ -254,7 +264,20 @@ class GraphParsedLM(RuleBasedModel):
 
     family = "rule-based"
     reads_text_parser = True
+
+    #: The knob the parser comparison turns on. Every row that leaves
+    #: :attr:`ablation` empty must differ in this and nothing else.
     default_text_parser = "template-002"
+
+    #: Whether the scorer may key on a parent's or grandparent's *label*. Off is
+    #: exactly renaming-invariant; see :func:`_features`. Only a row that names
+    #: itself an ablation may move it.
+    use_lexical = True
+
+    #: Non-empty when this row changes something other than the parser, and it
+    #: says what. Rows with an empty ablation are the parser comparison and are
+    #: held to differing in the parser alone.
+    ablation = ""
 
     LEARNED = ("boundary", "weight", "spelling", "bin_confidence",
                "boundary_seen", "answer_reachable")
@@ -340,7 +363,8 @@ class GraphParsedLM(RuleBasedModel):
                 hit = _norm(g.labels[i]) == answer
                 table = node_pos if hit else node_neg
                 n_pos, n_neg = n_pos + hit, n_neg + (not hit)
-                for key in _features(g, kids, mult, i):
+                for key in _features(g, kids, mult, i,
+                                     lexical=self.use_lexical):
                     table[key] += 1
 
             text = view.text(at)
@@ -445,7 +469,8 @@ class GraphParsedLM(RuleBasedModel):
             if not g.labels[i] or g.types[i] in STRUCTURAL:
                 continue
             score = sum(self.weight.get(key, 0.0)
-                        for key in _features(g, kids, mult, i))
+                        for key in _features(g, kids, mult, i,
+                                             lexical=self.use_lexical))
             key = _norm(g.labels[i])
             if key not in best or score > best[key][0]:
                 best[key] = (score, i)
@@ -569,3 +594,27 @@ class GraphParsedNone(GraphParsedLM):
     what the machinery around the parser is worth by itself, which is zero."""
 
     default_text_parser = "none"
+
+
+@register("gparse-nolex",
+          doc="CEILING, symbol-free: the oracle row with the lexical keys removed.")
+class GraphParsedNoLex(GraphParsedLM):
+    """The ceiling again, with the two features that read a *symbol* removed.
+
+    Not a parser row — an ablation of the reasoner, and the one that could
+    embarrass the rest of this table. ``gparse-oracle``'s heaviest weights are
+    parent labels like ``('pl', 'smaller', 1)``, which is a rule about the word
+    ``smaller`` rather than about the shape of the term. With ``use_lexical``
+    off, every feature is a type, a slot, a depth, an arity or a repeat count,
+    so the scorer is **exactly invariant under renaming every symbol in the
+    episode** — and the drop from ``gparse-oracle`` is the part of the ceiling
+    that was vocabulary rather than structure.
+
+    The repo has no renaming check on the text surface (``_renaming_check``
+    scores the *node* task, which every row here abstains on), so this row is
+    the only renaming evidence the LM side has.
+    """
+
+    default_text_parser = "oracle"
+    use_lexical = False
+    ablation = "no lexical keys"

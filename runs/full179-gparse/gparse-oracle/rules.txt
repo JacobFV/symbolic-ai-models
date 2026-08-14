@@ -1,0 +1,16 @@
+gparse-oracle: parser=oracle boundary contexts=1 fired=1.000 answer in parse=0.902 confidence by margin=[0.409, 0.354, 0.373, 0.246, 0.265]
+  ('pl', 'smaller', 1) +5.67
+  ('path', 'demonstrations', 'green green') +5.08
+  ('path', 'demonstrations', 'yellow yellow') +5.08
+  ('pl', 'green red green', 1) +5.08
+  ('pl.m', 'green green', 3) +5.08
+  ('pl.m', 'yellow yellow', 3) +5.08
+  ('pl', 'blue orange', 1) +4.57
+  ('pl', 'blue red', 1) +4.57
+  ('pl', 'blue yellow', 1) +4.57
+  ('pl', 'blue yellow blue', 1) +4.57
+  ('pl', 'green green', 0) +4.57
+  ('pl', 'green green', 1) +4.57
+  ('pl', 'green orange green', 1) +4.57
+  ('pl', 'green purple green', 0) +4.57
+  ('pl', 'green purple green', 2) +4.57

@@ -37,6 +37,14 @@ on `template-002` / `retrieve-001` does not.
 say the reasoning, not the parse, is what is missing — and it would be an
 argument for spending nothing further on `symbolic_ai_parsers`.
 
+> **Outcome (added after the sweep):** the second half of H held emphatically —
+> the same reasoner with no parse scores 0.000 and with a bag of words 0.030. The
+> first half did not. `template-002` and `retrieve-001` *did* clear the floor, by
+> +0.26 and +0.28, so the "without one it cannot" clause was wrong about real
+> parsers as well as about the oracle. And the ceiling is only 0.387: a perfect
+> parse still gets 61% of answers wrong. See
+> `notes/findings/2026-08-13-a-perfect-parser-does-not-rescue-the-text-surface`.
+
 **What would make it worthless**: the oracle reading the answer off the graph.
 85.3% of answers on the full curriculum are literally a label of some node of
 the episode's graph — 179 lessons, the sweep's own 3,580 training episodes, and

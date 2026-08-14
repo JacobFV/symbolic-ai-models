@@ -148,6 +148,47 @@ The symbolic models are held to the same bar as the networks, and the bar is enf
 - **Two leak tests run against all twelve models.** Perturbing later tokens must leave earlier predictions bit-identical, and rewriting a masked node's true label must not move the prediction. A model that fails either is reading its own answer.
 - **The back-off is shared**, exactly as the embeddings and heads are shared on the neural side, so differences between symbolic models come from their machinery.
 
+### The parser is a parameter — and one of them is an oracle
+
+`collate_text` sets `rel=None`, so the text surface hands a model a flat token
+chain while `collate_graph` hands it the true term graph. Every model that scores
+well here scores on the graph, which leaves "is the text-surface failure a
+*parsing* failure or a *reasoning* failure" unanswerable — the two are welded
+together inside each model.
+
+`symbolic_ai_models/prefix.py` unwelds them. A `PrefixParser` maps every prefix
+of a token sequence to a `Graph`; a rule-based model names the one it wants in
+`extra.text_parser` and reads `view.graph(t)`. `TextPrefix` adapts any parser
+registered in `symbolic_ai_parsers`, so a reasoner is measured against a real
+parser without either being rewritten. `gparse-003` is the first reasoner written
+against the seam and is registered five times — `-003` (`template-002`),
+`-retrieve`, `-flat`, `-none`, `-oracle` — differing in nothing but the reader,
+so the spread between its rows measures parsing rather than models.
+
+**`gparse-oracle` is a CEILING, not a system.** It is handed the episode's true
+term graph. On real text there is no oracle, and on any batch built from ids
+rather than episodes — `decode`, the agent evaluation — it returns nothing and
+the model abstains. It is a word-suffixed name on purpose: `--models gparse`
+resolves to `gparse-003`, never to the ceiling.
+
+**The leak, and why the number is not worthless.** 85.3% of answers are literally
+the label of a node of that episode's graph, so an unrestricted oracle would read
+the answer off it. The oracle is therefore restricted to *the nodes whose symbol
+the reader has already read* — the r-th node carrying a symbol waits for the r-th
+occurrence of that symbol as a complete word in `decode(ids[:t+1])`; symbol-free
+nodes wait for their first available descendant; the rest are deleted and their
+children re-attached. **It can never name a symbol the model has not read**: it
+supplies relations among seen symbols, which is what a parser supplies, and not
+vocabulary, which is what a leak is. Audited on all 179 lessons at eval seeds,
+11,198 positions, 424,550 revealed nodes: **zero** suffix violations and **zero**
+unseen-symbol violations, against a `none` reader that passes both by revealing
+nothing.
+
+Note that the two existing leak tests would *not* have caught a leak here — both
+perturb tokens, and the graph does not move when the tokens do. The guard that
+would is `tests/test_prefix_parser.py`: adding graph nodes labelled with symbols
+the text never contains must leave every logit bit-identical.
+
 A symbolic run's artifact is legible: `runs/<name>/rules.txt` is the induced decision list in full, and you can read it and argue with it.
 
 ```
@@ -339,6 +380,7 @@ symbolic-ai-models/
       base.py             # Model (the interface) + NeuralModel (embeddings, heads)
       symbolic.py         # RuleBasedModel: votes -> distribution, redacted views
       registry.py
+      gparse_003/         # the -003 generation: the parser is a *parameter*
       transformer_001/ rgt_001/ tpr_001/           # neural, one dir each,
       hrr_001/ ndr_001/ gru_001/                   #   named for what it registers
       ngram_001/ syllogism_001/ symbolalg_001/     # rule-based, one dir each,
@@ -347,6 +389,8 @@ symbolic-ai-models/
       base.py             # Task protocol, floors, lift
       lm.py               # next-token
       masked_node.py      # masked node: type head + label head
+    prefix.py             # ids -> one Graph per *prefix*: the parser seam, the
+                          #   prefix-restricted oracle, and its leak audit
     train.py              # data, tasks, budget -> model.fit(); no learning here
     decode.py             # sampling, for reading; feeds no metric
     agent.py              # trained model -> multiple-choice answerer
@@ -572,6 +616,58 @@ ptrgen-argmax             3696    0.321    +0.208   6.49     +0.307    +0.565   
 
 `RESEARCH_LOG.md` has the pre-registered refutation criteria and what each one
 actually did.
+
+### Is the text surface a parsing failure or a reasoning failure? — `gparse-003`
+
+All 179 lessons, `configs/full179.toml`, `runs/full179-gparse`. One reasoner,
+five readers, plus one declared ablation of the reasoner. `answer_*` only: every
+`gparse` row abstains outside the answer span by construction, so its
+`token_lift` sits at −0.001 to −0.007 and says nothing.
+
+```
+row               reader                    params   ans acc  ans lift   ans bits  bits lift
+gparse-oracle     oracle -- CEILING           4740     0.387    +0.349      7.169     +0.098
+gparse-retrieve   retrieve-001             1838708     0.322    +0.281      7.804     +0.019
+gparse-003        template-002              112277     0.305    +0.263      7.985     -0.004
+gparse-nolex      oracle, symbol-free          148     0.299    +0.256      8.081     -0.016
+ngram-001         (no parser; counts)       358019     0.143    +0.090      6.137     +0.228
+gparse-flat       prefix words, no structure    55     0.030    -0.030     10.368     -0.304
+gparse-none       nothing                        1     0.000    -0.062     10.608     -0.334
+```
+
+- **Structure is the difference between working and not.** The same reasoner on
+  the prefix's *words* scores 0.030 — below its own floor — and on any
+  structured parse 0.30–0.39.
+- **A perfect parse leaves most of the task undone.** At most 84.5% of eval
+  answers can be produced by pointing at a node at all, so even where the right
+  node exists the ceiling picks it under half the time. **The bottleneck this
+  finds is node selection, not parsing** — the opposite of what motivated
+  building the oracle.
+- **The best "parser" does no parsing.** `retrieve-001` hands back the nearest
+  *training* graph verbatim and is indistinguishable from `template-002`
+  (0.017, ≈1 SE at n=1,346). Whatever the parser column buys is recognition of
+  the lesson template. The audit agrees from the other side: 47% of the nodes
+  `retrieve-001` emits, and 37% of `template-002`'s, name symbols absent from
+  the document.
+- **A quarter of the ceiling is vocabulary.** Two of the ten node features read
+  a symbol — the parent's and grandparent's labels. Drop them (`gparse-nolex`,
+  exactly renaming-invariant) and the ceiling falls 0.387 → 0.299, a drop the
+  size of the whole oracle-versus-real-parser gap, landing *level with*
+  `template-002`. The renaming-invariant ceiling is worth no more than what a
+  real parser already delivers by reading words.
+- **And 148 symbol-free features get within 0.006 of a 112k-parameter
+  parser-plus-model** and within 0.023 of a 1.8M-parameter memoriser.
+- **The metrics disagree, again.** By `answer_acc` the ceiling leads. By
+  `answer_bits` **`ngram-001` is the best row in the table** (6.14 against the
+  ceiling's 7.17) and `template-002` sits exactly at the floor. `gparse`
+  decides; `ngram` estimates. `token_*` settles what `gparse` is not: `ngram`
+  scores 0.580 / 3.21 bits against `gparse`'s 0.05 / 8.47. **`gparse` is not a
+  language model** — it is an answer predictor sharing the LM head, and it does
+  nothing about prose.
+
+`notes/findings/2026-08-13-a-perfect-parser-does-not-rescue-the-text-surface.md`
+carries the refutation conditions, the uncontrolled confound (the readers do not
+present equal numbers of candidates) and the caveats.
 
 ### Does an ABC make new symbolic models cheap? — `omegaclaw`
 

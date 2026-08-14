@@ -25,6 +25,7 @@ from symbolic_ai_core.data.curriculum import Episode, build_split, generate, res
 from symbolic_ai_core.data.graph import Graph, graph_from_json
 from symbolic_ai_core.data.tokenizer import SymbolTokenizer
 from .models import Model, ModelConfig, NeuralModel, RuleBasedModel, build, model_names
+from .prefix import PrefixParser, TextView, audit_prefix_parser, build_prefix_parser
 from .tasks import LanguageModelling, MaskedNode, Task, make_task, task_names
 from .train import TrainConfig, evaluate_model, load_run, train
 
@@ -38,6 +39,8 @@ __all__ = [
     "collate_text", "collate_graph",
     # models
     "Model", "NeuralModel", "RuleBasedModel", "ModelConfig", "build", "model_names",
+    # the parser seam on the text surface
+    "PrefixParser", "TextView", "build_prefix_parser", "audit_prefix_parser",
     # tasks
     "Task", "LanguageModelling", "MaskedNode", "make_task", "task_names",
     # training

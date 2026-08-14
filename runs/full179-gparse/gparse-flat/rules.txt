@@ -1,0 +1,16 @@
+gparse-flat: parser=flat boundary contexts=1 fired=1.000 answer in parse=0.619 confidence by margin=[0.064, 0.019, 0.06, 0.06, 0.06]
+  ('m.sm', 1, 2) +2.35
+  ('sm', 2) +1.52
+  ('m.sm', 2, 3) +0.86
+  ('m', 2) +0.85
+  ('pl.m', '', 2) +0.85
+  ('t.m', 'token', 2) +0.85
+  ('pl', '', 6) +0.51
+  ('pt', 'list', 6) +0.51
+  ('pl', '', 5) +0.44
+  ('pt', 'list', 5) +0.44
+  ('pl', '', 8) +0.01
+  ('pt', 'list', 8) +0.01
+  ('pl', '', 4) +0.01
+  ('pt', 'list', 4) +0.01
+  ('dp', 1, 0) -0.00

@@ -225,17 +225,58 @@ def test_every_gparse_row_differs_only_in_its_parser():
     for name in GPARSE:
         cls = get(name)
         assert issubclass(cls, GraphParsedLM)
-        readers.add(cls.default_text_parser)
         if cls is GraphParsedLM:                  # the reasoner itself
+            readers.add(cls.default_text_parser)
             continue
-        # A variant may override the knob and nothing else. The moment one of
-        # them carries its own `_plan` or its own features, the spread between
-        # the rows stops being a measurement of parsing and becomes a comparison
-        # of models — which is the mistake this whole generation exists to avoid.
+        if cls.ablation:
+            # A named ablation is allowed to change the reasoner — that is what
+            # it is for — but it must say so in `ablation`, and it is then not
+            # part of the parser comparison and not counted as a reader.
+            assert not set(vars(cls)) - allowed - {"use_lexical", "ablation"}, \
+                f"{name} changes more than it declares"
+            continue
+        # Everything else may override the knob and nothing at all besides. The
+        # moment a parser row carries its own `_plan` or its own features, the
+        # spread between the rows stops being a measurement of parsing and
+        # becomes a comparison of models — the mistake this generation exists to
+        # avoid.
         own = set(vars(cls)) - allowed
         assert not own, f"{name} overrides more than the parser: {own}"
-    assert len(readers) == len(GPARSE) >= 3
+        readers.add(cls.default_text_parser)
+    assert len(readers) >= 4
     assert "oracle" in readers
+
+
+def test_the_symbol_free_ablation_really_is_symbol_free():
+    """`gparse-nolex` is the only renaming evidence the text surface has.
+
+    `_renaming_check` scores the *node* task, which every row here abstains on,
+    so the claim "this reasoner is about structure and not vocabulary" would
+    otherwise rest on nothing. Checked directly on the feature set: with the
+    lexical keys off, renaming every symbol in a graph must leave the features
+    of every node identical.
+    """
+    from symbolic_ai_models.models.gparse_003.model import (_children,
+                                                            _features,
+                                                            _multiplicity)
+
+    g = Graph()
+    root = g.add("", "record", -1, 0)
+    pred = g.add("parent", "pred", root, 0)
+    g.add("alice", "ident", pred, 0)
+    g.add("bob", "ident", pred, 1)
+
+    renamed = Graph.from_dict(g.to_dict())
+    swap = {"parent": "zz0", "alice": "zz1", "bob": "zz2"}
+    renamed.labels = [swap.get(l, l) for l in renamed.labels]
+
+    for lexical, same in ((False, True), (True, False)):
+        pairs = [
+            (_features(a, _children(a), _multiplicity(a), i, lexical=lexical),
+             _features(b, _children(b), _multiplicity(b), i, lexical=lexical))
+            for a, b in [(g, renamed)] for i in range(len(g))
+        ]
+        assert all(x == y for x, y in pairs) is same
 
 
 def test_a_graph_node_the_text_never_names_cannot_move_a_prediction(fixtures, cfg):

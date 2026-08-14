@@ -1,0 +1,16 @@
+gparse-nolex: parser=oracle boundary contexts=1 fired=1.000 answer in parse=0.902 confidence by margin=[0.364, 0.468, 0.372, 0.237, 0.261]
+  ('pt', 'ROOT', 4) +2.01
+  ('pt', 'ROOT', 5) +2.01
+  ('pt', 'record', 7) +1.44
+  ('m.sm', 1, 0) +1.42
+  ('t.m', 'field', 3) +1.38
+  ('t.m', 'ident', 1) +1.33
+  ('pt', 'field', 3) +1.23
+  ('t.m', 'str', 3) +1.12
+  ('pt', 'ROOT', 6) +1.08
+  ('pt', 'ROOT', 7) +1.08
+  ('t.m', 'token', 1) +1.06
+  ('pt', 'field', 5) +0.97
+  ('pt', 'field', 7) +0.86
+  ('pt', 'field', 1) +0.82
+  ('pt', 'field', 4) +0.81

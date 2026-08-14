@@ -1,0 +1,126 @@
+{
+  "config": {
+    "model": "gparse-retrieve",
+    "tasks": [
+      "lm",
+      "node"
+    ],
+    "task_weights": {
+      "lm": 1.0,
+      "node": 1.0
+    },
+    "data": null,
+    "lessons": "all",
+    "n_train": 20,
+    "n_eval": 4,
+    "language": "english",
+    "max_len": 320,
+    "max_nodes": 128,
+    "mask_rate": 0.15,
+    "type_weight": 0.5,
+    "vocab_size": 8192,
+    "label_vocab_fraction": 0.3,
+    "d_model": 96,
+    "n_layers": 3,
+    "n_heads": 4,
+    "d_ff": 256,
+    "dropout": 0.1,
+    "extra": {},
+    "steps": 2000,
+    "batch_size": 16,
+    "lr": 0.0003,
+    "min_lr_ratio": 0.1,
+    "warmup": 100,
+    "weight_decay": 0.01,
+    "grad_clip": 1.0,
+    "eval_every": 250,
+    "log_every": 50,
+    "seed": 0,
+    "resume": false,
+    "device": "cpu",
+    "amp": true,
+    "out": "runs/full179-gparse/gparse-retrieve"
+  },
+  "model_config": {
+    "vocab_size": 8192,
+    "d_model": 96,
+    "n_layers": 3,
+    "n_heads": 4,
+    "d_ff": 256,
+    "dropout": 0.1,
+    "max_len": 328,
+    "max_nodes": 128,
+    "extra": {}
+  },
+  "model": "gparse-retrieve",
+  "family": "rule-based",
+  "steps": 0,
+  "parameters": 1838708,
+  "n_train": 3580,
+  "n_eval": 716,
+  "vocab_size": 8192,
+  "floors": {
+    "lm": {
+      "token_acc": 0.052577039620376194,
+      "token_bits": 8.186910615185283,
+      "token_n": 139928.0,
+      "answer_acc": 0.05794947994056464,
+      "answer_bits": 7.951593552681449,
+      "answer_n": 1346.0
+    },
+    "node": {
+      "type_acc": 0.8601454659210886,
+      "type_bits": 2.3292035662165547,
+      "type_n": 51146.0,
+      "label_acc": 0.14321518927482088,
+      "label_bits": 9.369476110181317,
+      "label_n": 42293.0,
+      "copy_acc": 0.26580813816452037
+    }
+  },
+  "final": {
+    "lm": {
+      "token_acc": 0.05014562492085602,
+      "token_bits": 8.469137182772196,
+      "token_n": 118455.0,
+      "answer_acc": 0.3224368499257058,
+      "answer_bits": 7.803552563939062,
+      "answer_n": 1346.0,
+      "token_floor": 0.052577039620376194,
+      "token_lift": -0.002566345551247697,
+      "answer_floor": 0.05794947994056464,
+      "answer_lift": 0.28075709779179814,
+      "token_floor_bits": 8.186910615185283,
+      "token_bits_lift": -0.03447290203259719,
+      "answer_floor_bits": 7.951593552681449,
+      "answer_bits_lift": 0.018617776142803976
+    },
+    "node": {
+      "label_acc": 0.06153258169310147,
+      "label_bits": 10.879706725839362,
+      "label_n": 5233.0,
+      "type_acc": 0.39501891551071877,
+      "type_bits": 2.3271151931431158,
+      "type_n": 6344.0,
+      "label_coverage": 0.824873896595208,
+      "copy_ceiling": 0.721574622587426,
+      "copy_censored": 450.0,
+      "label_floor": 0.14321518927482088,
+      "label_lift": -0.09533619942746603,
+      "type_floor": 0.8601454659210886,
+      "type_lift": -3.3257881374652283,
+      "label_floor_bits": 9.369476110181317,
+      "label_bits_lift": -0.16118623900614434,
+      "type_floor_bits": 2.3292035662165547,
+      "type_bits_lift": 0.0008966039309441511
+    }
+  },
+  "seconds": 50.66260623931885,
+  "device": "cpu",
+  "renaming": {
+    "label_acc": 0.05310734361410141,
+    "renamed_label_acc": 0.0003766478330362588,
+    "drop": 0.05273069578106515,
+    "symbols": 2105.0
+  }
+}
