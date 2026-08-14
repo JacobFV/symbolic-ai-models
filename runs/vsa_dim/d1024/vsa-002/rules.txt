@@ -1,0 +1,4 @@
+=== vsa-002: random codebook, d=1024 ===
+  symbols 8192, role atoms 62
+  gate: fitted
+  (no learned layers; binding, superposition and cleanup only)

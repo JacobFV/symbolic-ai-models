@@ -1,0 +1,8 @@
+=== vsa_perm_hks_pure-004: channels role+permutation, d=4096 ===
+  symbols 8192, role atoms 62
+  offset routes 169 contexts, role routes 169 contexts
+  top_k 6, channel weight 1.00
+  gate: fitted
+  (pointer cleans up against addresses, not against fillers)
+  role embedding: heat-kernel signature, knob=0.5, sharpness=12 (fitted)
+  (the role Gram is the candidate score; see the module docstring)

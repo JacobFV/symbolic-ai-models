@@ -1,0 +1,135 @@
+{
+  "config": {
+    "model": "vsa-002",
+    "tasks": [
+      "lm",
+      "node"
+    ],
+    "task_weights": {
+      "lm": 1.0,
+      "node": 1.0
+    },
+    "data": null,
+    "lessons": "all",
+    "n_train": 20,
+    "n_eval": 4,
+    "language": "english",
+    "languages": "",
+    "max_len": 320,
+    "max_nodes": 128,
+    "mask_rate": 0.15,
+    "type_weight": 0.5,
+    "vocab_size": 8192,
+    "label_vocab_fraction": 0.3,
+    "d_model": 96,
+    "n_layers": 3,
+    "n_heads": 4,
+    "d_ff": 256,
+    "dropout": 0.1,
+    "extra": {
+      "vsa_dim": 16384
+    },
+    "steps": 2000,
+    "batch_size": 16,
+    "lr": 0.0003,
+    "min_lr_ratio": 0.1,
+    "warmup": 100,
+    "weight_decay": 0.01,
+    "grad_clip": 1.0,
+    "eval_every": 250,
+    "log_every": 50,
+    "seed": 0,
+    "resume": true,
+    "device": "cpu",
+    "amp": true,
+    "out": "runs/vsa_dim/d16384/vsa-002"
+  },
+  "model_config": {
+    "vocab_size": 8192,
+    "d_model": 96,
+    "n_layers": 3,
+    "n_heads": 4,
+    "d_ff": 256,
+    "dropout": 0.1,
+    "max_len": 328,
+    "max_nodes": 128,
+    "extra": {
+      "vsa_dim": 16384
+    }
+  },
+  "model": "vsa-002",
+  "family": "rule-based",
+  "steps": 0,
+  "parameters": 8254,
+  "n_train": 3580,
+  "n_eval": 716,
+  "vocab_size": 8192,
+  "floors": {
+    "lm": {
+      "token_acc": 0.052577039620376194,
+      "token_bits": 8.186910615185283,
+      "token_n": 139928.0,
+      "answer_acc": 0.05794947994056464,
+      "answer_bits": 7.951593552681449,
+      "answer_n": 1346.0
+    },
+    "node": {
+      "type_acc": 0.8601454659210886,
+      "type_bits": 2.3292035662165547,
+      "type_n": 51146.0,
+      "label_acc": 0.14321518927482088,
+      "label_bits": 9.369476110181317,
+      "label_n": 42293.0,
+      "copy_acc": 0.26580813816452037
+    }
+  },
+  "final": {
+    "lm": {
+      "token_acc": 0.0456797940146047,
+      "token_bits": 8.506303464163883,
+      "token_n": 118455.0,
+      "answer_acc": 0.0,
+      "answer_bits": 10.608439608790711,
+      "answer_n": 1346.0,
+      "token_floor": 0.052577039620376194,
+      "token_lift": -0.007280006812382748,
+      "answer_floor": 0.05794947994056464,
+      "answer_lift": -0.06151419558359622,
+      "token_floor_bits": 8.186910615185283,
+      "token_bits_lift": -0.03901262197564271,
+      "answer_floor_bits": 7.951593552681449,
+      "answer_bits_lift": -0.3341274976527587
+    },
+    "node": {
+      "label_acc": 0.21708389069367476,
+      "label_bits": 6.788917191114317,
+      "label_n": 5233.0,
+      "type_acc": 0.7922446406052963,
+      "type_bits": 1.1805992648395107,
+      "type_n": 6344.0,
+      "label_coverage": 0.824873896595208,
+      "copy_acc": 0.1790838375108038,
+      "copy_scored_n": 5785.0,
+      "copy_ceiling": 0.721574622587426,
+      "copy_censored": 450.0,
+      "label_floor": 0.14321518927482088,
+      "label_lift": 0.08621616594291828,
+      "type_floor": 0.8601454659210886,
+      "type_lift": -0.4855103609117174,
+      "copy_floor": 0.26580813816452037,
+      "copy_lift": -0.11812212197082354,
+      "label_floor_bits": 9.369476110181317,
+      "label_bits_lift": 0.275421900725361,
+      "type_floor_bits": 2.3292035662165547,
+      "type_bits_lift": 0.4931317803375946
+    }
+  },
+  "seconds": 107.38555455207825,
+  "device": "cpu",
+  "renaming": {
+    "label_acc": 0.21506591141223907,
+    "renamed_label_acc": 0.18606403470039368,
+    "drop": 0.029001876711845398,
+    "symbols": 2105.0
+  }
+}
