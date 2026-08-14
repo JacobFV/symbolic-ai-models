@@ -53,9 +53,10 @@ from symbolic_ai_core.data.curriculum import Episode
 from symbolic_ai_core.data.graph import NODE_TYPES, TYPE_TO_ID
 from symbolic_ai_core.data.tokenizer import SymbolTokenizer
 from ..parsers import build as build_parser
+from ..prefix import TextView, build_prefix_parser
 from .base import FitContext, Model, ModelConfig, ModelOutput, N_TYPES
 
-__all__ = ["RuleBasedModel", "GraphView", "Votes", "ABSTAIN"]
+__all__ = ["RuleBasedModel", "GraphView", "TextView", "Votes", "ABSTAIN"]
 
 #: What a model returns when it has nothing to say: no votes, no confidence.
 #: The mixture then reduces exactly to the back-off, which is the honest reading
@@ -145,6 +146,18 @@ class RuleBasedModel(Model):
 
     family = "rule-based"
 
+    #: Which prefix parser this model reads the text surface through, unless
+    #: ``extra.text_parser`` overrides it. A *class* attribute so that two
+    #: registrations of one reasoner can differ in exactly this and nothing
+    #: else, which is what makes the difference between their rows a
+    #: measurement of the parser rather than of two models.
+    default_text_parser = "none"
+
+    #: Whether this model reads the text surface through ``self.text_parser``.
+    #: Off by default: building the prefix reading costs a decode per sequence,
+    #: and a model that never asks should not pay for it.
+    reads_text_parser = False
+
     def __init__(self, cfg: ModelConfig) -> None:
         super().__init__()
         self.cfg = cfg
@@ -157,6 +170,15 @@ class RuleBasedModel(Model):
         # ignores `self.parser` is unaffected; one that uses it must still work
         # when handed `none`.
         self.parser = build_parser(str(cfg.get("parser", "none")))
+        # The same idea one surface over. `self.parser` reads text into a
+        # `ParseResult` -- word classes and brackets -- which is a claim about
+        # categories. `self.text_parser` reads *prefixes* of the text into
+        # `Graph`s, which is the codomain the masked-node task already uses, so
+        # a reasoner written against the term graph can be pointed at the text
+        # without being rewritten. See :mod:`symbolic_ai_models.prefix`, which
+        # also carries the leak argument for the oracle that can sit here.
+        self.text_parser = build_prefix_parser(
+            str(cfg.get("text_parser", self.default_text_parser)))
         #: structural context -> (commonest label, how pure that context is)
         self.context_prior: dict[tuple, tuple[int, float]] = {}
         #: Post-hoc temperature on the graph output. 1.0 is no change.
@@ -189,6 +211,7 @@ class RuleBasedModel(Model):
         # that consults it during `learn` sees the parser it will see at
         # evaluation rather than an unfitted one.
         self.parser.fit(ctx.episodes, ctx.tok)
+        self.text_parser.fit(ctx.episodes, ctx.tok)
         self._fit_backoff(ctx.episodes, ctx.tok)
         self._fit_context_prior(ctx.episodes, ctx.tok)
         self.learn(ctx.episodes, ctx.tok)
@@ -270,6 +293,7 @@ class RuleBasedModel(Model):
     def symbolic_state(self) -> dict[str, Any]:
         """Everything ``state_dict`` would miss — the parser included."""
         return {"_fitted": self._fitted, "_parser": self.parser,
+                "_text_parser": self.text_parser,
                 "_context_prior": self.context_prior,
                 "_temperature": self.temperature,
                 **{name: getattr(self, name, None) for name in self.LEARNED}}
@@ -283,6 +307,9 @@ class RuleBasedModel(Model):
             elif name == "_parser":
                 if value is not None:
                     self.parser = value
+            elif name == "_text_parser":
+                if value is not None:
+                    self.text_parser = value
             elif name == "_context_prior":
                 self.context_prior = value or {}
             elif name == "_temperature":
@@ -451,6 +478,17 @@ class RuleBasedModel(Model):
         """
         return [ABSTAIN] * len(ids)
 
+    def text_votes_view(self, view: TextView) -> list[Votes]:
+        """The same question, with the prefix parses alongside the tokens.
+
+        A model that sets ``reads_text_parser`` overrides this instead of
+        :meth:`text_votes` and gets ``view.graph(t)`` — the structure its parser
+        recovered from ``ids[:t + 1]``. The causality requirement is unchanged
+        and the view is what enforces it: there is no field on it holding the
+        episode, the answer, or any position after ``t``.
+        """
+        return self.text_votes(view.ids)
+
     def node_votes(self, view: GraphView) -> dict[int, tuple[Votes, Votes]]:
         """``{hidden node: (label votes, type votes)}``.
 
@@ -482,12 +520,24 @@ class RuleBasedModel(Model):
         rows, cols, syms, weights, conf = [], [], [], [], np.zeros((B, L), dtype=np.float64)
         tokens = batch.tokens.tolist()
         lengths = batch.pad_mask.sum(1).tolist()
+        # The answer key, and only the oracle parser is ever shown it. See the
+        # comment on `meta["graphs"]` in `collate_text` and the leak argument in
+        # `symbolic_ai_models.prefix`: a batch that was not built from episodes
+        # simply has none, and an oracle handed none returns nothing.
+        truths = (batch.meta or {}).get("graphs") if self.text_parser.needs_truth \
+            else None
 
         for b in range(B):
             ids = tokens[b][:lengths[b]]
             if not ids:
                 continue
-            for t, (votes, c) in enumerate(self.text_votes(ids)):
+            if self.reads_text_parser:
+                truth = truths[b] if truths and b < len(truths) else None
+                row = self.text_votes_view(
+                    self.text_parser.begin(ids, self.tok, truth))
+            else:
+                row = self.text_votes(ids)
+            for t, (votes, c) in enumerate(row):
                 if t >= L or not votes or c <= 0.0:
                     continue
                 total = float(sum(votes.values()))

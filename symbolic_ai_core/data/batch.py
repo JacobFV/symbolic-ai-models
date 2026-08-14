@@ -237,7 +237,18 @@ def collate_text(episodes: Sequence[Episode], tok: SymbolTokenizer, *,
         types=torch.full((B, L), TYPE_TO_ID["text"], dtype=torch.long),
         pad_mask=pad_mask, depth=torch.zeros((B, L), dtype=torch.long),
         causal=True, rel=None, target_tokens=targets, answer_mask=answer_mask,
-        meta={"task": "lm", "lesson_ids": [ep.lesson_id for ep in episodes]})
+        meta={"task": "lm", "lesson_ids": [ep.lesson_id for ep in episodes],
+              # The episode's true term graph, in row order. **For the oracle
+              # parser and nothing else.** It is the answer key: 85.7% of
+              # answers on the full curriculum are literally the label of one of
+              # its nodes, so a model reading it unrestricted while predicting
+              # the next token is cheating and its numbers are worthless. The
+              # only consumer is `OraclePrefix`, which is flagged
+              # `needs_truth = True`, is documented as a ceiling rather than a
+              # system, and returns only the part of it whose symbols the reader
+              # has already read -- see `symbolic_ai_models.prefix`. Nothing
+              # else in the repo may read this key.
+              "graphs": [ep.graph for ep in episodes]})
 
 
 def text_batch(ids: Sequence[int], tok: SymbolTokenizer,

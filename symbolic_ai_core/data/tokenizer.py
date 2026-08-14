@@ -23,7 +23,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable, Sequence
 
-__all__ = ["SymbolTokenizer", "split_words", "PAD", "UNK", "MASK", "BOS", "EOS", "SEP"]
+__all__ = ["SymbolTokenizer", "split_words", "word_spans", "PAD", "UNK", "MASK",
+           "BOS", "EOS", "SEP", "SPECIALS"]
 
 PAD, UNK, MASK, BOS, EOS, SEP = "<pad>", "<unk>", "<mask>", "<bos>", "<eos>", "<sep>"
 SPECIALS = (PAD, UNK, MASK, BOS, EOS, SEP)
@@ -55,6 +56,18 @@ _WORD_RE = re.compile(r"[^\W\d_]+|\d+|[^\s\w]|[^\s]", re.UNICODE)
 def split_words(text: str) -> list[str]:
     """Split into bare symbols, dropping whitespace. Used on the graph side."""
     return _WORD_RE.findall(text)
+
+
+def word_spans(text: str) -> list[tuple[str, int, int]]:
+    """:func:`split_words` with character offsets: ``(word, start, end)``.
+
+    The same compiled pattern, deliberately. A causal reader of a *prefix* needs
+    to know which words are finished, and the only honest way to answer that is
+    with the offsets of the segmentation everything else in the repo uses — a
+    second regex written to look like this one is how two components come to
+    disagree about what a word is.
+    """
+    return [(m.group(0), m.start(), m.end()) for m in _WORD_RE.finditer(text)]
 
 
 def _split_pieces(text: str) -> list[str]:
