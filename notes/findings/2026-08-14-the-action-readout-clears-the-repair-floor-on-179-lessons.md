@@ -83,11 +83,44 @@ changed is the readout. That is the claim
 and this is the strongest form of it the repo has: the same fitted model, the
 same environment, the same prior and calibrator, one thing swapped.
 
-## What would refute it
+## The refutation was attempted and did not land
 
-1. **`wrap(corefer-001)` at these exact settings clears the floor too.** Then
-   the gain is depth or configuration, not the readout. *Running; this note is
-   `provisional` until it lands and it should be read with that pending.*
+The condition written down before the control ran: *if `wrap(corefer-001)` at
+these exact settings clears the floor too, the gain is depth or configuration
+and not the readout.* It does not clear it. It does not come near it.
+
+`runs/agents-full179-readout/wrap-corefer/` — same model, same 179 lessons, same
+716 episodes, same 2,632 fills, same floor, same shared prior and calibrator.
+**One thing differs: what the model's output is read as.**
+
+| | `label_acc` | `return` | `success` |
+|---|---:|---:|---:|
+| `graphread` — read as a move | **0.5080** (+0.383) | 0.4623 (+0.331) | 0.2011 |
+| `wrap` — read as text | **0.0851** (−0.147) | 0.0726 (−0.154) | 0.0196 |
+| floor (`context`) | 0.2025 | 0.1963 | 0.0698 |
+
+The two sit on **opposite sides of the floor**, 0.423 apart on the same fitted
+model. Reading `corefer-001`'s output as a move beats a structure-only lookup
+table by a third of the headroom; reading the identical model as text loses to
+that table.
+
+### The confound in it, unquantified and stated anyway
+
+`wrap` **scores at most 8 of `repair`'s 24 candidates** (`max_actions=8`, read
+off its own `policy.txt`), shortlisted by the shared prior. Where the answer
+falls outside that shortlist, `wrap` cannot pick it at any quality of reading.
+Some unknown part of the 0.423 is therefore truncation rather than readout, and
+I did not measure how much: `wrap` at 24 candidates is three times the forward
+passes on a run that already took thirteen minutes, and it would not fit the
+box's kill window.
+
+What the confound does **not** explain is the sign. The floor picks from all 24
+and scores 0.2025; `wrap` scores 0.0851. A pure truncation story would put `wrap`
+somewhere between a shortlisted reader and a full one, not **below the
+structure-only baseline** — so the honest reading is that the text readout is
+actively bad here and truncation makes it worse by an amount nobody has
+measured. The clean version of this control is `graphread` restricted to the
+same top-8 shortlist, which is cheap and was not built.
 2. **The abstain-everywhere control does not land at the floor here.** The
    agents-side abstention path is measured to score *below chance* on `repair`
    at slice scale, and if that holds at 179 lessons then part of any gap between
@@ -100,6 +133,20 @@ same environment, the same prior and calibrator, one thing swapped.
 
 ## Refutation status
 
-`status: provisional`, and the reason is the one this repo keeps relearning:
-every control here was designed by the agent that built the readout. The
-independent check that matters most is (1), and it is the cheapest.
+**Still `provisional`, and the control landing does not change that.** The
+reason is the one this repo keeps relearning: every control here was designed by
+the agent that built the readout, and an author-designed control that passes is
+exactly the shape of a hollow one. What can honestly be said is that the
+refutation condition was written down first, attempted, and not met.
+
+The two an independent refuter should take, in order:
+
+1. **`graphread` on the same top-8 shortlist `wrap` gets.** The cheap version of
+   the control above, and the one that removes the confound it still carries.
+   If the gap collapses, the finding is about `max_actions` and not about the
+   readout.
+2. **The abstain-everywhere baseline at 179 lessons.** It is measured to sit
+   *below chance* on `repair` at slice scale. `graphread` abstains on 3.1% of
+   decisions and `wrap` on none, so this can shift the comparison a little and
+   cannot manufacture 0.423 — but the number has not been taken at this scale
+   and every coverage-weighted reading here assumes it.
