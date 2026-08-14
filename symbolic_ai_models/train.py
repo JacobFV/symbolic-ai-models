@@ -374,6 +374,16 @@ def train(cfg: TrainConfig, *, progress=None) -> dict[str, Any]:
         "n_train": len(train_eps), "n_eval": len(eval_eps),
         "vocab_size": len(tok),
         "floors": floors,
+        # The fitted post-hoc temperature, recorded because it is the one
+        # parameter that moves every `*_bits` in this file and no `*_acc`.
+        # Dividing log-probabilities by a positive constant cannot reorder them,
+        # so a temperature that shifts leaves every accuracy bit-identical while
+        # every bits figure drifts -- and until now it was fitted, applied, and
+        # never written down, which made such a drift unattributable. `corefer`
+        # was found to have moved +0.0029 bits on an unchanged model with every
+        # accuracy identical to nine decimal places, and the investigation had
+        # to re-fit the model to discover what temperature either run used.
+        "temperature": float(getattr(model, "temperature", 1.0)),
         "final": history[-1]["eval"] if history else {},
         "seconds": time.time() - started,
         "device": str(run_device),
