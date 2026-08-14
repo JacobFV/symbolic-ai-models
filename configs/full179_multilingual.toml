@@ -16,13 +16,19 @@
 # sees this corpus as seven copies of `full179.toml`'s. Only a model that reads
 # `GraphView.text` sees seven different things.
 #
-# Every renderable pack is here. `symbolic_ai_data` ships five hand-written
+# Every hand-written pack is here. `symbolic_ai_data` ships five hand-written
 # natural grammars (english, spanish, chinese, turkish, swahili), one lexical
-# variant of English, and one formal notation. The thousand-odd derived
-# languages the registry advertises need `grammar/data/languages.db`, a 2 GB
-# gitignored build artefact that is not present, so seven is the whole of it --
-# which is why nothing in `runs/` here can support a claim about language
-# *families*. See the pre-registration note in `notes/decisions/`.
+# variant of English, and one formal notation.
+#
+# When this file was written the derived languages the registry advertises were
+# unreachable -- the header said they "need `grammar/data/languages.db`, a 2 GB
+# gitignored build artefact that is not present, so seven is the whole of it".
+# That is no longer true: `symbolic_ai_core/data/langdb.py` materialises a
+# 102 MB database covering 58 languages, and `configs/full179_wals42.toml`
+# renders the 42 of them that WALS has coded. **This file is unchanged in every
+# field that produced `runs/full179_multilingual`** and is kept as the
+# seven-pack corpus those numbers were measured on; a family claim wants the
+# wider config.
 
 tasks = "lm,node"
 lessons = "all"
