@@ -79,8 +79,9 @@ from ..synthex_002.model import SynthexClassModel, SynthexCurated
 __all__ = ["SynthexBalanced", "SynthexSkewRandom", "SynthexRandomSalted",
            "SynthexBalancedPure", "SynthexSkewRandomPure",
            "SynthexRandomPure", "SynthexCuratedPure",
-           "rebalance", "skew_matched_random", "uniform_random",
-           "assignment_stats"]
+           "SynthexOccBalanced", "SynthexOccBalancedPure",
+           "rebalance", "rebalance_weighted", "skew_matched_random",
+           "uniform_random", "assignment_stats", "label_occurrences"]
 
 
 def _digest(symbol: int, salt: str) -> int:
@@ -139,6 +140,64 @@ def rebalance(curated: dict[int, int], k: int, salt: str = "") -> dict[int, int]
         for symbol in members[c]:
             assignment[symbol] = bin_
         load[bin_] += sizes[c]
+    return assignment
+
+
+def label_occurrences(episodes: Sequence[Episode],
+                      tok: SymbolTokenizer) -> dict[int, int]:
+    """How often each symbol appears as a node label. The other weighting."""
+    occ: collections.Counter = collections.Counter()
+    for episode in episodes:
+        for label in episode.graph.labels:
+            if label:
+                occ[tok.label_id(label)] += 1
+    return dict(occ)
+
+
+def rebalance_weighted(curated: dict[int, int], k: int,
+                       weight: dict[int, int], salt: str = "") -> dict[int, int]:
+    """``rebalance`` with the bins made equal in *occurrence mass*, not in count.
+
+    Added after the pre-registered table, and for a reason recorded in
+    ``notes/findings``: matching the control on symbol-type entropy left the
+    two arms **0.32 bits apart on occurrence entropy** (2.48 against 2.80), and
+    occurrences are what the conditioning context actually sees. The two cannot
+    both be matched by a boundary-respecting partition of this ontology — this
+    arm is the other end of the bracket, not a replacement.
+
+    Same three steps as ``rebalance``; only the measure changes, and the split
+    inside a class becomes greedy least-loaded over a digest-ordered sequence
+    because ``% s`` equalises counts and not mass.
+    """
+    w = {s: max(int(weight.get(s, 0)), 0) + 1 for s in curated}   # +1: no zero bin
+    totals: collections.Counter = collections.Counter()
+    for symbol, cls in curated.items():
+        totals[cls] += w[symbol]
+    slots = _apportion(dict(totals), k)
+    assignment: dict[int, int] = {}
+    load = [0] * k
+    nxt = 0
+    for c in sorted(totals):
+        s = slots[c]
+        if s < 1:
+            continue
+        base, nxt = nxt, nxt + s
+        members = sorted((sym for sym, cls in curated.items() if cls == c),
+                         key=lambda sym: (_digest(sym, salt), sym))
+        for symbol in members:
+            bin_ = min(range(base, base + s), key=lambda b: (load[b], b))
+            assignment[symbol] = bin_
+            load[bin_] += w[symbol]
+    leftovers = sorted((c for c in totals if slots[c] < 1),
+                       key=lambda c: (-totals[c], c))
+    members_of = collections.defaultdict(list)
+    for symbol, cls in curated.items():
+        members_of[cls].append(symbol)
+    for c in leftovers:
+        bin_ = min(range(k), key=lambda b: (load[b], b))
+        for symbol in members_of[c]:
+            assignment[symbol] = bin_
+        load[bin_] += totals[c]
     return assignment
 
 
@@ -248,6 +307,30 @@ class SynthexBalanced(_Synthex003):
         return out
 
 
+@register("synthex_occbal-003",
+          doc="Curated classes rebalanced by occurrence mass: the other end of "
+              "the balance bracket.")
+class SynthexOccBalanced(_Synthex003):
+    """The second balanced-curated arm, and it is **post-hoc**.
+
+    ``synthex_balanced-003`` matched the control on symbol-type entropy — the
+    measure the control is uniform in — and thereby left the pair 0.32 bits apart
+    on *occurrence* entropy. No boundary-respecting 7-way partition of this
+    ontology matches both, so the two arms bracket the balance axis instead of
+    landing on it. Reported as a bracket, and never as the pre-registered number.
+    """
+
+    def _assign_classes(self, episodes: Sequence[Episode],
+                        tok: SymbolTokenizer) -> dict[int, int]:
+        curated = self._curated(episodes, tok)
+        k = max(len(set(curated.values())), 2)
+        self.n_classes = k
+        out = rebalance_weighted(curated, k, label_occurrences(episodes, tok),
+                                 self.salt)
+        self.stats = assignment_stats(out, curated)
+        return out
+
+
 @register("synthex_skewrand-003",
           doc="Meaningless classes wearing the curated size profile: balance "
               "held skewed, provenance removed.")
@@ -315,6 +398,12 @@ class SynthexCuratedPure(_Pure, SynthexCurated):
 @register("synthex_balanced_pure-003",
           doc="synthex_balanced-003 with the shared structural fallback off.")
 class SynthexBalancedPure(_Pure, SynthexBalanced):
+    pass
+
+
+@register("synthex_occbal_pure-003",
+          doc="synthex_occbal-003 with the shared structural fallback off.")
+class SynthexOccBalancedPure(_Pure, SynthexOccBalanced):
     pass
 
 

@@ -18,19 +18,29 @@ import pytest
 from symbolic_ai_core.data.curriculum import generate
 from symbolic_ai_models.models import ModelConfig, build
 from symbolic_ai_models.models.synthex_003.model import (
-    assignment_stats, rebalance, skew_matched_random, uniform_random)
+    assignment_stats, label_occurrences, rebalance, rebalance_weighted,
+    skew_matched_random, uniform_random)
 
 LESSONS = ["unification", "symbol_grounding", "center_embedding"]
 
 ARMS = ("synthex_class-002", "synthex_random-002", "synthex_balanced-003",
-        "synthex_skewrand-003", "synthex_random-003")
+        "synthex_skewrand-003", "synthex_random-003", "synthex_occbal-003")
+
+PURE = ("synthex_class_pure-003", "synthex_balanced_pure-003",
+        "synthex_skewrand_pure-003", "synthex_random_pure-003",
+        "synthex_occbal_pure-003")
 
 
 @pytest.fixture(scope="module")
-def fitted():
-    train = list(generate(LESSONS, n=25))
+def episodes():
     from symbolic_ai_models.train import TrainConfig, build_tokenizer
-    tok = build_tokenizer(TrainConfig(vocab_size=1600), train)
+    train = list(generate(LESSONS, n=25))
+    return train, build_tokenizer(TrainConfig(vocab_size=1600), train)
+
+
+@pytest.fixture(scope="module")
+def fitted(episodes):
+    train, tok = episodes
     cfg = ModelConfig(vocab_size=len(tok), max_len=160, max_nodes=128)
     out = {}
     for name in ARMS:
@@ -106,6 +116,36 @@ def test_provenance_separates_the_columns(curated):
         "a rebalancing cannot carry more of the ontology than the ontology")
 
 
+def test_the_two_balanced_arms_bracket_rather_than_match(curated, episodes):
+    """Neither balance measure can be matched without unmatching the other.
+
+    `synthex_balanced-003` equalises symbol *types* — the measure the hash
+    control is uniform in — and `synthex_occbal-003` equalises label
+    *occurrences*, which is what the conditioning context actually sees. On this
+    ontology the two cannot be equalised at once, so the pair brackets the
+    balance axis. Each arm must beat the other on the measure it optimises, or
+    the bracket is not a bracket.
+    """
+    import collections as c
+
+    train, tok = episodes
+    k = len(set(curated.values()))
+    occ = label_occurrences(train, tok)
+    by_type = rebalance(curated, k)
+    by_occ = rebalance_weighted(curated, k, occ)
+
+    def h_occ(a):
+        per = c.Counter()
+        for s, cls in a.items():
+            per[cls] += occ.get(s, 0)
+        total = sum(per.values())
+        return -sum((v / total) * math.log2(v / total) for v in per.values() if v)
+
+    assert (assignment_stats(by_type, curated)["entropy"]
+            > assignment_stats(by_occ, curated)["entropy"])
+    assert h_occ(by_occ) > h_occ(by_type)
+
+
 def test_a_rebalanced_bin_never_cuts_across_a_curated_boundary(curated):
     """The property that makes this "provenance held fixed" rather than "a new
     partition that happens to be balanced".
@@ -173,8 +213,7 @@ def test_the_arms_differ_only_in_the_class_assignment():
     from symbolic_ai_models.models.synthex_002.model import SynthexClassModel
     shared = ("_contexts", "_label_table", "node_votes", "learn", "_fit_gate",
               "_class_of", "_type_vote")
-    for name in ARMS + ("synthex_class_pure-003", "synthex_balanced_pure-003",
-                        "synthex_skewrand_pure-003", "synthex_random_pure-003"):
+    for name in ARMS + PURE:
         cls = REGISTRY[name]
         for method in shared:
             assert getattr(cls, method) is getattr(SynthexClassModel, method), (
@@ -188,8 +227,7 @@ def test_the_pure_rows_drop_the_shared_memorising_floor():
     compress their differences. The `_pure` rows are the comparison with the
     shared memoriser removed rather than merely equalised."""
     from symbolic_ai_models.models import REGISTRY
-    for name in ("synthex_class_pure-003", "synthex_balanced_pure-003",
-                 "synthex_skewrand_pure-003", "synthex_random_pure-003"):
+    for name in PURE:
         assert REGISTRY[name].structural_fallback is False
     for name in ARMS:
         assert REGISTRY[name].structural_fallback is True
