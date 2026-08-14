@@ -152,3 +152,26 @@ the agents-side `action` readout caught it independently: `synth-001` implements
   have to agree, and where they disagree the accuracy is the lenient one.
 * Nothing here says attachment helps the label task. That is a separate
   measurement and it has not been made.
+
+## Refutation status
+
+`status: provisional`, and it stays there: every control here was designed by
+the agent that wrote the readout, which is exactly when this repo has watched a
+control pass while hollow. The three things an independent refuter should attack
+first, in order of how much rests on them:
+
+1. **The target definition.** `site_targets` walks up to the nearest ancestor
+   whose label was read *before the attaching word began*. "Before it began" and
+   "before it finished" are both defensible and they disagree on multi-word
+   labels — that disagreement is the whole of `gsite-oracle`'s residual 0.2%.
+   If the other definition is the right one, every number in the table moves by
+   an unknown amount and the floor moves with it.
+2. **`words_at_position` returning a set.** Correctness is *membership*, so a
+   position spelling two words counts as either. That is forced by the codomain,
+   and it is also the most lenient choice available; a stricter rule would lower
+   every row including the floor, and possibly not by the same amount.
+3. **The floor's third rule.** `offset` is keyed on `min(word index, 12)` and
+   nothing else. A stronger structure-free rule — one conditioned on how many
+   words are left, or on sentence position — might clear 0.2200 on its own, and
+   then `gsite-001`'s +0.018 is gone. **This is the cheapest way to kill the
+   only positive result in the note and should be tried first.**
