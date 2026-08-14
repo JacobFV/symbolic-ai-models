@@ -37,6 +37,15 @@ COLUMNS = (
     ("node", "label_coverage", "lbl cov", "{:.2f}"),
     ("node", "type_acc", "typ acc", "{:.3f}"),
     ("node", "type_lift", "typ lift", "{:.3f}"),
+    # The two readouts nothing used to be scored on. Blank for a model that
+    # emits neither channel, which is the honest cell for "cannot point" and is
+    # not the same cell as a zero. `site` is attachment on the text surface and
+    # `copy` is binding on the graph; both are pointer questions and both are
+    # invisible in an accuracy over the vocabulary, which is what every column
+    # to the left of them is.
+    ("node", "copy_acc", "cpy acc", "{:.3f}"),
+    ("lm", "site_acc", "site acc", "{:.3f}"),
+    ("lm", "site_lift", "site lift", "{:.3f}"),
 )
 
 
@@ -105,6 +114,11 @@ def comparison_table(summaries: Sequence[dict[str, Any]], sort_by: str = "ans li
     lines.append("ans = the answer span alone (~1.4% of positions); tok = all of "
                  "them, so tok lift is mostly boilerplate. lbl cov = share of "
                  "masked labels the vocabulary can name and the score covers.")
+    lines.append("cpy = binding on the graph (which node says it); site = "
+                 "attachment on the text (which read word is the head). Both "
+                 "are pointer questions and both are invisible in every column "
+                 "to their left. A blank is a model that emits no such channel "
+                 "-- unscored, which is not the same cell as zero.")
     rename = [(s.get("model", "?"), (s.get("renaming") or {}))
               for s in summaries if (s.get("renaming") or {}).get("drop") is not None]
     if rename:

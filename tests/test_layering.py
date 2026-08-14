@@ -136,6 +136,60 @@ def test_the_pre_split_import_paths_still_resolve_to_the_moved_objects():
                 f"{old_name}.{name} is not {new_name}.{name}")
 
 
+#: Names that moved into `symbolic_ai_core.graphview` from
+#: `symbolic_ai_models.models.symbolic`. Listed by hand rather than by `__all__`
+#: because the source module's `__all__` is a *superset* — it still exports
+#: `RuleBasedModel` and `TextView`, which did not move and must not.
+MOVED_GRAPHVIEW = ["GraphView", "Votes", "ABSTAIN"]
+
+
+def test_graphview_moved_into_the_core_and_the_old_path_still_resolves():
+    """`symbolic_ai_agents.envs.base` imports `GraphView` out of
+    `symbolic_ai_models.models.symbolic`, which is one package reaching into its
+    sibling for a pure data type — the exact arrangement the core split exists
+    to end. A `GraphView` is what a *reader* of a masked term may see, whether
+    that reader is scored by a task or by an environment.
+
+    Identity, not equality, for the reason the other shim test gives: a copy
+    would pass `==` and then fail every `isinstance` downstream.
+    """
+    from importlib import import_module
+
+    old = import_module("symbolic_ai_models.models.symbolic")
+    new = import_module("symbolic_ai_core.graphview")
+    for name in MOVED_GRAPHVIEW:
+        assert getattr(old, name) is getattr(new, name), name
+
+
+def test_the_structural_context_is_written_once():
+    """Four places deliberately key on the same tuple — the masked-node floor,
+    the rule-based back-off, `Repair.context_key` and `OmegaClaw.perceive`. Four
+    hand-copied near-misses is how "the back-off a model falls to is the
+    baseline it is measured against" stops being true without anyone noticing,
+    so the tuple lives in the core and the models package re-exports it.
+    """
+    from symbolic_ai_core.graphview import node_context
+    from symbolic_ai_models.models.symbolic import _node_context
+
+    assert _node_context is node_context
+
+
+def test_the_readout_registry_is_shared_by_both_packages():
+    """A readout registered in `symbolic_ai_agents` must land in the same
+    registry as one registered in `symbolic_ai_models`, or "the readout is a
+    knob" is two knobs. The registry is in the core precisely so that the
+    action readout and the symbol readout are the same kind of thing.
+    """
+    out = subprocess.run(
+        [sys.executable, "-c",
+         "import symbolic_ai_models.readouts as m\n"
+         "from symbolic_ai_core.readout import REGISTRY\n"
+         "print(sorted(REGISTRY.entries) == sorted(m.readout_names()))\n"],
+        capture_output=True, text=True, timeout=300, env=_ENV)
+    assert out.returncode == 0, out.stderr[-2000:]
+    assert out.stdout.strip() == "True"
+
+
 def test_the_shims_cover_names_their_source_forgot_to_export():
     """`invariance.__all__` omits `label_accuracy`, and always did, while
     `train.py` and three test files import it. A shim re-exporting only `__all__`

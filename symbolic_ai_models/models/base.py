@@ -117,7 +117,14 @@ class ModelConfig:
 
 @dataclass
 class ModelOutput:
-    """Logits for both questions. ``hidden`` is kept for probing."""
+    """Logits for every question a readout might ask. ``hidden`` is for probing.
+
+    The three named fields are the ones every model has always had. Anything
+    else a model wants to say goes in :attr:`channels`, which is what makes the
+    readout a knob rather than a hard-coded set of heads — see
+    :mod:`symbolic_ai_core.readout` for what a channel is and why
+    ``source_logits`` became one instead of staying a special case.
+    """
 
     symbol_logits: torch.Tensor          # [B, L, V]
     type_logits: torch.Tensor            # [B, L, N_TYPES]
@@ -128,7 +135,37 @@ class ModelOutput:
     #: separate from `symbol_logits` rather than folded into it, because a
     #: pointer can name a symbol the vocabulary cannot, which is the whole
     #: reason for having one.
+    #:
+    #: Kept as a named field, and not quietly turned into ``channels["node"]``
+    #: only: eight files construct and read it, and a published copy number is
+    #: attached to it. It is *mirrored* into the channels below, so the two can
+    #: never disagree.
     source_logits: torch.Tensor | None = None
+    #: Every readout-visible output, by channel name. The generalisation of
+    #: ``source_logits``: a pointer over nodes was always one channel among
+    #: several, and writing the second one (``site``, a pointer over text
+    #: positions) as another field would have been the moment this became a pile
+    #: of heads instead of a seam.
+    channels: dict[str, torch.Tensor] = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        # `setdefault`, so a model that filled a channel explicitly keeps what
+        # it put there and the mirroring never silently overwrites it.
+        self.channels.setdefault("symbol", self.symbol_logits)
+        self.channels.setdefault("type", self.type_logits)
+        if self.source_logits is not None:
+            self.channels.setdefault("node", self.source_logits)
+        elif "node" in self.channels:
+            self.source_logits = self.channels["node"]
+
+    def channel(self, name: str) -> torch.Tensor | None:
+        """What this model said on ``name``, or ``None`` if it said nothing.
+
+        ``None`` rather than zeros, and the distinction is the whole point: a
+        readout must be able to tell "has no pointer" from "has a bad pointer",
+        and a zero tensor says the second while meaning the first.
+        """
+        return self.channels.get(name)
 
 
 # ---------------------------------------------------------------------------
