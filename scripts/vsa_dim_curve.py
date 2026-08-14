@@ -41,6 +41,12 @@ reported separately and is not in it: a rule-based model fits once and predicts
 forever, and folding the fit into the rate would price a cost the deployment
 does not pay per token.
 
+The clock is **CPU time**, not wall clock, and that is not fastidiousness. This
+box carries real training alongside these runs — load average 17-30 on 20 cores
+while the sweep was fitting — and it showed up as a 3.4x spread in ``seconds``
+between two models doing near-identical work. Both clocks are recorded so the
+gap between them stays visible.
+
 One process per point, and each point written the moment it lands: long
 single-process jobs on this box are killed at ~20 minutes and take the process
 group with them. See ``scripts/wals_perlang.py`` for the same shape and the four
@@ -83,15 +89,44 @@ def throughput(run_dir: Path, batch: int = 32) -> dict:
     with torch.no_grad():
         model(warm)
 
-    started = time.perf_counter()
+    # Two clocks over the same episodes, because they price different things.
+    #
+    # `forward` is deployment-realistic and includes the harness's dense
+    # assembly: `_mix` materialises a [B, L, V] tensor, 32 x 128 x 8192 floats
+    # = 134MB per batch, which is O(vocabulary) and completely independent of
+    # `d`. Timing only that would report the *tokenizer's* size as the cost of
+    # the embedding -- it is what made a first pass here read 1,342 tok/s for a
+    # model APPROACH.md clocks in the hundreds of thousands.
+    #
+    # `votes` is the model's own inner loop -- build the view, run the algebra,
+    # clean up -- and is the thing that actually scales with `d`. The ratio
+    # between the two is itself worth reading: it says how much of a symbolic
+    # model's deployed cost is its reasoning and how much is the interface it
+    # has to speak through.
+    inner = 0.0
+    wall0, cpu0 = time.perf_counter(), time.process_time()
     with torch.no_grad():
         for chunk in chunks:
             collated = collate_graph(
                 chunk, tok, max_nodes=cfg.max_nodes, mask_rate=cfg.mask_rate,
                 rng=np.random.default_rng(20_250_811))
             nodes += int(collated.pad_mask.sum())
+            mark = time.process_time()
+            for b in range(len(chunk)):
+                view = model._view(collated, b)
+                if len(view):
+                    model.node_votes(view)
+                    model.source_votes(view)
+            inner += time.process_time() - mark
             model(collated)
-    seconds = time.perf_counter() - started
+    wall = time.perf_counter() - wall0
+    # CPU time, not wall clock, is the rate that gets quoted. This box carries
+    # real training alongside: load average was 17-30 on 20 cores while these
+    # runs were fitted, and it showed up as a 3.4x spread in `seconds` between
+    # two models doing near-identical work. A tokens/sec quoted off wall clock
+    # under that would be a measurement of the neighbours. Both are recorded so
+    # the gap between them is visible rather than assumed away.
+    seconds = time.process_time() - cpu0
 
     summary = json.loads((run_dir / "summary.json").read_text())
     node = summary.get("final", {}).get("node", {})
@@ -99,8 +134,10 @@ def throughput(run_dir: Path, batch: int = 32) -> dict:
         "model": summary["model"],
         "vsa_dim": int(summary["config"].get("extra", {}).get("vsa_dim", 4096)),
         "episodes": len(episodes), "tokens": tokens, "nodes": nodes,
-        "predict_seconds": seconds,
+        "predict_cpu_seconds": seconds, "predict_wall_seconds": wall,
+        "votes_cpu_seconds": inner,
         "tokens_per_sec": tokens / seconds if seconds else float("nan"),
+        "votes_tokens_per_sec": tokens / inner if inner else float("nan"),
         "nodes_per_sec": nodes / seconds if seconds else float("nan"),
         "fit_seconds": float(summary.get("seconds", float("nan"))),
         "parameters": int(summary.get("parameters", 0)),
@@ -141,9 +178,10 @@ def main(argv: list[str]) -> int:
             print(f"{run_dir} FAILED {type(e).__name__}: {e}", flush=True)
             continue
         dest.write_text(json.dumps(row, indent=1), encoding="utf-8")
-        print(f"{row['model']:<16} d={row['vsa_dim']:<6} "
+        print(f"{row['model']:<22} d={row['vsa_dim']:<6} "
               f"acc {row['label_acc']:.3f}  bits {row['label_bits']:.3f}  "
-              f"{row['tokens_per_sec']:>9,.0f} tok/s  "
+              f"{row['votes_tokens_per_sec']:>9,.0f} tok/s reasoning  "
+              f"{row['tokens_per_sec']:>8,.0f} end-to-end  "
               f"fit {row['fit_seconds']:.0f}s", flush=True)
     return 0
 
