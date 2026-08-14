@@ -79,6 +79,14 @@ silently.
 - `notes/findings/` needs the floor, the control, and what would have refuted it.
 - `notes/decisions/` records a fork *before* the work, including what was rejected.
 
+- `notes/lessons/` records **how we go wrong** — the mistake, what it cost, and
+  the guard that stops it recurring. `RESEARCH_LOG.md`'s "believed and false"
+  table lists claims that died; this lists the *mechanisms* that killed them,
+  which is the reusable half. A claim is wrong once; a mechanism keeps producing
+  wrong claims until something structural stops it. Read these first when
+  arriving cold — six entries cover eight slice inversions, four silent-property
+  failures, and the substrate that outweighs every model.
+
 Read `notes/README.md` before writing one. Findings get promoted into
 `RESEARCH_LOG.md` — rewritten, not copied — once something independent has tried
 to break them.

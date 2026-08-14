@@ -100,13 +100,19 @@ def _bipolar(rng: np.random.Generator, n: int, d: int) -> np.ndarray:
 class VSAModel(RuleBasedModel):
     """Bind roles to fillers, superpose, unbind at the mask, clean up."""
 
-    LEARNED = ("codebook", "roles", "gate_map", "type_rules", "_d")
+    LEARNED = ("codebook", "roles", "gate_map", "type_rules", "_d", "sharpness")
     #: ``random`` or ``distributional``; see the module docstring.
     codebook_source = "random"
 
     def __init__(self, cfg: ModelConfig) -> None:
         super().__init__(cfg)
         self._d = int(cfg.get("vsa_dim", 4096))
+        #: Softmax temperature of the cleanup. An *attribute* rather than a
+        #: config read at the point of use, because ``vsa_spec_004`` fits it on
+        #: held-out training episodes and the two must be the same number. The
+        #: default is unchanged, so every published ``-002`` row is unmoved --
+        #: which the sweep re-runs the family to confirm rather than assert.
+        self.sharpness = float(cfg.get("vsa_sharpness", 12.0))
         self.seed = int(cfg.get("vsa_seed", 0))
         self.codebook: np.ndarray | None = None
         #: Structural role atoms, bound together to make a node's role.
@@ -176,28 +182,45 @@ class VSAModel(RuleBasedModel):
         """Unbind at the masked node's role. MAP binding is its own inverse."""
         return self._role(view, node) * trace
 
-    def _cleanup(self, probe: np.ndarray, candidates: Sequence[int]
-                 ) -> dict[int, float]:
-        """Similarity of the recovered filler to each candidate symbol.
+    def _similarities(self, probe: np.ndarray, candidates: Sequence[int]
+                      ) -> tuple[np.ndarray | None, Sequence[int]]:
+        """Cosine similarity of the recovered filler to each candidate symbol.
 
-        A softmax over cosine similarity rather than an arg-max, because the
-        graded answer is the point: two candidates that are both somewhat bound
-        at this role should both keep mass.
+        Split out from :meth:`_cleanup` so that a model fitting the softmax
+        temperature can compute the similarities once and try several
+        temperatures against them, instead of recomputing the probe per
+        temperature. The arithmetic is unchanged.
         """
         if not candidates:
-            return {}
+            return None, ()
         norm = float(np.linalg.norm(probe))
         if norm <= 0.0:
-            return {}
+            return None, ()
         vectors = self.codebook[np.asarray(candidates)]
-        sims = (vectors @ probe) / (norm * np.sqrt(self._d))
+        return (vectors @ probe) / (norm * np.sqrt(self._d)), candidates
+
+    def _soften(self, sims: np.ndarray | None, candidates: Sequence[int],
+                sharpness: float | None = None) -> dict[int, float]:
+        """A softmax over the similarities, not an arg-max over them.
+
+        The graded answer is the point: two candidates that are both somewhat
+        bound at this role should both keep mass.
+        """
+        if sims is None or not candidates:
+            return {}
         sims = sims - sims.max()
-        weights = np.exp(sims * float(self.cfg.get("vsa_sharpness", 12.0)))
+        weights = np.exp(sims * (self.sharpness if sharpness is None
+                                 else float(sharpness)))
         total = float(weights.sum())
         if total <= 0.0:
             return {}
         return {int(c): float(w / total)
                 for c, w in zip(candidates, weights) if w / total > 1e-3}
+
+    def _cleanup(self, probe: np.ndarray, candidates: Sequence[int]
+                 ) -> dict[int, float]:
+        """Similarity of the recovered filler to each candidate symbol."""
+        return self._soften(*self._similarities(probe, candidates))
 
     def _fit_gate(self, episodes: Sequence[Episode],
                   tok: SymbolTokenizer) -> None:
