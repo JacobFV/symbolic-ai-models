@@ -1,0 +1,30 @@
+# The `site` readout on every generatable lesson. Identical to
+# `configs/full179.toml` in every knob that could move a number; only `out`
+# differs, so a row here and a row there are the same run in everything but the
+# readout being asked about.
+#
+#   uv run symbolic-ai-models sweep --config configs/full179_site.toml \
+#       --models gsite-001,gsite-flat,gsite-retrieve,gsite-none,gsite-oracle --resume
+#
+# One model per process. A full-curriculum fit of a per-prefix parser is tens of
+# minutes and this machine kills a single process at about twenty, taking its
+# process group with it — so the sweep is driven one model at a time and
+# `--resume` makes the finished ones free. See `scripts/wals_perlang.py`, which
+# learned this the same way.
+
+tasks = "lm,node"
+lessons = "all"
+n_train = 20
+n_eval = 4
+
+vocab_size = 8192
+d_model = 96
+n_layers = 3
+n_heads = 4
+d_ff = 256
+dropout = 0.1
+max_len = 320
+max_nodes = 128
+batch_size = 16
+device = "cpu"
+out = "runs/full179-site"

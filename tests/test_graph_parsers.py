@@ -297,8 +297,8 @@ def test_every_registered_parser_has_a_package_named_after_it():
 
     A directory named for the row it produces cannot drift away from the
     registry — which is the failure the version suffix was added to prevent in
-    the first place. Skeleton packages (``template``, ``classical``) register
-    nothing and are allowed to exist without a row.
+    the first place. Skeleton packages (``template``, ``classical``,
+    ``polyglot``) register nothing and are allowed to exist without a row.
     """
     import symbolic_ai_parsers.parsers as pkg
 
@@ -307,7 +307,8 @@ def test_every_registered_parser_has_a_package_named_after_it():
     want = {n.replace("-", "_") for n in parser_names()}
     assert want <= have, f"registered but no package: {sorted(want - have)}"
     extra = have - want
-    assert extra <= {"template", "classical"}, f"package with no row: {sorted(extra)}"
+    assert extra <= {"template", "classical", "polyglot"}, (
+        f"package with no row: {sorted(extra)}")
 
 
 # ---- the treebank and the induced grammar -------------------------------

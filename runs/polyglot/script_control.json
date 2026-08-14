@@ -1,0 +1,337 @@
+{
+ "metric": "bracket_f1",
+ "parser": "polycky-001",
+ "r_abstraction_gain_untranslated": 0.026905871737082514,
+ "r_abstraction_gain_novelscript": 0.19038857710428783,
+ "mean_abstraction_gain": 0.1578110947016533,
+ "n_languages": 46,
+ "n_lessons": 24,
+ "r_retention_novelscript": -0.4929406731382026,
+ "r_retention_untranslated": 0.8357159285253432,
+ "r_novelscript_untranslated": -0.4017189985144448,
+ "partial_retention_novelscript_given_untranslated": -0.31262082577600375,
+ "partial_retention_untranslated_given_novelscript": 0.8003453407302682,
+ "per_language": {
+  "ady": {
+   "retention": 0.9818465921724401,
+   "untranslated": 0.823624962006745,
+   "script": "Latn"
+  },
+  "ain": {
+   "retention": 0.9597929042300214,
+   "untranslated": 0.8269533732808672,
+   "script": "Latn"
+  },
+  "apw": {
+   "retention": 0.9359620615820926,
+   "untranslated": 0.8259869884536514,
+   "script": "Latn"
+  },
+  "arb": {
+   "retention": 0.15746627246384465,
+   "untranslated": 0.423056858771429,
+   "script": "Arab"
+  },
+  "ayr": {
+   "retention": 0.962989761104265,
+   "untranslated": 0.8317054235719393,
+   "script": "Latn"
+  },
+  "chr": {
+   "retention": 0.814733379864032,
+   "untranslated": 0.8307428257809187,
+   "script": "Latn"
+  },
+  "ckt": {
+   "retention": 0.9382222168649371,
+   "untranslated": 0.8336817837379119,
+   "script": "Latn"
+  },
+  "cmn": {
+   "retention": 0.23599960507544612,
+   "untranslated": 0.45745650149303047,
+   "script": "Hans"
+  },
+  "deu": {
+   "retention": 0.3241200970797041,
+   "untranslated": 0.4696695728955498,
+   "script": "Latn"
+  },
+  "eus": {
+   "retention": 0.7058700560178501,
+   "untranslated": 0.7557279528485052,
+   "script": "Latn"
+  },
+  "fin": {
+   "retention": 0.25160641700941816,
+   "untranslated": 0.6547563175062165,
+   "script": "Latn"
+  },
+  "fra": {
+   "retention": 0.3503875837828762,
+   "untranslated": 0.4839928471021417,
+   "script": "Latn"
+  },
+  "gug": {
+   "retention": 0.9822779227189047,
+   "untranslated": 0.8307305457122571,
+   "script": "Latn"
+  },
+  "heb": {
+   "retention": 0.47196729911354074,
+   "untranslated": 0.6899013840342167,
+   "script": "Hebr"
+  },
+  "hun": {
+   "retention": 0.41466056415735003,
+   "untranslated": 0.6688837568699438,
+   "script": "Latn"
+  },
+  "ind": {
+   "retention": 0.597476000504166,
+   "untranslated": 0.7145786846283747,
+   "script": "Latn"
+  },
+  "inh": {
+   "retention": 0.9035603749878023,
+   "untranslated": 0.8174071333110894,
+   "script": "Latn"
+  },
+  "jpn": {
+   "retention": 0.42647557401804775,
+   "untranslated": 0.437806328957462,
+   "script": "Jpan"
+  },
+  "kal": {
+   "retention": 0.8891397783348901,
+   "untranslated": 0.8107198123462456,
+   "script": "Latn"
+  },
+  "kat": {
+   "retention": 0.5757936550969884,
+   "untranslated": 0.7054004030931073,
+   "script": "Geor"
+  },
+  "khm": {
+   "retention": 0.45603139557799766,
+   "untranslated": 0.6927733417305552,
+   "script": "Khmr"
+  },
+  "kor": {
+   "retention": 0.2923723018188169,
+   "untranslated": 0.68080577563193,
+   "script": "Hang"
+  },
+  "lao": {
+   "retention": 0.3964162063176855,
+   "untranslated": 0.7054360416884213,
+   "script": "Laoo"
+  },
+  "lez": {
+   "retention": 0.9850567185811809,
+   "untranslated": 0.8293700361676275,
+   "script": "Latn"
+  },
+  "lkt": {
+   "retention": 0.9907907684889969,
+   "untranslated": 0.8322112800635074,
+   "script": "Latn"
+  },
+  "luo": {
+   "retention": 0.9857042024814717,
+   "untranslated": 0.8384922690169067,
+   "script": "Latn"
+  },
+  "mri": {
+   "retention": 0.2740355399159544,
+   "untranslated": 0.7078569238923045,
+   "script": "Latn"
+  },
+  "mww": {
+   "retention": 0.9286570835611584,
+   "untranslated": 0.81498212302572,
+   "script": "Latn"
+  },
+  "nav": {
+   "retention": 0.8218257496811571,
+   "untranslated": 0.7925405503120971,
+   "script": "Latn"
+  },
+  "niv": {
+   "retention": 0.9869053008549563,
+   "untranslated": 0.8384297095819718,
+   "script": "Latn"
+  },
+  "nmn": {
+   "retention": 0.9767039603558064,
+   "untranslated": 0.8274121947628289,
+   "script": "Latn"
+  },
+  "ppl": {
+   "retention": 0.9183928949300546,
+   "untranslated": 0.8301060848315661,
+   "script": "Latn"
+  },
+  "quz": {
+   "retention": 0.8771051820072884,
+   "untranslated": 0.7930078072804254,
+   "script": "Latn"
+  },
+  "ryu": {
+   "retention": 0.7775997198345753,
+   "untranslated": 0.8291256273122896,
+   "script": "Latn"
+  },
+  "spa": {
+   "retention": 0.17689378868581118,
+   "untranslated": 0.48484252683014045,
+   "script": "Latn"
+  },
+  "swh": {
+   "retention": 0.8041996328528921,
+   "untranslated": 0.5938701615653564,
+   "script": "Latn"
+  },
+  "tam": {
+   "retention": 0.7701334449250143,
+   "untranslated": 0.7769480924468882,
+   "script": "Taml"
+  },
+  "tel": {
+   "retention": 0.7030344167810347,
+   "untranslated": 0.7629976113751212,
+   "script": "Telu"
+  },
+  "tha": {
+   "retention": 0.4180416253037677,
+   "untranslated": 0.6751306175304984,
+   "script": "Thai"
+  },
+  "tur": {
+   "retention": 0.7047119968802391,
+   "untranslated": 0.5732331123444379,
+   "script": "Latn"
+  },
+  "twf": {
+   "retention": 0.9837549332036941,
+   "untranslated": 0.8362608649775228,
+   "script": "Latn"
+  },
+  "vie": {
+   "retention": 0.411964090058365,
+   "untranslated": 0.7071047829900642,
+   "script": "Latn"
+  },
+  "yag": {
+   "retention": 0.979634936451973,
+   "untranslated": 0.8361961163396067,
+   "script": "Latn"
+  },
+  "yor": {
+   "retention": 0.9468527114158549,
+   "untranslated": 0.8464161821527346,
+   "script": "Latn"
+  },
+  "yua": {
+   "retention": 0.96660426289635,
+   "untranslated": 0.8228467840117673,
+   "script": "Latn"
+  },
+  "yue": {
+   "retention": 0.7324185356040909,
+   "untranslated": 0.724149262933635,
+   "script": "Hant"
+  }
+ },
+ "robustness": {
+  "retention, bracket_f1": {
+   "untranslated": 0.8357159285253432,
+   "novel_script": -0.4929406731382026,
+   "partial_untranslated": 0.8003453407302682,
+   "partial_novel_script": -0.31262082577600375
+  },
+  "retention, edge_f1": {
+   "untranslated": 0.8617582465503678,
+   "novel_script": -0.467102464565288,
+   "partial_untranslated": 0.8325271066997436,
+   "partial_novel_script": -0.2602710765213806
+  },
+  "retention, label_f1": {
+   "untranslated": 0.8431788565360148,
+   "novel_script": -0.5310164858675186,
+   "partial_untranslated": 0.8116930715535391,
+   "partial_novel_script": -0.39057103504207746
+  },
+  "raw held-out bracket_f1": {
+   "untranslated": 0.8264297541422475,
+   "novel_script": -0.5750430078811184,
+   "partial_untranslated": 0.7947391188368244,
+   "partial_novel_script": -0.4713833751896433
+  },
+  "raw held-out edge_f1": {
+   "untranslated": 0.8532469479183213,
+   "novel_script": -0.5541657631652848,
+   "partial_untranslated": 0.8272843511305309,
+   "partial_novel_script": -0.4426517653507092
+  }
+ },
+ "untranslated_split_words": {
+  "r_retention": 0.8276623773551631,
+  "partial_given_novelscript": 0.7774344188024661,
+  "r_with_script_aware": 0.9861234582973342
+ },
+ "clause_coverage": {
+  "per_language": {
+   "ady": 0.8683651804670913,
+   "ain": 0.8598726114649682,
+   "apw": 0.8683651804670913,
+   "arb": 0.6263269639065817,
+   "ayr": 0.8683651804670913,
+   "chr": 0.8598726114649682,
+   "ckt": 0.8683651804670913,
+   "cmn": 0.7006369426751592,
+   "deu": 0.7388535031847133,
+   "eus": 0.8237791932059448,
+   "fin": 0.7197452229299363,
+   "fra": 0.7409766454352441,
+   "gug": 0.8683651804670913,
+   "heb": 0.7813163481953291,
+   "hun": 0.7091295116772823,
+   "ind": 0.7685774946921444,
+   "inh": 0.8598726114649682,
+   "jpn": 0.5902335456475584,
+   "kal": 0.8683651804670913,
+   "kat": 0.772823779193206,
+   "khm": 0.721868365180467,
+   "kor": 0.7367303609341825,
+   "lao": 0.6963906581740976,
+   "lez": 0.8683651804670913,
+   "lkt": 0.8683651804670913,
+   "luo": 0.8683651804670913,
+   "mri": 0.7791932059447984,
+   "mww": 0.8598726114649682,
+   "nav": 0.8535031847133758,
+   "niv": 0.8683651804670913,
+   "nmn": 0.8598726114649682,
+   "ppl": 0.8683651804670913,
+   "quz": 0.8301486199575372,
+   "ryu": 0.8683651804670913,
+   "spa": 0.7070063694267515,
+   "swh": 0.8301486199575372,
+   "tam": 0.8301486199575372,
+   "tel": 0.8280254777070064,
+   "tha": 0.6560509554140127,
+   "tur": 0.7749469214437368,
+   "twf": 0.8641188959660298,
+   "vie": 0.7494692144373672,
+   "yag": 0.8598726114649682,
+   "yor": 0.8641188959660298,
+   "yua": 0.8683651804670913,
+   "yue": 0.732484076433121
+  },
+  "r_retention": 0.8864405904254308,
+  "r_with_untranslated": 0.8494475653376352,
+  "partial_retention_coverage_given_untranslated": 0.6092379207273328,
+  "partial_retention_untranslated_given_coverage": 0.338743452218275
+ }
+}

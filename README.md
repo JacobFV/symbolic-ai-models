@@ -189,6 +189,76 @@ perturb tokens, and the graph does not move when the tokens do. The guard that
 would is `tests/test_prefix_parser.py`: adding graph nodes labelled with symbols
 the text never contains must leave every logit bit-identical.
 
+### The readout is a parameter too
+
+The parser seam answers *what does the model read*. The mirror-image seam —
+*what is the model's output read as* — was welded shut until now, and one
+readout is an assumption rather than a neutral choice. Three measurements say so:
+**71.9%** of scored answers already sit on a visible node, so the label task is
+binding scored as classification; `gparse-003` abstains everywhere outside the
+answer span and 11 of 19 models cannot emit a token at all; and `label_acc` and
+`label_bits` rank the models close to *inversely*, because one shared mixture
+`(1-c)·backoff + c·votes` pushes deciding and estimating through the same scalar.
+
+`symbolic_ai_core/readout.py` unwelds it. A `Readout` is
+`(model output, batch) -> counts`, plus `summarize` and — non-negotiably —
+`floor`; `ModelOutput` carries a `channels` mapping and each readout names the
+one it consumes. `source_logits` **became** `channels["node"]` rather than
+staying a special case beside a second mechanism, and one assembler
+(`_pointer_logits`) builds both pointer channels. `symbolic-ai-models readouts`
+lists them.
+
+| readout | channel | the question | floor |
+|---|---|---|---|
+| `symbol-001` | `symbol` | name the hidden symbol out of 8,192 | the masked-node structural table |
+| `node-001` | `node` | which visible node of this episode says it | commonest offset to a same-label node |
+| `site-001` | `site` | which already-read *word* is the head this token attaches under | best of `start` / `previous` / `offset` |
+| `action-001` | `symbol`/`node` | the same emission read as a move in an environment | the environment's `reference_floor` |
+
+**A model that emits nothing on a channel is unscored, never scored zero.**
+"Cannot point" and "points badly" are different facts and one cell cannot hold
+both — `gsite-none` has no `site` column at all, which is the correct row for a
+reasoner handed nothing to read.
+
+**How much of the registry can answer each readout** — static, from whether the
+class overrides the hook, so no slice can move it. Over the 90 registered
+rule-based models: `symbol` **79/90**, `node` **41/90**, `site` **5/90** (all
+five added with the readout; before it, **zero**), next token **14/90**.
+
+Read the columns carefully, because the obvious reading of the first one is
+wrong and was written that way here first. The eleven that cannot answer
+`symbol` are exactly the `gparse` and `gsite` families, which are text-surface
+models and abstain on the graph task **by design and in their own docstrings**.
+That is not a hidden problem. The real content of the table is the other three
+columns: two thirds of the registry has no pointer, six sevenths cannot emit a
+token, and until this work nothing at all could answer a question about the text
+surface's structure.
+
+The hidden problem is a *runtime* fact and the static table cannot see it: a
+model may implement a hook and still contribute nothing, because abstention is
+mixed against the shared back-off before any metric sees it. `synth-001`
+implements `node_votes`, publishes a symbol-readout `label_acc` of 0.2500, and
+on `repair` — where no shared back-off is in the way — scores exactly the
+abstain-everywhere control. **The number in the table is not always the model.**
+See `notes/lessons/2026-08-14-a-score-can-be-the-back-off-wearing-the-models-name.md`.
+
+**`site` is the new question, and the corpus is privileged for it.** A token may
+attach to the phrase before it or the one after, at different depths of the
+tree, and the curriculum ships the true term *and* its rendering from one seed —
+so the correct site has ground truth at every position, for free. `availability`
+already says which word reveals which node; walking up to the nearest ancestor
+already realised gives the site, and the word that spelled it is a position.
+Correctness is *word* equality with the true site, never index equality, which
+is the rule the copy head already followed and is what makes the readout
+scorable for any parser — including `flat`, which has no term nodes at all.
+
+The target is computed task-side from `meta["graphs"]`, exactly as
+`target_tokens` is computed from the episode, and no model is handed it. The
+guard is the one the causality test cannot be, because that test perturbs tokens
+and the graph does not move when tokens do: **adding graph nodes labelled with
+symbols the text never contains must leave every logit on every channel
+bit-identical** (`tests/test_readouts.py`).
+
 A symbolic run's artifact is legible: `runs/<name>/rules.txt` is the induced decision list in full, and you can read it and argue with it.
 
 ```

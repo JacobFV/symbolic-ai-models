@@ -109,11 +109,26 @@ class MaskedNode(Task):
     name = "node"
 
     def __init__(self, mask_rate: float = 0.15, type_weight: float = 0.5,
-                 max_nodes: int = 256, seed: int = 0) -> None:
+                 max_nodes: int = 256, seed: int = 0,
+                 readouts: "dict | None" = None) -> None:
         self.mask_rate = mask_rate
         self.type_weight = type_weight
         self.max_nodes = max_nodes
+        self.seed = seed
         self.rng = np.random.default_rng(seed)
+        # The readouts scored *beside* the two heads below, never instead of
+        # them. `label_*` and `copy_*` are what every published number in this
+        # repo means, and a readout computing something nearly the same would
+        # redefine all of them silently. Built lazily so that constructing a
+        # task cannot import the readout package, which imports the models.
+        self._readouts = readouts
+
+    @property
+    def readouts(self) -> dict:
+        if self._readouts is None:
+            from ..readouts import REGISTRY
+            self._readouts = {n: REGISTRY.get(n)() for n in ("symbol", "node")}
+        return self._readouts
 
     def collate(self, episodes: Sequence[Episode], tok: SymbolTokenizer):
         return collate_graph(episodes, tok, max_nodes=self.max_nodes,
@@ -124,10 +139,14 @@ class MaskedNode(Task):
             out.symbol_logits, batch.target_tokens, "label")
         type_loss, type_counts = score_block(
             out.type_logits, batch.target_types, "type")
+        readout_counts: dict[str, float] = {}
+        for readout in self.readouts.values():
+            readout_counts.update(readout.score(out, batch))
         return TaskOutput(loss=label_loss + self.type_weight * type_loss,
                           counts={**label_counts, **type_counts,
                                   **_copy_counts(batch),
-                                  **_pointer_counts(out, batch)})
+                                  **_pointer_counts(out, batch),
+                                  **readout_counts})
 
     def summarize(self, totals: Totals) -> dict[str, float]:
         """Both heads, plus how much of the masked set the label score covers.
@@ -154,6 +173,9 @@ class MaskedNode(Task):
         out["copy_ceiling"] = reachable / scored if scored else float("nan")
         censored = totals.get("copy_censored", 0.0)
         out["copy_censored"] = censored
+
+        for readout in self.readouts.values():
+            out.update(readout.summarize(totals))
         return out
 
     def floor(self, episodes: Sequence[Episode], tok: SymbolTokenizer,
@@ -217,13 +239,23 @@ class MaskedNode(Task):
 
         _, type_bits = empirical_floor(dict(eval_types))
         _, label_bits = empirical_floor(dict(eval_labels))
-        return {
+        out = {
             "type_acc": type_hits / type_n if type_n else float("nan"),
             "type_bits": type_bits, "type_n": float(type_n),
             "label_acc": label_hits / label_n if label_n else float("nan"),
             "label_bits": label_bits, "label_n": float(label_n),
             "copy_acc": copy_acc,
         }
+        # The readout floors are these floors, renamed -- not second opinions
+        # computed alongside. Two near-identical copies of a floor drift, and a
+        # floor is the one number in a table that nothing else is checked
+        # against, so the drift would be invisible. `SymbolReadout.floor` and
+        # `NodeReadout.floor` exist for callers holding a readout and no task
+        # and go through this same method to get here.
+        out.update({"rsymbol_acc": out["label_acc"],
+                    "rsymbol_bits": out["label_bits"],
+                    "rsymbol_n": out["label_n"], "rnode_acc": copy_acc})
+        return out
 
     def _copy_floor(self, episodes: Sequence[Episode],
                     train: Sequence[Episode], tok: SymbolTokenizer) -> float:

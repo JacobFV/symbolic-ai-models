@@ -238,6 +238,14 @@ def collate_text(episodes: Sequence[Episode], tok: SymbolTokenizer, *,
         pad_mask=pad_mask, depth=torch.zeros((B, L), dtype=torch.long),
         causal=True, rel=None, target_tokens=targets, answer_mask=answer_mask,
         meta={"task": "lm", "lesson_ids": [ep.lesson_id for ep in episodes],
+              # The vocabulary these ids are in. Carried so that a readout can
+              # turn a *position* back into the word spelled there, which is
+              # what makes a text-surface pointer scorable by what it picked
+              # rather than by index -- see
+              # `symbolic_ai_models.readouts.site`. It is the same object the
+              # caller already holds, not a copy, and it says nothing about any
+              # episode: a tokenizer is fitted before any of this runs.
+              "tokenizer": tok,
               # The episode's true term graph, in row order. **For the oracle
               # parser and nothing else.** It is the answer key: 85.3% of
               # answers on the full curriculum are literally the label of one of
