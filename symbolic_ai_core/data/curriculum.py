@@ -140,6 +140,13 @@ def generate(lessons: Sequence[str], *, n: int, seed0: int = 0,
     change generation, so it is recorded rather than repaired here.
     """
     lc = _lc()
+    # A language the package does not ship is a request for the derived path,
+    # and only then is the language database touched. See
+    # `symbolic_ai_core/data/langdb.py`: the seven shipped packs must render
+    # byte-identically whether or not that database is present on the machine,
+    # or the fingerprint — and every number resting on it — moves silently.
+    from . import langdb
+    langdb.ensure_for([language])
     for lid in lessons:
         L = lc.get(lid)
         for i in range(n):

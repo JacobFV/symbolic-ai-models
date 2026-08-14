@@ -1,0 +1,70 @@
+# `configs/full179.toml`, rendered in 42 languages that WALS has coded.
+#
+#   uv run symbolic-ai-models sweep --config configs/full179_wals42.toml \
+#       --models omegaclaw_textlang-002,omegaclaw_text-002
+#
+# Why this file exists
+# --------------------
+# `full179_multilingual.toml` says, in its own header, that the derived
+# languages "need `grammar/data/languages.db`, a 2 GB gitignored build artefact
+# that is not present, so seven is the whole of it -- which is why nothing in
+# `runs/` here can support a claim about language *families*."
+#
+# The artefact turned out to exist in a 102 MB form on this machine, and
+# `symbolic_ai_core/data/langdb.py` now materialises it into a cache outside
+# the tree on first request. Naming a language this package does not ship is
+# what triggers that; a run naming only shipped packs cannot be affected by
+# whether the cache is present, which is the property that keeps
+# `tests/test_curriculum_fingerprint.py` meaningful.
+#
+# Which 42, and why not 46
+# ------------------------
+# The database holds 58 languages; 46 of them carry at least one WALS feature.
+# Four of those 46 -- `spa`, `tur`, `swh`, `cmn` -- are shadowed by a
+# hand-written grammar, because `grammar/grammars/__init__.py` registers the
+# verified pack under its ISO code so that a checked grammar always outranks a
+# generated one. Rendering those four through a different pipeline than the
+# other 42 would put a pipeline difference inside the distance matrix, so they
+# are dropped and 42 languages -- 861 pairs -- is what the correlations are
+# computed over. The rule was fixed before any number existed; see
+# `notes/decisions/2026-08-13-typology-oracle-preregistration.md`.
+#
+# What this corpus is
+# -------------------
+# The same parallel corpus `full179_multilingual.toml` describes, six times
+# wider. `Lesson.structured` takes no language, so within a seed the term graph
+# is byte-identical across all 42 renderings and the prose is the only thing
+# that moves. A model reading only the graph sees 42 copies of `full179.toml`;
+# only a model reading `GraphView.text` sees 42 different things.
+#
+# Tier, stated where the config is
+# --------------------------------
+# These are tier-2 and tier-3 languages: derived word order from WALS, an
+# imported Wiktionary lexicon, and morphology only where UniMorph has it. They
+# are not verified presentations of those languages, and a Vietnamese episode
+# still contains English content words. That weakens any signal here; it cannot
+# manufacture one.
+
+tasks = "lm,node"
+lessons = "all"
+languages = "ady,ain,apw,arb,ayr,chr,ckt,deu,eus,fin,fra,gug,heb,hun,ind,inh,jpn,kal,kat,khm,kor,lao,lez,lkt,luo,mri,mww,nav,niv,nmn,ppl,quz,ryu,tam,tel,tha,twf,vie,yag,yor,yua,yue"
+n_train = 20
+n_eval = 4
+
+vocab_size = 8192
+d_model = 96
+n_layers = 3
+n_heads = 4
+d_ff = 256
+dropout = 0.1
+max_len = 320
+max_nodes = 128
+batch_size = 16
+device = "cpu"
+
+# 42 x 4,000, for the same reason `full179_multilingual.toml` uses 7 x 4,000: a
+# model splitting its evidence table by language must still get the per-language
+# budget a monolingual run gives, or the comparison is about sample size.
+extra = { max_examples = 168000 }
+
+out = "runs/full179_wals42"
