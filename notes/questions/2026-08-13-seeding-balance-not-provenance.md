@@ -1,9 +1,20 @@
 ---
 date: 2026-08-13
 author: lead
-status: open
-related: [2026-08-13-cluster-to-the-measured-effective-rank]
+status: superseded
+related: [2026-08-13-cluster-to-the-measured-effective-rank,
+          2026-08-13-balance-not-provenance-and-not-much-of-either,
+          2026-08-13-rebalancing-the-curated-class-layer]
 ---
+
+**Answered, and the answer is neither branch.** Measured on the full curriculum
+in `notes/findings/2026-08-13-balance-not-provenance-and-not-much-of-either.md`:
+rebalanced-curated does not beat random, it *loses* to it by 0.025 label lift at
+matched type entropy and ties it at matched occurrence entropy. Removing the
+semantics while keeping the skew (`synthex_skewrand-003`) costs 0.008 — nothing.
+So the mechanism recorded below is **wrong**: the curated layer was not being
+masked by its skew, and unskewing it does not help. What the balance buys, it
+buys only in the partition that means nothing.
 Three independent seeding experiments are nulls: synthEX's WordNet supersenses
 (~0 against a random partition, negative past 15M chars), `synthex_class-002`
 (ground-truth node types LOSE to sha256 at matched cardinality), and

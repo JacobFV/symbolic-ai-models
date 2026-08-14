@@ -1,0 +1,4 @@
+=== synthex_occbal-003: 7 classes over 5220 symbols ===
+  context tables 1051
+  gate: fitted
+  partition: classes=7.000  curated_entropy=1.352  entropy=2.447  mutual=1.145  top_share=0.267

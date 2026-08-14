@@ -1,0 +1,3 @@
+=== synthex_random-002: 7 classes over 5220 symbols ===
+  context tables 1515
+  gate: fitted

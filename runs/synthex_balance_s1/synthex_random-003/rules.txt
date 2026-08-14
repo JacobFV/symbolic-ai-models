@@ -1,0 +1,4 @@
+=== synthex_random-003: 7 classes over 5220 symbols ===
+  context tables 1506
+  gate: fitted
+  partition: classes=7.000  curated_entropy=1.352  entropy=2.807  mutual=0.004  top_share=0.151

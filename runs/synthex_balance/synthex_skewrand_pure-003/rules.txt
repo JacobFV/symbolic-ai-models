@@ -1,0 +1,4 @@
+=== synthex_skewrand_pure-003: 7 classes over 5220 symbols ===
+  context tables 945
+  gate: fitted
+  partition: classes=7.000  curated_entropy=1.352  entropy=1.352  mutual=0.004  top_share=0.755
