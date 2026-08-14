@@ -1,0 +1,131 @@
+{
+  "config": {
+    "model": "omegaclaw_text_pure-002",
+    "tasks": [
+      "lm",
+      "node"
+    ],
+    "task_weights": {
+      "lm": 1.0,
+      "node": 1.0
+    },
+    "data": null,
+    "lessons": "all",
+    "n_train": 20,
+    "n_eval": 4,
+    "language": "english",
+    "languages": "english,spanish,chinese,turkish,swahili,english_synonym,symbols",
+    "max_len": 320,
+    "max_nodes": 128,
+    "mask_rate": 0.15,
+    "type_weight": 0.5,
+    "vocab_size": 8192,
+    "label_vocab_fraction": 0.3,
+    "d_model": 96,
+    "n_layers": 3,
+    "n_heads": 4,
+    "d_ff": 256,
+    "dropout": 0.1,
+    "extra": {
+      "max_examples": 28000
+    },
+    "steps": 2000,
+    "batch_size": 16,
+    "lr": 0.0003,
+    "min_lr_ratio": 0.1,
+    "warmup": 100,
+    "weight_decay": 0.01,
+    "grad_clip": 1.0,
+    "eval_every": 250,
+    "log_every": 50,
+    "seed": 0,
+    "resume": false,
+    "device": "cpu",
+    "amp": true,
+    "out": "runs/sweep/omegaclaw_text_pure-002"
+  },
+  "model_config": {
+    "vocab_size": 8192,
+    "d_model": 96,
+    "n_layers": 3,
+    "n_heads": 4,
+    "d_ff": 256,
+    "dropout": 0.1,
+    "max_len": 328,
+    "max_nodes": 128,
+    "extra": {
+      "max_examples": 28000
+    }
+  },
+  "model": "omegaclaw_text_pure-002",
+  "family": "rule-based",
+  "steps": 0,
+  "parameters": 1259,
+  "n_train": 25060,
+  "n_eval": 5012,
+  "vocab_size": 8192,
+  "floors": {
+    "lm": {
+      "token_acc": 0.03635261608494197,
+      "token_bits": 8.393146470985256,
+      "token_n": 1118599.0,
+      "answer_acc": 0.046025457304223215,
+      "answer_bits": 7.225879357473904,
+      "answer_n": 11863.0
+    },
+    "node": {
+      "type_acc": 0.8639436510184922,
+      "type_bits": 2.3314613280310703,
+      "type_n": 360042.0,
+      "label_acc": 0.15002342833494653,
+      "label_bits": 9.308837745240227,
+      "label_n": 292381.0,
+      "copy_acc": 0.2703247261942139
+    }
+  },
+  "final": {
+    "lm": {
+      "token_acc": 0.037197102853069375,
+      "token_bits": 8.761687379337278,
+      "token_n": 918835.0,
+      "answer_acc": 0.0,
+      "answer_bits": 9.503225680252427,
+      "answer_n": 11863.0,
+      "token_floor": 0.03635261608494197,
+      "token_lift": 0.0008763441713466487,
+      "answer_floor": 0.046025457304223215,
+      "answer_lift": -0.048246001590527526,
+      "token_floor_bits": 8.393146470985256,
+      "token_bits_lift": -0.043909743458672185,
+      "answer_floor_bits": 7.225879357473904,
+      "answer_bits_lift": -0.31516528440555935
+    },
+    "node": {
+      "label_acc": 0.3437964236588721,
+      "label_bits": 7.807062029600771,
+      "label_n": 36350.0,
+      "type_acc": 0.8210714285714286,
+      "type_bits": 1.0647011669078483,
+      "type_n": 44800.0,
+      "label_coverage": 0.8113839285714286,
+      "copy_ceiling": 0.71353507565337,
+      "copy_censored": 3646.0,
+      "label_floor": 0.15002342833494653,
+      "label_lift": 0.22797451339668787,
+      "type_floor": 0.8639436510184922,
+      "type_lift": -0.3151063714997284,
+      "label_floor_bits": 9.308837745240227,
+      "label_bits_lift": 0.16132795057120217,
+      "type_floor_bits": 2.3314613280310703,
+      "type_bits_lift": 0.5433331215461363
+    }
+  },
+  "seconds": 236.80972456932068,
+  "device": "cpu",
+  "renaming": {
+    "label_acc": 0.34275686740875244,
+    "renamed_label_acc": 0.3431955873966217,
+    "drop": -0.0004387199878692627,
+    "symbols": 1944.0
+  }
+}
