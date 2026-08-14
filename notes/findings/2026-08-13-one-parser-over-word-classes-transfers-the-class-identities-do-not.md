@@ -69,14 +69,52 @@ bracket F1 (0.130 both). Abstraction costs nothing where the language is known
 and pays only where it is not, which is what a claim about transfer should look
 like.
 
-**Script is the confound, exactly as predicted.** Retention for `polycky-001`
-splits **0.780 for the 34 Latin-script languages against 0.470 for the 12 that
-are the sole representative of their script**. Per language it is worse than the
-average suggests: Arabic keeps 0.16, Mandarin 0.24, Korean 0.29; Aymara,
-Western Apache and Ainu keep 0.94–0.96. When the script is in the mixture the
-parser barely notices the language is new; when it is not, most of the score
-goes. The abstraction helps most where it is hardest (Mandarin 0.24 against the
-literal grammar's 0.12) and still does not rescue it.
+**Script is a confound, and it is mostly a proxy for a bigger one.** Retention
+for `polycky-001` splits **0.780 for the 34 Latin-script languages against 0.470
+for the 12 that are the sole representative of their script**. Per language it
+is worse than the average suggests: Arabic keeps 0.16, Mandarin 0.24, Korean
+0.29; Aymara, Western Apache and Ainu keep 0.94–0.96.
+
+But the alternatives had to be measured rather than argued about, and script
+comes **third of three**. `scripts/polyglot_script_control.py`, 46 languages,
+retention of `polycky-001` on bracket F1:
+
+| correlate with retention | r |
+|---|---:|
+| **treebank clause coverage** (a harness heuristic) | **+0.886** |
+| **untranslated share** (how little the language translates) | **+0.836** |
+| novel script (1/0) | −0.493 |
+
+They are heavily collinear — coverage against untranslated share is +0.849 —
+so the partials are what decide it:
+
+| | r |
+|---|---:|
+| coverage, untranslated share partialled out | **+0.609** |
+| untranslated share, coverage partialled out | +0.339 |
+| untranslated share, script partialled out | +0.800 |
+| novel script, untranslated share partialled out | −0.313 |
+
+So the best single predictor of whether this parser transfers to a language it
+has never seen is **how many of that language's clauses `Treebank`'s span
+heuristic could find at all** — a property of the harness, not of the grammar,
+not of the conditioning, and not of the script. Script is real but largely
+mediated: it drops from −0.49 to −0.31 once translation share is held, and
+translation share is itself two thirds explained by coverage.
+
+**And here is the part that stops this from being a causal claim.** The
+segmentation arm is an *intervention* on exactly that variable. It raises
+Chinese clause coverage from 0.466 to 0.627 and Cantonese from 0.491 to 0.685
+— and moves the held-out parse score by +0.002 bracket, in 4 folds of 6. So
+coverage predicts transfer across languages at +0.89 and yet manipulating
+coverage within a language buys nothing. The correlation and the intervention
+disagree, which means coverage is not the cause; it and retention are both
+downstream of something else about how tractable a given rendering is.
+
+That is the parser-side echo of the Mantel result on the graded language
+representation (script +0.18, held-out WALS features null), with one extra
+turn of the screw: here there was an intervention available, and taking it
+showed the strongest correlate in the table to be a passenger.
 
 ## What was refuted, including by me
 
@@ -182,16 +220,82 @@ the class identities were to be refuted if `polycky-1class` matched (it did more
 than match); conditioning was to be refuted if `polycky-crc` gained as much (it
 lost outright, which refutes the *machinery* rather than the signal).
 
-`status: provisional`, because every control here was designed by the same agent
-that wrote the parser. The two that most want an independent try:
+## Two refutation attempts, run rather than parked
 
-- **The 1class result decides the interpretation.** If it is an artefact of the
-  wildcard beam (`WILDCARD_BEAM = 6`, ordered by best reachable rule) then the
-  full class induction is being starved at search time rather than losing on
-  merit — one class means one wildcard child and no beam at all. That is a
-  search bound doing the work of a finding, which is exactly the substitution
-  this repo keeps making.
-- **The retention statistic** divides out the language's own difficulty but not
-  how much of the document that language translates. A language that leaves most
-  of the frame in English will retain well for a reason that has nothing to do
-  with the parser.
+**The 1class result could have been a search bound, and is not.** An unknown
+token is tried against at most `WILDCARD_BEAM = 6` class symbols; the one-class
+control has exactly one class and therefore no beam at all, so a bound tight
+enough to starve the full induction would look identical to "the class
+identities carry nothing". `polycky-wide` was registered afterwards, with the
+beam at 64 — wider than the class count at any state this grammar builds, i.e.
+exhaustive. All six folds again:
+
+| contrast | brack | edge | label | uas | ted |
+|---|---:|---:|---:|---:|---:|
+| wide − 001 (the beam was costing this) | +0.0007 | +0.0023 | +0.0033 | +0.0038 | +0.0030 |
+| 1class − wide (the gap that remains) | +0.0018 | +0.0090 | +0.0165 | +0.0141 | +0.0193 |
+
+Taking the beam off recovers about a fifth of the gap on `edge_f1` and a
+quarter on `uas`, and `polycky-1class` still leads on 6 folds of 6 on every
+metric but bracket. The bound was not binding; the finding stands.
+
+**The abstraction gain does not go where the mechanism says it should, and
+that is a null against my own story.** The account of *why* classes transfer is
+that a held-out language's frame words are all unseen, so a literal RHS has
+nothing to match while a wildcard does — which predicts the gain should be
+largest in the languages that translate most. It is not. The gain in retention
+averages **+0.158** and correlates with untranslated share at **r = +0.027** —
+flat. Against novel script it is +0.19, weak and noisy. So abstraction buys a
+roughly uniform amount of retention everywhere rather than rescuing the hard
+languages, and the mechanism is more likely "a smaller, better-generalising rule
+set" (28,046 rules against the literal grammar's 55,010) than "the wildcard
+catches untranslated frames". The effect is real and reproduces 6/6; the
+explanation for it does not survive its own prediction.
+
+## What would have refuted this
+
+Stated in the decision note before the run: abstraction was to be refuted if
+`polycky-001` failed to beat `polycky-literal` held out (it did not fail, 6/6);
+the class identities were to be refuted if `polycky-1class` matched (it did more
+than match); conditioning was to be refuted if `polycky-crc` gained as much (it
+lost outright, which refutes the *machinery* rather than the signal).
+
+**The translation correlation is not an artefact of the retention statistic.**
+That was the third thing worth attacking — retention is a ratio of two small
+numbers (bracket F1 in the 0.05–0.17 range), so a correlation could be a
+property of the statistic rather than of the corpus. Recomputed on three
+metrics and on the raw held-out score, which does not divide by anything:
+
+| read-out | untranslated share | novel script |
+|---|---:|---:|
+| retention, bracket_f1 | +0.836 | −0.493 |
+| retention, edge_f1 | +0.862 | −0.467 |
+| retention, label_f1 | +0.843 | −0.531 |
+| raw held-out bracket_f1 | +0.826 | −0.575 |
+| raw held-out edge_f1 | +0.853 | −0.554 |
+
+It holds everywhere, between +0.83 and +0.86, and script stays second in every
+row. The section survives.
+
+**And it is not an artefact of the instrument that measures it.** Untranslated
+share is counted in tokens, and the two splitters here count tokens very
+differently for exactly the languages the analysis is about — one emits a token
+per ideograph, the other emits whole runs. Measured with the shared
+`split_words` instead of the script-aware one, the covariate agrees with itself
+at **r = 0.986**, correlates with retention at **+0.828** (against +0.836), and
+survives partialling script out at **+0.777** (against +0.800). The covariate
+is not carrying the new splitter's fingerprint.
+
+`status: provisional`, because every control here was designed by the same agent
+that wrote the parser, and the ones that passed passed against controls I chose.
+What most wants an independent try now:
+
+**The correlation/intervention dissociation is the load-bearing claim and it
+rests on one intervention.** Segmentation is the only handle on clause coverage
+that was tried. A second, independent way of moving coverage — loosening the
+greedy one-node-per-segment assignment in `Treebank._add`, or scoring anchors by
+substring rather than whole-token match — would either reproduce the null and
+make "coverage is a passenger" solid, or move the score and make the
+segmentation arm the odd one out. Until then "coverage is not causal" is one
+experiment's worth of evidence against a +0.886 correlation, and that is not
+much.
