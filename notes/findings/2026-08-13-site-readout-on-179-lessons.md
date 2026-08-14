@@ -107,6 +107,30 @@ bits for decisions wherever a confidence exists at all. Splitting *where* from
 *what* did not dissolve it. Recorded as
 `notes/questions/2026-08-13-the-inversion-is-not-the-symbol-mixture.md`.
 
+## Which readout each model can answer *at all*
+
+Static, not measured: does the class override the hook, or inherit the
+abstaining default. No episodes, no fitting, so this one cannot be a slice
+artifact. Over the **90 registered rule-based models**:
+
+| readout | models that can answer it |
+|---|---|
+| `symbol` | 79 / 90 |
+| `node` | 41 / 90 |
+| `site` | **5 / 90** — and all five are the `gsite` family added here. Before this work: **0**. |
+| next token | 14 / 90 |
+
+This is the sharpest form of the thing the readout split was built to expose.
+**Eleven of ninety models cannot answer the one readout the entire repo has been
+scored on**, and seventy-six cannot emit a token. Every one of them has
+nevertheless carried a `label_acc` in a published table, because a model that
+abstains is scored on the shared back-off under its own name — which is exactly
+what the agents-side `action` readout independently caught for `synth-001`
+(`notes/findings/2026-08-13-action-readout.md`).
+
+The two findings arrive from opposite directions and say the same thing: *the
+number in the table is not always the model*.
+
 ## What this does not show
 
 * It is one reasoner. `gsite` walks up to the nearest labelled ancestor of the

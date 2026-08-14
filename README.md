@@ -220,6 +220,20 @@ lists them.
 both — `gsite-none` has no `site` column at all, which is the correct row for a
 reasoner handed nothing to read.
 
+**How much of the registry can answer each readout** — static, from whether the
+class overrides the hook, so no slice can move it. Over the 90 registered
+rule-based models: `symbol` **79/90**, `node` **41/90**, `site` **5/90** (all
+five added with the readout; before it, zero), next token **14/90**.
+
+Read that as the reason the split was needed. Eleven models cannot answer the
+one readout the whole repo has been scored on, and every one of them has still
+carried a `label_acc` in a published table — because a model that abstains is
+scored on the *shared back-off* under its own name. The `action` readout caught
+the same thing from the other side and named a case: `synth-001` publishes a
+symbol-readout `label_acc` of 0.2500 while its `node_votes` abstains on
+essentially every decision, and on `repair` it scores exactly the
+abstain-everywhere control. **The number in the table is not always the model.**
+
 **`site` is the new question, and the corpus is privileged for it.** A token may
 attach to the phrase before it or the one after, at different depths of the
 tree, and the curriculum ships the true term *and* its rendering from one seed —
