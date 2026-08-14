@@ -1,0 +1,50 @@
+# The WALS-coded corpus: 46 languages, 1,035 pairs, 8 scripts, 15 families.
+#
+#   uv run symbolic-ai-models sweep --config configs/full179_wals46.toml \
+#       --models omegaclaw_textlang-002,omegaclaw_ctx-001
+#   uv run python scripts/language_typology.py runs/full179_wals46/omegaclaw_textlang-002 \
+#       --out runs/full179_wals46/typology.json
+#
+# Why this file rather than `full179_multilingual.toml`: that one renders the
+# seven hand-written packs, five of which are European and two of which are
+# English. A genealogy or typology claim needs a sample that is not one family
+# with the same language twice, and `symbolic_ai_core.data.langdb` makes 58
+# derived languages renderable -- 46 of them WALS-coded by the linguists who
+# study them, which is the only oracle in this repo nobody here wrote.
+#
+# The graph stays byte-identical across every one of them, so this is an exact
+# parallel corpus 46 languages wide, not a bigger one. Only a model that reads
+# `GraphView.text` sees any difference at all.
+#
+# Derived grammars are tier 4: word order from WALS, no morphology. That is
+# exactly why `scripts/language_typology.py` splits the oracle -- the 14
+# features the renderer consumes are a positive control and nothing more; the 4
+# it never reads are the test.
+
+tasks = "lm,node"
+lessons = "all"
+n_train = 20
+n_eval = 4
+
+vocab_size = 8192
+# Pinned for the same reason `full179.toml` pins them: a config that omits a
+# shape knob is a default with a filename.
+d_model = 96
+n_layers = 3
+n_heads = 4
+d_ff = 256
+dropout = 0.1
+max_len = 320
+max_nodes = 128
+batch_size = 16
+device = "cpu"
+
+# Seven times the default 4,000, so that a model splitting its evidence table
+# seven ways still gets ~4,000 observations per language -- the same budget
+# `full179.toml` gives a monolingual run. Without this the language-conditioned
+# rows would be measured on a seventh of the data and the comparison would be
+# about sample size rather than about language.
+extra = { max_examples = 28000 }
+
+languages = "ady,ain,apw,arb,ayr,chr,ckt,cmn,deu,eus,fin,fra,gug,heb,hun,ind,inh,jpn,kal,kat,khm,kor,lao,lez,lkt,luo,mri,mww,nav,niv,nmn,ppl,quz,ryu,spa,swh,tam,tel,tha,tur,twf,vie,yag,yor,yua,yue"
+out = "runs/full179_wals46"
