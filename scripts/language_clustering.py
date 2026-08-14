@@ -76,14 +76,14 @@ FAMILY = {
 # observation
 # ---------------------------------------------------------------------------
 def observe(model, episodes, tok, max_nodes: int
-            ) -> tuple[list[tuple[int, tuple[str, ...]]], list[str]]:
-    """``(episode index, claws that were right / that fired)`` per asked node.
+            ) -> tuple[list[tuple[int, tuple[str, ...], tuple[str, ...]]], list[str]]:
+    """``(episode index, claws that fired, claws that were right)`` per asked node.
 
     Mirrors :meth:`OmegaClaw._observe` — same views, same seed, same example cap
     — but keeps the episode each record came from instead of the context key,
-    which is what makes the permutation control possible. The return is a list of
-    ``(episode_index, fired_names, right_names)`` flattened into two aligned
-    tuples per record, plus the language of every episode.
+    which is what makes the permutation control possible: a shuffle of the
+    language labels moves whole episodes between buckets and changes nothing
+    about what any claw did.
     """
     from symbolic_ai_models.models.omegaclaw import Scan
 
@@ -187,7 +187,8 @@ def within(dist: np.ndarray, names: Sequence[str], group: Iterable[str]) -> floa
 def main(argv: Sequence[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("run", help="a finished omegaclaw_textlang-002 run directory")
-    ap.add_argument("--shuffles", type=int, default=2000)
+    ap.add_argument("--shuffles", type=int, default=100,
+                    help="permutations of the episode-level language labels")
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--out", help="write the numbers here as JSON")
     args = ap.parse_args(argv)
@@ -274,7 +275,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     rng = np.random.default_rng(args.seed)
     real_spread = float(np.mean(dist[np.triu_indices(len(langs), 1)]))
     shuffled: list[float] = []
-    for _ in range(args.shuffles // 20 or 1):
+    for _ in range(max(args.shuffles, 1)):
         perm = list(rng.permutation(languages))
         a, c = tally(records, languages, perm)
         shuffled.append(float(np.mean(
