@@ -42,6 +42,24 @@ reliability vectors and check the clustering against known genealogy.**
 Refuted if per-language reliability vectors cluster no better than a control
 pairing (shuffle the language labels and re-cluster).
 
+## Answered, on the full sweep
+
+See `notes/findings/2026-08-13-language-conditioning-recovers-typology-not-genealogy.md`.
+Both halves landed, and they landed on opposite sides:
+
+- **Rules do have per-language reliabilities**, strongly — the clustering is 4.7x
+  tighter than a shuffled-label control, 33 control standard deviations clear.
+- **The clustering is arbitrary with respect to genealogy.** Indo-European ranks
+  10th of 20 triples; Spanish's nearest neighbour is Chinese. What it recovers is
+  how often a bare graph label survives verbatim into the prose.
+- **Conditioning on the language bought nothing**, exactly as this note said it
+  would in that case: +0.001 label lift net of a *meaningless* seven-way split of
+  the same shape.
+
+The premise that decided most of it: `Lesson.structured` takes no language, so
+the graph is byte-identical across all seven packs and 99.05% of the
+between-language variance lives in the three claws that read the prose.
+
 ## Caveat that does not go away
 
 Language arrives as ground truth now and should eventually be an in-context

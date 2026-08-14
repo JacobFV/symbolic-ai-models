@@ -19,6 +19,11 @@
         built to test whether an ABC makes new symbolic models cheap to write
         and fair to compare
 
+    omegaclaw_lang  omegaclaw_const  omegaclaw_text  omegaclaw_textlang
+        the same skeleton conditioned on **which language** the episode was
+        rendered in, with the controls that make that readable: a constant where
+        the language goes, and the same widened reach without it
+
 Both answer to :class:`~symbolic_ai_models.models.base.Model`: a batch in, logits over
 the shared vocabulary out. A decision list and a transformer are therefore
 scored by the same cross-entropy against the same floors and appear in the same
@@ -47,6 +52,9 @@ from . import omegaclaw_ctx_001, omegaclaw_em_001  # noqa: F401
 from . import omegaclaw_flat_001, omegaclaw_rank_001  # noqa: F401
 from . import ensemble_001, joint, omegaclaw_reach_001, ptrgen_001  # noqa: F401
 from . import gparse_003  # noqa: F401
+from . import omegaclaw_const_002, omegaclaw_lang_002  # noqa: F401
+from . import omegaclaw_text_002, omegaclaw_textlang_002  # noqa: F401
+from . import omegaclaw_pure_002, omegaclaw_split_002  # noqa: F401
 from . import synthex_002, vsa_002, vsa_perm_002  # noqa: F401
 
 #: The neural half is **not registered by default**. It is not the subject of

@@ -239,7 +239,7 @@ def collate_text(episodes: Sequence[Episode], tok: SymbolTokenizer, *,
         causal=True, rel=None, target_tokens=targets, answer_mask=answer_mask,
         meta={"task": "lm", "lesson_ids": [ep.lesson_id for ep in episodes],
               # The episode's true term graph, in row order. **For the oracle
-              # parser and nothing else.** It is the answer key: 85.7% of
+              # parser and nothing else.** It is the answer key: 85.3% of
               # answers on the full curriculum are literally the label of one of
               # its nodes, so a model reading it unrestricted while predicting
               # the next token is cheating and its numbers are worthless. The
@@ -361,4 +361,13 @@ def collate_graph(episodes: Sequence[Episode], tok: SymbolTokenizer, *,
               # and pins it down 0.000% of the time, so it carries the symbol
               # without carrying its position. The answer string would carry
               # both.
-              "prompts": [ep.prompt for ep in episodes]})
+              "prompts": [ep.prompt for ep in episodes],
+              # Which language each prompt was rendered in. Carried because the
+              # graph is *not* a function of it -- `Lesson.structured` takes no
+              # language, so the term tree is byte-identical across all seven
+              # packs -- which makes the language a fact about the surface and
+              # nothing else. A model that conditions on it is conditioning on
+              # the only thing that varies. Not an answer and not a shortcut:
+              # the label is identical in every language, so knowing which
+              # language cannot name the hidden symbol.
+              "languages": [ep.language for ep in episodes]})
