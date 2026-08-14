@@ -113,15 +113,24 @@ is the model that actually ships. Everything else, including the cleanup's
 softmax temperature, is held at ``vsa-002``'s value, so a ``-004`` row is the
 same machine with a different role Gram and nothing else.
 
-That last sentence is a correction, and the correction is a result. The first
-version fitted the temperature too, on the same criterion, and every graded
-construction ran to the flattest corner of the grid: 0.126 dev accuracy at
-``(knob 1.0, sharpness 12)`` became **0.040** at ``(4.0, 3)``, which is what the
-likelihood chose. The mechanism generalises past this family — *a flat softmax
-over a graded Gram is an episode unigram*, an excellent density estimate and a
-terrible classifier — so it is registered as a row rather than fixed in silence:
-``vsa_hks_ll-004`` is ``vsa_hks-004`` with the temperature in the grid, and the
-pair prices the decision on the full curriculum.
+That last sentence started life as a correction to a disaster and ended as the
+ninth slice artifact in this repo's history. Both halves are worth keeping.
+
+The first version fitted the temperature too, and on a three-lesson diagnostic
+every graded construction ran to the flattest corner of the grid: 0.126 held-out
+*training* accuracy at ``(knob 1.0, sharpness 12)`` became **0.040** at
+``(4.0, 3)``, which is what the likelihood chose. The mechanism was legible —
+*a flat softmax over a graded Gram is an episode unigram*, an excellent density
+estimate and a terrible classifier — so rather than fix it in silence,
+``vsa_hks_ll-004`` was registered to price the decision at full scale.
+
+**On all 179 lessons the likelihood picks sharpness 12 by itself**, and
+``vsa_hks_ll-004`` comes out bit-identical to ``vsa_hks-004``: 0.242 label,
++0.115 lift, 6.643 bits, 0.213 copy, on every digit. The trap is real on three
+lessons and absent on a hundred and seventy-nine. Fixing the temperature remains
+the right design — it removes a degree of freedom the ``-002`` family does not
+have, which is what makes a ``-004`` row a clean contrast — but it is a *design*
+argument and not, as the slice claimed, a rescue.
 
 The controls
 ------------
@@ -380,15 +389,12 @@ class RoleEmbedding:
             c(s) = argmax_c sum_i log[(1 - c) b_i + c q_i]      (the gate)
             LL   = sum_i log[(1 - c(s_i)) b_i + c(s_i) q_i]     (selected on)
 
-        **Do not put the temperature in the same grid.** Fixing that and then
-        fitting ``(knob, sharpness)`` jointly still chose the degenerate corner:
-        a flat softmax over a graded Gram is an *episode unigram*, which is a
-        genuinely good density estimate and a terrible classifier. Measured on
-        held-out training episodes, ``vsa_hks-004``'s dev accuracy by (knob,
-        sharpness) ran 0.126 at ``(1.0, 12)`` and 0.040 at ``(4.0, 3)`` — and the
-        joint fit chose ``(4.0, 3)``. With the temperature held at ``vsa-002``'s
-        fixed 12, the same likelihood picks ``knob = 1.0``, the accuracy optimum,
-        for both spectral constructions:
+        **Do not put the temperature in the same grid — on three lessons.**
+        Fixing that and then fitting ``(knob, sharpness)`` jointly chose the
+        degenerate corner on a three-lesson diagnostic: a flat softmax over a
+        graded Gram is an *episode unigram*, a genuinely good density estimate
+        and a terrible classifier. Held-out **training** episodes, three lessons,
+        ``vsa_hks-004``:
 
         ==========  =========  ============
         knob        dev acc    mixture LL
@@ -399,10 +405,12 @@ class RoleEmbedding:
         4.0          0.064      -4.5288
         ==========  =========  ============
 
-        So the criterion is sound and the *temperature* was the confound —
-        another entry in this repo's long list of harness decisions that move
-        more than architectures do. ``vsa_hks_ll-004`` is registered to price it
-        on the full curriculum instead of on the slice above.
+        at sharpness 12, against 0.040 at ``(4.0, 3)`` — which is what the joint
+        fit chose. **And on all 179 lessons the joint fit chooses sharpness 12
+        anyway**, so ``vsa_hks_ll-004`` is bit-identical to ``vsa_hks-004``.
+        The temperature is held fixed here for the design reason — it removes a
+        degree of freedom the ``-002`` family does not have — and *not* because
+        the slice's 3x swing survived. It did not. Ninth time.
 
         **Training episodes only.** The calibrator used for selection is fitted
         on the same held-out fifth it scores, which is in-sample for the gate's
@@ -794,9 +802,18 @@ class VSAHKSLikelihood(VSAHKS):
 
     Pre-registered: this row should beat ``vsa_hks-004`` on ``label_bits`` and
     lose to it on ``label_acc``. If it loses on both, the temperature is simply
-    mis-fitted and the reading above is wrong. If it wins on both, the slice that
-    produced the 0.126-to-0.040 number was the misleading thing and that is worth
-    knowing too.
+    mis-fitted. If it *matches*, the slice that produced the 0.126-to-0.040
+    number was the misleading thing and that is worth knowing too.
+
+    **Measured, all 179 lessons: it matches, on every digit.** 0.242 label,
+    +0.115 lift, 6.643 bits, 0.213 copy, +0.009 renaming — identical to
+    ``vsa_hks-004``, because the likelihood picks sharpness 12 unprompted. The
+    third pre-registered outcome, and the honest reading is the unflattering
+    one: the harness trap this row was registered to expose is a three-lesson
+    artifact. It is kept registered because the *next* graded construction may
+    have a Gram on a different scale, and then the grid will matter again — but
+    nothing here should be cited for a temperature effect, because there is not
+    one at full scale.
     """
 
     fit_sharpness = True
