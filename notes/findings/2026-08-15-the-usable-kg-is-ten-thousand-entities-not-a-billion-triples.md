@@ -65,14 +65,49 @@ already reached it. **Twice now, "get more graph" has been measured to be the
 wrong prescription.** What was missing was never facts; it is that nothing in the
 curriculum is derivable *from* facts.
 
-## What would refute this
+## The named refutation was run, and it confirmed the finding 163x over
 
-- **The overlap is an artefact of the five sources chosen.** `entity` (Wikidata,
-  260M rows) is not yet normalised and is the most likely source of nodes
-  carrying both a type and properties. If it lifts the intersection by an order
-  of magnitude the "don't normalise the rest" conclusion weakens — though the
-  citation bulk is unaffected either way. **This is the cheapest test and it has
-  not been run.**
+The condition written above before the run: *if Wikidata lifts the intersection
+by an order of magnitude, the "don't normalise the rest" conclusion weakens.*
+`entity` was then normalised — 259,773,342 rows seen, **194,756,799 kept** — and
+the measurement repeated over all 216M triples:
+
+| | 5 sources | + Wikidata | change |
+|---|---:|---:|---:|
+| triples read | 21,715,580 | 216,472,379 | **+194,756,799** |
+| entities anchorable | 732,339 | 119,125,858 | **+118,393,519** |
+| with a determined attribute | 78,642 | 78,642 | **+0** |
+| **both — usable** | **15,977** | **15,977** | **+0** |
+| single-valued | 9,849 | 9,849 | **+0** |
+
+**A 163-fold increase in anchorable entities bought exactly zero usable ones.**
+Not "a small gain" — the intersection is identical to the entity, and so is the
+single-valued subset.
+
+The mechanism is plain once seen. Wikidata's backbone here is `is-a`,
+`instance-of` and `same-as`: taxonomy and identity. **Determined attributes come
+almost entirely from CSKG/ConceptNet, which is 3.98M rows in total** — 1.8% of
+the corpus now normalised, and the source of essentially every `has-property`,
+`capable-of`, `used-for` and ATOMIC if-then edge in it.
+
+So the scarce resource is not entities, not types, and not scale. It is
+**statements about what follows from being something**, and general-purpose
+knowledge graphs are not built to carry them. The conclusion is stronger than
+what it replaced: normalising the remaining ~1 billion rows is not merely poor
+value, it is measured to be worth nothing at all for this purpose.
+
+## What would still refute it
+
+- **Single-valued is the wrong criterion.** An entity whose relation has several
+  objects may still be derivable if the lesson supplies context enough to pick
+  one. That moves 9,849 toward 15,977 and does not change the order of magnitude.
+- **Anchorability is under-counted.** Only `is-a` and `instance-of` count. Adding
+  `member-of`, `part-of` or `classified-as` grows the base — but the base is
+  already 119M and is demonstrably not the constraint, so this cannot matter.
+- **A property-dense source nobody has looked at.** The remaining unnormalised
+  sources are citation, patent-classification and financial-holding structure.
+  If one of them carries `has-property`-shaped edges at scale it would move the
+  number; none of their sampled relation vocabularies suggests it.
 - **Single-valued is the wrong criterion.** An entity whose relation has several
   objects may still be derivable if the lesson supplies enough context to pick
   one. That would raise 9,849 toward 15,977 and does not change the order of

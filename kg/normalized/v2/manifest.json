@@ -64,6 +64,77 @@
         "/r/dbpedia/product": 294
       }
     },
+    "entity": {
+      "canonical_counts": {
+        "authored-by": 37324034,
+        "continent": 137084,
+        "country": 21591420,
+        "instance-of": 129149812,
+        "member-of": 766935,
+        "part-of": 5717835,
+        "same-as": 69679
+      },
+      "files": [
+        "/home/brandonin/Downloads/kg/entity/wikidata/backbone_core12m_p0.parquet",
+        "/home/brandonin/Downloads/kg/entity/wikidata/backbone_full_p0.parquet",
+        "/home/brandonin/Downloads/kg/entity/wikidata/backbone_full_p1.parquet",
+        "/home/brandonin/Downloads/kg/entity/wikidata/backbone_full_p2.parquet",
+        "/home/brandonin/Downloads/kg/entity/wikidata/backbone_full_p3.parquet",
+        "/home/brandonin/Downloads/kg/entity/wikidata/backbone_full_p4.parquet",
+        "/home/brandonin/Downloads/kg/entity/wikidata/idbridges_full_p0.parquet"
+      ],
+      "kept_fraction": 0.7497,
+      "output": "kg/normalized/v2/entity.ndjson.gz",
+      "output_sha256": "1893f36cae36c73963ec4f2dd00fbcdb8a100b98c9e85c10ec341e307c143992",
+      "rejected": {
+        "kind:unmapped": 65016543
+      },
+      "row_cap_per_file": null,
+      "rows_seen": 259773342,
+      "source": "entity",
+      "triples_kept": 194756799,
+      "unmapped_kinds": {
+        "birthplace": 4597595,
+        "board-member": 8947,
+        "capital": 147519,
+        "capital-of": 111395,
+        "ceo": 9481,
+        "chairperson": 42470,
+        "child": 2042649,
+        "contains-admin": 1289888,
+        "country-of-citizenship": 6763210,
+        "deathplace": 1872418,
+        "diplomatic-relation": 8054,
+        "doctoral-advisor": 405021,
+        "employer": 2644217,
+        "father": 1267219,
+        "followed-by": 1852226,
+        "follows": 1874249,
+        "founder": 131110,
+        "has-part": 2972683,
+        "headquarters-location": 1033869,
+        "ideology": 36257,
+        "industry": 753505,
+        "influenced-by": 34199,
+        "located-in-admin": 15934301,
+        "located-on-terrain": 172479,
+        "location": 5101159,
+        "member-of-party": 691474,
+        "mother": 772628,
+        "notable-work": 194820,
+        "owned-by": 1191932,
+        "owner-of": 70295,
+        "parent-organization": 204156,
+        "position-held": 2087891,
+        "product-or-material": 88898,
+        "religion": 942745,
+        "shares-border-with": 1028798,
+        "spouse": 957123,
+        "student": 95550,
+        "subclass-of": 5460413,
+        "subsidiary": 123700
+      }
+    },
     "geo": {
       "canonical_counts": {
         "adjacent-to": 654,
