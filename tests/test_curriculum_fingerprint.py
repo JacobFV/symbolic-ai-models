@@ -114,3 +114,36 @@ def test_the_recorded_file_is_the_shape_the_checker_expects(golden):
     assert len(problems) == 2
     assert any("term graph" in p for p in problems)
     assert any(f"[{lang}]" in p for p in problems)
+
+
+def test_every_registered_curriculum_has_a_pinned_corpus():
+    """A curriculum with no golden is an unpinned substrate wearing a name.
+
+    Seven curricula are registered and seven goldens exist, but nothing required
+    the second number to track the first — the files are there because the agents
+    who added the arms were careful, not because anything failed when they were
+    not. That makes "beside, never instead" a convention rather than a guard, and
+    this repo's whole versioning discipline exists because a convention already
+    failed twice: ``corefer``'s type head went 0.174 -> 0.612 in one commit and
+    ``workspace`` moved from eighth to joint first, both silently redefining what
+    an earlier published row meant.
+
+    A curriculum is a *substrate*, so the same failure is worse: an unpinned one
+    invalidates every row measured on it rather than one model's. The whole point
+    of registering `derive:wordnet` beside `base` instead of editing the
+    generator is that the old numbers keep meaning what they meant, and that
+    holds only if each curriculum's corpus is pinned independently.
+
+    This is the cheap half of the guard. It does not check that the golden is
+    *correct* — ``test_the_curriculum_still_hashes_to_what_the_published_runs_used``
+    does that for ``base``, and the per-arm goldens are checked in
+    ``tests/test_kg.py`` — it checks that one exists at all, which is the failure
+    mode that would otherwise be silent.
+    """
+    missing = [c for c in C.CURRICULA if not F.golden_path_for(c).exists()]
+    assert not missing, (
+        f"{len(missing)} registered curriculum/a have no fingerprint golden: "
+        f"{missing}. Every curriculum pins its own corpus, or a number measured "
+        f"on it cannot be attributed to a substrate later. Generate one with "
+        f"`curriculum_fingerprint(curriculum=...)` and commit it beside the "
+        f"others in symbolic_ai_core/data/.")
