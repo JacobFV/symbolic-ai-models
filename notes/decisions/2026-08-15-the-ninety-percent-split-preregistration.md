@@ -10,6 +10,14 @@ related: [2026-08-15-the-supply-model-breaks-at-ninety-percent-masking,
 
 # Which way the 0.90 split will go, written before the refit finishes
 
+> **Outcome, same day: both halves held.** `acc | copyable` **0.5971** against a
+> predicted ≈0.59, `acc | not copyable` **0.0013** against a predicted ≤0.002.
+> The mechanism half held too — the mix over label multiplicity carries about two
+> thirds of the rise — and the third refutation condition below turned out to be
+> the interesting one: stratified by evidence *concentration* rather than by
+> multiplicity, the 0.90 arm is **worse**, not equal. See
+> `notes/findings/2026-08-15-the-ninety-percent-point-is-a-different-bucket-not-a-better-model.md`.
+
 `notes/questions/2026-08-15-the-supply-model-breaks-at-ninety-percent-masking.md`
 names three stories and deliberately declines to choose. This note chooses, with
 its reasoning, **before the split exists**, so that the reading cannot drift

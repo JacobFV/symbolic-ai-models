@@ -134,6 +134,19 @@ each band, so the size of that 0.099 is an estimate. The direction does not
 depend on the banding, because the sweep already reports the same thing with no
 stratification at all.
 
+**`ptrgen-001` replicates both halves**, on the same draw and the same strata,
+which is the cheapest available answer to "this is one model":
+
+| `ptrgen-001` | m=5-9 | m=10+ | v/V 0.05-0.1 | v/V 0.1-0.2 | v/V 0.2-0.4 | v/V 0.4-1 |
+|---|---|---|---|---|---|---|
+| 0.15 | 0.471 | 0.691 | 0.493 | 0.669 | 0.781 | 0.967 |
+| 0.90 | 0.473 | 0.685 | **0.278** | **0.522** | **0.748** | **0.952** |
+
+Flat in the large multiplicity strata (0.002 and −0.006), below in **all four**
+concentration bands, mix explaining 77% of its +0.107, and a standardised
+shortfall of **−0.120** where `corefer-001`'s is −0.099. Two models, same signs,
+same places.
+
 **The two supply models bracket the truth, and they miss by the same amount in
 opposite directions.** Carrying the 0.15 numbers forward to predict `label_acc`
 at 0.90:
@@ -252,7 +265,7 @@ zero and the ladder's conclusion needs no bound at all.
 
 ## Provisional, and what it is not
 
-The stratifications (m, v/V, node type) are `corefer-001` only. The conditional
+The stratifications (m, v/V, node type) are `corefer-001` and `ptrgen-001`. The conditional
 split is six models, the `copy_lift` table is all six pointer-bearing models on
 the full published sweep, and the twelve-model split of the 0.90 arm was still
 fitting `ctw-001` when this was written.
