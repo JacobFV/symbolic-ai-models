@@ -51,9 +51,17 @@ explaining a number it had not decomposed.** Left open deliberately.
 
 ## What would answer it
 
-Run `scripts/copyable_split.py` against `runs/infill-node-r090` — the same
-script that produced the 0.15 table, which reloads the fitted model and
-reproduces `evaluate_model`'s draw. One command. Then extend the table in
+**Correction to this note's own first draft, which said "one command".** It is
+not. `scripts/copyable_split.py` reloads `model.pt` to reproduce
+`evaluate_model`'s draw, and the run directories keep `summary.json` and
+`rules.txt` but **not the weights** — deliberately, since *"Keep the evidence,
+drop the weights"*. So the 0.90 arm has to be **re-fitted** before it can be
+split, which is a real run rather than a rescore. The refuter hit the same wall
+on the 0.15 arm and re-ran it from scratch into `runs/refute-node-r015`, where
+all twelve summaries came back bit-identical — so the re-fit is known to be
+faithful, just not free.
+
+Refit the 0.90 arm, split it, then extend the table in
 `notes/findings/2026-08-14-the-mask-rate-curve-moves-the-opportunity-not-the-ability.md`
 and either close this note or promote whichever story it turns out to be.
 
