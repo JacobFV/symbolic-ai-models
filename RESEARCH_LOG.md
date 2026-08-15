@@ -997,9 +997,12 @@ about the models: split six ways at 0.90, `acc | copyable` **rises for four**
 **falls for two** (`routes` −0.033, `ruleinduce` −0.038) — through a bucket that
 got 0.025 easier for a lookup table. `routes-001` shows what the mix hides: its
 two largest multiplicity strata fall by **0.109 and 0.168** while its pooled
-conditional falls by 0.033. Standardised over the concentration mix, all three
-models measured are below their 0.15 conversion — `corefer` −0.099, `ptrgen`
-−0.120, `routes` −0.242, the same order as their `copy_lift`. *The ability was never flat; the conditional
+conditional falls by 0.033. Standardised over the concentration mix, **all five
+models measured are below their own 0.15 conversion rate** — `corefer` −0.099,
+`ptrgen` −0.120, `vsa_perm` −0.149, `evidence` −0.149, `routes` −0.242, against
+`copy_lift` of −0.149, −0.153, −0.164, −0.148, −0.219 — and 19 of 20 band
+comparisons put 0.90 below 0.15. `evidence-001` has the largest pooled *rise* of
+the six, +0.165, and a −0.149 shortfall. *The ability was never flat; the conditional
 that looked flat is a mixture whose weights the knob controls.* See
 `notes/findings/2026-08-15-the-ninety-percent-point-is-a-different-bucket-not-a-better-model.md`
 and the lesson it produced,

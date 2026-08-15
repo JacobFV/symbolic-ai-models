@@ -167,13 +167,20 @@ same order as `copy_lift` at 0.90:
 |---|---:|---:|---:|---:|---:|
 | `corefer-001` | +0.103 | 0.696 | 0.597 | **−0.099** | −0.149 |
 | `ptrgen-001` | +0.107 | 0.688 | 0.569 | **−0.120** | −0.153 |
+| `vsa_perm-002` | +0.081 | 0.666 | 0.516 | **−0.149** | −0.164 |
 | `evidence-001` | **+0.165** | 0.618 | 0.468 | **−0.149** | −0.148 |
 | `routes-001` | −0.033 | 0.657 | 0.415 | **−0.242** | −0.219 |
 
 `evidence-001` is the sharpest single row in this note: the **largest** pooled
 rise of the six, +0.165, and a −0.149 shortfall once concentration is held —
-within 0.001 of its own `copy_lift`. Four models, four negative shortfalls, and
-the pooled column has the wrong sign for three of them.
+within 0.001 of its own `copy_lift`. **Five models, five negative shortfalls, and
+the pooled column has the wrong sign for four of the five.** The sixth,
+`ruleinduce-001`, has no 0.15 refit here and so no bands; its pooled conditional
+fell 0.425 → 0.387 and its `copy_lift` is −0.230, both in the same direction.
+Across the five, **19 of 20** band comparisons put 0.90 below 0.15. The single
+exception is `evidence-001` in the 0.2–0.4 band, 0.698 against 0.697 — above by
+0.001, which is a fifth of this repo's own noise floor. Counted honestly rather
+than rounded into the claim.
 
 **The two supply models bracket the truth, and they miss by the same amount in
 opposite directions.** Carrying the 0.15 numbers forward to predict `label_acc`
@@ -293,9 +300,10 @@ zero and the ladder's conclusion needs no bound at all.
 
 ## Provisional, and what it is not
 
-The stratifications (m, v/V, node type) are `corefer-001`, `ptrgen-001`,
-`evidence-001` and `routes-001` — the biggest riser, two middling risers and the
-faller, all four negative once concentration is held. The conditional
+The stratifications (m, v/V, node type) are five of the six models —
+`corefer-001`, `ptrgen-001`, `vsa_perm-002`, `evidence-001` and `routes-001`;
+the biggest riser, three middling risers and the faller, all five negative once
+concentration is held. The conditional
 split is six models, the `copy_lift` table is all six pointer-bearing models on
 the full published sweep, and the twelve-model split of the 0.90 arm was still
 fitting `ctw-001` when this was written.
