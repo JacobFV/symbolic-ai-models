@@ -48,3 +48,43 @@ __pycache__/
 !/runs/**/rules.txt
 !/runs/**/policy.txt
 !/runs/**/copyable_split.txt
+
+# Knowledge-graph ingestion: keep the manifest, drop the corpus.
+#
+# The same rule as `/runs/**` above, applied to a different kind of bulk. The
+# source corpora are ~14 GB and every byte of them is re-fetchable from
+# upstream; the mined and normalised intermediates are larger still and are a
+# pure function of (source, miner, config). None of that belongs in a 27 MB
+# repository, and a clone that dragged it would be unusable.
+#
+# What *must* survive a clone is the answer to "what produced this graph?" —
+# which source files, at which checksums, through which miner, yielding how
+# many facts, rejecting how many, under which schema version. That is what a
+# `manifest.json` records, and it is the exact analogue of `summary.json`: the
+# artefact that lets a later reader audit a number instead of taking it on
+# trust. This repo's standing rule is that a number without its floor is not a
+# result; a mined fact without its provenance is the same defect one layer down,
+# and it is worse here because the two ingestion paths (parsed vs
+# directly-mined) will not produce facts of equal quality. Pooling them without
+# recording which path produced which is how `label_acc` spent its entire
+# history hiding a 72:28 mixture.
+#
+# `schema.json` is tracked for the same reason: normalisation is a design
+# decision, it will be revised, and a graph whose schema is not pinned cannot be
+# compared against an earlier one.
+#
+# Small, licensed, sha-pinned *derived* graphs do not live here at all — they go
+# in `symbolic_ai_kg/data/` and are tracked in full, as `wordnet30-physical`
+# (248K) and `cskg-commonsense` (612K) already are. The rule of thumb: if a
+# model reads it at sweep time, vendor it; if it is scaffolding on the way to
+# producing that, it belongs under `/kg/` and only its manifest survives.
+#
+# Directories must be re-included explicitly or git will not descend into them
+# to find the negations.
+/kg/**
+!/kg/**/
+!/kg/README.md
+!/kg/**/manifest.json
+!/kg/**/schema.json
+!/kg/**/stats.json
+!/kg/**/LICENSE*
