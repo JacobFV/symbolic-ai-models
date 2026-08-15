@@ -1,0 +1,10 @@
+=== metta_gated_pure-005: random codebook, d=4096 ===
+  symbols 8192, role atoms 62
+  gate: fitted
+  (no learned layers; binding, superposition and cleanup only)
+  role embedding: atomspace query signatures, knob=2, sharpness=12 (fitted)
+  (the role Gram is the candidate score; see the module docstring)
+  queries: parent_type, root, child_type, sibling_type, grandparent, parent_slot
+  extra_weight=2  (interior), normalise=True
+  signature atoms: 401
+  extra_weight likelihood curve (held-out training episodes): 0->-4.1417, 0.25->-4.1145, 0.5->-4.0888, 1->-4.0676, 2->-4.0639, 4->-4.0661

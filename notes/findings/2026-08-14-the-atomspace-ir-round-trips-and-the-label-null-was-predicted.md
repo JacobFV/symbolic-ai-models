@@ -15,7 +15,79 @@ Floors, identical across every row and asserted to be by
 `scripts/metta_table.py` before it prints: **label 0.143, type 0.860, copy
 0.266, copy ceiling 0.722.**
 
-## The headline: the likelihood wants the atomspace queries, and pays for them in bits rather than in accuracy
+## The result to lead with: the type head moved, it was predicted, and it still does not clear the floor
+
+Both halves of that sentence are load-bearing and neither survives alone.
+
+The pre-registration named this head and named the mechanism, before anything
+was built:
+
+> **The type head, which nothing has attacked.** Floor 0.860, two of nineteen
+> models positive, every VSA row parked at −0.486. `(: label type)` is a
+> first-class atom here rather than a second head bolted on, and design rule 1
+> (the heads do not share machinery) is satisfied by construction rather than by
+> discipline.
+
+| row | type acc | type lift | type bits | type bits lift |
+|---|---:|---:|---:|---:|
+| floor | 0.8601 | 0.000 | 2.3292 | 0.000 |
+| every other `vsa_*` / `metta_*` row | 0.7922 | −0.4855 | 1.1806 | +0.4931 |
+| **`metta_type-005`**, `metta_type_pure-005` | **0.8203** | **−0.2849** | **1.0110** | **+0.5660** |
+| `corefer-001` | 0.9458 | +0.6123 | 0.3479 | +0.8506 |
+
+**+0.201 of type lift and +0.073 of type bits lift** — and unlike everything else
+in this line, the two metrics agree in direction, which they have not done
+anywhere else in this repo's history for these models.
+
+**It is the largest movement any VSA-family row has ever shown on the type head,
+and it does not clear the floor.** −0.285 is below zero. The floor is 0.860 and
+two of nineteen models beat it; this is not one of them. The honest claim is
+"first movement on the head nothing had attacked", and the claim that is *false*
+is "clears the type floor".
+
+So the answer to *"is the type head unattacked because nobody looked down?"* is
+**no**. Looking down — the multiset of a node's child types, which no key in this
+repo has ever read, since `node_context` is `(parent type, slot, depth, has
+children)` and entirely upward — helps a great deal and is not close to enough.
+The floor's six-level backed-off upward ladder is genuinely strong, and the type
+column is **saturated rather than unattacked**. That redirects effort away from a
+whole class of ideas, which is worth more than the win would have been.
+
+### Design rule 1, checked in the code and then in the arithmetic
+
+`corefer` paid 0.174 → 0.004 for letting its heads share machinery, so a type
+gain that leaked out of the label head would be that mistake in a new notation.
+Checked, rather than asserted:
+
+- `RuleBasedModel._forward_graph` fills **separate** confidence arrays `s_conf`
+  and `t_conf` from separate `_collect` calls, and mixes them against
+  **separate** back-offs (`symbol_backoff`, `type_backoff`).
+- the `structural_fallback` prior is passed to the `symbol_logits` `_mix` call
+  **only** — `prior=` appears once and it is on the label route;
+- the post-hoc fitted `self.temperature` is applied to `symbol_logits`
+  **only**;
+- `DownwardTypes._type_vote` reads its own `type_rules` ladder with its own
+  support threshold and its own confidence `min(0.15 + 0.8 n/total, 0.95)`,
+  while the label vote goes through the fitted `MassCalibrator` gate. Different
+  calibrators, not one shared one.
+
+And then the arithmetic says the same thing without being asked. `metta_type-005`
+differs from `metta-005` in the type head and nothing else:
+
+| | label lift | label bits | copy acc |
+|---|---:|---:|---:|
+| `metta-005` | 0.0960 | 6.4905 | 0.1907 |
+| `metta_type-005` | **0.0960** | **6.4905** | **0.1907** |
+| `metta_pure-005` | 0.0780 | 6.6273 | 0.1907 |
+| `metta_type_pure-005` | **0.0780** | **6.6273** | **0.1907** |
+
+Identical to four decimals on every label and copy column while the type column
+moves +0.201. A second confirmation falls out for free: the `_pure` switch moves
+label numbers and leaves the type numbers **bit-identical** (0.8203 in both),
+which is what a label-only fallback should do and is now measured rather than
+read off the source.
+
+## The knob: the likelihood wants the atomspace queries, and pays for them in bits rather than in accuracy
 
 **A correction first, because it is the tenth time this has happened here.** The
 six-lesson wiring check said the knob ran to **0.0** — "the extras contribute
@@ -235,7 +307,54 @@ is the row that separates them, because its grid moves the hand-built share from
 62.8% (`extra_weight` 0.25) through 32.3% (1.0) to 11.4% (4.0), and
 `metta_tuple-005` is the 100% end.
 
-<!-- TABLE -->
+## The sweep
+
+All nineteen rows, one directory, `scripts/metta_table.py` asserting the floors
+are identical across every row before it prints. `rename` is `summary.json`'s
+`drop`: **positive means accuracy was lost** under a permutation of all 2,105
+symbols with no refitting.
+
+| model | lbl acc | lbl lift | bits | bits lift | typ acc | typ lift | cpy acc | cpy lift | rename | secs |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| `corefer-001` | 0.357 | +0.250 | 6.955 | +0.258 | **0.946** | **+0.612** | 0.336 | +0.096 | +0.003 | 359 |
+| `vsa_perm_pure-002` | **0.337** | **+0.227** | 6.622 | +0.293 | 0.792 | −0.486 | 0.310 | +0.060 | −0.003 | 49 |
+| `vsa_perm-002` | 0.326 | +0.213 | 6.491 | +0.307 | 0.792 | −0.486 | 0.310 | +0.060 | +0.010 | 52 |
+| `metta_perm-005` | 0.274 | +0.153 | **6.338** | **+0.324** | 0.792 | −0.486 | **0.346** | **+0.109** | +0.009 | 402 |
+| `metta_perm_pure-005` | 0.263 | +0.140 | 6.468 | +0.310 | 0.792 | −0.486 | **0.346** | **+0.109** | −0.007 | 355 |
+| `vsa_hks-004` | 0.242 | +0.115 | 6.643 | +0.291 | 0.792 | −0.486 | 0.213 | −0.072 | +0.009 | 287 |
+| `vsa_hks_pure-004` | 0.235 | +0.107 | 6.781 | +0.276 | 0.792 | −0.486 | 0.213 | −0.072 | +0.003 | 351 |
+| `vsa_sum-004` | 0.228 | +0.098 | 6.583 | +0.297 | 0.792 | −0.486 | 0.194 | −0.097 | +0.012 | 37 |
+| `metta_gated-005` | 0.227 | +0.098 | 6.477 | +0.309 | 0.792 | −0.486 | 0.193 | −0.100 | +0.018 | 591 |
+| `metta_tuple-005` | 0.226 | +0.096 | 6.581 | +0.298 | 0.792 | −0.486 | 0.193 | −0.099 | +0.011 | 55 |
+| `metta-005` | 0.225 | +0.096 | 6.490 | +0.307 | 0.792 | −0.486 | 0.191 | −0.102 | +0.018 | 319 |
+| `metta_type-005` | 0.225 | +0.096 | 6.490 | +0.307 | **0.820** | **−0.285** | 0.191 | −0.102 | +0.018 | 324 |
+| `vsa_sum_pure-004` | 0.214 | +0.083 | 6.724 | +0.282 | 0.792 | −0.486 | 0.194 | −0.097 | −0.000 | 37 |
+| `metta_gated_pure-005` | 0.213 | +0.081 | 6.613 | +0.294 | 0.792 | −0.486 | 0.193 | −0.100 | +0.001 | 641 |
+| `metta_tuple_pure-005` | 0.213 | +0.081 | 6.722 | +0.283 | 0.792 | −0.486 | 0.193 | −0.099 | −0.002 | 55 |
+| `metta_pure-005` | 0.210 | +0.078 | 6.627 | +0.293 | 0.792 | −0.486 | 0.191 | −0.102 | +0.002 | 311 |
+| `metta_type_pure-005` | 0.210 | +0.078 | 6.627 | +0.293 | **0.820** | **−0.285** | 0.191 | −0.102 | +0.002 | 332 |
+| `metta_shuf-005` | 0.092 | −0.060 | 7.333 | +0.217 | 0.792 | −0.486 | 0.074 | −0.261 | +0.009 | 388 |
+| `metta_shuf_pure-005` | 0.081 | −0.072 | 7.490 | +0.201 | 0.792 | −0.486 | 0.074 | −0.261 | −0.001 | 380 |
+
+Requoted separately because they live in `runs/vsa_role` — same config, same
+eval seeds, **`label_floor` 0.1432, identical**: `vsa_hks_wide_pure-004` 0.280 /
++0.160 / 6.634 / +0.292 / rename +0.006. The `vsa_hks-004` rows *in* the table
+above are the **stale, bandwidth-pinned** ones and should not be used as the
+graph-derived-role baseline.
+
+### The control that could have failed, and did
+
+`metta_shuf-005` is the identical schedule with the signature rows permuted
+across nodes: the same multiset of signatures, the same Gram value distribution,
+attached to the wrong nodes. It falls to **0.081 label accuracy** against
+`metta_pure-005`'s 0.210 and **0.074 copy** against 0.191 — below the floor on
+both, and below `vsa_null`-style abstention, because a shuffled role does not
+merely fail to help: it asserts confidently that unrelated nodes are alike.
+
+So the machinery is fully capable of producing a collapse, and the +0.011 bits
+and +0.049 copy are not artefacts of a graded Gram being graded. What is doing
+the work is the **correspondence between a query result and the node it
+describes**.
 
 ## 1. The round trip is the identity, and covering the curriculum earned it twice
 
@@ -326,20 +445,158 @@ comparison if implemented here.
 
 ## 4. The harness check, which licenses reading anything else
 
-<!-- HARNESS -->
+`metta_tuple-005` re-expresses `vsa-002`'s four coordinates as conjunctive
+queries over the atomspace and changes nothing else. Pre-registered to reproduce
+`vsa_sum-004` to within crosstalk — the two draw independent random atoms per
+coordinate, so they are not bit-identical, but the Gram has the same
+distribution.
+
+| | lbl acc | lbl lift | bits | bits lift | cpy acc | rename |
+|---|---:|---:|---:|---:|---:|---:|
+| `vsa_sum-004` | 0.228 | +0.098 | 6.583 | +0.297 | 0.194 | +0.012 |
+| `metta_tuple-005` | 0.226 | +0.096 | 6.581 | +0.298 | 0.193 | +0.011 |
+| `vsa_sum_pure-004` | 0.214 | +0.083 | 6.724 | +0.282 | 0.194 | −0.000 |
+| `metta_tuple_pure-005` | 0.213 | +0.081 | 6.722 | +0.283 | 0.193 | −0.002 |
+
+**Agreement to 0.002 on every column.** Saying the old thing in the new notation
+reproduces the old number, so the harness did not move and everything else in
+this note is attributable to the IR rather than to a changed contract.
+
+Six reference rows were re-run into this directory rather than cited from their
+original sweeps, and **all six reproduce their published numbers to three
+decimals** — `vsa_sum-004`, `vsa_sum_pure-004`, `vsa_hks-004`,
+`vsa_hks_pure-004`, `vsa_perm-002`, `vsa_perm_pure-002`, plus `corefer-001`
+matching to four on the copy column. That is what licenses reading the table at
+all, and it is why the sweep re-ran rows whose answers were already known.
 
 ## 5. The label head
 
-<!-- LABEL -->
+The numbers are above; what belongs here is the verdict on the
+pre-registration's central claim.
 
-## 6. The type head
+**Pre-registered:** *"`metta-005` will not beat `corefer-001` or
+`vsa_perm_pure-002` on label accuracy, and the reason is already measured"* —
+`omegaclaw_reach-001` added `ilp`'s best discovered operator and still lost,
+because `ilp` is uniquely right on only 2.2% of nodes and candidate recall
+climbing 82.7% → 98.7% moved accuracy by 0.000. Reach was never the constraint;
+discrimination is.
 
-<!-- TYPE -->
+**Confirmed, and by a wide margin.** Best `-005` label accuracy is
+`metta_perm-005` at 0.274 against `corefer-001`'s 0.357 and
+`vsa_perm_pure-002`'s 0.337. Not close. The prediction was right and it was
+right *for the stated reason*: the atomspace demonstrably reaches further —
+`metta_shuf-005`'s collapse proves the extra signatures carry real information,
+and the likelihood curve proves the model wants them — and reaching further
+still does not decide better.
 
-## 7. Cost
+This is the third independent confirmation of the same fact in this repo
+(`omegaclaw_reach-001`, the candidate-recall experiment, and now this), and it
+is the most expensive one, so it should probably be the last. **Expressiveness
+is not the binding constraint on this curriculum's label head.** Any future line
+proposing to win on label accuracy by representing more should have to say what
+it does about *discrimination*, not about *reach*.
 
-<!-- COST -->
+## 6. The type head — the numbers are at the top of this note
+
+Led with, because it was the pre-registered one. Two things belong here rather
+than up there:
+
+**The narrower prediction inside it was refuted.** `MettaTypes`' docstring said
+*"**positive type lift**"*. It is −0.285. Predicting the head correctly and the
+sign wrongly is worth separating from predicting nothing.
+
+**The guard against the flattering reading was written first and turned out not
+to be needed.** The design note said a type head landing near 1.0 would be a
+*definition* rather than a result — the encoding would be carrying the answer,
+which is the trap `symbolic_ai_parsers` fell into when it reported UAS 0.95 for a
+parser that did no parsing. It landed at 0.820, so nothing here is trivially
+correct by construction, and the check cost nothing to have made in advance.
+
+## 7. Cost: the ratios, and a refusal to quote the absolute rate
+
+**The absolute throughput numbers from this pass are not reportable, and the
+instrument said so rather than me.** `scripts/metta_cost.py` carries a
+calibration control: `vsa_sum-004` is in the same directory, timed by the same
+code, and has a published rate of **18,995 tok/s** at this `d = 4096` from the
+dimension curve. It measured **9,493 — 0.50x**, outside the 0.7–1.4x band, so
+the script printed `THE BOX WAS NOT QUIET` and exited non-zero. Load average was
+12–18 on 20 cores with a parallel sweep and real training on the machine.
+
+A missing number with a reason beats a contaminated one. What survives is the
+**ratios between rows measured in the same pass**, which share the contamination:
+
+| contrast | reasoning tok/s (contaminated) | ratio | what it prices |
+|---|---:|---:|---|
+| `vsa_sum-004` | 9,493 | 1.00x | four dict lookups per node |
+| `metta_tuple-005` | 3,613 | **0.38x** | the *same four features*, via encode-to-atomspace + conjunctive query |
+| `metta-005` | 1,003 | **0.11x** | the full six-query schedule |
+| `vsa_perm-002` | 1,170 | — | permutation channel, hand-built roles |
+| `metta_perm-005` | 275 | **0.24x of `vsa_perm-002`** | permutation channel, query roles |
+
+So, stated as multipliers rather than as rates:
+
+- **The IR machinery alone costs 2.6x.** `metta_tuple-005` computes exactly
+  `vsa-002`'s four coordinates and differs only in getting them by building an
+  atomspace and running two conjunctive queries over it. That is the price of the
+  representation with the expressiveness held fixed, and it is the honest
+  denominator for "was the IR worth it".
+- **The full query schedule costs 9.5x**, and 4.2x on top of the IR itself. Six
+  queries, ~14 extra signatures per node, and a sibling join that is quadratic in
+  arity.
+- **In the permutation channel the tax is 4.3x.**
+
+**Against `APPROACH.md`'s budget**, and the honest framing is that this line is
+not where the budget is lost: `vsa_sum-004` at `d = 256` does 282,170 tok/s and
+is comfortably inside the ~200k target, while the same model at the `d = 4096`
+every row here uses does 18,995 — already **15x below target before any
+atomspace exists**. The dimension is the dominant cost and the IR is a
+multiplier on top of it. A `005` row at `d = 256` has never been run, and by the
+dimension curve's own finding — quality saturates at `d = 1,024` and the last
+64x buys nothing — that is the obvious cheap experiment this line did not do.
+
+**Interface share.** 49–74% of deployed cost is the harness's `[B, L, V]`
+assembly rather than any reasoning, which is independent of everything above and
+is why the two clocks are reported separately.
+
+**What would settle it:** re-run `scripts/metta_cost.py` on an idle box. It is
+one command, it self-checks, and it will refuse again if the box is busy.
 
 ## What would have refuted this, stated before the numbers
 
-<!-- REFUTE -->
+The pre-registration listed four. All four were checked and two fired.
+
+| condition | outcome |
+|---|---|
+| the round trip is not the identity on all 179 lessons | **passed** — identity on 895 graphs, and it caught two encoding bugs on the way |
+| the learned pattern set converges on the twelve claws | **did not fire** — the likelihood curve rises monotonically to `extra_weight` 2.0, so the model actively wants the atomspace-only patterns |
+| any bits gain dies under renaming | **did not fire** — +0.011 bits lift at a +0.001 drop, all 2,105 symbols permuted, no refitting |
+| cost | **fired** — 2.6x for the IR alone, 9.5x for the full schedule; and the absolute rate is unquotable from this pass |
+
+Plus the two predictions written into the model docstrings, which are a stricter
+bar because they name a number:
+
+| prediction | outcome |
+|---|---|
+| `metta_tuple-005` reproduces `vsa_sum-004` to within crosstalk | **confirmed**, 0.002 on every column |
+| `metta-005` does not beat `corefer-001` or `vsa_perm_pure-002` on label accuracy | **confirmed**, 0.274 vs 0.357 and 0.337 |
+| `metta_gated-005`'s knob lands at or near 0.0 | **refuted** — interior at 2.0; this came off a six-lesson slice and is inversion number thirteen |
+| `metta_type-005` shows positive type lift | **refuted** — −0.285, a +0.201 move that does not clear the floor |
+
+## What this line should and should not be cited for
+
+**Cite it for:** the type head is *saturated, not unattacked* — the downward
+direction is worth +0.201 and still loses to the floor's upward ladder;
+expressiveness is not the binding constraint on the label head, now on a third
+independent measurement; and a `Graph` cannot be content-addressed into an
+atomspace without losing 42.3% of its nodes.
+
+**Do not cite it for:** the copy result, until an independent refuter has been
+at it. It is the largest effect here, it was **not** pre-registered, and an
+unpredicted large effect is the single most likely thing in this repo to be a
+harness artefact rather than reasoning. The mechanism offered for it is an unrun
+story and is labelled as one.
+
+**Status is `provisional`** on the definition in `notes/README.md`: every
+control in this note was designed by the same agent that wrote the treatment.
+The one exception is the `hyperon` conformance check, which is the only
+assertion here that does not come from code this repo wrote.

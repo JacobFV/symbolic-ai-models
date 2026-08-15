@@ -1,0 +1,9 @@
+=== metta_pure-005: random codebook, d=4096 ===
+  symbols 8192, role atoms 62
+  gate: fitted
+  (no learned layers; binding, superposition and cleanup only)
+  role embedding: atomspace query signatures, knob=1, sharpness=12
+  (the role Gram is the candidate score; see the module docstring)
+  queries: parent_type, root, child_type, sibling_type, grandparent, parent_slot
+  extra_weight=1, normalise=True
+  signature atoms: 401
