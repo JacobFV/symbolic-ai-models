@@ -29,6 +29,77 @@ so the answers are exact and unannotated.
 Nineteen models, two families. Rule-based ones are the subject; six neural ones
 exist as a control and are off by default.
 
+## Derivability: a channel 0.833 wide, provably open, and nothing takes it
+
+The semantic-constraint line's second attempt, and the one whose control can
+fail. The first arm re-*labelled* the curriculum from a knowledge graph and
+returned mean −0.0013 with a degree-preserving scramble as its control — an
+isomorphism, so a corpus-only learner sees the same problem and the control could
+not lose. This arm changes what is **derivable** instead of what things are
+called.
+
+**Treatment** `derive:wordnet` — the attribute slot is *not drawn*. It follows
+from the object's kind through a six-pair map fixed corpus-wide, read off
+WordNet's `part` relation: `ship→bay, building→annex, garment→arm, auto→buffer,
+body→abdomen, shoe→lace`. Six pairs rather than thousands, deliberately: drawing
+kinds from ~13,810 graph words would have been a second null-by-construction, by
+sparsity.
+
+**Control** `derive:wordnet-perm` — the same six kinds and six values and the
+same bijection, composed with a **fresh uniform permutation per episode**. A
+bijection composed with a permutation is a bijection, so collision structure,
+copyable share and tree shapes are identical by construction. The one thing
+removed is *cross-episode co-occurrence of two symbols in one term* — the only
+channel the treatment has.
+
+**The control provably can fail, and this is shown without any model.** A
+*derivation floor* — a one-symbol lookup weaker than anything in the sweep — over
+1,345 derived fills:
+
+| | treatment | control | shuffled |
+|---|---:|---:|---:|
+| derivation floor, not copyable | **1.000** | **0.167** | 1.000 |
+| the same lookup, sibling-blind | 0.167 | 0.143 | 0.167 |
+
+**The channel is 0.833 wide and the control closes it.** That is the thing the
+previous arm never had.
+
+**Twenty models. Nothing takes it.** `acc | derived, not copyable`, n = 633:
+
+| | derive | perm |
+|---|---:|---:|
+| `brill` / `ctw` / `grammar` / `ngram` | 0.155 | 0.178 |
+| `symbolalg-001` | 0.145 | 0.156 |
+| **the other fifteen** | **0.000** | 0.000 |
+| mean | **0.038** | 0.043 |
+
+**Fifteen of twenty score exactly zero**, and the five that score anything sit
+*below their own arm's blind marginal of 0.167* — they are reproducing the value
+frequency, not deriving. The mean moves −0.005, **against** the treatment. On the
+*copyable* half of the same bucket those models reach 0.211 (`corefer` 0.410,
+`ensemble` 0.395, `ptrgen` 0.329) and score the same in the control: their route
+is coreference and only coreference.
+
+`derive − shuffled` is **exactly 0.000 on 20 of 20 models** — the isomorphism
+prediction, written down before the run and then measured.
+
+**Coverage caps what this could ever have shown, and it was measured first.**
+The binder derives a value for 728 of 728 scene objects it is offered, but that
+is **175 graph positions — 0.205% of nodes, in 11 of 179 lessons**. Stated before
+running: pooled `label_acc` cannot move by more than ~0.003 even if the derived
+bucket went to 1.00, so **a flat pooled table here is arithmetic, not evidence**,
+and the honest measurement is the conditional one above. Raising that ceiling is
+a curriculum change, not a graph change.
+
+**What this does and does not say.** It does not say semantics is worthless:
+`derive` and `derive-shuffled` are indistinguishable, so this instrument reads
+*derivability* and never *meaning*. What it says is that when a symbol is made
+derivable — provably, with an 0.833-wide channel a one-symbol lookup walks
+straight through — **not one of twenty models takes any of it.** Together with
+`label_acc` being 72% a copy score and a pointer scoring 0.000 on the
+non-copyable quarter even with an oracle, the picture is consistent: these models
+corefer, and they have no mechanism that derives.
+
 ## Read this before any number below it: `label_acc` is 72% a copy score
 
 **Status: challenged and survived, 2026-08-15 — with one of its three readings
