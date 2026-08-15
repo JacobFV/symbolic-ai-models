@@ -1,9 +1,11 @@
-"""The policies under comparison — one interface, seven mechanisms.
+"""The policies under comparison — one interface, nine mechanisms.
 
 There is no neural family here. An agent in this package computes an action
-rather than learning one, and the seven differ in *what they compute from*::
+rather than learning one, and the nine differ in *what they compute from*::
 
     random      nothing                       chance, reproducibly
+    abstain     nothing, differently          the shared prior alone: what
+                                              silence is worth, as a row
     shortcut    the shape of the options      the parameter-free cheats, ranked
     context     the shape of the situation    a lookup table — the model
                                               harness's own masked-node floor
@@ -14,6 +16,9 @@ rather than learning one, and the seven differ in *what they compute from*::
                                               architecture, read as text
     graphread   the same model's graph head   the same architecture, read
                                               through the `action` readout
+    graphread-capped                          the same readout under `wrap`'s
+                                              candidate cap — the control that
+                                              separates readout from truncation
 
 The first three are also the :data:`~symbolic_ai_agents.envs.base.FLOOR_POLICIES`,
 so each appears in the comparison table with zero lift on whichever environment
@@ -46,8 +51,8 @@ from .registry import REGISTRY, agent_names, build, get, register
 
 # Registration happens at import; the noqa keeps a linter from tidying away the
 # only thing these imports are for.
-from . import (careful, context, graphread, random_agent, recall,  # noqa: F401
-               shortcut, wrapped)
+from . import (abstain, careful, context, graphread,  # noqa: F401
+               random_agent, recall, shortcut, wrapped)
 
 __all__ = ["Agent", "PolicyAgent", "Decision", "Preference", "ABSTAIN",
            "LearnContext", "training_views",

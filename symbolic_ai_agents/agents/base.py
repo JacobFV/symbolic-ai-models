@@ -341,6 +341,30 @@ class PolicyAgent(Agent):
             return f"abstained -> {source}"
         return f"{len(votes)} preferences at {conf:.2f}"
 
+    def shortlist(self, obs: Observation, options: Sequence[str],
+                  max_actions: int) -> list[str]:
+        """The ``max_actions`` candidates worth paying for, ranked by the prior.
+
+        Lifted here from :class:`~symbolic_ai_agents.agents.wrapped.WrappedModel`,
+        where it began, because a *second* agent now needs the identical
+        handicap and two near-copies of a shortlist rule would be the same
+        mistake :func:`~symbolic_ai_agents.envs.base.reference_floor` records
+        about two near-copies of a floor: they drift, and nothing notices. The
+        point of the rule is that it is **agent-independent** — ranked by the
+        shared prior rather than by anything the caller knows — so two agents
+        given the same cap face the same eight strings and the difference
+        between their rows is their mechanism.
+
+        ``max_actions <= 0`` means no cap, which is the honest spelling of "this
+        agent does not pay per candidate".
+        """
+        opts = list(options)
+        if max_actions <= 0 or len(opts) <= max_actions:
+            return opts
+        prior = self._prior_over(obs, opts)
+        return sorted(opts, key=lambda a: (-prior.get(a, 0.0),
+                                           opts.index(a)))[:max_actions]
+
     def _prior_over(self, obs: Observation, legal: Sequence[str]) -> dict[str, float]:
         """The floor, as a distribution over exactly these actions.
 

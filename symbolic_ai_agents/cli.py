@@ -77,7 +77,7 @@ def cmd_agents(args: argparse.Namespace) -> int:
     from .envs.base import FLOOR_POLICIES
     for name in agent_names():
         mark = " (floor)" if name in FLOOR_POLICIES else ""
-        print(f"  {name:<12}{getattr(REGISTRY[name], 'summary', '')}{mark}")
+        print(f"  {name:<18}{getattr(REGISTRY[name], 'summary', '')}{mark}")
     print("\n(floor) = also one of the reference policies every environment's "
           "floor is the best of, so it has zero lift wherever it wins.",
           file=sys.stderr)
@@ -156,7 +156,17 @@ def cmd_sweep(args: argparse.Namespace) -> int:
 
     names = (agent_names() if args.agents in (None, "all")
              else [a.strip() for a in args.agents.split(",") if a.strip()])
-    root = Path(args.out or "runs/agent-sweep")
+    # The config's `out` counts, and it did not: this read `args.out or
+    # "runs/agent-sweep"` and silently ignored a `--config` that said where to
+    # write. `configs/agents-full.toml` is documented to be run as
+    # `sweep --config ... --resume`, and it says `out = "runs/agents-full179"`,
+    # so a resumed sweep was resuming a directory nothing had ever written to.
+    # `run` layered the same two sources correctly; only `sweep` did not.
+    # Read from the file rather than from `RunConfig`, so that a config without
+    # an `out` key still falls through to the sweep's own default instead of to
+    # `RunConfig.out`, which is where a single `run` goes.
+    from_file = _load_toml(args.config).get("out") if args.config else None
+    root = Path(args.out or from_file or "runs/agent-sweep")
     done: list[Path] = []
     if args.resume:
         finished = [n for n in names if _already_ran(root / n)]

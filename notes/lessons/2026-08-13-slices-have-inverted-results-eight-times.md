@@ -4,10 +4,10 @@ author: lead
 status: measured
 ---
 
-# A slice is a different curriculum, and it has inverted results ten times
+# A slice is a different curriculum, and it has inverted results eleven times
 
 Every confident wrong result this repo has published came from measuring a
-*sample* of the world rather than covering it. The count is **ten**, three of
+*sample* of the world rather than covering it. The count is **eleven**, three of
 them in one day.
 
 *The filename says eight and is deliberately frozen there* — other notes,
@@ -27,6 +27,7 @@ the count.
 | a +0.051 renaming drop for the permutation VSA (24 episodes) | +0.008 at 192 episodes, +0.010 on the full curriculum |
 | Indo-European ranks at the median, Spanish nearest Chinese (7 packs) | at 46 languages a real, if weak, family signal appears |
 | fitting the softmax temperature collapses held-out accuracy 0.126 → 0.040, so it must be held fixed (3 lessons) | at 179 the likelihood picks sharpness 12 unaided and the row is **bit-identical** to the fixed one; the trap does not exist at scale |
+| abstention on `repair` scores **below chance** (6 lessons) | at 179 it is **0.032 above** chance — `abstain` 0.0866, `random` 0.0543. Both rows moved, in opposite directions, and no mechanism for either was measured |
 
 **Why:** lesson families differ enormously in which structure is available, so a
 handful of them re-weights every model's strengths. The tokenizer case is the

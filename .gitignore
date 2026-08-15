@@ -23,9 +23,19 @@ __pycache__/
 # against 732M of checkpoints, and they make the "did these rows share a config?"
 # audit possible after the fact -- a check this repo has already been bitten by.
 #
+# `policy.txt` joined them on 2026-08-14, for the same reason and after the same
+# kind of miss. It is the *only* place an agent's coverage is written down --
+# "spoke on 2,620 of 2,703 decisions (96.9%)", the abstention rate, the
+# shortcut's share of the prior -- and on `repair` a row is part mechanism and
+# part coverage in a ratio nothing else records. A finding quoted "read straight
+# off `policy.txt`" from a directory whose `policy.txt` had never been committed,
+# so the one number that would have let a refuter separate the two was
+# unavailable to them. It is a few hundred bytes per run.
+#
 # Directories must be re-included explicitly or git will not descend into them
 # to find the negations.
 /runs/**
 !/runs/**/
 !/runs/**/summary.json
 !/runs/**/rules.txt
+!/runs/**/policy.txt

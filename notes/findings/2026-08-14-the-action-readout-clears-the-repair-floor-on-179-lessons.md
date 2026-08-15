@@ -1,10 +1,50 @@
 ---
 date: 2026-08-14
 author: agent-readout
-status: provisional
+status: measured
+challenged_by: 2026-08-14-the-readout-survives-both-attacks-and-its-comparison-row-does-not
 related: [action-readout, readout-is-a-knob,
-          abstention-on-repair-is-below-chance]
+          abstention-on-repair-is-below-chance,
+          the-readout-survives-both-attacks-and-its-comparison-row-does-not]
 ---
+
+> **Independently challenged, 2026-08-14. The headline survives; two of the
+> arguments for it do not.** Both attacks this note asked for were pre-registered
+> (`notes/decisions/2026-08-14-pre-registering-the-two-attacks-on-the-action-readout.md`,
+> committed before the runs) and both were run. `graphread`'s 0.5080 reproduced
+> to sixteen significant figures in a separate process. Three corrections to the
+> text below, all in
+> `notes/findings/2026-08-14-the-readout-survives-both-attacks-and-its-comparison-row-does-not.md`:
+>
+> 1. **The `max_actions` confound runs the other way.** `wrap` at 24 candidates
+>    scores **0.0767**, *lower* than 0.0851 at 8
+>    (`runs/agents-readout179/wrap-24/`, 395 s — less than the 8-candidate run,
+>    so the runtime argument for skipping it was wrong). The gap on equal
+>    candidate sets is **0.4312**, larger than the 0.4229 published here. The
+>    sentence "some unknown part of the 0.423 is therefore truncation" asserts a
+>    sign it had not measured; see
+>    `notes/lessons/2026-08-14-an-unmeasured-confound-has-an-unknown-sign.md`.
+>    The control this note asked for was also built: `graphread-capped`, on the
+>    same top-8 shortlist produced by the same shared prior, scores **0.3609**
+>    against the same 0.2025 floor (`runs/agent-sweep/graphread-capped/`) — well
+>    clear of the pre-registered kill threshold of 0.2025 and of the 0.2966
+>    needed for "survives in the form claimed". It splits the published gap
+>    0.1471 to the cap and 0.2758 to the readout.
+> 2. **"The text readout is actively bad here" is struck.** At 179 lessons an
+>    agent that says nothing scores **0.0866** and `wrap` scores 0.0851 — four
+>    fills of 2,632 apart, and identical on `success` to sixteen figures. `wrap`
+>    is *inert*, not bad, and an inert row is not a comparison. The related note
+>    on abstention is now `refuted` for a separate reason and its 0.0431 must not
+>    be quoted.
+> 3. **The two rows differed in three things, not one.** Besides the readout and
+>    the cap, `wrap` fits its confidence map on a freshly built `choice` while
+>    `graphread` fits through the run's own environments. Equalising all three
+>    (`wrap-envcal` at 24, `runs/agents-readout179/wrap-envcal-24/`) gives
+>    **0.0760** and a gap of **0.4320** — the largest of the four ways of taking
+>    it. The claim is stronger than this note made it, not weaker.
+>
+> Caveat 3 below is settled: `floor_by` **is** `context` at `n_train=20`, at
+> 0.2643 (`runs/agents-full179/`). Only the floor's value moves with depth.
 
 # Reading the graph head as an action clears the `repair` floor on 179 lessons
 
@@ -114,13 +154,20 @@ I did not measure how much: `wrap` at 24 candidates is three times the forward
 passes on a run that already took thirteen minutes, and it would not fit the
 box's kill window.
 
-What the confound does **not** explain is the sign. The floor picks from all 24
+~~What the confound does **not** explain is the sign. The floor picks from all 24
 and scores 0.2025; `wrap` scores 0.0851. A pure truncation story would put `wrap`
 somewhere between a shortlisted reader and a full one, not **below the
 structure-only baseline** — so the honest reading is that the text readout is
 actively bad here and truncation makes it worse by an amount nobody has
-measured. The clean version of this control is `graphread` restricted to the
+measured.~~ The clean version of this control is `graphread` restricted to the
 same top-8 shortlist, which is cheap and was not built.
+
+**Struck, 2026-08-14, by the challenge note.** Both halves are wrong. The
+truncation does not make `wrap` worse — removing it costs `wrap` 0.0084 — and
+being below the structure-only baseline is not evidence of anything, because at
+179 lessons an agent that says nothing scores 0.0866 and *everything* on
+`repair` except the lookup table sits between 0.045 and 0.087. `wrap` is inert.
+The capped `graphread` was built and scores 0.3609.
 2. **The abstain-everywhere control does not land at the floor here.** The
    agents-side abstention path is measured to score *below chance* on `repair`
    at slice scale, and if that holds at 179 lessons then part of any gap between
@@ -133,13 +180,16 @@ same top-8 shortlist, which is cheap and was not built.
 
 ## Refutation status
 
-**Still `provisional`, and the control landing does not change that.** The
-reason is the one this repo keeps relearning: every control here was designed by
-the agent that built the readout, and an author-designed control that passes is
-exactly the shape of a hollow one. What can honestly be said is that the
-refutation condition was written down first, attempted, and not met.
+**`measured` as of 2026-08-14.** It was `provisional` for the right reason —
+every control was designed by the agent that built the readout, and an
+author-designed control that passes is exactly the shape of a hollow one. Both
+of the attacks listed below were then taken by an independent agent, against
+thresholds committed before the runs, and neither landed on the headline; two
+of them landed on the *arguments*, which is recorded in the banner at the top
+and in
+`notes/findings/2026-08-14-the-readout-survives-both-attacks-and-its-comparison-row-does-not.md`.
 
-The two an independent refuter should take, in order:
+The two an independent refuter should take, in order — **both now done**:
 
 1. **`graphread` on the same top-8 shortlist `wrap` gets.** The cheap version of
    the control above, and the one that removes the confound it still carries.
