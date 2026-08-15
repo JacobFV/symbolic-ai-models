@@ -35,6 +35,7 @@ import torch
 torch.set_num_threads(4)
 
 from symbolic_ai_core.data.batch import IGNORE
+from symbolic_ai_core.data.graph import NODE_TYPES
 from symbolic_ai_core.data.sampler import batches
 from symbolic_ai_models.tasks import make_task
 from symbolic_ai_models.train import load_data, load_run
@@ -77,6 +78,12 @@ def split(path: str, batch_size: int = 16,
     model.eval()
     hit = {True: 0, False: 0}
     n = {True: 0, False: 0}
+    # The same split again, *within* each node type. The obvious objection to
+    # the pooled split is that copyable fills might simply be an easier kind of
+    # node — `ident` leaves, say — so the gap would be about difficulty rather
+    # than mechanism. Conditioning on the type answers it: a gap that survives
+    # inside a type is not a type effect.
+    per_type: dict[str, dict[bool, list[int]]] = {}
     for batch in batches(ev, task, tok, batch_size=cfg.batch_size,
                          rng=random.Random(0), shuffle=False):
         with torch.no_grad():
@@ -88,6 +95,12 @@ def split(path: str, batch_size: int = 16,
             sel = scored & (copyable if flag else ~copyable)
             n[flag] += int(sel.sum())
             hit[flag] += int((correct & sel).sum())
+            for tid in batch.target_types[sel].unique().tolist():
+                name = NODE_TYPES[tid]
+                cell = per_type.setdefault(name, {True: [0, 0], False: [0, 0]})
+                here = sel & (batch.target_types == tid)
+                cell[flag][0] += int((correct & here).sum())
+                cell[flag][1] += int(here.sum())
     total = n[True] + n[False]
     return {
         "copyable_share": n[True] / total if total else float("nan"),
@@ -99,6 +112,7 @@ def split(path: str, batch_size: int = 16,
         "published": next(
             (v.get("label_acc") for v in (summary.get("final") or {}).values()
              if isinstance(v, dict) and "label_acc" in v), float("nan")),
+        "per_type": per_type,
     }
 
 
@@ -108,6 +122,7 @@ def main(paths: list[str]) -> int:
     print(head)
     print("-" * len(head))
     floors: dict[str, float] = {}
+    per_type_of: dict = {}
     for p in paths:
         if not (Path(p) / "summary.json").exists():
             continue
@@ -116,11 +131,28 @@ def main(paths: list[str]) -> int:
         # not that number, this is measuring something else.
         assert abs(r["acc_all"] - r["published"]) < 1e-9, (
             f"{r['model']}: pooled {r['acc_all']} != published {r['published']}")
+        per_type_of = r["per_type"]
         gap = r["acc_copyable"] - r["acc_not_copyable"]
         print(f"{r['model']:<22}{r['mode']:<9}{r['mask_rate']:>5.2f}"
               f"{r['n']:>7.0f}{r['copyable_share']:>10.3f}"
               f"{r['acc_copyable']:>16.3f}{r['acc_not_copyable']:>11.3f}"
               f"{r['acc_all']:>9.3f}{gap:>8.3f}")
+    if len(paths) == 1 and per_type_of:
+        print()
+        sub = (f"{'  within node type':<22}{'':<9}{'':>5}{'n':>7}{'copyable':>10}"
+               f"{'acc | copyable':>16}{'acc | not':>11}{'':>9}{'gap':>8}")
+        print(sub)
+        print("-" * len(sub))
+        for name, cell in sorted(per_type_of.items(),
+                                 key=lambda kv: -(kv[1][True][1] + kv[1][False][1])):
+            nc, nn = cell[True][1], cell[False][1]
+            if nc + nn < 50 or not nc or not nn:
+                continue
+            ac, an = cell[True][0] / nc, cell[False][0] / nn
+            print(f"  {name:<20}{'':<9}{'':>5}{nc + nn:>7}{nc / (nc + nn):>10.3f}"
+                  f"{ac:>16.3f}{an:>11.3f}{'':>9}{ac - an:>8.3f}")
+        print("  types with fewer than 50 scored fills, or none on one side, are "
+              "omitted rather than shown at n=3")
     if floors:
         print("-" * len(head))
         print(f"{'FLOOR (structure only)':<22}{'':<9}{'':>5}"

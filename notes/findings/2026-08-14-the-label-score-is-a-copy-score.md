@@ -98,12 +98,32 @@ than quietly re-drawn.
   signal is untouched". The sharper reading: essentially *all* the signal these
   models reach is inside the ceiling, and outside it they are below a lookup.
 
-## What would refute it
+## The artefact explanation, tested and dead
 
-- **The split being an artefact of node type.** Copyable fills might be
-  systematically `ident` leaves and non-copyable ones something structurally
-  harder. The flat counting models argue against it and do not settle it; the
-  right test is the split *within* a node type and it has not been run.
+The obvious objection: copyable fills might simply be an easier *kind* of node —
+`ident` leaves, say — so the gap would be about difficulty and not mechanism.
+Conditioning on the node type answers it. Same run, same draw, same 5,233 fills:
+
+| node type | n | copyable share | `corefer-001` copyable / not | `grammar-001` copyable / not |
+|---|---:|---:|---:|---:|
+| `ident` | 2,023 | 0.712 | 0.228 / **0.000** | 0.181 / 0.122 |
+| `pred` | 1,749 | 0.882 | 0.834 / **0.000** | 0.183 / 0.184 |
+| `num` | 821 | 0.674 | 0.297 / **0.000** | 0.222 / 0.127 |
+| `field` | 386 | 0.065 | 0.640 / 0.014 | 0.080 / 0.291 |
+| `token` | 127 | 0.803 | 0.422 / **0.000** | 0.108 / 0.120 |
+| `char` | 102 | 0.882 | 0.278 / **0.000** | 0.422 / 0.667 |
+
+`corefer-001`'s gap is positive in **every** type, between +0.228 and +0.834, and
+its non-copyable column is 0.000 in five of six. `grammar-001`'s gaps range from
+−0.244 to +0.096 with no consistent sign. So the split is not a node type wearing
+a copyability label — it is the mechanism, inside each type.
+
+`field` is the sharpest case: only 6.5% of field-name fills are copyable, and
+`corefer-001` gets 0.640 of those and 0.014 of the rest, while `grammar-001` —
+which can simply learn that the field at this slot is usually called `query` —
+gets 0.291 of the non-copyable ones, twenty times `corefer`'s.
+
+## What would refute it
 - **A renaming-invariant row with a small gap.** Twelve were tried; the smallest
   equivariant gap is `ruleinduce-001`'s 0.344.
 - **A pre-registered prediction for the mask-rate curve, committed before those
@@ -117,6 +137,9 @@ than quietly re-drawn.
 
 ## Provisional
 
-Author-designed controls only. The flat counting columns and the pooled-floor
-assertion are the two that could have failed and did not. An independent refuter
-should run the within-type split before this is promoted.
+Author-designed controls only. Three of them could have failed and did not: the
+flat counting columns, the pooled-floor assertion, and the within-type split
+(which was named as the refutation condition in the first version of this note
+and then run). What is still missing is an *independent* attempt to break it —
+the obvious next one being whether `acc | copyable` survives a renaming
+permutation, i.e. whether even the copying is structural.
