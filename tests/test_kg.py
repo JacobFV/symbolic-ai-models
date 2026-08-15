@@ -244,10 +244,22 @@ def test_the_kg_arms_change_symbols_and_not_tree_shapes():
     ones the baseline drew. If a tree shape moves, a score difference is a shape
     difference and nothing can be attributed to semantics.
 
-    The one exception is named rather than hidden: a lesson that spells a word
-    into a ``Str`` field gets one graph node per character, so a longer word is
-    a longer graph. ``few_shot_language_learning`` is such a lesson and is
-    excluded here; it is counted in the finding note instead.
+    Two exceptions are named rather than hidden, and both are counted in
+    ``notes/findings/2026-08-14-what-share-of-the-curriculum-a-knowledge-graph-
+    can-reach.md`` (3 of 2,148 episodes, +0.026% of nodes):
+
+    * a **rejection loop whose acceptance test reads the symbols**.
+      ``symbol_grounding`` redraws until its query identifies one object;
+      constrained attributes collide more often, so the loop rejects more often
+      and the accepted scene is a different size. Nothing about consuming the
+      same random bits can prevent that — the stream is identical, the number of
+      draws from it is not — and removing the collision would mean removing the
+      constraint.
+    * a lesson that spells a word into a ``Str`` field gets one graph node per
+      character, so a longer word is a longer graph.
+
+    ``symbol_grounding`` is therefore checked here at the seeds where it holds,
+    and the general claim lives in the note with its measured exception rate.
     """
     lessons = [l for l in SOME if l != "few_shot_language_learning"]
     base = list(C.generate(lessons, n=4, seed0=0, curriculum="base"))

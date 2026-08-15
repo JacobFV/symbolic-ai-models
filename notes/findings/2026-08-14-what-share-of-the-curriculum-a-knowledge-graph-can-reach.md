@@ -93,26 +93,56 @@ table as a slot that falls back 95 times out of 95.
 
 ## The measurement that matters more than the coverage number
 
-**Zero of 716 episodes changed tree shape, in either KG arm.**
+**The manipulation is symbols-only on 99.86% of episodes, and the exception has
+a name.**
 
-`graph.types` and `graph.parent` are identical to the base curriculum for every
-episode of every lesson at seeds 0-3. That is by construction and it is the
-property the whole experiment rests on: every bound value is chosen by *indexing*
-into a candidate set with the position the ordinary uniform draw already
-produced, never by a fresh `rng` call, so the scene size, the coordinates, the
-question and the answer's identity are the ones the baseline drew. The KG arms
-differ from `base` **in symbols and in nothing else**.
+By construction every bound value is chosen by *indexing* into a candidate set
+with the position the ordinary uniform draw already produced, never by a fresh
+`rng` call, so the scene size, the coordinates, the question and the answer's
+identity should be the ones the baseline drew. Without that, a score difference
+between arms would be a difference in tree shapes and no reading of it would be
+possible.
 
-Without that, a score difference between arms would be a difference in tree
-shapes and no reading of it would be possible. With it, a difference is
-attributable to what the symbols mean.
+Checked, rather than assumed, on **179 lessons x 12 seeds** — eight training and
+four eval — comparing `graph.types` and `graph.parent` cell by cell:
 
-One known exception, named rather than hidden: a lesson that spells a word into
-a `Str` field gets one graph node per character, so a longer word is a longer
-graph. `few_shot_language_learning` did this at one seed during development
-(49 nodes -> 55) and does not at the four seeds measured here. It is not a bug
-and it cannot be fixed without length-matching the vocabulary; it is a small,
-lesson-local confound that any future widening of the binding should re-measure.
+| | |
+|---|---:|
+| episodes compared, `base` vs `kg:wordnet` | 2,148 |
+| episodes whose tree shape moved | **3 (0.140%)** |
+| lessons involved | 3 (`symbol_grounding`, `ontology_revision`, `symbolic_generalist`) |
+| total graph nodes, `base` | 148,814 |
+| total graph nodes, `kg:wordnet` | 148,852 (**+0.026%**) |
+
+### Why it is not zero, which is the interesting half
+
+The first version of this note said "zero of 716", measured at four seeds. It is
+zero at four seeds and it is not zero in general, and the mechanism is worth
+more than the number.
+
+**A rejection loop's acceptance test depends on the symbols drawn.**
+`symbol_grounding` redraws its scene until the query uniquely identifies one
+object; under the KG the attribute is constrained by the kind, so two objects
+collide more often, so the loop rejects more often, so the accepted scene is a
+different size. At seed 4 it is three objects in `base` and five under the KG —
+25 nodes against 37.
+
+Nothing about "consume the same random bits" can prevent this. The stream is
+identical; what differs is how many times it is *drawn from*, because the
+generator itself is looking at the values. Any lesson that filters on symbol
+equality will diverge, and the only way to make it not diverge would be to
+remove the constraint that is the whole point.
+
+So the honest statement is: the arms differ in symbols and, on about one episode
+in seven hundred, in one scene size. 38 extra nodes in 148,814. It is far too
+small to carry a score difference and it is not zero, and both halves of that
+sentence belong in any write-up of the arms.
+
+(A second, smaller mechanism was seen during development and is not in the count
+above: a lesson that spells a word into a `Str` field gets one graph node per
+character, so a longer word is a longer graph. `few_shot_language_learning` did
+this at one seed, 49 nodes -> 55. It cannot be fixed without length-matching the
+vocabulary.)
 
 ## The graph, and its control
 
@@ -200,7 +230,10 @@ working, and only an assertion of the *claim itself* separates them.
   and the "one object sort" diagnosis was about something else. Also did not
   happen — 5.3% of nodes.
 * **A tree shape moving.** Would have meant the manipulation is confounded with
-  structure and the arms are not comparable. Zero of 716.
+  structure and the arms are not comparable. Three of 2,148, +0.026% of nodes,
+  with a named mechanism — see above. The threshold I would have called
+  disqualifying is 1% of episodes or 0.5% of nodes; this is an order of
+  magnitude under both, and it is reported rather than rounded to zero.
 * **The control's census differing from its treatment's.** Would have meant the
   control also changes density and cannot isolate meaning. Identical.
 
