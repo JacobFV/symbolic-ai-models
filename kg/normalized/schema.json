@@ -1,0 +1,99 @@
+{
+  "schema_version": 1,
+  "designed": "2026-08-15",
+  "designed_from": "kg/sources/manifest.json",
+  "purpose": "One relation vocabulary and one id space over 26 independently-built sources, so that a fact from OpenAlex and a fact from Wikidata can be the same fact.",
+
+  "what_the_corpus_actually_is": {
+    "sources": 26,
+    "triples_total": 1214852868,
+    "distinct_kinds_sampled": 247,
+    "unstructured_text": "none. Every source is already (source_id, target_id, kind), Gutenberg and StackExchange included -- those are edge lists over catalogue entries, not prose. The planned LLM fact-mining path has nothing to mine; the whole job is normalisation.",
+    "redundant_sources": {
+      "__r2_data_catalog": "the same graph as `graph/`, re-exported as Iceberg. 47 of its kinds are `graph`'s kinds. Excluded, not normalised twice.",
+      "d1/*.sql": "a SQL dump of the same graph, 6.5 GB. Excluded.",
+      "test": "5 rows of fixture. Excluded."
+    }
+  },
+
+  "id_space": {
+    "form": "kg:<authority>:<local-id>",
+    "rule": "The authority segment is the naming authority, not the source that shipped the row. Two sources citing the same OpenAlex work must both produce kg:openalex:W123, or the join silently fails and the graph looks sparser than it is.",
+    "authorities": ["openalex", "wikidata", "patent", "cpc", "geonames", "cusip",
+                    "lei", "iata", "cskg", "inventor", "sec", "fec", "bioguide",
+                    "clop", "gdelt", "gh", "se", "concept", "entity", "agency"],
+    "empty_ids": {
+      "observed": 1285756,
+      "policy": "REJECT and count. An id that does not parse is not a node; admitting it creates a hub that every graph statistic then reports as structure. Rejections are recorded per source in the manifest, never dropped silently."
+    }
+  },
+
+  "dialects_to_reconcile": {
+    "note": "Seven notations for the same kind of thing, because 26 sources were built independently. The mapping is explicit and per-source; nothing is inferred by string munging at load time.",
+    "kebab": {"count": 85, "example": "authored-by", "action": "canonical form"},
+    "bare-word": {"count": 85, "example": "org", "action": "most are node TYPES in a relation slot -- see type_edges"},
+    "conceptnet": {"count": 39, "example": "/r/AtLocation", "action": "map to canonical"},
+    "numeric-code": {"count": 19, "example": "01", "action": "GDELT CAMEO event codes; map via CAMEO table or reject"},
+    "obo-iri": {"count": 8, "example": "RO:0000087", "action": "map to canonical; keep the IRI as provenance"},
+    "lowercase-run-on": {"count": 6, "example": "commitcommentevent", "action": "GitHub event types; split and map"},
+    "SCREAMING": {"count": 5, "example": "IS_DIRECTLY_CONSOLIDATED_BY", "action": "GLEIF; lowercase and hyphenate"}
+  },
+
+  "type_edges": {
+    "problem": "`org`, `person`, `concept`, `place`, `paper`, `airport`, `artwork`, `product`, `work` appear in the `kind` column but are not relations -- they name what the target IS. Left as relations they inflate the relation vocabulary and make `instance-of` look rarer than it is.",
+    "action": "Rewrite `<x> --org--> <y>` as `<x> --instance-of--> <y>` with the type recorded on the node, and fold into the existing 68,476 instance-of edges."
+  },
+
+  "canonical_relations": {
+    "taxonomic": {
+      "is-a":        ["is-a", "/r/IsA", "instance-of", "RO:0018033"],
+      "instance-of": ["instance-of", "org", "person", "place", "paper", "concept", "work", "product", "airport", "artwork", "entity", "assembly", "part"],
+      "part-of":     ["part-of", "/r/PartOf", "BFO:0000051", "in-department", "in-classification"],
+      "member-of":   ["member-of", "affiliated-with"]
+    },
+    "identity": {
+      "same-as":  ["same-as", "/r/Synonym", "represents"],
+      "synonym":  ["synonym", "/r/SimilarTo"],
+      "antonym":  ["antonym", "/r/Antonym"]
+    },
+    "citation": {
+      "cites": ["cites", "cites-precedent"],
+      "note": "appcite, cite, scholar and caselaw are 327M rows of the SAME relation under three names. This single merge is 27% of the corpus."
+    },
+    "attribution": {
+      "authored-by":  ["authored-by", "author", "by", "created-by"],
+      "invented-by":  ["invented-by"],
+      "assigned-to":  ["assigned-to"]
+    },
+    "spatial": {
+      "located-in": ["located-in", "/r/AtLocation", "in-country", "based-in", "from-place"],
+      "country":    ["country"],
+      "continent":  ["continent"]
+    },
+    "classification": {
+      "classified-as": ["classified-as", "in-genre", "in-medium", "tech-field"]
+    },
+    "properties": {
+      "has-property": ["has-property", "/r/HasProperty"],
+      "capable-of":   ["/r/CapableOf"],
+      "used-for":     ["/r/UsedFor"],
+      "causes":       ["caused", "/r/Causes"],
+      "note": "This block is the one that matters for the curriculum. has-property + capable-of + used-for are what make a slot DERIVABLE from an anchor, which is the only proposal on the table for moving `acc | not copyable` off 0.003. Everything above it is bulk."
+    }
+  },
+
+  "provenance": {
+    "rule": "Every normalised triple carries `src` (the source directory) and `orig_kind` (the pre-mapping relation string).",
+    "why": "The two would-be ingestion paths do not produce facts of equal quality, and neither do 26 independently-built sources. Pooling them without recording which produced which creates a silent quality variable. `label_acc` pooled two questions in a 72:28 ratio for its entire history and the published ranking INVERTED when they were finally reported apart -- best model went from first of twelve to eleventh. No table pools sources without reporting the split."
+  },
+
+  "scope": {
+    "warning": "1.21 billion triples is not the deliverable. Coverage of the curriculum's vocabulary is already ~100% and WordNet's 13,810-node projection already reached it; the first KG arm returned a null with mean -0.0013 on the quarter that matters. Normalising all of scholar and caselaw would add 500M citation edges between papers the curriculum never mentions.",
+    "priority_order": [
+      "cskg + graph -- the property and taxonomy relations, which are what derivability needs",
+      "entity (wikidata) -- the backbone that joins authorities",
+      "geo, lit, transport -- small, and carry located-in / classified-as",
+      "everything else -- bulk citation structure, normalise only if something needs it"
+    ]
+  }
+}

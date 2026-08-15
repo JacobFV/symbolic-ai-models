@@ -1,0 +1,765 @@
+{
+  "corpus_root": "/home/brandonin/Downloads/kg",
+  "note": "kinds and namespaces are counted on a per-file SAMPLE of sample_rows_per_file rows; rows_total is exact from parquet metadata. A sampled count and a corpus count are different numbers and must not be quoted interchangeably.",
+  "sample_rows_per_file": 30000,
+  "sources": {
+    "__r2_data_catalog": {
+      "errors": [],
+      "files": 21,
+      "kinds": {
+        "airport": 900,
+        "anime": 129,
+        "artwork": 600,
+        "assembly": 10803,
+        "asset": 1617,
+        "based-on": 100,
+        "by-studio": 54,
+        "concept": 11157,
+        "created-by": 310,
+        "entity": 447,
+        "fact": 84,
+        "from-place": 310,
+        "holds-role": 9481,
+        "in-classification": 308,
+        "in-department": 310,
+        "in-field": 120,
+        "in-genre": 272,
+        "in-medium": 308,
+        "instance-of": 484,
+        "introduces": 228,
+        "located-in": 600,
+        "manufacturer": 549,
+        "member-of": 17779,
+        "org": 12350,
+        "organization": 180,
+        "paper": 180,
+        "part": 24006,
+        "part-of": 1152,
+        "person": 53780,
+        "place": 461,
+        "product": 753,
+        "represents": 8958,
+        "role": 141,
+        "route-from": 226,
+        "route-to": 368,
+        "same-as": 17928,
+        "technique": 900,
+        "uses": 574,
+        "uses-aircraft": 58,
+        "work": 1021
+      },
+      "n_kinds": 47,
+      "rows_total": 12667080,
+      "source_namespaces": {
+        "<empty>": 120117,
+        "kg:agency:": 36,
+        "kg:aircraft:": 464,
+        "kg:airline:": 668,
+        "kg:airport:": 600,
+        "kg:anime:": 466,
+        "kg:art:": 1546,
+        "kg:arxiv:": 922,
+        "kg:attack:": 1152,
+        "kg:bioguide:": 54146
+      },
+      "target_namespaces": {
+        "<bare>": 8966,
+        "<empty>": 120117,
+        "kg:attack:": 1152,
+        "kg:concept:": 798,
+        "kg:country:": 608,
+        "kg:org:": 8960,
+        "kg:party:": 8819,
+        "kg:person:": 8970,
+        "kg:role:": 9481,
+        "kg:wikidata:": 8958
+      }
+    },
+    "appcite": {
+      "errors": [],
+      "files": 4,
+      "kinds": {
+        "cites": 120000
+      },
+      "n_kinds": 1,
+      "rows_total": 78562347,
+      "source_namespaces": {
+        "kg:patent:": 120000
+      },
+      "target_namespaces": {
+        "kg:patent:": 120000
+      }
+    },
+    "assignee": {
+      "errors": [],
+      "files": 1,
+      "kinds": {
+        "assigned-to": 30000
+      },
+      "n_kinds": 1,
+      "rows_total": 8751310,
+      "source_namespaces": {
+        "kg:patent:": 30000
+      },
+      "target_namespaces": {
+        "kg:assignee:": 30000
+      }
+    },
+    "caselaw": {
+      "errors": [],
+      "files": 2,
+      "kinds": {
+        "cites-precedent": 60000
+      },
+      "n_kinds": 1,
+      "rows_total": 76959991,
+      "source_namespaces": {
+        "kg:clop:": 60000
+      },
+      "target_namespaces": {
+        "kg:clop:": 60000
+      }
+    },
+    "cite": {
+      "errors": [],
+      "files": 3,
+      "kinds": {
+        "cites": 90000
+      },
+      "n_kinds": 1,
+      "rows_total": 134789083,
+      "source_namespaces": {
+        "kg:patent:": 90000
+      },
+      "target_namespaces": {
+        "kg:patent:": 90000
+      }
+    },
+    "cpc": {
+      "errors": [],
+      "files": 2,
+      "kinds": {
+        "classified-as": 60000
+      },
+      "n_kinds": 1,
+      "rows_total": 59805669,
+      "source_namespaces": {
+        "kg:patent:": 60000
+      },
+      "target_namespaces": {
+        "kg:cpc:": 60000
+      }
+    },
+    "cskg": {
+      "errors": [],
+      "files": 1,
+      "kinds": {
+        "/r/Antonym": 2333,
+        "/r/AtLocation": 105,
+        "/r/CapableOf": 313,
+        "/r/Causes": 86,
+        "/r/CausesDesire": 35,
+        "/r/DefinedAs": 9,
+        "/r/DerivedFrom": 1718,
+        "/r/Desires": 6,
+        "/r/DistinctFrom": 19,
+        "/r/Entails": 8,
+        "/r/EtymologicallyRelatedTo": 181,
+        "/r/FormOf": 2143,
+        "/r/HasA": 26,
+        "/r/HasContext": 1246,
+        "/r/HasFirstSubevent": 11,
+        "/r/HasLastSubevent": 11,
+        "/r/HasPrerequisite": 101,
+        "/r/HasProperty": 39,
+        "/r/HasSubevent": 82,
+        "/r/InstanceOf": 5,
+        "/r/IsA": 1697,
+        "/r/LocatedNear": 759,
+        "/r/MadeOf": 4,
+        "/r/MannerOf": 156,
+        "/r/MotivatedByGoal": 32,
+        "/r/NotCapableOf": 2,
+        "/r/NotDesires": 3,
+        "/r/PartOf": 116,
+        "/r/ReceivesAction": 18,
+        "/r/RelatedTo": 9998,
+        "/r/SimilarTo": 330,
+        "/r/Synonym": 7971,
+        "/r/UsedFor": 136,
+        "/r/dbpedia/capital": 3,
+        "/r/dbpedia/genre": 12,
+        "/r/dbpedia/genus": 12,
+        "/r/dbpedia/knownFor": 1,
+        "/r/dbpedia/language": 7,
+        "/r/dbpedia/product": 8,
+        "mw:MayHaveProperty": 258
+      },
+      "n_kinds": 40,
+      "rows_total": 3975177,
+      "source_namespaces": {
+        "kg:cskg:": 30000
+      },
+      "target_namespaces": {
+        "kg:cskg:": 30000
+      }
+    },
+    "entity": {
+      "errors": [],
+      "files": 8,
+      "kinds": {
+        "author": 9709,
+        "birthplace": 2942,
+        "capital": 616,
+        "capital-of": 805,
+        "child": 1759,
+        "contains-admin": 6516,
+        "continent": 151,
+        "country": 23556,
+        "country-of-citizenship": 5584,
+        "deathplace": 1429,
+        "diplomatic-relation": 874,
+        "employer": 956,
+        "father": 866,
+        "followed-by": 1473,
+        "follows": 1515,
+        "founder": 184,
+        "has-part": 3825,
+        "headquarters-location": 435,
+        "industry": 216,
+        "influenced-by": 256,
+        "instance-of": 72328,
+        "located-in-admin": 19873,
+        "located-on-terrain": 227,
+        "location": 1677,
+        "member-of": 2180,
+        "member-of-party": 441,
+        "mother": 558,
+        "notable-work": 1078,
+        "org": 8021,
+        "owned-by": 448,
+        "owner-of": 588,
+        "part-of": 2907,
+        "position-held": 1833,
+        "religion": 601,
+        "same-as": 30000,
+        "shares-border-with": 7318,
+        "spouse": 1186,
+        "student": 242,
+        "subclass-of": 1905,
+        "subsidiary": 291
+      },
+      "n_kinds": 46,
+      "rows_total": 259781363,
+      "source_namespaces": {
+        "<empty>": 8021,
+        "kg:wikidata:": 210000
+      },
+      "target_namespaces": {
+        "<empty>": 8021,
+        "kg:asx:": 1193,
+        "kg:isin:": 4630,
+        "kg:lei:": 22365,
+        "kg:sec:": 1791,
+        "kg:ticker:": 21,
+        "kg:wikidata:": 180000
+      }
+    },
+    "finance": {
+      "errors": [],
+      "files": 4,
+      "kinds": {
+        "acquired-by-will": 8,
+        "bought": 3653,
+        "converted": 549,
+        "exercised-derivative": 3907,
+        "exercised-option": 76,
+        "gifted": 1653,
+        "granted-shares": 3822,
+        "holds": 30000,
+        "org": 10697,
+        "other-acquisition-disposition": 886,
+        "person": 27270,
+        "security": 22033,
+        "shares-withheld-for-tax": 3766,
+        "small-acquisition": 87,
+        "sold": 10875,
+        "sold-to-issuer": 667,
+        "tendered-in-merger": 36,
+        "txn-E": 1,
+        "txn-I": 14
+      },
+      "n_kinds": 19,
+      "rows_total": 4260770,
+      "source_namespaces": {
+        "<empty>": 60000,
+        "kg:sec:": 60000
+      },
+      "target_namespaces": {
+        "<empty>": 60000,
+        "kg:cusip:": 30000,
+        "kg:sec:": 30000
+      }
+    },
+    "gdelt": {
+      "errors": [],
+      "files": 24,
+      "kinds": {
+        "01": 15730,
+        "02": 7845,
+        "03": 8805,
+        "04": 34625,
+        "05": 11302,
+        "06": 2731,
+        "07": 3683,
+        "08": 3686,
+        "09": 2134,
+        "10": 1456,
+        "11": 6850,
+        "12": 2261,
+        "13": 1321,
+        "14": 839,
+        "15": 433,
+        "16": 1318,
+        "17": 5947,
+        "18": 1829,
+        "19": 7167,
+        "actor": 40194,
+        "appeal": 18013,
+        "assault": 4771,
+        "coerce": 12211,
+        "consult": 83546,
+        "cooperate-diplomatically": 28386,
+        "cooperate-materially": 7526,
+        "demand": 3249,
+        "disapprove": 19333,
+        "exhibit-force": 1380,
+        "fight": 24561,
+        "intend-cooperation": 17525,
+        "investigate": 4710,
+        "mass-violence": 175,
+        "protest": 2153,
+        "provide-aid": 7719,
+        "reduce-relations": 2932,
+        "reject": 6229,
+        "state-publicly": 39418,
+        "threaten": 7352,
+        "yield": 8811
+      },
+      "n_kinds": 41,
+      "rows_total": 39180391,
+      "source_namespaces": {
+        "<empty>": 40194,
+        "kg:gdelt:": 420000
+      },
+      "target_namespaces": {
+        "<empty>": 40194,
+        "kg:gdelt:": 420000
+      }
+    },
+    "geo": {
+      "errors": [],
+      "files": 7,
+      "kinds": {
+        "continent": 7,
+        "country": 252,
+        "currency": 155,
+        "described-at": 30000,
+        "in-continent": 252,
+        "located-in": 30000,
+        "neighbor-of": 654,
+        "place": 30000,
+        "same-as": 60252,
+        "uses-currency": 251
+      },
+      "n_kinds": 10,
+      "rows_total": 29361187,
+      "source_namespaces": {
+        "<empty>": 30414,
+        "kg:geonames:": 120000,
+        "kg:iso:": 1409
+      },
+      "target_namespaces": {
+        "<empty>": 30414,
+        "kg:continent:": 252,
+        "kg:currency:": 251,
+        "kg:geonames:": 30252,
+        "kg:iata:": 4363,
+        "kg:icao:": 3409,
+        "kg:iso:": 654,
+        "kg:unlocode:": 22215,
+        "kg:wikidata:": 30000,
+        "kg:wikipedia:": 30000
+      }
+    },
+    "gharchive": {
+      "errors": [],
+      "files": 5,
+      "kinds": {
+        "commitcommentevent": 13,
+        "createevent": 29170,
+        "deleteevent": 7733,
+        "discussionevent": 3,
+        "forkevent": 220,
+        "gollumevent": 6,
+        "issuecommentevent": 927,
+        "issuesevent": 604,
+        "memberevent": 25,
+        "publicevent": 36,
+        "pullrequestevent": 3142,
+        "pullrequestreviewcommentevent": 163,
+        "pullrequestreviewevent": 648,
+        "pushevent": 106117,
+        "releaseevent": 132,
+        "watchevent": 1061
+      },
+      "n_kinds": 16,
+      "rows_total": 7730712,
+      "source_namespaces": {
+        "kg:gh:": 150000
+      },
+      "target_namespaces": {
+        "kg:gh:": 150000
+      }
+    },
+    "gleif": {
+      "errors": [],
+      "files": 2,
+      "kinds": {
+        "IS_DIRECTLY_CONSOLIDATED_BY": 7439,
+        "IS_FEEDER_TO": 44,
+        "IS_FUND-MANAGED_BY": 10211,
+        "IS_INTERNATIONAL_BRANCH_OF": 83,
+        "IS_SUBFUND_OF": 4359,
+        "IS_ULTIMATELY_CONSOLIDATED_BY": 7864,
+        "org": 30000
+      },
+      "n_kinds": 7,
+      "rows_total": 3825302,
+      "source_namespaces": {
+        "<empty>": 30000,
+        "kg:lei:": 30000
+      },
+      "target_namespaces": {
+        "<empty>": 30000,
+        "kg:lei:": 30000
+      }
+    },
+    "govspend": {
+      "errors": [],
+      "files": 8,
+      "kinds": {
+        "awarded": 10000,
+        "complaint-about-issue": 610,
+        "complaint-about-product": 394,
+        "concept": 153,
+        "contributed": 30000,
+        "hired": 5824,
+        "lobbied": 14359,
+        "lobbied-on": 9817,
+        "org": 37972,
+        "person": 3396
+      },
+      "n_kinds": 10,
+      "rows_total": 966930,
+      "source_namespaces": {
+        "<empty>": 41521,
+        "kg:company:": 1004,
+        "kg:fec:": 30000,
+        "kg:lobby:": 30000,
+        "kg:usgov:": 10000
+      },
+      "target_namespaces": {
+        "<empty>": 41521,
+        "kg:cfpb:": 1004,
+        "kg:fec:": 30000,
+        "kg:issue:": 9817,
+        "kg:lobby:": 5824,
+        "kg:recipient:": 10000,
+        "kg:usgov:": 14359
+      }
+    },
+    "graph": {
+      "errors": [],
+      "files": 10,
+      "kinds": {
+        "BFO:0000051": 517,
+        "RO:0000087": 868,
+        "RO:0018033": 1113,
+        "RO:0018034": 1082,
+        "RO:0018036": 156,
+        "RO:0018037": 70,
+        "RO:0018038": 1626,
+        "RO:0018039": 425,
+        "airport": 300,
+        "artwork": 200,
+        "assembly": 3601,
+        "authored-by": 547,
+        "based-on": 68,
+        "concept": 3719,
+        "created-by": 310,
+        "entity": 149,
+        "from-place": 155,
+        "holds-role": 4740,
+        "in-classification": 154,
+        "in-department": 155,
+        "in-genre": 136,
+        "in-medium": 154,
+        "instance-of": 242,
+        "introduces": 114,
+        "is-a": 5533,
+        "located-in": 300,
+        "made-by": 1419,
+        "manufacturer": 183,
+        "member-of": 8890,
+        "part": 8002,
+        "part-of": 16700,
+        "person": 12783,
+        "product": 251,
+        "represents": 4479,
+        "route-from": 226,
+        "route-to": 368,
+        "same-as": 8964,
+        "technique": 300,
+        "uses": 287,
+        "work": 340
+      },
+      "n_kinds": 56,
+      "rows_total": 1555042,
+      "source_namespaces": {
+        "<empty>": 30032,
+        "kg:airline:": 660,
+        "kg:airport:": 300,
+        "kg:art:": 928,
+        "kg:arxiv:": 461,
+        "kg:attack:": 1152,
+        "kg:bioguide:": 27073,
+        "kg:bomwiki:": 16967,
+        "kg:book:": 547,
+        "kg:chebi:": 11395
+      },
+      "target_namespaces": {
+        "<bare>": 4487,
+        "<empty>": 30032,
+        "kg:attack:": 1152,
+        "kg:bomwiki:": 16967,
+        "kg:chebi:": 11395,
+        "kg:org:": 4480,
+        "kg:party:": 4410,
+        "kg:person:": 4485,
+        "kg:role:": 4740,
+        "kg:wikidata:": 4479
+      }
+    },
+    "inventor": {
+      "errors": [],
+      "files": 2,
+      "kinds": {
+        "invented-by": 60000
+      },
+      "n_kinds": 1,
+      "rows_total": 24037380,
+      "source_namespaces": {
+        "kg:patent:": 60000
+      },
+      "target_namespaces": {
+        "kg:inventor:": 60000
+      }
+    },
+    "lit": {
+      "errors": [],
+      "files": 2,
+      "kinds": {
+        "about": 14076,
+        "book": 14080,
+        "by": 6063,
+        "classified-as": 5106,
+        "concept": 10003,
+        "in-language": 4755,
+        "person": 5917
+      },
+      "n_kinds": 7,
+      "rows_total": 614315,
+      "source_namespaces": {
+        "<empty>": 30000,
+        "kg:gutenberg:": 30000
+      },
+      "target_namespaces": {
+        "<empty>": 30000,
+        "kg:author:": 6063,
+        "kg:lang:": 4755,
+        "kg:locc:": 5106,
+        "kg:subject:": 14076
+      }
+    },
+    "patents": {
+      "errors": [],
+      "files": 1,
+      "kinds": {
+        "patent": 30000
+      },
+      "n_kinds": 1,
+      "rows_total": 8532000,
+      "source_namespaces": {
+        "<empty>": 30000
+      },
+      "target_namespaces": {
+        "<empty>": 30000
+      }
+    },
+    "qa": {
+      "errors": [],
+      "files": 29,
+      "kinds": {
+        "duplicate-of": 78150,
+        "related-to": 464460
+      },
+      "n_kinds": 2,
+      "rows_total": 7969958,
+      "source_namespaces": {
+        "kg:se:": 512610,
+        "kg:so:": 30000
+      },
+      "target_namespaces": {
+        "kg:se:": 512610,
+        "kg:so:": 30000
+      }
+    },
+    "scholar": {
+      "errors": [],
+      "files": 23,
+      "kinds": {
+        "affiliated-with": 30000,
+        "authored-by": 60000,
+        "cites": 210000,
+        "concept": 29303,
+        "domain": 4,
+        "field": 26,
+        "funded-by": 30000,
+        "has-mesh": 30000,
+        "has-topic": 30000,
+        "org": 28646,
+        "paper": 90000,
+        "person": 27599,
+        "published-in": 30000,
+        "same-as": 30000,
+        "subfield": 252,
+        "topic": 4516,
+        "venue": 30000
+      },
+      "n_kinds": 17,
+      "rows_total": 430532739,
+      "source_namespaces": {
+        "<empty>": 210346,
+        "kg:openalex:": 450000
+      },
+      "target_namespaces": {
+        "<empty>": 210346,
+        "kg:doi:": 30000,
+        "kg:mesh:": 30000,
+        "kg:openalex:": 390000
+      }
+    },
+    "sec13f": {
+      "errors": [],
+      "files": 2,
+      "kinds": {
+        "holds-stake": 60000
+      },
+      "n_kinds": 1,
+      "rows_total": 7296094,
+      "source_namespaces": {
+        "kg:sec:": 60000
+      },
+      "target_namespaces": {
+        "kg:cusip:": 60000
+      }
+    },
+    "sec_fin": {
+      "errors": [],
+      "files": 1,
+      "kinds": {
+        "reports-metric": 30000
+      },
+      "n_kinds": 1,
+      "rows_total": 619672,
+      "source_namespaces": {
+        "kg:sec:": 30000
+      },
+      "target_namespaces": {
+        "kg:xbrl:": 30000
+      }
+    },
+    "sec_insider": {
+      "errors": [],
+      "files": 1,
+      "kinds": {
+        "insider-of": 30000
+      },
+      "n_kinds": 1,
+      "rows_total": 41322,
+      "source_namespaces": {
+        "kg:sec:": 30000
+      },
+      "target_namespaces": {
+        "kg:sec:": 30000
+      }
+    },
+    "test": {
+      "errors": [],
+      "files": 2,
+      "kinds": {
+        "cites": 5
+      },
+      "n_kinds": 1,
+      "rows_total": 5,
+      "source_namespaces": {
+        "kg:patent:": 5
+      },
+      "target_namespaces": {
+        "kg:patent:": 5
+      }
+    },
+    "transport": {
+      "errors": [],
+      "files": 4,
+      "kinds": {
+        "based-in": 5951,
+        "flies-to": 24005,
+        "in-country": 5995,
+        "operates-from": 18164,
+        "org": 6161,
+        "place": 6072,
+        "same-as": 5885
+      },
+      "n_kinds": 7,
+      "rows_total": 86187,
+      "source_namespaces": {
+        "<empty>": 12233,
+        "kg:airline:": 30000,
+        "kg:iata:": 30000
+      },
+      "target_namespaces": {
+        "<empty>": 12233,
+        "kg:airline:": 5885,
+        "kg:iata:": 42169,
+        "kg:iso:": 11946
+      }
+    },
+    "wipo": {
+      "errors": [],
+      "files": 1,
+      "kinds": {
+        "tech-field": 30000
+      },
+      "n_kinds": 1,
+      "rows_total": 12950842,
+      "source_namespaces": {
+        "kg:patent:": 30000
+      },
+      "target_namespaces": {
+        "kg:wipo:": 30000
+      }
+    }
+  }
+}
