@@ -115,9 +115,48 @@ def resolve_lessons(spec: str | Sequence[str] | None) -> list[str]:
     return names
 
 
+#: The curricula this repo can draw from, and what each one means.
+#:
+#: ``base`` is the 179 lessons every published number was measured on and is
+#: what a caller gets by saying nothing. ``kg:<name>`` is the same 179 lessons
+#: with their closed word lists bound under a knowledge graph — see
+#: ``symbolic_ai_kg`` and
+#: ``notes/decisions/2026-08-14-semantic-constraint-from-a-knowledge-graph.md``.
+#:
+#: **Beside, never instead.** The lesson ids are identical across curricula on
+#: purpose: it is what makes a macro average over 179 lessons comparable between
+#: them, and it is why ``symbolic_ai_data.lesson_ids()`` still returns exactly
+#: 179 names and ``curriculum_fingerprint.json`` does not move. A KG curriculum
+#: that added lessons would fail that fingerprint with "lessons that did not
+#: exist", and the fix would be this comment, not the golden file.
+CURRICULA: tuple[str, ...] = ("base", "kg:wordnet", "kg:wordnet-shuffled")
+
+
+def curriculum_ids() -> list[str]:
+    return list(CURRICULA)
+
+
+def _binder_factory(curriculum: str):
+    """``(lesson_id, seed) -> binder``, or ``None`` for the base curriculum.
+
+    Imported lazily so that ``symbolic_ai_core`` keeps working with
+    ``symbolic_ai_kg`` absent, and so the vendored 250 KB graph is not
+    decompressed by every process that imports the data layer.
+    """
+    if curriculum in ("base", "", None):
+        return None
+    if not curriculum.startswith("kg:"):
+        raise ValueError(f"unknown curriculum {curriculum!r}; have {list(CURRICULA)}")
+    from symbolic_ai_kg import load as load_kg
+    from symbolic_ai_kg.bind import KGBinder
+    kg = load_kg(curriculum[3:])
+    return lambda lesson_id, seed: KGBinder(kg, lesson_id, seed)
+
+
 def generate(lessons: Sequence[str], *, n: int, seed0: int = 0,
              language: str = "english", max_nodes: int = 512,
-             on_error: str = "raise") -> Iterator[Episode]:
+             on_error: str = "raise",
+             curriculum: str = "base") -> Iterator[Episode]:
     """Draw ``n`` episodes of each lesson, starting from ``seed0``.
 
     Text and structure are generated from the same seed and therefore describe
@@ -147,13 +186,21 @@ def generate(lessons: Sequence[str], *, n: int, seed0: int = 0,
     # or the fingerprint — and every number resting on it — moves silently.
     from . import langdb
     langdb.ensure_for([language])
+    make_binder = _binder_factory(curriculum)
+    from symbolic_ai_data.binding import using
     for lid in lessons:
         L = lc.get(lid)
         for i in range(n):
             seed = seed0 + i
+            # One binder per episode, seeded from (graph, lesson, seed), so a
+            # KG episode is a pure function of its address exactly as a base
+            # episode is. Both halves are drawn inside the same `with`, or the
+            # text and the graph would be two different worlds.
+            binder = make_binder(lid, seed) if make_binder is not None else None
             try:
-                ex = L.example(seed, language=language)
-                st = L.structured(seed)
+                with using(binder):
+                    ex = L.example(seed, language=language)
+                    st = L.structured(seed)
             except Exception:
                 if on_error == "raise":
                     raise

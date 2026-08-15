@@ -67,6 +67,17 @@ class TrainConfig:
     #: order would spend the whole cap on English and then report a
     #: "multilingual" model that had never seen another language.
     languages: str = ""
+    #: Which curriculum the episodes come from. ``base`` is the 179 lessons
+    #: every published number in this repo was measured on and is what a config
+    #: that says nothing gets. ``kg:wordnet`` is the same 179 lessons with their
+    #: closed word lists bound under a knowledge graph, and
+    #: ``kg:wordnet-shuffled`` is its degree-preserving control. See
+    #: ``symbolic_ai_core.data.curriculum.CURRICULA``.
+    #:
+    #: It is recorded in every summary. A score is only comparable to another
+    #: score drawn from the same curriculum, and the field is what lets a reader
+    #: check that rather than assume it.
+    curriculum: str = "base"
     max_len: int = 512
     max_nodes: int = 256
     mask_rate: float = 0.15
@@ -146,13 +157,14 @@ def load_data(cfg: TrainConfig) -> tuple[list[Episode], list[Episode]]:
     lessons = resolve_lessons(cfg.lessons)
     packs = language_packs(cfg)
     if len(packs) == 1:
-        kw = dict(language=packs[0], max_nodes=cfg.max_nodes)
+        kw = dict(language=packs[0], max_nodes=cfg.max_nodes,
+                  curriculum=cfg.curriculum)
         return (list(generate(lessons, n=cfg.n_train, seed0=0, **kw)),
                 list(generate(lessons, n=cfg.n_eval, seed0=1_000_000, **kw)))
     return (_parallel_corpus(lessons, packs, n=cfg.n_train, seed0=0,
-                             max_nodes=cfg.max_nodes),
+                             max_nodes=cfg.max_nodes, curriculum=cfg.curriculum),
             _parallel_corpus(lessons, packs, n=cfg.n_eval, seed0=1_000_000,
-                             max_nodes=cfg.max_nodes))
+                             max_nodes=cfg.max_nodes, curriculum=cfg.curriculum))
 
 
 def language_packs(cfg: TrainConfig) -> list[str]:
@@ -163,7 +175,8 @@ def language_packs(cfg: TrainConfig) -> list[str]:
 
 
 def _parallel_corpus(lessons: Sequence[str], packs: Sequence[str], *, n: int,
-                     seed0: int, max_nodes: int) -> list[Episode]:
+                     seed0: int, max_nodes: int,
+                     curriculum: str = "base") -> list[Episode]:
     """The same seeds in every pack, interleaved so no prefix is monolingual.
 
     Interleaved rather than concatenated because a model with an example budget
@@ -171,7 +184,8 @@ def _parallel_corpus(lessons: Sequence[str], packs: Sequence[str], *, n: int,
     ``TrainConfig.languages``.
     """
     drawn = [list(generate(lessons, n=n, seed0=seed0, language=p,
-                           max_nodes=max_nodes)) for p in packs]
+                           max_nodes=max_nodes, curriculum=curriculum))
+             for p in packs]
     return [ep for row in zip(*drawn) for ep in row]
 
 

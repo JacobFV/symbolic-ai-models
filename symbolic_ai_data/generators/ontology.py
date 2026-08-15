@@ -9,6 +9,7 @@ from __future__ import annotations
 import random
 from typing import Any, Iterable, Mapping, Sequence
 
+from ..binding import SlotVocabulary
 from .._structure import Ident, Lst, Pred, Term
 
 OPTION_LABELS = ("opt_a", "opt_b", "opt_c", "opt_d")
@@ -29,7 +30,7 @@ NEW_PRED_NAMES = ("p_kor", "p_vim", "p_sel", "p_dun")
 MACRO_NAMES = ("m_kor", "m_vim", "m_sel", "m_dun")
 
 
-PROPS = ("warm", "striped", "hollow", "rigid", "porous", "glossy", "heavy", "fibrous")
+PROPS = SlotVocabulary("property", ("warm", "striped", "hollow", "rigid", "porous", "glossy", "heavy", "fibrous"))
 
 
 TYPE_NAMES = ("kes", "mor", "tav", "zun", "pil", "reth", "sam", "dov", "quen", "lorn")
@@ -44,7 +45,7 @@ ITEMS = tuple(f"i{i}" for i in range(8))
 REL_NAMES = ("near", "holds", "links", "feeds", "binds")
 
 
-OPS = ("lift", "move", "drop", "turn", "scan", "wait", "push", "open")
+OPS = SlotVocabulary("act", ("lift", "move", "drop", "turn", "scan", "wait", "push", "open"))
 
 
 VERB_ISA = {"give": "transfer", "lend": "transfer", "sell": "transfer", "hand": "transfer",
@@ -61,7 +62,7 @@ ENTITY_ISA = {"alice": "person", "bob": "person", "carol": "person", "dave": "pe
 PERSONS = ("alice", "bob", "carol", "dave")
 
 
-THINGS = ("apple", "bread", "coin", "gem")
+THINGS = SlotVocabulary("thing", ("apple", "bread", "coin", "gem"))
 
 
 REL_WORDS = {"left_of": "to the left of", "right_of": "to the right of",

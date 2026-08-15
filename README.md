@@ -422,13 +422,24 @@ symbolic-ai-models/
     small.toml            # finishes in minutes; checks the wiring
     full.toml             # a slice, with the shape knobs pinned
     full179.toml          # all 179 lessons: the config a result comes from
+    kg179.toml            # the same 179 under three curricula: base, a
+                          #   knowledge graph, and its degree-preserving control
     agents-small.toml     # the same two, for the interactive half
     agents-full.toml
   symbolic_ai_data/       # the generator, vendored verbatim from langcurriculum
     lessons/ generators/  #   180 registered, 179 that generate; one seed = one
                           #   episode, in both surfaces
     grammar/ languages/   #   deterministic realization, seven language packs
+    binding.py            #   the one hook something outside may use to choose
+                          #   the closed word lists; inert unless set
     _vendor.py            #   provenance, and the rule for changing any of it
+  symbolic_ai_kg/         # a vendored knowledge graph, and variable binding
+    data/                 #   under it. WordNet 3.0, projected and checksummed
+    graph.py              #   taxonomy, meronymy, adjective dimensions, verb
+                          #   frames -- the queries a binder needs
+    registry.py           #   the graph is a *parameter*: load("wordnet")
+    scramble.py           #   the control: same degrees, no meaning
+    bind.py               #   the dependency DAG over an episode's variables
   symbolic_ai_core/       # what every package here shares; depends on nothing
     data/                 #   above it
       curriculum.py       # symbolic_ai_data -> Episode (text + graph, one seed)

@@ -41,6 +41,7 @@ from typing import Any, Sequence
 from . import curriculum as C
 
 __all__ = ["GOLDEN_PATH", "SEEDS", "curriculum_fingerprint", "load_golden",
+           "golden_path_for",
            "compare"]
 
 #: Where the recorded fingerprint lives.
@@ -68,33 +69,60 @@ def _canon(obj: Any) -> str:
                       separators=(",", ":"))
 
 
-def _episodes(lesson: str, language: str) -> list[C.Episode]:
+def golden_path_for(curriculum: str = "base") -> Path:
+    """Where a curriculum's recorded fingerprint lives.
+
+    One file per curriculum, and the base one keeps its original name. A KG
+    curriculum sharing the base file would be exactly the silent redefinition
+    the whole module exists to prevent.
+    """
+    if curriculum in ("base", "", None):
+        return GOLDEN_PATH
+    slug = curriculum.replace(":", "-")
+    return GOLDEN_PATH.with_name(f"curriculum_fingerprint.{slug}.json")
+
+
+def _episodes(lesson: str, language: str, curriculum: str = "base") -> list[C.Episode]:
     """Draw the grid one seed at a time, so a gap in the middle cannot shift
     every later episode onto a different seed and hide as a total mismatch."""
     out = []
     for s in SEEDS:
-        out.extend(C.generate([lesson], n=1, seed0=s, language=language))
+        out.extend(C.generate([lesson], n=1, seed0=s, language=language,
+                              curriculum=curriculum))
     return out
 
 
 def curriculum_fingerprint(lessons: Sequence[str] | None = None,
                            languages: Sequence[str] | None = None,
+                           curriculum: str = "base",
                            ) -> dict[str, Any]:
-    """Hash the grid. Returns the structure recorded in the golden file."""
+    """Hash the grid. Returns the structure recorded in the golden file.
+
+    ``curriculum`` selects which one is hashed. The ``raw`` digest is taken
+    through the same binder as the text one — a bound episode's ``structured``
+    and ``example`` halves have to be the same world, and hashing one of them
+    outside the binding would silently certify the wrong pair.
+    """
     lc = C._lc()
     lessons = sorted(lessons if lessons is not None else C.lesson_ids())
     if languages is None:
-        languages = sorted(lc.language_codes())
+        languages = sorted(lc.language_codes()) if curriculum == "base" else ["english"]
     languages = sorted(languages)
+    make_binder = C._binder_factory(curriculum)
+    from symbolic_ai_data.binding import using
 
     per_lesson: dict[str, Any] = {}
     for lid in lessons:
         L = lc.get(lid)
-        raw = _digest([_canon(L.structured(s)) for s in SEEDS])
+        raws = []
+        for s in SEEDS:
+            with using(make_binder(lid, s) if make_binder else None):
+                raws.append(_canon(L.structured(s)))
+        raw = _digest(raws)
         texts = {}
         for lang in languages:
             texts[lang] = _digest(
-                [_canon(ep.to_dict()) for ep in _episodes(lid, lang)])
+                [_canon(ep.to_dict()) for ep in _episodes(lid, lang, curriculum)])
         per_lesson[lid] = {"raw": raw, "text": texts}
 
     glob = _digest([f"{lid}|{per_lesson[lid]['raw']}|"
@@ -154,10 +182,15 @@ def main(argv: Sequence[str] | None = None) -> int:   # pragma: no cover
                         "Only correct when the corpus is *meant* to change, "
                         "which invalidates every published number carrying the "
                         "old one.")
-    p.add_argument("--path", default=str(GOLDEN_PATH))
+    p.add_argument("--path", default=None)
+    p.add_argument("--curriculum", default="base",
+                   help="which curriculum to hash; see "
+                        "symbolic_ai_core.data.curriculum.CURRICULA")
     args = p.parse_args(argv)
+    if args.path is None:
+        args.path = str(golden_path_for(args.curriculum))
 
-    got = curriculum_fingerprint()
+    got = curriculum_fingerprint(curriculum=args.curriculum)
     if args.write:
         Path(args.path).write_text(json.dumps(got, indent=1, sort_keys=True) + "\n",
                                    encoding="utf-8")

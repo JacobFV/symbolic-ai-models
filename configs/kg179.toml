@@ -1,0 +1,46 @@
+# The semantic-constraint arms: the same 179 lessons, three curricula.
+#
+#   uv run symbolic-ai-models sweep --config configs/kg179.toml \
+#       --curriculum base                --out runs/kg179-base
+#   uv run symbolic-ai-models sweep --config configs/kg179.toml \
+#       --curriculum kg:wordnet          --out runs/kg179-wordnet
+#   uv run symbolic-ai-models sweep --config configs/kg179.toml \
+#       --curriculum kg:wordnet-shuffled --out runs/kg179-shuffled
+#
+# Three arms, not two. The scrambled graph has identical node count, identical
+# per-node degree in every relation, identical density and identical acyclicity;
+# only the correspondence to meaning is destroyed. Without it, "semantics
+# helped" cannot be told from "more structure helped" or from "the model
+# memorised the graph" -- see
+# `notes/decisions/2026-08-14-semantic-constraint-from-a-knowledge-graph.md`
+# rule 2, and `vsa_hks_shuf_pure-004`, which is the control that made this
+# repo's strongest embedding result readable.
+#
+# Every knob below is copied from `configs/full179.toml` unchanged, and the
+# `base` arm is re-run rather than compared against `runs/full179`. Two reasons,
+# both learned here: the published run used a different `steps` budget and a
+# differently fitted temperature, and a floor is a property of the curriculum
+# and must be refitted rather than carried across.
+#
+# The model list is a subset and this file says so. A *lesson* subset would be
+# forbidden -- thirteen wrong readings in this repo came from lesson slices --
+# but every arm runs all 179 lessons; what is subset here is the registry, to
+# keep three arms inside one afternoon. The neural rows (`gru`, `tpr`,
+# `transformer`) are omitted because they are 7,000 of the 11,900 seconds of
+# `runs/full179` and the symbolic models are the subject.
+
+tasks = "lm,node"
+lessons = "all"
+n_train = 20
+n_eval = 4
+
+vocab_size = 8192
+d_model = 96
+n_layers = 3
+n_heads = 4
+d_ff = 256
+dropout = 0.1
+max_len = 320
+max_nodes = 128
+batch_size = 16
+device = "cpu"
