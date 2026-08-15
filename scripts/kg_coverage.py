@@ -135,7 +135,7 @@ def static_pass(lessons, seeds):
     return out
 
 
-def reach(lessons, seeds, arms=("kg:wordnet", "kg:wordnet-shuffled")):
+def reach(lessons, seeds, arms=("kg:wordnet", "kg:wordnet-shuffled", "kg:wordnet-flat")):
     base = {}
     for lid in lessons:
         for s in seeds:

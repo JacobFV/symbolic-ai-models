@@ -131,6 +131,23 @@ four eval — comparing `graph.types` and `graph.parent` cell by cell:
 | total graph nodes, `base` | 148,814 |
 | total graph nodes, `kg:wordnet` | 148,852 (**+0.026%**) |
 
+### The arms are matched to each other, which is the part that carries the result
+
+`base -> kg` is a comparison across a manipulation. `kg -> shuffled -> flat` is
+the comparison the conclusion rests on, and those three have to be
+interchangeable in everything except the thing being varied. Over 179 lessons x
+8 training seeds:
+
+| arm | lessons changed | node labels changed | tree shapes moved | total nodes vs base |
+|---|---:|---:|---:|---:|
+| `kg:wordnet` | 55 (30.7%) | 5,183 / 99,199 (5.22%) | 3 / 1,432 | +0.028% |
+| `kg:wordnet-shuffled` | 55 (30.7%) | 5,206 / 99,273 (5.24%) | 1 / 1,432 | +0.000% |
+| `kg:wordnet-flat` | 57 (31.8%) | 5,492 / 99,307 (5.53%) | 1 / 1,432 | +0.010% |
+
+Same lessons, same share of labels to three significant figures, same node
+totals to a hundredth of a percent. `flat` reaches marginally more because it
+draws from the whole graph rather than one family, which is what it is for.
+
 ### Why it is not zero, which is the interesting half
 
 The first version of this note said "zero of 716", measured at four seeds. It is
