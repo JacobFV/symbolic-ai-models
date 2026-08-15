@@ -62,7 +62,7 @@ still open; the cliff-at-0.35 half is closed.
 |---:|---:|---:|---:|---:|---:|---:|
 | **0.15** | 0.722 | 0.357 | 0.143 | 0.250 | 6.955 | 5,233 |
 | **0.35** | 0.680 | 0.332 | 0.142 | 0.222 | 7.399 | 12,264 |
-| 0.60 | *running* | | | | | |
+| **0.60** | 0.583 | 0.285 | 0.136 | 0.173 | 7.925 | 21,172 |
 | 0.90 | *running* | | | | | |
 
 And the arm, both rates complete, `label_acc` / `label_lift`:
@@ -97,16 +97,26 @@ copyable share mechanically, so a pointer's `label_acc` should track
 not merely the opportunity, and that is a second effect this account does not
 predict.*
 
-| | 0.15 | 0.35 |
-|---|---:|---:|
-| copyable share | 0.722 | 0.680 |
-| `corefer-001` acc \| copyable | 0.494 | **0.488** |
-| `corefer-001` acc \| not copyable | 0.003 | **0.003** |
-| `corefer-001` acc (published) | 0.357 | 0.332 |
-| predicted from the share alone | — | **0.337** |
-| `ptrgen-001` acc \| copyable | 0.462 | 0.450 |
-| `ptrgen-001` acc \| not copyable | 0.010 | 0.015 |
-| floor, copyable / not | 0.158 / 0.106 | 0.159 / 0.106 |
+| | 0.15 | 0.35 | **0.60** |
+|---|---:|---:|---:|
+| copyable share | 0.722 | 0.680 | **0.583** |
+| `corefer-001` acc \| copyable | 0.494 | 0.488 | **0.486** |
+| `corefer-001` acc \| not copyable | 0.003 | 0.003 | **0.004** |
+| `corefer-001` acc (published) | 0.357 | 0.332 | **0.285** |
+| predicted from the share alone | — | 0.337 | **0.289** |
+| `ptrgen-001` acc \| copyable | 0.462 | 0.450 | *running* |
+| `ptrgen-001` acc \| not copyable | 0.010 | 0.015 | *running* |
+| floor, copyable / not | 0.158 / 0.106 | 0.159 / 0.106 | **0.158 / 0.104** |
+
+Three points, and the ceiling has now fallen by 0.139 while `acc | copyable`
+moved by **0.008** and `acc | not copyable` by 0.001. Both split floors are
+within 0.002 of where they started. Carrying `acc | copyable` forward from 0.15
+predicts 0.289 at rate 0.60 against an observed **0.285** — an error of 0.004,
+smaller than the noise band this repo quotes for bits.
+
+The within-type gaps survive at 0.60 as well: `pred` 0.832 against 0.001, `ident`
+0.176 against 0.000, `field` 0.415 against 0.020. Non-copyable accuracy is 0.000
+in four of seven types with the mask at 60%.
 
 Six models measured both ways, `acc | copyable` then `acc | not`:
 
@@ -120,9 +130,9 @@ Six models measured both ways, `acc | copyable` then `acc | not`:
 | `evidence-001` | 0.303 / 0.001 | 0.324 / 0.002 |
 | `grammar-001` | 0.191 / 0.178 | 0.149 / 0.151 |
 
-**Both conditional accuracies are flat and both floors are flat.** The entire
-0.357 → 0.332 move is the copyable share falling from 0.722 to 0.680; carrying
-`acc|copyable` forward unchanged predicts 0.337 against an observed 0.332.
+**Both conditional accuracies are flat and both floors are flat, over three
+rates.** The entire 0.357 → 0.332 → 0.285 fall is the copyable share dropping
+0.722 → 0.680 → 0.583.
 
 So the mask rate is not a difficulty knob for these models in the way the ladder
 assumed. It is a **supply** knob: it controls how often the answer is still
@@ -244,9 +254,9 @@ about local context and not about the models.
 
 ## What would refute this
 
-- `acc|copyable` falling materially at 0.60 or 0.90. That would be a second
-  effect — losing the ability to copy, not just the opportunity — and this note
-  does not predict it.
+- ~~`acc|copyable` falling materially at 0.60~~ — **checked, it did not**: 0.494
+  → 0.488 → 0.486 while the ceiling fell 0.722 → 0.583. The condition still
+  stands for 0.90, where the ceiling should finally collapse.
 - The copy ceiling *not* collapsing at 0.90. `target_source` accepts any visible
   same-label node, and with 10% of nodes visible a repeated label often still has
   one, so the collapse is not as automatic as it sounds. If the ceiling holds up,
