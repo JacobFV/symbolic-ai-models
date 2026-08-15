@@ -1,5 +1,10 @@
 # STATE — KG normalisation, 2026-08-15
 
+> **Continued in `notes/2026-08-15-STATE-kg-normalisation-2.md`** (branch
+> `worktree-agent-aa2e35242d3651d38`), which carries the full run, the
+> curriculum-vocabulary join, the schema v3 revision and the re-measure. This
+> file is still the right place to start: its decisions stand.
+
 **This file exists to survive context compaction.** It is the working state of an
 in-flight job, not a finding. Anyone picking this up cold should read it first,
 then `notes/findings/2026-08-15-the-usable-kg-is-ten-thousand-entities-not-a-billion-triples.md`
