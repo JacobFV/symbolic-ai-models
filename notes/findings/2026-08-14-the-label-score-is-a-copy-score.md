@@ -1,8 +1,9 @@
 ---
 date: 2026-08-14
 author: agent-generation
-status: provisional
-related: [2026-08-14-the-curriculums-own-question-asked-on-the-graph,
+status: measured-in-part
+related: [2026-08-15-the-copy-split-survives-and-its-floor-does-not,
+          2026-08-14-the-curriculums-own-question-asked-on-the-graph,
           2026-08-14-the-infilling-ladder-preregistration,
           2026-08-13-a-ranking-is-a-property-of-a-metric,
           2026-08-13-slices-have-inverted-results-eight-times,
@@ -10,6 +11,19 @@ related: [2026-08-14-the-curriculums-own-question-asked-on-the-graph,
 ---
 
 # Every renaming-invariant model is below the floor on the quarter of fills it cannot copy
+
+> **Independently refuted in part, 2026-08-15 —
+> `2026-08-15-the-copy-split-survives-and-its-floor-does-not`.** The
+> decomposition, the columns and reading 3 survived every attack (coverage per
+> bucket, a per-bucket-fitted floor, a lesson-cluster bootstrap, McNemar, and the
+> lesson-family and depth confounds). **Reading 2 did not.** Under renaming
+> `acc | not copyable` is exactly **0.0000** for all five models measured,
+> `grammar-001` included, and the oracle pointer scores 0 there by construction —
+> so "below the content-blind floor on the non-copyable quarter" holds for every
+> renaming-invariant predictor and is a property of the partition. On the
+> copyable bucket the equivariant floor is **0.3345**, not the 0.158 quoted here,
+> and the claim inverts. Read the two notes together; the numbers below are
+> reproduced to the digit and are not in dispute.
 
 **All 179 lessons, 716 evaluation episodes, 5,233 scored fills, `runs/infill-node-r015`,
 `mask_rate=0.15` — the published masked-node setting, on the run's own masking
