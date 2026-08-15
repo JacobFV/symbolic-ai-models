@@ -20,6 +20,16 @@ Two candidates, chosen to differ on **what the representation can refuse**:
 | native operation | match and rewrite over atoms | **typecheck** |
 | a bad answer | scores low | **is rejected** |
 | pre-registration | `notes/decisions/2026-08-14-atomspace-metta-ir-preregistration.md` | `notes/decisions/2026-08-14-lean-ir-preregistration.md` |
+| status | building; sweep in progress | **CLOSED at the gate**, see `RESEARCH_LOG.md` |
+
+**`006` is done and the answer is no.** The gate closed: the one arm that cleared
+its pre-registered thresholds is dominated on both axes by an *arity check* — no
+types, no unification, computable by any existing model from the `Graph` it
+already reads. No `lean-006` was registered and no sweep was run, which is the
+gate working as designed and the cheapest death any line here has had. The kernel,
+the `Graph <-> Expr` translation and the gate command are kept: they are tested,
+they cost nothing to keep, and the diagnostic is reusable by anything that wants
+to ask "how much does this filter prune, and does the gold answer survive it".
 
 The fork itself is `notes/decisions/2026-08-14-the-ir-is-a-knob.md`. Three things
 it fixes in advance, because each is a mistake already paid for here:

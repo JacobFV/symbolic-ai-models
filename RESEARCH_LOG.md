@@ -830,6 +830,63 @@ measured on six lessons and inverts at 179: `abstain` 0.0866 against `random`
 directions, and no mechanism for either move has been measured. The note named
 this as its own live risk and was right to.
 
+## `006`: the Lean gate closes, and the kernel loses to an arity check
+
+The IR-as-a-knob line's second candidate was **Lean — a representation that can
+*refuse* an answer** rather than score it low. It was pre-registered with a
+gating diagnostic designed to kill it before a model was ever written, because
+the pointer's constraint is measured to be discrimination rather than recall:
+candidate recall climbing 82.7% -> 98.7% moved dev copy accuracy by 0.000. So a
+typechecker helps only if it prunes candidates *without* pruning the gold one.
+
+All 179 lessons, 537 held-out **training** episodes (eval's seeds untouched),
+4,443 scored holes, median 55 candidates each. Reproduced on an independent draw
+of 895 episodes at different seeds; nothing moves by 0.01.
+
+| filter | prune (median) | gold survival | matched random |
+|---|---:|---:|---:|
+| `open` — the sound kernel | 0.286 | 0.988 | 0.634 |
+| `declared` — Lean's own rule | **0.355** | **0.984** | 0.486 |
+| `closed` — the committing arm | 0.797 | 0.797 | 0.256 |
+| **`arity` — the floor** | **0.370** | **0.988** | 0.506 |
+| `shifted` — the must-fail control | 0.286 | **0.578** | 0.663 |
+
+**One arm cleared the pre-registered thresholds and it is dominated on both axes
+by the floor.** The floor is: *reject a candidate iff no visible occurrence of it
+has the hole's number of children.* No types, no unification, no intermediate
+representation — any of the nineteen registered models could compute it from the
+`Graph` it already reads. The pre-registration's own row-one language applies
+exactly: **the IR is a re-encoding with no filter.** No threshold was moved; the
+number cleared its threshold and failed its floor.
+
+The two are not nested — the kernel rejects 3,659 candidates the floor keeps and
+keeps 5,468 the floor rejects — so taking both prunes 0.388 against the floor's
+0.370. **+0.018 of prune for an entire intermediate representation**, against a
+measured baseline where sixteen points of candidate recall bought 0.000.
+
+**The instrument works, which is what makes the null readable.** `shifted` — the
+same kernel pointed at a different hole of the same episode — holds its prune
+rate at 0.286 while gold survival collapses 0.988 -> 0.578, *below* its own
+matched-random. The filter reads the hole. And it is not "right but
+unaffordable", the failure mode the pre-registration worried about: 291,000
+candidate checks per second, about 1.1 s for a full sweep.
+
+**Why there was nothing left for a type system.** Every entity symbol in an
+episode collapses into one metavariable component — `alice`, `apple` and
+`manipulate` share a type, because the generator never made them differ. Only
+`Nat/Str/Chr/Prop` are rigid and all come from literals. What remains is kind and
+arity, and arity is free.
+
+**No `lean-006` was registered and no sweep was run.** Phase 2 was never entered.
+That is the gate doing its job, and it is the cheapest death any line here has
+had.
+
+This is promoted despite its controls being author-designed, and the reason is
+worth stating: the failure mode that makes an author's controls untrustworthy is
+constructing them to *pass*. Here they killed the author's own line, and the
+must-fail control failed as required. A null from the agent that built the thing
+runs against its own incentive; a win does not.
+
 ## Awaiting independent challenge — the promotion queue
 
 `notes/` promotes into this file **only once something independent has tried to
