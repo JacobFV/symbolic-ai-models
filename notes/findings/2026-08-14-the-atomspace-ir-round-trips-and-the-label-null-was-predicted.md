@@ -75,6 +75,55 @@ Three things move at once and they do **not** move together:
 All of it at a renaming drop of **−0.007** — the model is slightly *better* after
 every symbol is permuted, which is what exact equivariance plus noise looks like.
 
+### This answers a question `RESEARCH_LOG.md` has had open for weeks
+
+> Can anything reach the 0.722 copy ceiling? Four candidate-level features in a
+> row have failed, and a discriminative re-ranker was worse than counting.
+> `ptrgen`'s marginal-likelihood pointer is the fifth thing to not help, at
+> +0.078 copy lift against `corefer`'s +0.096. The first thing that *did* move
+> a pointer a long way is `vsa_perm-002`, and it moved it from far below the
+> floor to +0.060 — **still third of the pointers, so the ceiling is
+> untouched.**
+
+`metta_perm_pure-005` is **first**, at +0.1091 against `corefer-001`'s +0.0959.
+The ceiling is still a long way off — 0.346 of 0.722, so under half the
+reachable signal — but "nothing has ever been first" is no longer true, and the
+thing that did it is a role built from conjunctive queries over an atomspace.
+
+### Both models are answering the same question, which is worth showing
+
+A pointer is scored on **what it picked, not on which index it picked**:
+`_source_counts` computes `label_group[picked] == label_group[asked]`, so
+choosing any node that corefers with the hidden one is correct and choosing the
+"wrong" node with the right label group is not penalised. A pointer may not
+choose a padded position and may not choose itself. Scored over every masked
+node that has a label — **including the 88.5% invented `ident` names the
+vocabulary cannot name**, which is the point of the head, since those are
+exactly where copying is the only available route.
+
+The denominator is identical across every row of the sweep, **n = 5,785**, with
+the same floor 0.2658 and the same ceiling 0.7216, and `corefer-001` reproduces
+its published copy number to four decimals inside this run. So the two models
+are being asked one question and not two differently-shaped ones.
+
+### The same two models, on the type head, in the opposite order
+
+Put the three columns side by side and this becomes the sharpest example in the
+repo of `notes/lessons/2026-08-13-a-ranking-is-a-property-of-a-metric.md`:
+
+| | `metta_perm_pure-005` | `corefer-001` |
+|---|---:|---:|
+| copy lift | **+0.109** | +0.096 |
+| label lift | +0.140 | **+0.250** |
+| **type lift** | **−0.486** | **+0.612** |
+
+The same pair of models is first-and-second on the pointer, second-and-first on
+label accuracy, and separated by **1.098** of type lift in the second direction.
+There is no ordering of these two models that is not a statement about which
+metric was chosen. A one-line summary of this line — "the atomspace IR beats
+`corefer`" or "the atomspace IR loses to `corefer`" — is available in both
+directions from the same run directory, and neither is a result.
+
 ### A mechanism, offered as a hypothesis and not as a result
 
 The label head and the pointer read the same roles through different operations,
