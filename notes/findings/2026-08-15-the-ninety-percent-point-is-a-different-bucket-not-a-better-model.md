@@ -1,8 +1,9 @@
 ---
 date: 2026-08-15
 author: agent-r090
-status: provisional
-related: [2026-08-15-the-ninety-percent-split-preregistration,
+status: measured-in-part
+related: [2026-08-15-the-concentration-reversal-survives-its-size-has-no-unextrapolated-estimate,
+          2026-08-15-the-ninety-percent-split-preregistration,
           2026-08-15-the-supply-model-breaks-at-ninety-percent-masking,
           2026-08-14-the-mask-rate-curve-moves-the-opportunity-not-the-ability,
           2026-08-15-the-copy-split-survives-and-its-floor-does-not,
@@ -12,12 +13,36 @@ related: [2026-08-15-the-ninety-percent-split-preregistration,
 
 # The 0.90 point is a different bucket, not a better model — and the ability it was supposed to vindicate was falling the whole time
 
+> **Independently attacked the same day and it held, except for the size of one
+> number —
+> `notes/findings/2026-08-15-the-concentration-reversal-survives-its-size-has-no-unextrapolated-estimate.md`,
+> by an agent who wrote their own scoring code and did not import mine.** The
+> reversal is **six of six models** under `v/V`, six of six under a bandless
+> logistic and six of six holding node type as well, where this note reported it
+> on five. The banding is priced by an ability-free predictor at **+0.013**, so
+> this note *understates* rather than flatters.
+> **What did not survive is "the model at 0.90 is 0.099 worse".** The −0.099 is
+> an extrapolation: only 2.6% of the 0.15 fills have `V` in the 0.90 arm's range.
+> Holding node type as well takes it to **−0.062**, and on the 1,364 fills that
+> are the *same* `(episode, node)` and copyable at both rates the 0.90 arm is not
+> worse at all. **Read −0.099 as an upper bound on the shortfall, not an estimate
+> of it.** The refuter also supplied a better control than this note's, recorded
+> below.
+
 **All 179 lessons, 716 evaluation episodes, `mask_rate=0.90`, `mask_mode=scatter`,
 31,671 scored fills, `runs/refute-node-r090` — a from-scratch refit of the
-published `runs/infill-node-r090`, whose `final`, `floors`, `renaming` and
-`masking` blocks are bit-identical.** The published run keeps no weights, so the
-split needed the refit; the 0.15 arm was refitted the same way into
-`runs/refit-node-r015` and is bit-identical to `runs/infill-node-r015` too.
+published `runs/infill-node-r090`.** The published run keeps no weights, so the
+split needed the refit; the 0.15, 0.35 and 0.60 arms were refitted the same way
+into `runs/refit-node-r015`, `runs/refit-node-r035` and `runs/refit-node-r060`.
+
+**Reproduction, stated exactly.** Of the twelve models in the 0.90 arm, **eleven
+are bit-identical** to the published run in `final`, `floors`, `renaming` and
+`masking`, and so are all six 0.15 refits and both single-model refits at 0.35
+and 0.60. The twelfth, `brill-001`, differs in **`type_bits` by 2.0e-5** and
+`type_bits_lift` by 8.4e-6 — and in nothing else at all: its `label_acc`,
+`label_floor`, every `copy_*` key and its whole `renaming` block are identical to
+the last digit. Nothing quoted anywhere in this note is a type-bits number.
+Recorded rather than rounded to "all twelve reproduced".
 
 The prediction was written down first, in
 `notes/decisions/2026-08-15-the-ninety-percent-split-preregistration.md`, and
@@ -61,6 +86,18 @@ copyable column should sit still.
 Flat, flat, flat, **+0.025** — in the same place and the same direction as
 `corefer-001`'s +0.103, and in a predictor that cannot have learned anything.
 The copyable bucket at 0.90 is an easier population. That is the finding.
+
+**The refuter found a sharper version of this control than the one above, and it
+is the single strongest number in either note.** The two arms are separately
+fitted models — which nothing in the record says out loud — but their tokenizers
+are byte-identical, so the **0.15-fitted weights can be scored on the 0.90 draw
+with no refitting at all**. A model whose ability is frozen at its 0.15 value
+gains **+0.1038** of `acc | copyable` (0.4936 → 0.5974) against the +0.1035 the
+0.90 arm gains, and pools to 0.1822 against the native fit's published 0.1810.
+**The entire rise is picked up by a predictor that cannot have improved** — no
+covariate, no banding, no floor, no stratification. Survivorship is not an
+inference from the tables below; it is directly measurable, and the tables only
+say *what* got easier.
 
 **All four columns of both tables above were recomputed here**, not carried from
 the earlier note: `runs/refit-node-r015`, `runs/refit-node-r035`,
@@ -126,13 +163,24 @@ candidates together: the mean number of visible labelled nodes per fill falls
 
 In **all four bands where both rates have real mass, 0.90 is at or below 0.15.**
 Carrying the 0.15 conversion rates onto the 0.90 mix predicts `acc | copyable` =
-**0.696**; the model delivers 0.5971. So once the evidence is held at constant
-concentration the model at 0.90 is **0.099 worse**, not better.
+**0.696**; the model delivers 0.5971, a shortfall of **0.099**.
 
-Coarse bands cannot rule out the 0.90 arm sitting systematically low *inside*
-each band, so the size of that 0.099 is an estimate. The direction does not
-depend on the banding, because the sweep already reports the same thing with no
-stratification at all.
+**Read that 0.099 as an upper bound, not an estimate** — the correction the
+refuter forced. Only 2.6% of the 0.15 fills have `V` in the range the 0.90 arm
+occupies, so standardising extrapolates; holding node type as well takes
+`corefer-001` to **−0.062** on 98.2% of the weight; and on the 1,364 fills that
+are the *same* `(episode, node)` and copyable at both rates the 0.90 arm is not
+worse at all, while their mean `v/V` rises 0.152 → 0.226 and the accuracy does
+not follow. That last one is the note's own conclusion seen from the other side —
+concentration went up and conversion did not — but it is not a measurement of a
+model being 0.099 worse, and this note's first draft phrased it as if it were.
+
+The **direction** does not depend on the banding: six of six models under a
+bandless logistic, six of six holding node type, and `copy_lift` says it with no
+stratification at all. The two coarse-band worries both resolve in the note's
+disfavour rather than its favour — within-band mean `v/V` is *higher* at 0.90 in
+four of five shared bands, and an ability-free predictor prices the whole banding
+at **+0.013**.
 
 **`ptrgen-001` replicates both halves**, on the same draw and the same strata,
 which is the cheapest available answer to "this is one model":
@@ -322,8 +370,11 @@ split is six models, the `copy_lift` table is all six pointer-bearing models on
 the full published sweep, and the twelve-model split of the 0.90 arm was still
 fitting `ctw-001` when this was written.
 
-**What would still weaken it**: a refuter who is not me re-running the v/V
-stratification, since it is the one number here that is an author-designed
-control on an author-chosen banding, and the one the reversal claim rests on.
-`copy_lift` says the same thing without any banding, which is why the reversal is
-stated on that and the 0.099 only estimated on this.
+**That check has now been run by someone else** and is in
+`2026-08-15-the-concentration-reversal-survives-its-size-has-no-unextrapolated-estimate`:
+own code, six of six models, banding priced and found to understate, and the
+0.15-fitted weights scored on the 0.90 draw as a control better than anything
+here. The direction is `measured`. **What remains `provisional` is the size**:
+there is no unextrapolated estimate of the shortfall, and the one estimator that
+extrapolates nothing rests on 106 fills over 35 lessons — a slice, which by this
+repo's own rule may form a hypothesis and not report one.

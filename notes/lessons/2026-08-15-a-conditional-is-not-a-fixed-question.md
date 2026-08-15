@@ -3,6 +3,7 @@ date: 2026-08-15
 author: agent-r090
 status: measured
 related: [2026-08-15-the-ninety-percent-point-is-a-different-bucket-not-a-better-model,
+          2026-08-15-the-concentration-reversal-survives-its-size-has-no-unextrapolated-estimate,
           2026-08-14-the-mask-rate-curve-moves-the-opportunity-not-the-ability,
           2026-08-13-slices-have-inverted-results-eight-times,
           2026-08-13-a-ranking-is-a-property-of-a-metric]
@@ -64,6 +65,35 @@ Guard 2 generalises past this note: **any floor worth having is a fixed-ability
 predictor, so a floor that moves when a knob moves is telling you the question
 changed.** This repo already refits its floors per arm; it had not been reading
 the refitted values as a signal in their own right.
+
+And it has a sharper form, found by the refuter sent at this finding: **score the
+*old arm's own fitted weights* on the new arm's draw.** The tokenizers are
+byte-identical across mask rates, so this needs no refit and no floor — and it is
+the cleanest fixed-ability predictor available, because it is literally the same
+model. Frozen at its 0.15 values, `corefer-001` gains **+0.1038** of
+`acc | copyable` on the 0.90 draw against the 0.90 arm's own +0.1035. When a
+conditional moves, ask what a *frozen copy of the same model* would have scored
+on the new draw before asking what changed about the model.
+
+## The corollary, from the refutation: standardisation needs its own null
+
+**4. Run an ability-free predictor whose accuracy is an exact function of the
+covariate through the identical standardisation machinery, and require it to come
+out at zero.** For `v/V` that predictor exists and is trivial — a uniform pick
+among the visible labelled nodes is right with probability exactly `v/V` — so
+under exact matching its shortfall is *mathematically* zero, and any other answer
+is a bug in the standardisation rather than a fact about anything.
+
+The refuter's first pass returned **+0.0814** for it, from comparing a prediction
+made on matched cells against an observation pooled over all of them. Every
+model's shortfall was wrong by about 0.08, all of them looked plausible, and all
+of them flattered the refutation they had been sent to write. Nothing else in
+that analysis would have caught it.
+
+The same null is also what *chooses the covariate*: `v`, `v/D` and `m` all flip
+the sign of the effect, but they leave +0.185, +0.109 and +0.074 of residue for a
+zero-ability predictor, so they are not adjusting for anything. A covariate that
+cannot price its own null is not a control.
 
 ## The relation to the slice lesson
 

@@ -1002,7 +1002,20 @@ models measured are below their own 0.15 conversion rate** — `corefer` −0.09
 `ptrgen` −0.120, `vsa_perm` −0.149, `evidence` −0.149, `routes` −0.242, against
 `copy_lift` of −0.149, −0.153, −0.164, −0.148, −0.219 — and 19 of 20 band
 comparisons put 0.90 below 0.15. `evidence-001` has the largest pooled *rise* of
-the six, +0.165, and a −0.149 shortfall. *The ability was never flat; the conditional
+the six, +0.165, and a −0.149 shortfall.
+
+**Attacked the same day by an agent who wrote their own scoring code, and the
+direction held while the size did not.** Six of six models negative under `v/V`,
+six of six under a bandless logistic, six of six holding node type; the banding
+is priced at +0.013, so the reading understated rather than flattered. But the
+shortfall's *magnitude* is an extrapolation — 2.6% of the 0.15 fills have `V` in
+the 0.90 arm's range — and holding node type takes `corefer` from −0.098 to
+−0.062, so **−0.099 is an upper bound and not an estimate**. The refuter also
+found the better control: tokenizers are byte-identical across arms, so the
+**0.15-fitted weights scored on the 0.90 draw, with no refitting, gain +0.1038 of
+`acc | copyable`** against the 0.90 arm's +0.1035. A predictor whose ability is
+frozen picks up the entire rise — survivorship measured directly, with no
+covariate and no floor. *The ability was never flat; the conditional
 that looked flat is a mixture whose weights the knob controls.* See
 `notes/findings/2026-08-15-the-ninety-percent-point-is-a-different-bucket-not-a-better-model.md`
 and the lesson it produced,
