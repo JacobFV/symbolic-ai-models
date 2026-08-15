@@ -128,6 +128,45 @@ published number and first here, `omegaclaw_rank-001` is second and fourth,
 credit span 0.008–0.038 of whole-episode correctness, and the map between the two
 is not monotone.
 
+## Rung 2, and it is the knob that moves the ability
+
+`nodesub` hides **whole subtrees** drawn to the same node budget, so the amount
+hidden is matched and only the *shape* of the hole varies. `runs/infill-sub-r015`,
+first row, against `runs/infill-node-r015`:
+
+| `corefer-001` at budget 0.15 | scattered | **subtree** |
+|---|---:|---:|
+| `label_acc` | 0.357 | 0.275 |
+| `label_floor` | 0.143 | 0.126 |
+| `label_lift` | 0.250 | **0.170** |
+| `type_lift` | 0.612 | 0.417 |
+| copy ceiling | 0.722 | 0.698 |
+| **acc \| copyable** | 0.494 | **0.383** |
+| acc \| not copyable | 0.003 | 0.024 |
+| floor, copyable / not | 0.158 / 0.106 | 0.126 / 0.125 |
+
+**R3 confirmed, and by the mechanism it was registered for.** The supply is
+almost unchanged — the copy ceiling falls only 0.722 → 0.698 — and yet
+`acc | copyable` falls by **0.111**. Raising the mask rate from 0.15 to 0.35 cost
+0.006 of the same quantity while removing more supply than this does. So the two
+knobs are not two settings of one difficulty dial:
+
+* **mask rate** removes the *opportunity* to copy and leaves the ability intact;
+* **contiguity** removes the *ability* at unchanged opportunity.
+
+The pre-registration said scattered masking "leaves siblings visible and is a
+fundamentally easier problem than generating a constituent", and this is what
+that looks like when measured: the coreferent is still visible, and the local
+context that would say *which* visible node it is has been hidden along with the
+rest of the subtree.
+
+**The floor says the same thing from the other side.** Under scattered masking
+the structure-only lookup is itself 0.052 better on copyable fills than on the
+rest; under subtree masking that difference collapses to **0.002** (0.126 against
+0.125). Contiguity removes the copyability signal from a table that cannot read
+a symbol, which is as clean a statement as this repo can make that the effect is
+about local context and not about the models.
+
 ## What would refute this
 
 - `acc|copyable` falling materially at 0.60 or 0.90. That would be a second
