@@ -62,6 +62,15 @@ Flat, flat, flat, **+0.025** — in the same place and the same direction as
 `corefer-001`'s +0.103, and in a predictor that cannot have learned anything.
 The copyable bucket at 0.90 is an easier population. That is the finding.
 
+**All four columns of both tables above were recomputed here**, not carried from
+the earlier note: `runs/refit-node-r015`, `runs/refit-node-r035`,
+`runs/refit-node-r060`, `runs/refute-node-r090`, each a from-scratch refit whose
+`final` block is bit-identical to the published arm and whose pooled split floor
+is asserted equal to that arm's `label_floor`. The 0.35 and 0.60 values agree
+with the earlier note to the digit — 0.488 / 0.003 and 0.486 / 0.004, floors
+0.159 / 0.106 and 0.158 / 0.104 — so the only new column is 0.90 and the curve
+it sits on is not one this note assembled from someone else's numbers.
+
 ## What makes it easier, in two numbers that were already in the batch
 
 `label_group` already groups every labelled non-structural node by its label
@@ -139,6 +148,37 @@ better than supply allows. It is a coarse supply variable undershooting by
 almost exactly as much as the fine one overshoots — the bucket really did get
 easier, and the model really did convert less of it.
 
+## Six models, and two of them fall through the easier bucket
+
+The split is not `corefer-001`'s alone. Same run, same draw, same floor,
+`acc | copyable` / `acc | not copyable`, against the same six models' 0.15 rows
+from `the-label-score-is-a-copy-score`:
+
+| model | 0.15 | **0.90** | Δ `acc \| copyable` | renaming drop at 0.90 |
+|---|---|---|---:|---:|
+| `corefer-001` | 0.494 / 0.003 | **0.597 / 0.001** | **+0.103** | 0.0003 |
+| `ptrgen-001` | 0.462 / 0.010 | **0.569 / 0.034** | **+0.107** | 0.0294 |
+| `vsa_perm-002` | 0.435 / 0.043 | **0.516 / 0.035** | **+0.081** | 0.0315 |
+| `evidence-001` | 0.303 / 0.001 | **0.468 / 0.005** | **+0.165** | 0.0076 |
+| `routes-001` | 0.448 / 0.000 | **0.415 / 0.000** | **−0.033** | −0.0001 |
+| `ruleinduce-001` | 0.425 / 0.081 | **0.387 / 0.037** | **−0.038** | 0.0280 |
+| **split floor** | *0.158 / 0.106* | ***0.183 / 0.102*** | *+0.025* | — |
+
+**Four of six rise and two of six fall — through a bucket that got easier for a
+lookup table.** `routes-001` and `ruleinduce-001` do not merely fail to gain the
+floor's +0.025, they lose ground in absolute terms, which is the ability half
+showing through the composition half without any stratification at all. So the
++0.030 that started this is not a property of these models; it is a property of
+the *bucket*, and what the models do on top of it differs in sign.
+
+The non-copyable column tracks renaming, exactly as the refuter's account
+predicts: the three rows with drops of 0.028–0.032 are the three with
+`acc | not copyable` of 0.034–0.037, and the three with drops under 0.008 are at
+0.000–0.005. The memorisation channel is small everywhere at 0.90 and is not
+where the miss came from — but it is not uniformly *zero* either, and
+`ptrgen-001`'s tripling from 0.010 to 0.034 is the one place story 2 has any
+substance. It is worth 0.024 of a pooled 0.195.
+
 ## `copy_lift` was in every `summary.json` and says it plainly
 
 The pointer channel, scored against `copy_floor` — the structure-only pointer
@@ -201,11 +241,24 @@ labels, and an eight-fold smaller candidate set.
   concentration — which would have meant a real gain in pointing. It is below in
   all four shared bands, and `copy_lift` agrees without any banding.
 
+## Rung 4 at 0.90, since the weights were there
+
+`scripts/graph_exact.py` on the same refit, all 716 episodes: whole-episode label
+exactness is **0.0000** for all six models, and the render-side upper estimate is
+**0.0000–0.0014** (one episode). Whatever the bracket is at `mask_rate=0.15` —
+see `notes/findings/2026-08-15-rung-fours-bound-points-the-other-way.md`, where
+it is [0.038, 0.15] and not the published "at most 0.038" — at 0.90 both ends are
+zero and the ladder's conclusion needs no bound at all.
+
 ## Provisional, and what it is not
 
-The conditional split and the stratifications are `corefer-001` only; the
-`copy_lift` table is all six pointer-bearing models on the full sweep. **The
-per-model split at 0.90 is the missing independent check** — the reading here
-would be weakened by an arm in which `acc | copyable` fell at 0.90 while
-`corefer`'s rose, because that would make the survivorship story a fact about one
-model rather than about the bucket. It is the first thing to run next.
+The stratifications (m, v/V, node type) are `corefer-001` only. The conditional
+split is six models, the `copy_lift` table is all six pointer-bearing models on
+the full published sweep, and the twelve-model split of the 0.90 arm was still
+fitting `ctw-001` when this was written.
+
+**What would still weaken it**: a refuter who is not me re-running the v/V
+stratification, since it is the one number here that is an author-designed
+control on an author-chosen banding, and the one the reversal claim rests on.
+`copy_lift` says the same thing without any banding, which is why the reversal is
+stated on that and the 0.099 only estimated on this.

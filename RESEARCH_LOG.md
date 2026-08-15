@@ -991,8 +991,12 @@ the 0.90 mix predict **0.212**, so the fine supply variable overshoots by 0.031
 almost exactly as the coarse one undershoots by 0.030. And `copy_lift`, which
 was in every `summary.json` all along, falls monotonically for **six of six**
 pointer models and is negative for all six by 0.60 (`corefer` +0.096, +0.057,
-−0.013, **−0.149**). *The ability was never flat; the conditional that looked
-flat is a mixture whose weights the knob controls.* See
+−0.013, **−0.149**). And the survivorship is a fact about the bucket rather than
+about the models: split six ways at 0.90, `acc | copyable` **rises for four**
+(`corefer` +0.103, `ptrgen` +0.107, `evidence` +0.165, `vsa_perm` +0.081) and
+**falls for two** (`routes` −0.033, `ruleinduce` −0.038) — through a bucket that
+got 0.025 easier for a lookup table. *The ability was never flat; the conditional
+that looked flat is a mixture whose weights the knob controls.* See
 `notes/findings/2026-08-15-the-ninety-percent-point-is-a-different-bucket-not-a-better-model.md`
 and the lesson it produced,
 `notes/lessons/2026-08-15-a-conditional-is-not-a-fixed-question.md`. Provisional:

@@ -61,8 +61,15 @@ contaminate the measurement — `lbl exact` bounds `exact_match` from below and
 | `evidence-001` | 0.219 | 0.0225 | 0.667 | 0.262 | **0.0999** |
 | `grammar-001` | 0.187 | 0.0295 | 0.667 | 0.183 | **0.0661** |
 | `corefer-001` at 0.90 | 0.181 | 0.0000 | 0.676 | 0.216 | **0.0014** |
+| `ptrgen-001` at 0.90 | 0.195 | 0.0000 | 0.676 | 0.212 | **0.0000** |
+| `vsa_perm-002` at 0.90 | 0.180 | 0.0000 | 0.676 | 0.191 | **0.0000** |
+| `evidence-001` at 0.90 | 0.145 | 0.0000 | 0.676 | 0.164 | **0.0014** |
+| `routes-001` at 0.90 | 0.125 | 0.0000 | 0.676 | 0.145 | **0.0014** |
+| `ruleinduce-001` at 0.90 | 0.142 | 0.0000 | 0.676 | 0.137 | **0.0000** |
 
-**A third of all scored fills never appear in the prompt at all**, so the
+**Six models at `mask_rate=0.90`, both ends zero to three decimal places**: the
+ladder's conclusion at the extreme needs no bound and does not depend on any of
+this. **A third of all scored fills never appear in the prompt at all**, so the
 inequality is not just backwards, it is loose: `corefer-001`'s rung-4 number
 lies somewhere in **[0.038, 0.15]**, and 0.15 is one episode in seven rather than
 "essentially unachieved". At `mask_rate=0.90` both ends are ~0 and the ladder's
