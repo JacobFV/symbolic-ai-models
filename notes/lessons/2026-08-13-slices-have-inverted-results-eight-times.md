@@ -4,11 +4,16 @@ author: lead
 status: measured
 ---
 
-# A slice is a different curriculum, and it has inverted results eight times
+# A slice is a different curriculum, and it has inverted results ten times
 
 Every confident wrong result this repo has published came from measuring a
-*sample* of the world rather than covering it. The count is eight, three of them
-in one day.
+*sample* of the world rather than covering it. The count is **ten**, three of
+them in one day.
+
+*The filename says eight and is deliberately frozen there* — other notes,
+`RESEARCH_LOG.md` and `CLAUDE.md` link to this slug, and renaming it to chase a
+count that keeps rising would break every inbound link for no gain. The table is
+the count.
 
 | claim, from a slice | what the full run said |
 |---|---|
@@ -21,6 +26,7 @@ in one day.
 | the seeding 2x2's *positive* lifts (12 lessons) | every arm is **below** the label floor at 179; only the ordering survived |
 | a +0.051 renaming drop for the permutation VSA (24 episodes) | +0.008 at 192 episodes, +0.010 on the full curriculum |
 | Indo-European ranks at the median, Spanish nearest Chinese (7 packs) | at 46 languages a real, if weak, family signal appears |
+| fitting the softmax temperature collapses held-out accuracy 0.126 → 0.040, so it must be held fixed (3 lessons) | at 179 the likelihood picks sharpness 12 unaided and the row is **bit-identical** to the fixed one; the trap does not exist at scale |
 
 **Why:** lesson families differ enormously in which structure is available, so a
 handful of them re-weights every model's strengths. The tokenizer case is the
@@ -33,6 +39,15 @@ and **may never appear** in a commit message, a docstring, `RESEARCH_LOG.md` or 
 report. Only the full sweep reports. When a slice result is startlingly large,
 expect the full run to cut it by roughly an order of magnitude — and say so
 *before* running it.
+
+**The guard is starting to work, and that is worth recording too.** The first
+seven entries were caught by a *later sweep contradicting a published claim* —
+the expensive way. The last three were caught by **re-measuring at a larger
+sample before publishing**: the +0.051 renaming drop was chased to 192 episodes
+and evaporated, and the temperature trap was registered as its own row precisely
+so the full curriculum could price it, which is how it was found not to exist.
+That is the same mistake being paid for at a tenth of the price, and it is the
+outcome this file was written to produce.
 
 **The variant that catches people twice:** do not pin a constant measured on one
 slice into a test that runs on another fixture. A test asserting the curated
