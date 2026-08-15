@@ -49,38 +49,80 @@ Six lessons said zero; a hundred and seventy-nine say two. Slice number ten.
 **And the gain is bits, not accuracy** — which is exactly, and only, where the
 pre-registration said a legitimate win could appear.
 
-## The bits gain is real, small, and survives renaming
+## The result, in one sentence with both columns in it
+
+**The atomspace query schedule buys +0.011 of `label_bits` lift over identical
+machinery and 0.000 of `label_acc`** — 0.213 against 0.213 — **and the bits gain
+survives a permutation of all 2,105 symbols at a drop of +0.001.**
+
+Neither half of that sentence may be quoted without the other. This repo's
+entire published history was accuracy rankings that never said they were
+accuracy rankings, and `label_acc` and `label_bits` rank these models close to
+inversely. An "atomspace roles win" headline and an "atomspace roles are a null"
+headline are both available here and both are misreporting.
+
+### The bits gain, and the renaming test that is the load-bearing part
 
 The sharp test named in the pre-registration: *"if a pattern-matching IR gains
 bits, that gain is structural and must survive a permutation of all 2,105
 symbols without refitting."* The `_pure` rows are that test, because
 `structural_fallback` is where every VSA row's renaming sensitivity lives.
 
-| row (role channel only, `_pure`) | lbl acc | bits | bits lift | rename |
-|---|---:|---:|---:|---:|
-| `vsa_sum_pure-004` | 0.214 | 6.724 | +0.282 | −0.000 |
-| `metta_tuple_pure-005` | 0.213 | 6.722 | +0.283 | −0.002 |
-| `metta_pure-005` (share 1.0) | 0.210 | 6.627 | +0.293 | **+0.002** |
-| `metta_gated_pure-005` (share 2.0) | 0.213 | **6.613** | **+0.294** | **+0.001** |
+| row (role channel only, `_pure`) | lbl acc | lbl lift | bits | bits lift | rename |
+|---|---:|---:|---:|---:|---:|
+| `vsa_sum_pure-004` | 0.214 | +0.083 | 6.724 | +0.282 | −0.000 |
+| `metta_tuple_pure-005` | 0.213 | +0.081 | 6.722 | +0.283 | −0.002 |
+| `metta_pure-005` (share 1.0) | 0.210 | +0.078 | 6.627 | +0.293 | **+0.002** |
+| `metta_gated_pure-005` (share 2.0) | 0.213 | +0.081 | **6.613** | **+0.294** | **+0.001** |
 
-**+0.011 of bits lift over the identical machinery with only the query schedule
-changed, at a renaming drop of +0.001.** All 2,105 symbols permuted, no
-refitting. The gain is structural: no query in the schedule reads the `label`
-relation, asserted on the schedule *and* empirically by permuting every label
-and requiring the signatures to come out bit-identical.
+`metta_tuple_pure-005` and `metta_gated_pure-005` differ in **one thing only** —
+which conjunctive queries produce the signatures — so the +0.011 is attributable
+to the query schedule and to nothing else.
 
-For scale, this is a tenth of what `ensemble-001` claimed and did not keep. That
-row reached 4.77 bits and lost 0.467 → 0.038 of it under renaming, because the
-gain was vocabulary memorisation. This one is 0.011 and keeps essentially all of
-it. **A small honest number and a large dishonest one are not on the same
-scale**, and the whole point of running the permutation early was to find out
-which kind this was.
+**Why the renaming column is the whole result and not a footnote.** A bits gain
+is the easiest thing in this repo to fake, and this repo has faked it. The best
+bits ever recorded here, `ensemble-001` at **4.77**, turned out to be vocabulary
+memorisation: permute the symbols without refitting and **0.467 collapsed to
+0.038**, keeping 8% of what it claimed. That is why the pre-registration made
+the permutation the *first* thing to run rather than a check at the end.
 
-**Accuracy does not move**: 0.213 against 0.213, and `metta_pure-005` is
-*worse* at 0.210. So the atomspace roles improve the **density estimate** and not
-the **decision** — this repo's oldest measured fact, `label_acc` and
-`label_bits` ranking these models close to inversely, showing up one more time.
-Quoting either number alone would misreport the line in opposite directions.
+This gain is **a tenth the size and keeps essentially all of it.** +0.011 of
+bits lift at a +0.001 drop, against +1.14 at a −0.429 collapse. The comparison
+is the point: a small number that is real is worth more than a large one that is
+not, and the only way to tell them apart is the control that could have failed.
+It could have failed here — `metta_shuf_pure-005` is the same schedule with the
+signatures on the wrong nodes and it lands at **0.086 label accuracy** against
+0.210, so the machinery is fully capable of producing a collapse.
+
+The structural claim is also closed at the source rather than inferred from the
+number: **no query in the schedule reads the `label` relation**, asserted on the
+schedule itself *and* empirically by permuting every label in a view and
+requiring the signatures to come out bit-identical.
+
+### Against the right baseline, which is not the one this line was designed against
+
+`vsa_hks-004`'s bandwidth was pinned at the bottom of its grid; an independent
+refuter refitted it, and the fitted-bandwidth rows are the real ones. Requoted
+from `runs/vsa_role`, whose `label_floor` is **0.1432 — identical to this
+sweep's**, same config and same evaluation seeds:
+
+| role-only `_pure` row | lbl acc | lbl lift | bits | bits lift | rename |
+|---|---:|---:|---:|---:|---:|
+| `vsa_hks_wide_pure-004` | **0.280** | **+0.160** | 6.634 | +0.292 | +0.006 |
+| `metta_gated_pure-005` | 0.213 | +0.081 | **6.613** | **+0.294** | **+0.001** |
+
+**This is the honest comparison and it is unflattering in the column this repo
+leads with.** The heat-kernel signature — a spectral quantity of the graph, no
+queries, no atomspace — reaches **+0.160** of label lift where the atomspace
+schedule reaches **+0.081**, twice as much. On bits the two are level, with the
+atomspace row ahead by 0.002 of lift, which is inside anything worth calling a
+difference.
+
+So the graph-derived role that already existed is a **much better classifier**
+and an **equal density estimate**, at a slightly worse renaming drop. The
+atomspace's contribution is not that it found structure the spectrum could not;
+it is that it found structure the *hand-built four-tuple* could not, and the
+spectrum had already found more of it by another route.
 
 ## Read the table with this in mind
 
