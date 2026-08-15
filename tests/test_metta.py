@@ -193,6 +193,40 @@ def test_every_metta_row_is_registered_beside_its_predecessor():
         assert name.endswith("-005"), name
 
 
+def test_the_recorded_curve_picks_what_the_parent_fit_picks():
+    """`metta_gated-005` re-derives the knob objective so it can record the whole
+    curve. That duplication is only safe if the two agree.
+
+    A curve reported for a knob that was actually chosen by different arithmetic
+    would be worse than no curve: it would look like evidence and be a second
+    opinion. So run the parent's fit and the recording fit on the same episodes
+    and require the same chosen value, and require the curve to have a point per
+    grid entry.
+    """
+    from symbolic_ai_core.data.tokenizer import SymbolTokenizer
+    from symbolic_ai_models.models import build
+    from symbolic_ai_models.models.base import ModelConfig
+    from symbolic_ai_models.models.vsa_spec_004.model import RoleEmbedding
+
+    episodes = list(C.generate(C.lesson_ids()[:6], n=4, seed0=0,
+                               on_error="skip"))
+    tok = SymbolTokenizer.build([e.text for e in episodes], max_vocab=2048)
+    cfg = ModelConfig(vocab_size=len(tok), max_nodes=64,
+                      extra={"vsa_dim": 512})
+
+    recording = build("metta_gated-005", cfg)
+    recording.fit_on(episodes, tok)
+    assert len(recording.knob_curve) == len(type(recording).knob_grid)
+    assert recording._knob == max(recording.knob_curve, key=lambda kv: kv[1])[0]
+
+    parent = build("metta_gated-005", cfg)
+    parent._fit_scalars = RoleEmbedding._fit_scalars.__get__(parent)
+    parent.fit_on(episodes, tok)
+    assert parent._knob == recording._knob, (
+        f"the recorded curve chose {recording._knob} and the parent fit chose "
+        f"{parent._knob} -- the re-derived objective has drifted")
+
+
 def test_an_atomspace_query_expresses_ilps_clause_that_claws_cannot(views):
     """The concrete expressiveness claim, as a firing count on real graphs.
 

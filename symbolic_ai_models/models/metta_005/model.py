@@ -127,6 +127,7 @@ from __future__ import annotations
 
 import collections
 import hashlib
+import math
 from typing import Sequence
 
 import numpy as np
@@ -202,6 +203,9 @@ class AtomSpaceRoles(RoleEmbedding):
         #: views; recomputing the queries per knob would be six times the
         #: atomspace work for an identical answer.
         self._sig_cache: tuple | None = None
+        #: ``[(extra_weight, held-out mixture log-likelihood per node)]`` --
+        #: the whole grid, not only its argmax. See :meth:`_fit_scalars`.
+        self.knob_curve: list[tuple[float, float]] = []
 
     # ---- the role construction ------------------------------------------
     def _atom_for(self, signature: str) -> np.ndarray:
@@ -235,6 +239,81 @@ class AtomSpaceRoles(RoleEmbedding):
             out = out * (np.sqrt(self._d) / np.maximum(norms, 1e-9))
         return out.astype(np.float32)
 
+    # ---- fitting, with the curve written down -----------------------------
+    def _fit_scalars(self, episodes: Sequence[Episode],
+                     tok: SymbolTokenizer) -> None:
+        """The parent's fit, with the **whole likelihood curve** recorded.
+
+        `notes/lessons/2026-08-14-a-boundary-optimum-is-not-a-fitted-value.md`
+        says a fit landing on the edge of its grid is a failed fit *until you
+        establish which* of two worlds produced it: the curve genuinely turns
+        around there, or the grid was too narrow. An argmax alone cannot tell
+        them apart — and a third possibility it also cannot exclude is that the
+        objective is **flat** and the argmax is picking noise.
+
+        All three are distinguishable from the curve, so the curve is what gets
+        written down. `rules.txt` carries every point, per
+        `notes/lessons/2026-08-14-record-every-fitted-parameter-or-a-drift-is-
+        unattributable.md`: a parameter recorded nowhere turns a later
+        four-decimal discrepancy into a bisect.
+
+        The objective is re-derived here rather than read out of the parent,
+        because exposing it would mean editing ``vsa_spec_004`` — a file a
+        parallel line is also working in, and a merge conflict in the middle of
+        a shared base class is a worse hazard than twenty lines here.
+        ``tests/test_metta.py::test_the_recorded_curve_picks_what_the_parent_fit_picks``
+        is what makes that safe: it runs both and requires the same answer, so
+        a drift between the two fails loudly instead of silently reporting a
+        curve for a knob that was chosen by something else.
+        """
+        from symbolic_ai_core.calibration import MassCalibrator
+
+        original = self._knob
+        curve: list[tuple[float, float]] = []
+        try:
+            for value in self.knob_grid:
+                self._knob = float(value)
+                self._cache = None
+                rows: list[tuple] = []
+                for view, targets in self.training_views(
+                        episodes, tok, repeats=1, seed=23,
+                        max_nodes=self.cfg.max_nodes):
+                    keep = [(node, int(label))
+                            for node, (label, _) in targets.items() if label >= 0]
+                    if not keep:
+                        continue
+                    context = self._predict_context(view)
+                    candidates = self._candidates(view)
+                    for node, label in keep:
+                        sims, cands = self._similarities(
+                            self._probe_for(view, node, context), candidates)
+                        if sims is None:
+                            continue
+                        table = self._soften(sims, cands, self.sharpness)
+                        if not table:
+                            continue
+                        rows.append((max(table.values()),
+                                     float(table.get(label, 0.0)),
+                                     self.backoff_prob(view, node, label)))
+                if not rows:
+                    continue
+                scores = [r[0] for r in rows]
+                votes = [r[1] for r in rows]
+                backoff = [r[2] for r in rows]
+                gate = MassCalibrator().fit(scores, votes, backoff)
+                total = sum(
+                    math.log(max((1.0 - gate(s)) * max(b, 1e-12) + gate(s) * q,
+                                 1e-12))
+                    for s, q, b in zip(scores, votes, backoff)) / len(rows)
+                curve.append((float(value), total))
+        finally:
+            self._knob = original
+            self._cache = None
+        self.knob_curve = curve
+        if curve:
+            self._knob = max(curve, key=lambda kv: kv[1])[0]
+            self._cache = None
+
     # ---- bookkeeping -----------------------------------------------------
     def learn(self, episodes: Sequence[Episode], tok: SymbolTokenizer) -> None:
         super().learn(episodes, tok)
@@ -258,6 +337,9 @@ class AtomSpaceRoles(RoleEmbedding):
             f"  extra_weight={self._knob:.3g}"
             f"{self._boundary_note()}, normalise={self.normalise}",
             f"  signature atoms: {max(self.n_role_atoms, len(self._sig_atoms))}",
+            *([f"  extra_weight likelihood curve (held-out training episodes): "
+               + ", ".join(f"{k:g}->{ll:.4f}" for k, ll in self.knob_curve)]
+              if self.knob_curve else []),
         ])
 
     def _boundary_note(self) -> str:
