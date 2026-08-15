@@ -42,6 +42,34 @@ Adding it cost a re-record of the two KG fingerprints, because the binder's seed
 now carries the `structured` flag. Nothing was published on them; the `base`
 fingerprint (`68be4d098db17e28`) did not move, which is the one that matters.
 
+### Addendum, same evening, still before any arm landed: "13,810 vs 2,105" is wrong
+
+Added as an addendum rather than an edit, because a pre-registration that gets
+quietly corrected is not one.
+
+The graph has 13,810 nodes and the base curriculum has 2,105 renameable symbols,
+and I wrote the confound as a six-fold vocabulary increase. **The corpus does not
+see the graph, it sees a sample of it.** Distinct graph-node labels actually
+occurring over 179 lessons x 4 seeds:
+
+| arm | distinct labels | vs base |
+|---|---:|---:|
+| `base` | 3,036 | — |
+| `kg:wordnet` | 3,829 | x1.26 |
+| `kg:wordnet-shuffled` | 3,831 | x1.26 |
+| `kg:wordnet-flat` | 3,999 | x1.32 |
+
+So the realised inflation is **26%**, not 560%, because only 5.3% of node labels
+are rebound at all and each episode draws six words from one neighbourhood. That
+makes the vocabulary-size confound much smaller than the fourth arm was added
+for — and the fourth arm is still worth having, because 26% is not zero and the
+ordering of the three KG arms by vocabulary (`flat` > `shuffled` ≈ `kg`) is the
+opposite of the ordering H2b predicts for the structure term, so the two will not
+be confusable.
+
+`flat` having the most distinct labels is itself the design working: with no
+family to concentrate the draw, every slot samples the whole graph.
+
 The manipulation is **symbols only**: zero of 716 measured episodes changed tree
 shape, arity, scene size, coordinates or which node carries the answer. Coverage
 is 54 of 179 lessons and **5.3% of graph node labels** — see the coverage
