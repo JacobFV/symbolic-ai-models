@@ -1,0 +1,22 @@
+prior log-odds -2.453
+top evidence:
+  ('query_rel', (('list', 6), 'other'))    -4.582
+  ('query_rel', (('ROOT', 6), 'sibling'))  +4.140
+  ('query_rel', (('ROOT', 5), 'sibling'))  +3.695
+  ('query_rel', (('ROOT', 6), 'other'))    -3.616
+  ('query_rel', (('str', 1), 'sibling'))   +3.552
+  ('query_rel', (('list', 1), 'sibling'))  +3.494
+  ('query_dist', (('ROOT', 6), 0))         +3.484
+  ('query_dist', (('ROOT', 6), 1))         +3.447
+  ('query_rel', (('list', 5), 'sibling'))  +3.422
+  ('query_rel', (('record', 1), 'other'))  -3.367
+  ('query_dist', (('ROOT', 5), 0))         +3.360
+  ('query_dist', (('list', 5), 0))         +3.300
+  ('query_rel', (('ROOT', 6), 'same_depth')) -3.299
+  ('query_rel', (('list', 3), 'sibling'))  +3.215
+  ('query_dist', (('list', 6), 0))         +3.211
+  ('query_dist', (('list', 6), 1))         +3.202
+  ('query_rel', (('list', 2), 'sibling'))  +3.189
+  ('query_rel', (('list', 3), 'other'))    -3.180
+  ('query_rel', (('record', 2), 'other'))  -3.164
+  ('query_rel', (('list', 4), 'other'))    -3.160

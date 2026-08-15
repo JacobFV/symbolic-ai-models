@@ -1,0 +1,19 @@
+=== label ===
+DecisionList(6 rules, 23 params)
+  IF sibling_type(_,=pred) ∧ slot(>0) ∧ parent_head(=1) THEN ('prev',)  [18725/21552]
+  IF parent_type(=record) ∧ ¬depth(=4) THEN ('const', 5735)  [2815/2843]
+  IF sibling_type(=0,=pred) ∧ parent_head(=1) ∧ depth(=3) THEN ('sibling', 0)  [2899/3073]
+  IF arity(>0) ∧ ¬depth(=3) ∧ ¬parent_head(_) THEN ('prev',)  [4291/6005]
+  IF arity(=1) ∧ ¬parent_head(_) THEN ('const', 5736)  [2857/2888]
+  IF has_peer() ∧ ¬parent_head(=1) ∧ slot(>0) THEN ('peer',)  [4421/6834]
+  ELSE ('prev',)
+=== type ===
+DecisionList(3 rules, 11 params)
+  IF arity(=0) ∧ ¬depth(=3) ∧ ¬depth(=5) THEN 6  [71750/102844]
+  IF arity(>0) ∧ depth(=3) ∧ ¬sibling_type(_,=list) THEN 12  [29577/30079]
+  IF parent_type(=record) THEN 15  [5470/5470]
+  ELSE 12
+=== text ===
+DecisionList(1 rules, 4 params)
+  IF back1(=264) ∧ ¬back3(=263) THEN ('const', 263)  [9668/9972]
+  ELSE ('const', 265)

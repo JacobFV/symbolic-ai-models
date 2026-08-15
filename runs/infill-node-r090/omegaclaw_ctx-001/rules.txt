@@ -1,0 +1,13 @@
+=== omegaclaw_ctx-001: 11 claws, 397 context cells ===
+  echo           fired     3398   credited    566.0   rate 0.167
+  prev           fired     3504   credited    504.0   rate 0.144
+  slotmate       fired     2593   credited    385.0   rate 0.148
+  mirror         fired     1150   credited    141.0   rate 0.123
+  sibling0       fired      382   credited    114.0   rate 0.298
+  prev_sibling   fired      238   credited     88.0   rate 0.370
+  grandparent    fired      323   credited     12.0   rate 0.037
+  peer           fired       14   credited      2.0   rate 0.143
+  child0         fired      131   credited      0.0   rate 0.000
+  parent         fired      400   credited      0.0   rate 0.000
+  aunt           fired      249   credited      0.0   rate 0.000
+  confidence map: label fitted, type fitted

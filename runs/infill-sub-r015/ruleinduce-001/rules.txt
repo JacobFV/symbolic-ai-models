@@ -1,0 +1,31 @@
+=== label ===
+DecisionList(4 rules, 16 params)
+  IF sibling_type(=0,=pred) ∧ slot(>0) ∧ parent_head(=1) THEN ('prev',)  [10086/11378]
+  IF parent_type(=pred) ∧ has_peer() ∧ slot(>0) THEN ('peer',)  [3722/5784]
+  IF sibling_type(=0,=pred) ∧ depth(=3) ∧ parent_head(=1) THEN ('sibling', 0)  [1841/1954]
+  IF parent_type(=record) ∧ ¬depth(=4) THEN ('const', 5735)  [1336/1354]
+  ELSE ('prev',)
+=== type ===
+DecisionList(17 rules, 52 params)
+  IF arity(=0) ∧ ¬parent_head(=1) ∧ ¬parent_type(=str) THEN 6  [59251/86658]
+  IF sibling_type(_,=pred) ∧ ¬sibling_type(=1,=ident) THEN 12  [16630/16665]
+  IF ¬parent_head(=1) ∧ arity(>0) ∧ ¬sibling_type(_,=str) THEN 12  [9949/15596]
+  IF parent_type(=record) THEN 15  [2985/2985]
+  IF sibling_type(_,=ident) ∧ arity(=0) THEN 6  [1846/1847]
+  IF sibling_type(_,=token) THEN 3  [1649/1649]
+  IF parent_type(=str) THEN 16  [1179/1179]
+  IF sibling_type(_,=num) ∧ parent_type(=list) THEN 5  [1172/1172]
+  IF sibling_type(_,=str) THEN 4  [203/203]
+  IF sibling_type(_,=list) ∧ parent_type(=list) THEN 9  [200/200]
+  IF arity(>0) ∧ parent_type(=list) ∧ ¬arity(=4) THEN 12  [174/174]
+  IF n_siblings(=0) ∧ arity(=0) ∧ parent_type(=list) THEN 6  [150/151]
+  IF arity(=0) ∧ n_siblings(=1) ∧ ¬depth(=3) THEN 6  [34/39]
+  IF ¬parent_type(=pred) ∧ depth(=3) ∧ ¬n_siblings(=1) THEN 12  [24/24]
+  IF arity(>0) THEN 9  [11/11]
+  IF depth(=3) ∧ parent_type(=pred) THEN 6  [14/14]
+  IF parent_type(=pred) THEN 5  [3/3]
+  ELSE 6
+=== text ===
+DecisionList(1 rules, 4 params)
+  IF back1(=264) ∧ ¬back3(=263) THEN ('const', 263)  [9668/9972]
+  ELSE ('const', 265)
