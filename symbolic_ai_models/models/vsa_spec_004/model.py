@@ -176,7 +176,11 @@ __all__ = ["RoleEmbedding", "VSAAtomRoles", "VSASum", "VSASumPure",
            "VSAHKS", "VSAHKSPure", "VSAHKSShuffled", "VSAHKSShuffledPure",
            "VSAHKSLikelihood", "VSAHKSLikelihoodPure", "VSAHKSSum",
            "VSAHKSSumPure", "VSAPermSpectral", "VSAPermSpectralPure",
-           "VSAPermHKS", "VSAPermHKSPure"]
+           "VSAPermHKS", "VSAPermHKSPure",
+           # the refuter's rows; see the block at the foot of this module
+           "NullRoles", "VSANull", "VSANullPure", "VSAHKSWide", "VSAHKSWidePure",
+           "VSASpectralWidePure", "VSASpectralShuffledMatchedPure",
+           "VSAHKSShuffledWidePure", "VSAPermHKSWide", "VSAPermHKSWidePure"]
 
 
 def _shape_hash(parent: Sequence[int]) -> int:
@@ -906,5 +910,212 @@ class VSAPermHKS(RoleEmbedding, VSAPerm):
           doc="vsa_perm_hks-004 without the shared memorising fallback.")
 class VSAPermHKSPure(VSAPermHKS):
     """The equivariant row for the family's most capable combination."""
+
+    structural_fallback = False
+
+
+# ---------------------------------------------------------------------------
+# rows added by an independent refuter, 2026-08-14
+#
+# Everything above this line was written by one agent, including every control.
+# These four rows exist because three properties the module asserts about itself
+# were unmeasured, and each is written down with its prediction *before* the
+# sweep ran (git will say so).
+#
+# 1. ``vsa_null-004``: the missing reference. The finding note concludes that
+#    "the gradedness of the Gram, which the shuffle preserves exactly,
+#    contributes nothing on its own" -- from ``vsa_hks_shuf_pure-004`` at
+#    -0.071. But there is **no row in this family with no role information at
+#    all**, so "contributes nothing" has nothing to be nothing *against*. A
+#    shuffled signature does not merely fail to help: it asserts, confidently
+#    and gradedly, that unrelated nodes are alike. That is a different failure
+#    from having no roles, and only a null row separates them.
+# 2. ``vsa_hks_wide-004``: ``knob_grid = (0.5, 1.0, 2.0, 4.0)`` and **all four
+#    registered HKS rows fitted 0.5** -- the bottom. By this repo's own
+#    [[2026-08-14-a-boundary-optimum-is-not-a-fitted-value]] that is a failed
+#    fit until re-run wider, and the lesson was applied to the eigenmap (which
+#    lost) and not to the signature (which won).
+# 3. ``vsa_spec_wide_pure-004``: the note's own loosest claim, that a wider
+#    diffusion grid cannot rescue the eigenmap, is an argument. This measures it.
+# 4. ``vsa_spec_shuf16_pure-004``: the shuffled *eigenmap* control refitted its
+#    knob to 1 while its treatment fitted 16, so for that pair the "bit-identical
+#    Gram multiset" property is false as run --
+#    ``test_shuffling_keeps_every_gram_value_and_loses_the_correspondence``
+#    cannot see it because it overwrites the control's knob with the
+#    treatment's. This row pins the knob and is the matched control.
+# ---------------------------------------------------------------------------
+class NullRoles(RoleEmbedding):
+    """No role information of any kind: i.i.d. bipolar roles, one per node.
+
+    Every off-diagonal Gram entry is ``0 +/- 1/sqrt(d)``, so no node is ever
+    retrieved as similar to another and the readout has nothing but its back-off.
+    This is what "the embedding contributes nothing" actually looks like, and it
+    is the row the shuffled controls should have been read against.
+
+    The draw is seeded from the model seed and an FNV digest of the tree's shape,
+    for the same reason the shuffle is: a role that changes between the fit and
+    the sweep is a different model in each phase. It is also still a pure
+    function of the tree, so the row stays exactly equivariant like the rest.
+
+    **Prediction, written before the sweep.** ``vsa_null_pure-004`` lands
+    **above** both shuffled rows and near the floor -- somewhere in
+    ``[-0.03, +0.02]`` of label lift -- because abstaining beats retrieving the
+    wrong node confidently. *Refuted if* it lands within 0.010 of
+    ``vsa_hks_shuf_pure-004``'s -0.071, which would mean the shuffle destroys
+    exactly the correspondence and nothing else, and the note's sentence is
+    right as written.
+    """
+
+    knob_grid = (1.0,)
+    embedding_name = "i.i.d. random roles (no structure at all)"
+
+    def _role_matrix(self, view: GraphView) -> np.ndarray:
+        rng = np.random.default_rng(
+            [self.seed + 6, len(view), _shape_hash(view.parent) % (2 ** 32)])
+        return _bipolar(rng, len(view), self._d)
+
+
+@register("vsa_null-004",
+          doc="Reference: i.i.d. random roles, the row with no role information.")
+class VSANull(NullRoles, VSAModel):
+    """The bottom of the family, so that "contributes nothing" has a value."""
+
+    LEARNED = VSAModel.LEARNED + ("_knob", "n_eig")
+
+
+@register("vsa_null_pure-004",
+          doc="vsa_null-004 without the shared memorising fallback.")
+class VSANullPure(VSANull):
+    """The reference row for every ``_pure`` lift in this module."""
+
+    structural_fallback = False
+
+
+@register("vsa_hks_wide-004",
+          doc="vsa_hks-004 with the bandwidth grid extended past its boundary fit.")
+class VSAHKSWide(VSAHKS):
+    """``vsa_hks-004``'s fitted bandwidth sat on the bottom of its grid.
+
+    ``knob`` scales the random-Fourier bandwidth: ``cos(X W / (knob sqrt k))``.
+    Smaller ``knob`` means a *faster*-decaying kernel in signature space -- the
+    graded signature Gram degenerating toward a partition on near-exact signature
+    equality. The likelihood asked for the smallest value on offer, in all four
+    registered HKS rows, and nobody extended the grid.
+
+    **Prediction, written before the sweep.** The fit moves interior, to 0.25 or
+    0.125, and label lift rises by 0.005 to 0.025 over ``vsa_hks-004``'s +0.115.
+    *Refuted if* it stays pinned at 0.5, which retires the objection and makes
+    the published +0.115 a genuine fitted optimum. If instead it runs to the new
+    bottom as well, the reported figure is not a fit and the direction says the
+    signature kernel wants to be a partition -- which sits badly beside the
+    module's "graded beats partitioned" reading.
+    """
+
+    knob_grid = (0.0625, 0.125, 0.25, 0.5, 1.0, 2.0, 4.0)
+
+
+@register("vsa_hks_wide_pure-004",
+          doc="vsa_hks_wide-004 without the shared memorising fallback.")
+class VSAHKSWidePure(VSAHKSWide):
+    """The equivariant row: against ``vsa_hks_pure-004``'s +0.107."""
+
+    structural_fallback = False
+
+
+@register("vsa_spec_wide_pure-004",
+          doc="vsa_spec_pure-004 with the diffusion-time grid extended upward.")
+class VSASpectralWidePure(VSASpectralPure):
+    """The measurement the finding note says it did not run.
+
+    ``vsa_spec_pure-004`` fitted ``t = 16``, the top of ``(0.25, 1, 4, 16)``. The
+    note argues that extending the grid can only move further toward "the
+    embedding contributes nothing", since ``t -> inf`` is the all-ones kernel.
+    An argument is not a measurement and the note says so itself.
+
+    **Prediction, written before the sweep.** The fit lands at 64 or above and
+    label lift stays below the floor, within 0.02 of the published -0.044.
+    *Refuted if* the row clears the floor at any ``t``, which would mean the
+    eigenmap was never refuted -- only under-searched.
+    """
+
+    knob_grid = (4.0, 16.0, 64.0, 256.0, 1024.0)
+
+
+@register("vsa_spec_shuf16_pure-004",
+          doc="The eigenmap's shuffled control at its treatment's fitted knob.")
+class VSASpectralShuffledMatchedPure(VSASpectralShuffledPure):
+    """The matched control the eigenmap pair never actually had.
+
+    ``vsa_spec_pure-004`` fitted ``t = 16``; ``vsa_spec_shuf_pure-004`` refitted
+    to ``t = 1``. Two different kernels, so for that pair the "the shuffle
+    preserves the Gram's value multiset bit-identically" property -- the whole
+    reason a shuffle is a control rather than a different model -- is **false as
+    run**. Pinning the grid to the single value 16 restores it.
+
+    **Prediction, written before the sweep.** Matched, the shuffled eigenmap
+    lands *worse* than the -0.089 the refitted one scored, because the refit was
+    free to escape toward a kernel that suits misattributed coordinates. *Refuted
+    if* it beats ``vsa_spec_pure-004``'s -0.044, which would say the eigenmap's
+    residual signal is not the correspondence either.
+    """
+
+    knob_grid = (16.0,)
+
+
+# ---------------------------------------------------------------------------
+# the second round: vsa_hks_wide-004's grid landed interior at 0.25 and took
+# the signature from +0.107 to +0.160 label lift, so every comparison the
+# finding note drew against the pinned 0.5 has to be drawn again at 0.25.
+# ---------------------------------------------------------------------------
+@register("vsa_hks_shuf_wide_pure-004",
+          doc="The signature's shuffled control, pinned to the wide fit's 0.25.")
+class VSAHKSShuffledWidePure(VSAHKSShuffledPure):
+    """The load-bearing control, re-matched at the bandwidth that actually fits.
+
+    ``vsa_hks_shuf_pure-004`` matched ``vsa_hks_pure-004`` at 0.5 by luck, not by
+    construction: both refit independently and happened to land together. At the
+    wide grid the treatment moves to 0.25, so an independently refitting control
+    could drift again and the "bit-identical Gram value multiset" property would
+    stop holding exactly when the headline moved. Pinning the grid to the single
+    value 0.25 makes the property true by construction rather than by accident.
+
+    **Prediction, written before the sweep.** It lands below the floor, near
+    ``vsa_hks_shuf_pure-004``'s -0.071, and far below the +0.160 the treatment
+    now scores -- so the correspondence conclusion survives the bandwidth
+    correction. *Refuted if* it rises with its treatment, which would say the
+    wide grid bought a better *value distribution* rather than better use of the
+    graph, and that the shuffle was never the load-bearing control.
+    """
+
+    knob_grid = (0.25,)
+
+
+@register("vsa_perm_hks_wide-004",
+          doc="vsa_perm_hks-004 with the bandwidth grid extended past its boundary.")
+class VSAPermHKSWide(VSAPermHKS):
+    """The composition, redone at the bandwidth the signature actually wants.
+
+    The finding note's section 5 -- "the three heads disagree about the
+    composition" -- compares ``vsa_perm_pure-002`` (+0.227 label) against
+    ``vsa_perm_hks_pure-004`` (+0.161 label, +0.092 copy) and concludes there is
+    no single ranking. Both signature rows in that comparison fitted the pinned
+    0.5. Since ``vsa_hks_wide_pure-004`` shows 0.25 is worth +0.053 of label lift
+    on its own, that whole comparison was drawn at the wrong point.
+
+    **Prediction, written before the sweep.** It gains roughly what the plain
+    signature gained and lands near or above ``vsa_perm_pure-002``'s +0.227 on
+    label while keeping its copy advantage -- which would *collapse* the
+    disagreement the note reports, leaving one model ahead on all three heads.
+    *Refuted if* the gain does not transfer through the permutation channel, in
+    which case the two mechanisms are substitutes and the note's reading stands.
+    """
+
+    knob_grid = VSAHKSWide.knob_grid
+
+
+@register("vsa_perm_hks_wide_pure-004",
+          doc="vsa_perm_hks_wide-004 without the shared memorising fallback.")
+class VSAPermHKSWidePure(VSAPermHKSWide):
+    """The equivariant row that section 5's table has to be redrawn against."""
 
     structural_fallback = False

@@ -25,4 +25,13 @@ sweep and real Lean cannot.
 
 from __future__ import annotations
 
-__all__: list[str] = []
+from .elaborate import Elaboration, elaborate
+from .expr import (App, Const, Expr, Lam, Lit, MVar, Pi, Sort, Var, apps,
+                   arrow, pretty, spine)
+from .kernel import MetaCtx, check, infer, unify, whnf
+from .translate import expr_to_graph, graph_to_expr
+
+__all__ = ["Expr", "Sort", "Const", "Lit", "Var", "MVar", "App", "Lam", "Pi",
+           "apps", "arrow", "spine", "pretty",
+           "MetaCtx", "unify", "whnf", "infer", "check",
+           "graph_to_expr", "expr_to_graph", "elaborate", "Elaboration"]

@@ -1,0 +1,6 @@
+=== vsa_hks_shuf_wide_pure-004: random codebook, d=4096 ===
+  symbols 8192, role atoms 62
+  gate: fitted
+  (no learned layers; binding, superposition and cleanup only)
+  role embedding: heat-kernel signature, knob=0.25, sharpness=12 (fitted), SHUFFLED
+  (the role Gram is the candidate score; see the module docstring)

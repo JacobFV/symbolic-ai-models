@@ -830,6 +830,137 @@ measured on six lessons and inverts at 179: `abstain` 0.0866 against `random`
 directions, and no mechanism for either move has been measured. The note named
 this as its own live risk and was right to.
 
+## Roles derived from the graph, and a bandwidth nobody had fitted
+
+`runs/vsa_role`, 27 rows, all 179 lessons, same floors as every other row: label
+0.143, type 0.860, copy 0.266, copy ceiling 0.722. Attacked by an agent that did
+not write it; **all four load-bearing conclusions survive and the headline was
+0.053 too low.**
+
+A role in `vsa-002` is the product of four random atoms indexed by
+`(ptype, slot, depth, arity)`, and because the codebook is bipolar the candidate
+score reduces exactly to the **role Gram matrix**. Swapping the role construction
+and touching nothing else is therefore a controlled experiment by arithmetic.
+
+`_pure` rows — no shared memorising fallback, so the algebra is what is measured:
+
+| model | role Gram | lbl lift | bits lift | copy lift | rename |
+|---|---|---:|---:|---:|---:|
+| `vsa_null_pure-004` | i.i.d. — **the bottom row** | −0.125 | 0.201 | −0.320 | +0.003 |
+| `vsa_hks_shuf_wide_pure-004` | signature **shuffled**, matched | −0.075 | 0.166 | −0.264 | +0.000 |
+| `vsa_spec_shuf16_pure-004` | eigenmap shuffled, matched | −0.070 | 0.192 | −0.259 | −0.003 |
+| `vsa_spec_pure-004` | Laplacian eigenmap | −0.044 | 0.212 | −0.232 | −0.001 |
+| `vsa_pure-002` | product of atoms | +0.066 | 0.259 | −0.115 | +0.002 |
+| `vsa_sum_pure-004` | **sum** of the same atoms | +0.083 | 0.282 | −0.097 | −0.000 |
+| `vsa_hks_wide_pure-004` | **heat-kernel signature, fitted** | **+0.160** | 0.292 | −0.014 | +0.006 |
+| `vsa_perm_hks_wide_pure-004` | signature + permutation | +0.187 | **0.316** | **+0.093** | −0.002 |
+| `vsa_perm_pure-002` | partition + permutation | **+0.227** | 0.293 | +0.060 | −0.003 |
+
+**The graph beats the hand-built coordinates, and by twice what was published.**
+`vsa_hks_wide_pure-004` uses **no hand-built coordinate of any kind** — no parent
+type, no slot, no depth, no arity. Each node's role is its heat-kernel signature,
+a spectral quantity invariant under graph automorphism. At **+0.160** against the
+hand-built partition's +0.066 and the hand-built graded ladder's +0.083.
+
+**The published +0.107 was measured at a bandwidth the data does not want.** All
+four `vsa_hks*` rows fitted `knob = 0.5` — the **bottom** of their grid. Extended,
+the fit lands **interior at 0.25** and gains +0.053. This repo wrote a lesson that
+same day saying a boundary fit is a failed fit until re-run wider; **the lesson
+was invoked on the arm that lost and skipped on the arm that won**, and on the
+losing arm it gave the wrong reading. That is now its own lesson,
+`notes/lessons/2026-08-14-a-guard-applied-only-to-the-arm-that-lost.md`.
+
+**The shuffled control is load-bearing and the effect is bigger than claimed.**
+Permuting the signature rows across nodes preserves the Gram's value multiset and
+destroys only the correspondence to the graph: +0.160 → −0.075. But the family had
+no *bottom* row, so "gradedness contributes nothing on its own" had nothing to be
+nothing against. `vsa_null_pure-004` (i.i.d. roles) supplies it at −0.125, so
+gradedness alone is worth **+0.051**, and two unrelated shuffled embeddings agree
+on that to 0.001. The corrected split is **82% correspondence, 18% gradedness** —
+not 100/0.
+
+**The pre-registered eigenmap is refuted**, at −0.044, below the floor, beating
+its own matched control by only 0.026. Extending the diffusion grid 64x leaves it
+**bit-identical**, so `t = 16` was an interior optimum all along and "a wider grid
+cannot rescue it" has gone from an argument to a measurement. The mechanism given
+for it — a term tree alternates functor and argument levels, so a label-carrying
+node is always an even number of hops away — was a three-lesson slice and does not
+survive: "always even" is **91.2%** at 179 lessons, and "the nearest visible node
+never carries the answer" is 0.022, not 0.000. **The direction survives, the
+absolutes do not.**
+
+**`*` → `+` is still the cheapest result here.** Superposing the four atoms
+instead of binding them is +0.017 label lift on the `_pure` pair and halves the
+renaming drop, with no graph at all — and without it, a win for any graph
+embedding would be unattributable between "graded helps" and "graph-derived
+helps".
+
+**The three heads still disagree, and that is the strongest thing in the work.**
+Redrawn at the fitted bandwidth, `vsa_perm_pure-002` leads on label (+0.227), the
+signature leads on bits (0.316) and on copy (+0.093). `vsa_perm_hks` is the
+**second-best pointer in the repo**, behind `corefer-001`'s +0.0959. There is no
+single ranking of these two models; which is better is a property of the metric.
+
+**And every row in the family sits 0.486 *below* the type floor.** The work quotes
+that floor and never returns to it. Nothing here has attacked the type head.
+
+## `006`: the Lean gate closes, and the kernel loses to an arity check
+
+The IR-as-a-knob line's second candidate was **Lean — a representation that can
+*refuse* an answer** rather than score it low. It was pre-registered with a
+gating diagnostic designed to kill it before a model was ever written, because
+the pointer's constraint is measured to be discrimination rather than recall:
+candidate recall climbing 82.7% -> 98.7% moved dev copy accuracy by 0.000. So a
+typechecker helps only if it prunes candidates *without* pruning the gold one.
+
+All 179 lessons, 537 held-out **training** episodes (eval's seeds untouched),
+4,443 scored holes, median 55 candidates each. Reproduced on an independent draw
+of 895 episodes at different seeds; nothing moves by 0.01.
+
+| filter | prune (median) | gold survival | matched random |
+|---|---:|---:|---:|
+| `open` — the sound kernel | 0.286 | 0.988 | 0.634 |
+| `declared` — Lean's own rule | **0.355** | **0.984** | 0.486 |
+| `closed` — the committing arm | 0.797 | 0.797 | 0.256 |
+| **`arity` — the floor** | **0.370** | **0.988** | 0.506 |
+| `shifted` — the must-fail control | 0.286 | **0.578** | 0.663 |
+
+**One arm cleared the pre-registered thresholds and it is dominated on both axes
+by the floor.** The floor is: *reject a candidate iff no visible occurrence of it
+has the hole's number of children.* No types, no unification, no intermediate
+representation — any of the nineteen registered models could compute it from the
+`Graph` it already reads. The pre-registration's own row-one language applies
+exactly: **the IR is a re-encoding with no filter.** No threshold was moved; the
+number cleared its threshold and failed its floor.
+
+The two are not nested — the kernel rejects 3,659 candidates the floor keeps and
+keeps 5,468 the floor rejects — so taking both prunes 0.388 against the floor's
+0.370. **+0.018 of prune for an entire intermediate representation**, against a
+measured baseline where sixteen points of candidate recall bought 0.000.
+
+**The instrument works, which is what makes the null readable.** `shifted` — the
+same kernel pointed at a different hole of the same episode — holds its prune
+rate at 0.286 while gold survival collapses 0.988 -> 0.578, *below* its own
+matched-random. The filter reads the hole. And it is not "right but
+unaffordable", the failure mode the pre-registration worried about: 291,000
+candidate checks per second, about 1.1 s for a full sweep.
+
+**Why there was nothing left for a type system.** Every entity symbol in an
+episode collapses into one metavariable component — `alice`, `apple` and
+`manipulate` share a type, because the generator never made them differ. Only
+`Nat/Str/Chr/Prop` are rigid and all come from literals. What remains is kind and
+arity, and arity is free.
+
+**No `lean-006` was registered and no sweep was run.** Phase 2 was never entered.
+That is the gate doing its job, and it is the cheapest death any line here has
+had.
+
+This is promoted despite its controls being author-designed, and the reason is
+worth stating: the failure mode that makes an author's controls untrustworthy is
+constructing them to *pass*. Here they killed the author's own line, and the
+must-fail control failed as required. A null from the agent that built the thing
+runs against its own incentive; a win does not.
+
 ## Awaiting independent challenge — the promotion queue
 
 `notes/` promotes into this file **only once something independent has tried to
@@ -841,8 +972,8 @@ finding that never gets challenged.
 
 | finding | what it claims | what would promote it |
 |---|---|---|
-| `notes/findings/2026-08-14-graph-derived-roles-structure-not-locality.md` | a heat-kernel signature with **no hand-built coordinate** beats the hand-built role tuple (+0.107 vs +0.066), the pre-registered Laplacian eigenmap is **refuted** (−0.044, below the floor), and `vsa_perm_hks-004` is the **second-best pointer in the repo** at +0.092 copy lift | the shuffled control re-derived by someone else, and the composition retested — the three heads rank `vsa_perm_pure` and `vsa_perm_hks` differently and only the label head favours the published leader |
-| the dimension / throughput curve, same note | quality saturates at **d = 1,024** for every construction and the last 64x buys nothing; `vsa_sum-004` at d = 256 matches `vsa-002` at d = 4,096 on accuracy at **17x the throughput** | cheapest of the four to check: re-time it on a different machine state. It is a cost measurement, not a claim about reasoning, so it needs replication rather than a control |
+| ~~graph-derived roles~~ | — | **PROMOTED**, above. All four load-bearing conclusions survived an independent attack; the headline moved *up* 0.053 once the bandwidth was fitted rather than pinned at its grid's edge. Four of the refuter's five written predictions were refuted, all in the finding's favour. |
+| the dimension / throughput curve, same note | quality saturates at **d = 1,024** for every construction and the last 64x buys nothing; `vsa_sum-004` at d = 256 matches `vsa-002` at d = 4,096 on accuracy at **17x the throughput** | **still queued, and it needs a quiet machine.** The quality half survived: one arithmetic claim, "all three decline slightly", is wrong — `vsa-002` *rises* 0.2146 → 0.2180 from 1k to 64k. The right statement is that all three move by ≤0.004 in either direction, which is the saturation the section claims. The throughput half was not re-measured: the box was at load 35 and a contaminated pass read `vsa_sum-004` at 1,391 tok/s against a published 18,995 |
 | ~~the action readout~~ | — | **PROMOTED**, above. Attacked by an agent that did not write it; both named confounds run, plus a third nobody had named; the gap grew from 0.4229 to 0.4320 as they were removed. Its own interpretation was corrected in the process and a slice finding it rested on was refuted. |
 | `notes/findings/2026-08-13-one-parser-over-word-classes-transfers-the-class-identities-do-not.md` | over 46 WALS-coded languages, abstraction transfers and the induced class *identities* are a liability held out; `Treebank.coverage` predicts held-out transfer at **r = +0.886** and survives partialling out script and untranslated share | a second, independent handle on coverage — the one intervention tried moved bracket F1 by +0.002, which is not enough to call a +0.886 correlate a passenger. See `notes/questions/2026-08-14-a-second-handle-on-treebank-coverage.md` |
 

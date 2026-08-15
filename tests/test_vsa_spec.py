@@ -21,6 +21,7 @@ and its predecessors do not:
 from __future__ import annotations
 
 import collections
+import math
 
 import numpy as np
 import pytest
@@ -34,7 +35,8 @@ from symbolic_ai_models.train import TrainConfig, build_tokenizer
 LESSONS = ["unification", "symbol_grounding", "center_embedding"]
 VARIANTS = ["vsa_sum-004", "vsa_spec-004", "vsa_spec_shuf-004", "vsa_hks-004",
             "vsa_hks_shuf-004", "vsa_hks_sum-004", "vsa_hks_ll-004",
-            "vsa_perm_hks-004"]
+            "vsa_perm_hks-004", "vsa_null-004", "vsa_hks_wide-004",
+            "vsa_spec_wide_pure-004", "vsa_spec_shuf16_pure-004"]
 
 
 def cfg_for(tok):
@@ -304,6 +306,78 @@ def test_shuffling_keeps_every_gram_value_and_loses_the_correspondence(
         "correspondence it is meant to destroy")
 
 
+def test_the_multiset_property_belongs_to_a_shared_bandwidth_not_to_the_shuffle(
+        fixtures, cfg):
+    """Added by an independent refuter, 2026-08-14.
+
+    The test above overwrites the control's fitted knob with the treatment's
+    (``control._knob = treatment._knob``) before comparing, so what it asserts is
+    that *permuting rows permutes the Gram* — true by arithmetic, for any
+    bandwidth. It cannot see the case that actually occurred in
+    ``runs/vsa_role``: **``vsa_spec-004`` fitted ``t = 16`` and
+    ``vsa_spec_shuf-004`` refitted to ``t = 1``**, two different kernels, so for
+    the published eigenmap pair the "bit-identical value multiset" property — the
+    whole reason a shuffle is a control and not a different model — is false as
+    run. (``vsa_hks-004`` and ``vsa_hks_shuf-004`` both fitted 0.5, so the pair
+    the finding leans on is genuinely matched. That was luck, not construction.)
+
+    This pins both halves: that the property fails at the knobs the sweep chose,
+    and that ``vsa_spec_shuf16_pure-004`` restores it by pinning the grid.
+    """
+    train, _, tok = fixtures
+    treatment = fit("vsa_spec-004", fixtures, cfg)
+    drifted = fit("vsa_spec_shuf-004", fixtures, cfg)
+    views = big_views(treatment, train, tok, seed=5)
+
+    treatment._knob, treatment._cache = 16.0, None   # what the sweep fitted
+    drifted._knob, drifted._cache = 1.0, None        # what the control fitted
+    moved = sum(not np.allclose(np.sort(gram(treatment, v), axis=None),
+                                np.sort(gram(drifted, v), axis=None))
+                for v in views)
+    assert moved == len(views), (
+        "the published eigenmap pair fitted different bandwidths; if their Gram "
+        "multisets now agree anyway, the knob has stopped reaching the kernel "
+        "and something else is wrong")
+
+    matched = fit("vsa_spec_shuf16_pure-004", fixtures, cfg)
+    assert matched.knob_grid == (16.0,) and matched._knob == 16.0, (
+        "the matched control exists to be unable to drift")
+    treatment._cache = None
+    for view in views:
+        assert np.allclose(np.sort(gram(treatment, view), axis=None),
+                           np.sort(gram(matched, view), axis=None)), (
+            "vsa_spec_shuf16_pure-004 is meant to be the eigenmap's control "
+            "with the value multiset preserved exactly")
+
+
+def test_the_null_row_has_no_gradedness_and_no_correspondence(fixtures, cfg):
+    """Added by an independent refuter, 2026-08-14: the family's missing bottom.
+
+    The finding note reads ``vsa_hks_shuf_pure-004``'s -0.071 as "the gradedness
+    of the Gram contributes nothing on its own". Nothing in the family measured
+    what *nothing* scores, so there was no row for "contributes nothing" to be
+    compared against — and a shuffled signature does not merely fail to help, it
+    asserts gradedly and confidently that unrelated nodes are alike.
+    ``vsa_null-004`` is the reference: i.i.d. bipolar roles, every off-diagonal
+    Gram entry ``0 +/- 1/sqrt(d)``, no gradedness and no correspondence.
+
+    Refuted if the null Gram turned out to carry structure — which is what would
+    happen if the seeding accidentally keyed on something about the node.
+    """
+    train, _, tok = fixtures
+    model = fit("vsa_null-004", fixtures, cfg)
+    views = big_views(model, train, tok, seed=5)
+    off_diagonal: list[float] = []
+    for view in views:
+        g = gram(model, view)
+        off_diagonal.extend(g[~np.eye(len(view), dtype=bool)].tolist())
+    assert max(abs(v) for v in off_diagonal) < 8.0 / math.sqrt(model._d), (
+        "the null roles are not orthogonal; this row is not a null")
+    signature = fit("vsa_hks-004", fixtures, cfg)
+    assert abs(_agreement(model, signature, views)) < 0.05, (
+        "the null row agrees with the signature about which pairs are alike")
+
+
 def test_the_shuffle_is_the_same_permutation_every_time_it_is_asked(fixtures, cfg):
     """A control that reshuffles between fitting and prediction measures nothing.
 
@@ -386,10 +460,23 @@ def test_the_embedding_family_is_exactly_equivariant(name):
 def test_every_variant_answers_and_fits_inside_its_own_grid(fixtures, cfg, name):
     """A model that abstained everywhere would pass every claim above vacuously.
 
-    The grid check is the pre-registered guard against a boundary optimum being
-    reported as a result — ``vsa_full_gated-002`` made exactly that mistake once,
-    fitting to the top of a grid that stopped too early and coming out
-    bit-identical to the model it was meant to distinguish itself from.
+    **The grid check below is NOT a guard against a boundary optimum**, whatever
+    an earlier version of this docstring said. ``_fit_scalars`` searches
+    ``knob_grid`` and assigns from it, so ``model._knob in model.knob_grid`` is
+    true by construction and can never fail — including when the fit pins to an
+    endpoint, which is the case it was believed to catch. An independent refuter
+    found all four registered heat-kernel rows fitted ``knob = 0.5``, the bottom
+    of ``(0.5, 1, 2, 4)``, with this assertion passing the whole time; extended,
+    the fit lands interior at 0.25 and the row gains +0.053 of label lift
+    (``vsa_hks_wide-004``, ``notes/findings/2026-08-14-the-graph-roles-survive-
+    the-attack-and-their-bandwidth-does-not.md``).
+
+    The assertion is kept because it does catch a knob assigned from *outside*
+    the grid, which is a different and real bug. The boundary check that would
+    have caught the real defect is "extend the grid past the optimum and refit",
+    and it cannot live in a unit test on three lessons — it is a registered row
+    and a sweep. ``vsa_hks_wide-004`` and ``vsa_spec_wide_pure-004`` are those
+    rows for this module.
     """
     train, evaluation, tok = fixtures
     model = fit(name, fixtures, cfg)
