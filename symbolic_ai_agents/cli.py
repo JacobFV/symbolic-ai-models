@@ -77,7 +77,7 @@ def cmd_agents(args: argparse.Namespace) -> int:
     from .envs.base import FLOOR_POLICIES
     for name in agent_names():
         mark = " (floor)" if name in FLOOR_POLICIES else ""
-        print(f"  {name:<12}{getattr(REGISTRY[name], 'summary', '')}{mark}")
+        print(f"  {name:<18}{getattr(REGISTRY[name], 'summary', '')}{mark}")
     print("\n(floor) = also one of the reference policies every environment's "
           "floor is the best of, so it has zero lift wherever it wins.",
           file=sys.stderr)
