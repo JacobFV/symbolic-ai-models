@@ -1,0 +1,7 @@
+=== careful: 678 context cells ===
+  choice       801 answers seen   'yes'x96, 'no'x87, 'o1'x54, 'o0'x52
+  probe        801 answers seen   'yes'x96, 'no'x87, 'o1'x54, 'o0'x52
+  repair      2073 answers seen   'rule'x418, '1'x305, '0'x255, 'obj'x211
+  retry        801 answers seen   'yes'x96, 'no'x87, 'o1'x54, 'o0'x52
+  confidence map: fitted
+  probe threshold: 0.00 (fitted), at most 4 per episode

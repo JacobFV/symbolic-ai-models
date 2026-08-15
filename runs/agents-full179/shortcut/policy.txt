@@ -1,0 +1,10 @@
+=== shortcut: 3 cheats above chance ===
+  last          +0.018 above chance
+  recency       +0.016 above chance
+  alphabetical  +0.012 above chance
+  longest       +0.000 above chance
+  shortest      +0.000 above chance
+  first         +0.000 above chance
+  overlap       +0.000 above chance
+  digits        +0.000 above chance
+  odd_one_out   +0.000 above chance
