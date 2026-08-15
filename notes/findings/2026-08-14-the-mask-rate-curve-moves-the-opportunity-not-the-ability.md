@@ -160,6 +160,15 @@ that looks like when measured: the coreferent is still visible, and the local
 context that would say *which* visible node it is has been hidden along with the
 rest of the subtree.
 
+Four models measured both ways, `acc | copyable` at budget 0.15:
+
+| model | scattered | subtree | Δ |
+|---|---:|---:|---:|
+| `corefer-001` | 0.494 | 0.383 | **−0.111** |
+| `ptrgen-001` | 0.462 | 0.349 | −0.113 |
+| `routes-001` | 0.448 | 0.315 | −0.133 |
+| `evidence-001` | 0.303 | 0.258 | −0.045 |
+
 **The floor says the same thing from the other side.** Under scattered masking
 the structure-only lookup is itself 0.052 better on copyable fills than on the
 rest; under subtree masking that difference collapses to **0.002** (0.126 against
