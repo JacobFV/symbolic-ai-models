@@ -1,0 +1,14 @@
+=== route family (13 routes) ===
+  ('prev',)                 0.213
+  ('sibling', 0)            0.199
+  ('sibling', 1)            0.190
+  ('sibling', 2)            0.170
+  ('sibling', 3)            0.123
+  ('peer',)                 0.086
+  ('parent',)               0.006
+  ('child', 0)              0.005
+  ('grandparent',)          0.004
+  ('aunt', 0)               0.003
+  ('child', 1)              0.001
+  ('aunt', 1)               0.000
+=== 103 structural contexts ===
