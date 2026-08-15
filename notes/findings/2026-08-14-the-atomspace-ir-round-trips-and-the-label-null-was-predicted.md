@@ -49,7 +49,52 @@ Six lessons said zero; a hundred and seventy-nine say two. Slice number ten.
 **And the gain is bits, not accuracy** — which is exactly, and only, where the
 pre-registration said a legitimate win could appear.
 
-## The result, in one sentence with both columns in it
+## The largest effect is on a head nobody predicted, and it is the copy head
+
+The pre-registration named two places a win could legitimately appear: **bits**,
+and **the type head**. It did not name the pointer. The largest effect in this
+line is on the pointer, and because it was unpredicted it is the result most in
+need of an independent refuter rather than the one to lead a claim with.
+
+Permutation-channel rows, exactly equivariant (`_pure`), same floors, copy floor
+**0.266** and copy ceiling **0.722**:
+
+| row | lbl lift | bits lift | **copy acc** | **copy lift** | rename |
+|---|---:|---:|---:|---:|---:|
+| `vsa_perm_pure-002` | **+0.227** | +0.293 | 0.310 | +0.060 | −0.003 |
+| `metta_perm_pure-005` | +0.140 | **+0.310** | **0.346** | **+0.109** | **−0.007** |
+| `corefer-001` (best published pointer) | +0.250 | +0.258 | 0.336 | +0.096 | +0.003 |
+
+Three things move at once and they do **not** move together:
+
+- **copy lift +0.060 → +0.109**, an improvement of +0.049, which also clears
+  `corefer-001`'s +0.096 — the best pointer this repo has published;
+- **bits lift +0.293 → +0.310**, +0.017;
+- **label lift +0.227 → +0.140**, a real **loss** of −0.087.
+
+All of it at a renaming drop of **−0.007** — the model is slightly *better* after
+every symbol is permuted, which is what exact equivariance plus noise looks like.
+
+### A mechanism, offered as a hypothesis and not as a result
+
+The label head and the pointer read the same roles through different operations,
+and a richer role should help one and hurt the other:
+
+- the pointer scores a node by `<Q_role(i), role(j)>` — a **cleanup against the
+  role address codebook**. More signatures means more discriminative addresses,
+  so pointing gets better.
+- the label head unbinds the episode trace at the query's role. Every extra
+  signature adds another term to a superposition that already carries every
+  node, so **crosstalk rises** and symbol retrieval gets worse.
+
+That predicts exactly the observed sign pattern. It is a story that fits, told
+after the fact, and this repo has a lesson about those. What would test it: the
+crosstalk account says the label loss should grow with the number of signatures
+per node, so it should be worse on wide graphs and on high-arity nodes than on
+narrow ones — a per-node breakdown nobody has run. **Not run here, and the
+mechanism is therefore unconfirmed.**
+
+## The result on the head the repo leads with, in one sentence with both columns
 
 **The atomspace query schedule buys +0.011 of `label_bits` lift over identical
 machinery and 0.000 of `label_acc`** — 0.213 against 0.213 — **and the bits gain
