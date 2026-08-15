@@ -1,7 +1,282 @@
 {
   "mapped_kinds": 123,
+  "nodes": {
+    "entity": {
+      "body_field": "dropped on purpose: median 36 chars, 70% templated OBO provenance, 23,883 distinct openings per 190k sample",
+      "kinds": {
+        "org": 8021
+      },
+      "nodes_kept": 8021,
+      "output": "kg/normalized/v2/entity.nodes.tsv.gz",
+      "rejected": {},
+      "row_cap_per_file": null,
+      "source": "entity",
+      "without_label": 0
+    },
+    "finance": {
+      "body_field": "dropped on purpose: median 36 chars, 70% templated OBO provenance, 23,883 distinct openings per 190k sample",
+      "kinds": {
+        "org": 16992,
+        "person": 60870,
+        "security": 33656
+      },
+      "nodes_kept": 111518,
+      "output": "kg/normalized/v2/finance.nodes.tsv.gz",
+      "rejected": {},
+      "row_cap_per_file": null,
+      "source": "finance",
+      "without_label": 0
+    },
+    "gdelt": {
+      "body_field": "dropped on purpose: median 36 chars, 70% templated OBO provenance, 23,883 distinct openings per 190k sample",
+      "kinds": {
+        "actor": 40194
+      },
+      "nodes_kept": 40194,
+      "output": "kg/normalized/v2/gdelt.nodes.tsv.gz",
+      "rejected": {},
+      "row_cap_per_file": null,
+      "source": "gdelt",
+      "without_label": 0
+    },
+    "geo": {
+      "body_field": "dropped on purpose: median 36 chars, 70% templated OBO provenance, 23,883 distinct openings per 190k sample",
+      "kinds": {
+        "continent": 7,
+        "country": 252,
+        "currency": 155,
+        "place": 13446771
+      },
+      "nodes_kept": 13447185,
+      "output": "kg/normalized/v2/geo.nodes.tsv.gz",
+      "rejected": {},
+      "row_cap_per_file": null,
+      "source": "geo",
+      "without_label": 0
+    },
+    "gleif": {
+      "body_field": "dropped on purpose: median 36 chars, 70% templated OBO provenance, 23,883 distinct openings per 190k sample",
+      "kinds": {
+        "org": 3348427
+      },
+      "nodes_kept": 3348427,
+      "output": "kg/normalized/v2/gleif.nodes.tsv.gz",
+      "rejected": {},
+      "row_cap_per_file": null,
+      "source": "gleif",
+      "without_label": 0
+    },
+    "govspend": {
+      "body_field": "dropped on purpose: median 36 chars, 70% templated OBO provenance, 23,883 distinct openings per 190k sample",
+      "kinds": {
+        "concept": 153,
+        "org": 37972,
+        "person": 13222
+      },
+      "nodes_kept": 51347,
+      "output": "kg/normalized/v2/govspend.nodes.tsv.gz",
+      "rejected": {},
+      "row_cap_per_file": null,
+      "source": "govspend",
+      "without_label": 1
+    },
+    "graph": {
+      "body_field": "dropped on purpose: median 36 chars, 70% templated OBO provenance, 23,883 distinct openings per 190k sample",
+      "kinds": {
+        "article": 5395,
+        "assembly": 7202,
+        "asset": 10325,
+        "claim": 316774,
+        "class": 12501,
+        "concept": 1935462,
+        "entity": 5606,
+        "event": 62442,
+        "file": 9204,
+        "function": 74822,
+        "group": 19431,
+        "module": 6564,
+        "org": 390014,
+        "organization": 8175,
+        "part": 16037,
+        "patent": 166236,
+        "period": 3318,
+        "person": 328102,
+        "place": 196879,
+        "polity": 5043,
+        "product": 5724,
+        "protein": 2496,
+        "question": 3000,
+        "role": 18229,
+        "standard": 4006,
+        "statute": 14913,
+        "synset": 2500,
+        "trademark": 1900,
+        "word": 409391,
+        "work": 147489
+      },
+      "nodes_kept": 4209044,
+      "output": "kg/normalized/v2/graph.nodes.tsv.gz",
+      "rejected": {
+        "id:unparseable": 1692842
+      },
+      "row_cap_per_file": null,
+      "source": "graph",
+      "without_label": 0
+    },
+    "lit": {
+      "body_field": "dropped on purpose: median 36 chars, 70% templated OBO provenance, 23,883 distinct openings per 190k sample",
+      "kinds": {
+        "book": 78719,
+        "concept": 42148,
+        "person": 40312
+      },
+      "nodes_kept": 161179,
+      "output": "kg/normalized/v2/lit.nodes.tsv.gz",
+      "rejected": {},
+      "row_cap_per_file": null,
+      "source": "lit",
+      "without_label": 0
+    },
+    "patents": {
+      "body_field": "dropped on purpose: median 36 chars, 70% templated OBO provenance, 23,883 distinct openings per 190k sample",
+      "kinds": {
+        "patent": 8532000
+      },
+      "nodes_kept": 8532000,
+      "output": "kg/normalized/v2/patents.nodes.tsv.gz",
+      "rejected": {},
+      "row_cap_per_file": null,
+      "source": "patents",
+      "without_label": 0
+    },
+    "scholar": {
+      "body_field": "dropped on purpose: median 36 chars, 70% templated OBO provenance, 23,883 distinct openings per 190k sample",
+      "kinds": {
+        "concept": 29303,
+        "domain": 4,
+        "field": 26,
+        "org": 102955,
+        "paper": 21381127,
+        "person": 9082310,
+        "subfield": 252,
+        "topic": 4516,
+        "venue": 69234
+      },
+      "nodes_kept": 30669727,
+      "output": "kg/normalized/v2/scholar.nodes.tsv.gz",
+      "rejected": {},
+      "row_cap_per_file": null,
+      "source": "scholar",
+      "without_label": 4136
+    },
+    "transport": {
+      "body_field": "dropped on purpose: median 36 chars, 70% templated OBO provenance, 23,883 distinct openings per 190k sample",
+      "kinds": {
+        "org": 6161,
+        "place": 6072
+      },
+      "nodes_kept": 12233,
+      "output": "kg/normalized/v2/transport.nodes.tsv.gz",
+      "rejected": {},
+      "row_cap_per_file": null,
+      "source": "transport",
+      "without_label": 0
+    }
+  },
   "schema_version": 2,
   "sources": {
+    "appcite": {
+      "canonical_counts": {
+        "cites": 78562347
+      },
+      "files": [
+        "/home/brandonin/Downloads/kg/appcite/app_citations_p0.parquet",
+        "/home/brandonin/Downloads/kg/appcite/app_citations_p1.parquet",
+        "/home/brandonin/Downloads/kg/appcite/app_citations_p2.parquet",
+        "/home/brandonin/Downloads/kg/appcite/app_citations_p3.parquet"
+      ],
+      "kept_fraction": 1.0,
+      "output": "kg/normalized/v2/appcite.tsv.gz",
+      "output_sha256": "21219cacb73b25ae8814028126102a3982b61f35094ca6cece405e7bcd35e95b",
+      "rejected": {},
+      "row_cap_per_file": null,
+      "rows_seen": 78562347,
+      "source": "appcite",
+      "triples_kept": 78562347,
+      "unmapped_kinds": {}
+    },
+    "assignee": {
+      "canonical_counts": {
+        "assigned-to": 8751310
+      },
+      "files": [
+        "/home/brandonin/Downloads/kg/assignee/patent_assignee_p0.parquet"
+      ],
+      "kept_fraction": 1.0,
+      "output": "kg/normalized/v2/assignee.tsv.gz",
+      "output_sha256": "55a6976c873afcf9415d4d05f6096da9e43f5943da771379d903352bae0b91d9",
+      "rejected": {},
+      "row_cap_per_file": null,
+      "rows_seen": 8751310,
+      "source": "assignee",
+      "triples_kept": 8751310,
+      "unmapped_kinds": {}
+    },
+    "caselaw": {
+      "canonical_counts": {
+        "cites": 76959991
+      },
+      "files": [
+        "/home/brandonin/Downloads/kg/caselaw/citation_map_p0.parquet",
+        "/home/brandonin/Downloads/kg/caselaw/citation_map_p1.parquet"
+      ],
+      "kept_fraction": 1.0,
+      "output": "kg/normalized/v2/caselaw.tsv.gz",
+      "output_sha256": "e7ec7690dece0694ed188029651dbd473b59b4e69aa4b33e9aee8511c61e904b",
+      "rejected": {},
+      "row_cap_per_file": null,
+      "rows_seen": 76959991,
+      "source": "caselaw",
+      "triples_kept": 76959991,
+      "unmapped_kinds": {}
+    },
+    "cite": {
+      "canonical_counts": {
+        "cites": 134789083
+      },
+      "files": [
+        "/home/brandonin/Downloads/kg/cite/patent_citations_p0.parquet",
+        "/home/brandonin/Downloads/kg/cite/patent_citations_p1.parquet",
+        "/home/brandonin/Downloads/kg/cite/patent_citations_p2.parquet"
+      ],
+      "kept_fraction": 1.0,
+      "output": "kg/normalized/v2/cite.tsv.gz",
+      "output_sha256": "ed36d4021d450d8dfd3bc7f39c867f7a3eb234c3c7f3861fac443f8c147c97b0",
+      "rejected": {},
+      "row_cap_per_file": null,
+      "rows_seen": 134789083,
+      "source": "cite",
+      "triples_kept": 134789083,
+      "unmapped_kinds": {}
+    },
+    "cpc": {
+      "canonical_counts": {
+        "classified-as": 59805669
+      },
+      "files": [
+        "/home/brandonin/Downloads/kg/cpc/patent_cpc_p0.parquet",
+        "/home/brandonin/Downloads/kg/cpc/patent_cpc_p1.parquet"
+      ],
+      "kept_fraction": 1.0,
+      "output": "kg/normalized/v2/cpc.tsv.gz",
+      "output_sha256": "f1799125edfce4916701ee7f07097dea40fa633b3eeb635aa2e69410a65530d1",
+      "rejected": {},
+      "row_cap_per_file": null,
+      "rows_seen": 59805669,
+      "source": "cpc",
+      "triples_kept": 59805669,
+      "unmapped_kinds": {}
+    },
     "cskg": {
       "canonical_counts": {
         "agent-attribute": 130277,
@@ -40,8 +315,8 @@
         "/home/brandonin/Downloads/kg/cskg/cskg_full_p0.parquet"
       ],
       "kept_fraction": 0.7149,
-      "output": "kg/normalized/v2/cskg.ndjson.gz",
-      "output_sha256": "2a0ea80f76f4f6abb09ace543660165dadc8012e78086ed41216e7014f4e7079",
+      "output": "kg/normalized/v2/cskg.tsv.gz",
+      "output_sha256": "c4cfe05b963303540a0b6a805c4a814e944262b5bb1b9eec7cfb2c20c3b767d4",
       "rejected": {
         "kind:unmapped": 1133166
       },
@@ -84,8 +359,8 @@
         "/home/brandonin/Downloads/kg/entity/wikidata/idbridges_full_p0.parquet"
       ],
       "kept_fraction": 0.7497,
-      "output": "kg/normalized/v2/entity.ndjson.gz",
-      "output_sha256": "1893f36cae36c73963ec4f2dd00fbcdb8a100b98c9e85c10ec341e307c143992",
+      "output": "kg/normalized/v2/entity.tsv.gz",
+      "output_sha256": "c113fd287da297f57a27c0efbd171b81f805e023e35cc3121f9ac5c8cc4a0cf7",
       "rejected": {
         "kind:unmapped": 65016543
       },
@@ -135,6 +410,116 @@
         "subsidiary": 123700
       }
     },
+    "finance": {
+      "canonical_counts": {},
+      "files": [
+        "/home/brandonin/Downloads/kg/finance/13f/holdings_01mar2026-31may2026_p0.parquet",
+        "/home/brandonin/Downloads/kg/finance/insider/txns_2025q2_to_2026q1_p0.parquet"
+      ],
+      "kept_fraction": 0.0,
+      "output": "kg/normalized/v2/finance.tsv.gz",
+      "output_sha256": "a16cc1c6d3e22cef21d7345718b175903778b3072b9c7daefda20cdcbfcf3188",
+      "rejected": {
+        "kind:unmapped": 4149252
+      },
+      "row_cap_per_file": null,
+      "rows_seen": 4149252,
+      "source": "finance",
+      "triples_kept": 0,
+      "unmapped_kinds": {
+        "acquired-by-will": 116,
+        "bought": 30372,
+        "converted": 5922,
+        "exercised-derivative": 42382,
+        "exercised-option": 518,
+        "gifted": 6558,
+        "granted-shares": 62906,
+        "holds": 3682720,
+        "holds-call": 73171,
+        "holds-put": 66994,
+        "other-acquisition-disposition": 10980,
+        "shares-withheld-for-tax": 51004,
+        "small-acquisition": 642,
+        "sold": 107063,
+        "sold-to-issuer": 7193,
+        "tendered-in-merger": 555,
+        "txn-E": 2,
+        "txn-I": 142,
+        "txn-O": 3,
+        "txn-Z": 9
+      }
+    },
+    "gdelt": {
+      "canonical_counts": {},
+      "files": [
+        "/home/brandonin/Downloads/kg/gdelt/country/events_20260311_60d_p0.parquet",
+        "/home/brandonin/Downloads/kg/gdelt/country/events_20260510_30d_p0.parquet",
+        "/home/brandonin/Downloads/kg/gdelt/country/events_20260609_14d_p0.parquet",
+        "/home/brandonin/Downloads/kg/gdelt/country/events_20260623_2d_p0.parquet",
+        "/home/brandonin/Downloads/kg/gdelt/events_30day_p0.parquet",
+        "/home/brandonin/Downloads/kg/gdelt/events_60day_p0.parquet",
+        "/home/brandonin/Downloads/kg/gdelt/events_7day_p0.parquet",
+        "/home/brandonin/Downloads/kg/gdelt/events_recent_p0.parquet",
+        "/home/brandonin/Downloads/kg/gdelt/name/events_20260311_60d_p0.parquet",
+        "/home/brandonin/Downloads/kg/gdelt/name/events_20260510_30d_p0.parquet",
+        "/home/brandonin/Downloads/kg/gdelt/name/events_20260609_14d_p0.parquet",
+        "/home/brandonin/Downloads/kg/gdelt/name/events_20260623_2d_p0.parquet",
+        "/home/brandonin/Downloads/kg/gdelt/name/events_20260623_p0.parquet",
+        "/home/brandonin/Downloads/kg/gdelt/name/events_latest_p0.parquet"
+      ],
+      "kept_fraction": 0.0,
+      "output": "kg/normalized/v2/gdelt.tsv.gz",
+      "output_sha256": "ffc1d8f734dbcde14829765030e2436119b1aa74f92d65646b6b9a60ff34fb75",
+      "rejected": {
+        "kind:unmapped": 39140197
+      },
+      "row_cap_per_file": null,
+      "rows_seen": 39140197,
+      "source": "gdelt",
+      "triples_kept": 0,
+      "unmapped_kinds": {
+        "01": 1134443,
+        "02": 564313,
+        "03": 613452,
+        "04": 2567141,
+        "05": 806233,
+        "06": 206041,
+        "07": 269615,
+        "08": 261822,
+        "09": 152977,
+        "10": 101242,
+        "11": 513379,
+        "12": 174440,
+        "13": 110898,
+        "14": 65901,
+        "15": 34358,
+        "16": 91518,
+        "17": 436558,
+        "18": 117355,
+        "19": 523037,
+        "20": 3334,
+        "appeal": 1883613,
+        "assault": 461139,
+        "coerce": 1368378,
+        "consult": 8555950,
+        "cooperate-diplomatically": 2879578,
+        "cooperate-materially": 684352,
+        "demand": 367308,
+        "disapprove": 1948526,
+        "exhibit-force": 110521,
+        "fight": 2110463,
+        "intend-cooperation": 1848491,
+        "investigate": 491287,
+        "mass-violence": 14296,
+        "protest": 210678,
+        "provide-aid": 834381,
+        "reduce-relations": 290362,
+        "reject": 670407,
+        "state-publicly": 4075931,
+        "threaten": 659988,
+        "yield": 926491
+      }
+    },
     "geo": {
       "canonical_counts": {
         "adjacent-to": 654,
@@ -150,8 +535,8 @@
         "/home/brandonin/Downloads/kg/geo/geonames/wikipedia_links_2026_p0.parquet"
       ],
       "kept_fraction": 0.9556,
-      "output": "kg/normalized/v2/geo.ndjson.gz",
-      "output_sha256": "d9087875f410b4d1f5d780e2a093ee94d03579e98acb7fc8a5c23fe1f95ee589",
+      "output": "kg/normalized/v2/geo.tsv.gz",
+      "output_sha256": "7f21b098fbe1580b0cd88caefa929be4610a73c36028a3a4258c450e7ce1366b",
       "rejected": {
         "kind:unmapped": 705821
       },
@@ -161,6 +546,96 @@
       "triples_kept": 15208181,
       "unmapped_kinds": {
         "described-at": 705821
+      }
+    },
+    "gharchive": {
+      "canonical_counts": {},
+      "files": [
+        "/home/brandonin/Downloads/kg/gharchive/events_2026-06-14_15_p0.parquet",
+        "/home/brandonin/Downloads/kg/gharchive/events_2026-06-16_17_p0.parquet",
+        "/home/brandonin/Downloads/kg/gharchive/events_2026-06-18_p0.parquet",
+        "/home/brandonin/Downloads/kg/gharchive/events_2026-06-19_p0.parquet",
+        "/home/brandonin/Downloads/kg/gharchive/events_2026-06-20_p0.parquet"
+      ],
+      "kept_fraction": 0.0,
+      "output": "kg/normalized/v2/gharchive.tsv.gz",
+      "output_sha256": "fdcd8b5bb74588f4ae2fcd8abffeb870768ce5ef33c5c92fd50e883b120a1c07",
+      "rejected": {
+        "kind:unmapped": 7730712
+      },
+      "row_cap_per_file": null,
+      "rows_seen": 7730712,
+      "source": "gharchive",
+      "triples_kept": 0,
+      "unmapped_kinds": {
+        "commitcommentevent": 885,
+        "createevent": 1579719,
+        "deleteevent": 405577,
+        "discussionevent": 233,
+        "forkevent": 12522,
+        "gollumevent": 402,
+        "issuecommentevent": 55101,
+        "issuesevent": 33464,
+        "memberevent": 2226,
+        "publicevent": 1873,
+        "pullrequestevent": 165516,
+        "pullrequestreviewcommentevent": 12274,
+        "pullrequestreviewevent": 31847,
+        "pushevent": 5359448,
+        "releaseevent": 9264,
+        "watchevent": 60361
+      }
+    },
+    "gleif": {
+      "canonical_counts": {},
+      "files": [
+        "/home/brandonin/Downloads/kg/gleif/relationships_p0.parquet"
+      ],
+      "kept_fraction": 0.0,
+      "output": "kg/normalized/v2/gleif.tsv.gz",
+      "output_sha256": "f861e3b82c455add81003b39f1a5e30961550dfb0c21eeeade11f67bd66e8f86",
+      "rejected": {
+        "kind:unmapped": 476875
+      },
+      "row_cap_per_file": null,
+      "rows_seen": 476875,
+      "source": "gleif",
+      "triples_kept": 0,
+      "unmapped_kinds": {
+        "IS_DIRECTLY_CONSOLIDATED_BY": 124460,
+        "IS_FEEDER_TO": 1359,
+        "IS_FUND-MANAGED_BY": 146948,
+        "IS_INTERNATIONAL_BRANCH_OF": 1920,
+        "IS_SUBFUND_OF": 71833,
+        "IS_ULTIMATELY_CONSOLIDATED_BY": 130355
+      }
+    },
+    "govspend": {
+      "canonical_counts": {},
+      "files": [
+        "/home/brandonin/Downloads/kg/govspend/cfpb/complaints_2025_p0.parquet",
+        "/home/brandonin/Downloads/kg/govspend/fec/contributions_2026-2024_p0.parquet",
+        "/home/brandonin/Downloads/kg/govspend/lobbying/disclosures_2025_p0.parquet",
+        "/home/brandonin/Downloads/kg/govspend/usaspending/awards_contracts_fy2026_p0.parquet"
+      ],
+      "kept_fraction": 0.0,
+      "output": "kg/normalized/v2/govspend.tsv.gz",
+      "output_sha256": "4a3dcea1ac68a9321555cb956305b1f099d6e3f3821f9e5e53e9c7cec7d2207d",
+      "rejected": {
+        "kind:unmapped": 915583
+      },
+      "row_cap_per_file": null,
+      "rows_seen": 915583,
+      "source": "govspend",
+      "triples_kept": 0,
+      "unmapped_kinds": {
+        "awarded": 10000,
+        "complaint-about-issue": 610,
+        "complaint-about-product": 394,
+        "contributed": 862878,
+        "hired": 7625,
+        "lobbied": 21264,
+        "lobbied-on": 12812
       }
     },
     "graph": {
@@ -1244,8 +1719,8 @@
         "/home/brandonin/Downloads/kg/graph/clique/project-commandagi/rep/semantic/edges/00000000.ndjson.gz"
       ],
       "kept_fraction": 0.5928,
-      "output": "kg/normalized/v2/graph.ndjson.gz",
-      "output_sha256": "4c41eee8d9ca88ffc72829b84478916d74e2ff1aaf305fc38492c6ff683553a5",
+      "output": "kg/normalized/v2/graph.tsv.gz",
+      "output_sha256": "721db8e0b361282fdbfe50187814d457f0b8ca517b55e5b71acb25ed80ba0efc",
       "rejected": {
         "id:unparseable": 38339,
         "kind:unmapped": 2243686
@@ -1297,6 +1772,24 @@
         "used-for": 12560
       }
     },
+    "inventor": {
+      "canonical_counts": {
+        "invented-by": 24037380
+      },
+      "files": [
+        "/home/brandonin/Downloads/kg/inventor/patent_inventor_p0.parquet",
+        "/home/brandonin/Downloads/kg/inventor/patent_inventor_p1.parquet"
+      ],
+      "kept_fraction": 1.0,
+      "output": "kg/normalized/v2/inventor.tsv.gz",
+      "output_sha256": "33e92dfe9262ff9cafc319ddef96826f49163002ff8c53de5a7ca461810ceb46",
+      "rejected": {},
+      "row_cap_per_file": null,
+      "rows_seen": 24037380,
+      "source": "inventor",
+      "triples_kept": 24037380,
+      "unmapped_kinds": {}
+    },
     "lit": {
       "canonical_counts": {
         "authored-by": 108832,
@@ -1306,8 +1799,8 @@
         "/home/brandonin/Downloads/kg/lit/gutenberg/catalog_2026_p0.parquet"
       ],
       "kept_fraction": 0.595,
-      "output": "kg/normalized/v2/lit.ndjson.gz",
-      "output_sha256": "7a10b74165d9b122bd3ceec2084aa2713ad360c4851866325623196d65f445e8",
+      "output": "kg/normalized/v2/lit.tsv.gz",
+      "output_sha256": "54a471625c534b29accb5b5552e25074c170d05c15606f5a5664dd91f43d196c",
       "rejected": {
         "kind:unmapped": 183535
       },
@@ -1317,6 +1810,157 @@
       "triples_kept": 269601,
       "unmapped_kinds": {
         "about": 183535
+      }
+    },
+    "qa": {
+      "canonical_counts": {},
+      "files": [
+        "/home/brandonin/Downloads/kg/qa/stackexchange/ai-stackexchange-com_postlinks_2026_p0.parquet",
+        "/home/brandonin/Downloads/kg/qa/stackexchange/apple-stackexchange-com_postlinks_2026_p0.parquet",
+        "/home/brandonin/Downloads/kg/qa/stackexchange/askubuntu-com_postlinks_2026_p0.parquet",
+        "/home/brandonin/Downloads/kg/qa/stackexchange/aviation-stackexchange-com_postlinks_2026_p0.parquet",
+        "/home/brandonin/Downloads/kg/qa/stackexchange/biology-stackexchange-com_postlinks_2026_p0.parquet",
+        "/home/brandonin/Downloads/kg/qa/stackexchange/chemistry-stackexchange-com_postlinks_2026_p0.parquet",
+        "/home/brandonin/Downloads/kg/qa/stackexchange/cs-stackexchange-com_postlinks_2026_p0.parquet",
+        "/home/brandonin/Downloads/kg/qa/stackexchange/datascience-stackexchange-com_postlinks_2026_p0.parquet",
+        "/home/brandonin/Downloads/kg/qa/stackexchange/dba-stackexchange-com_postlinks_2026_p0.parquet",
+        "/home/brandonin/Downloads/kg/qa/stackexchange/economics-stackexchange-com_postlinks_2026_p0.parquet",
+        "/home/brandonin/Downloads/kg/qa/stackexchange/electronics-stackexchange-com_postlinks_2026_p0.parquet",
+        "/home/brandonin/Downloads/kg/qa/stackexchange/english-stackexchange-com_postlinks_2026_p0.parquet",
+        "/home/brandonin/Downloads/kg/qa/stackexchange/gaming-stackexchange-com_postlinks_2026_p0.parquet",
+        "/home/brandonin/Downloads/kg/qa/stackexchange/gis-stackexchange-com_postlinks_2026_p0.parquet",
+        "/home/brandonin/Downloads/kg/qa/stackexchange/history-stackexchange-com_postlinks_2026_p0.parquet",
+        "/home/brandonin/Downloads/kg/qa/stackexchange/law-stackexchange-com_postlinks_2026_p0.parquet",
+        "/home/brandonin/Downloads/kg/qa/stackexchange/math-stackexchange-com_postlinks_2026_p0.parquet",
+        "/home/brandonin/Downloads/kg/qa/stackexchange/philosophy-stackexchange-com_postlinks_2026_p0.parquet",
+        "/home/brandonin/Downloads/kg/qa/stackexchange/physics-stackexchange-com_postlinks_2026_p0.parquet",
+        "/home/brandonin/Downloads/kg/qa/stackexchange/politics-stackexchange-com_postlinks_2026_p0.parquet",
+        "/home/brandonin/Downloads/kg/qa/stackexchange/security-stackexchange-com_postlinks_2026_p0.parquet",
+        "/home/brandonin/Downloads/kg/qa/stackexchange/serverfault-com_postlinks_2026_p0.parquet",
+        "/home/brandonin/Downloads/kg/qa/stackexchange/skeptics-stackexchange-com_postlinks_2026_p0.parquet",
+        "/home/brandonin/Downloads/kg/qa/stackexchange/space-stackexchange-com_postlinks_2026_p0.parquet",
+        "/home/brandonin/Downloads/kg/qa/stackexchange/stackoverflow-com_postlinks_2026_p0.parquet",
+        "/home/brandonin/Downloads/kg/qa/stackexchange/stats-stackexchange-com_postlinks_2026_p0.parquet",
+        "/home/brandonin/Downloads/kg/qa/stackexchange/superuser-com_postlinks_2026_p0.parquet",
+        "/home/brandonin/Downloads/kg/qa/stackexchange/unix-stackexchange-com_postlinks_2026_p0.parquet",
+        "/home/brandonin/Downloads/kg/qa/stackexchange/worldbuilding-stackexchange-com_postlinks_2026_p0.parquet"
+      ],
+      "kept_fraction": 0.0,
+      "output": "kg/normalized/v2/qa.tsv.gz",
+      "output_sha256": "aac3b4d32168a1205d8a72d02078c3ed027695a7b5634ec68caeec6a9b2259bd",
+      "rejected": {
+        "kind:unmapped": 7969958
+      },
+      "row_cap_per_file": null,
+      "rows_seen": 7969958,
+      "source": "qa",
+      "triples_kept": 0,
+      "unmapped_kinds": {
+        "duplicate-of": 970341,
+        "related-to": 6999617
+      }
+    },
+    "scholar": {
+      "canonical_counts": {
+        "authored-by": 48662471,
+        "cites": 211109523,
+        "member-of": 55228451,
+        "same-as": 3153292
+      },
+      "files": [
+        "/home/brandonin/Downloads/kg/scholar/openalex/authorship_tail50_p0.parquet",
+        "/home/brandonin/Downloads/kg/scholar/openalex/authorship_tail50_p1.parquet",
+        "/home/brandonin/Downloads/kg/scholar/openalex/authorship_tail50_p2.parquet",
+        "/home/brandonin/Downloads/kg/scholar/openalex/bridges_2026q1_tail_p0.parquet",
+        "/home/brandonin/Downloads/kg/scholar/openalex/cites_2026q1_tail_p0.parquet",
+        "/home/brandonin/Downloads/kg/scholar/openalex/cites_2026q1_tail_p1.parquet",
+        "/home/brandonin/Downloads/kg/scholar/openalex/cites_tail50_p0.parquet",
+        "/home/brandonin/Downloads/kg/scholar/openalex/cites_tail50_p1.parquet",
+        "/home/brandonin/Downloads/kg/scholar/openalex/cites_tail50_p2.parquet",
+        "/home/brandonin/Downloads/kg/scholar/openalex/cites_tail50_p3.parquet",
+        "/home/brandonin/Downloads/kg/scholar/openalex/cites_tail50_p4.parquet",
+        "/home/brandonin/Downloads/kg/scholar/openalex/funding_tail50_p0.parquet",
+        "/home/brandonin/Downloads/kg/scholar/openalex/mesh_tail50_p0.parquet",
+        "/home/brandonin/Downloads/kg/scholar/openalex/topics_tail50_p0.parquet",
+        "/home/brandonin/Downloads/kg/scholar/openalex/venues_tail50_p0.parquet"
+      ],
+      "kept_fraction": 0.7957,
+      "output": "kg/normalized/v2/scholar.tsv.gz",
+      "output_sha256": "f3eab2884aad7fc7bd688f889b7ed8b60a23296dc9a3c3f2b4b587d9627b1d63",
+      "rejected": {
+        "kind:unmapped": 81709275
+      },
+      "row_cap_per_file": null,
+      "rows_seen": 399863012,
+      "source": "scholar",
+      "triples_kept": 318153737,
+      "unmapped_kinds": {
+        "about": 21649771,
+        "funded-by": 4154704,
+        "has-mesh": 13380211,
+        "has-topic": 25258904,
+        "in-domain": 26,
+        "in-field": 252,
+        "in-subfield": 4516,
+        "published-in": 17260891
+      }
+    },
+    "sec13f": {
+      "canonical_counts": {},
+      "files": [
+        "/home/brandonin/Downloads/kg/sec13f/holdings_dec2025_p0.parquet",
+        "/home/brandonin/Downloads/kg/sec13f/holdings_p0.parquet"
+      ],
+      "kept_fraction": 0.0,
+      "output": "kg/normalized/v2/sec13f.tsv.gz",
+      "output_sha256": "c827b33f3bc7b6b31dad3c2578a48bc947e2ce01df173e0a1b250e8f1acba8e6",
+      "rejected": {
+        "kind:unmapped": 7296094
+      },
+      "row_cap_per_file": null,
+      "rows_seen": 7296094,
+      "source": "sec13f",
+      "triples_kept": 0,
+      "unmapped_kinds": {
+        "holds-stake": 7296094
+      }
+    },
+    "sec_fin": {
+      "canonical_counts": {},
+      "files": [
+        "/home/brandonin/Downloads/kg/sec_fin/reports_p0.parquet"
+      ],
+      "kept_fraction": 0.0,
+      "output": "kg/normalized/v2/sec_fin.tsv.gz",
+      "output_sha256": "bfa9cbda16f05b606964b2a00cac252b8308c6bc25c0d95fee84f154c1ac9eed",
+      "rejected": {
+        "kind:unmapped": 619672
+      },
+      "row_cap_per_file": null,
+      "rows_seen": 619672,
+      "source": "sec_fin",
+      "triples_kept": 0,
+      "unmapped_kinds": {
+        "reports-metric": 619672
+      }
+    },
+    "sec_insider": {
+      "canonical_counts": {},
+      "files": [
+        "/home/brandonin/Downloads/kg/sec_insider/insider_2026q1_p0.parquet"
+      ],
+      "kept_fraction": 0.0,
+      "output": "kg/normalized/v2/sec_insider.tsv.gz",
+      "output_sha256": "4b50852458f24b255d5d3a77d25161f29faf1f5bed2bb9285fd97028fe66dd2d",
+      "rejected": {
+        "kind:unmapped": 41322
+      },
+      "row_cap_per_file": null,
+      "rows_seen": 41322,
+      "source": "sec_insider",
+      "triples_kept": 0,
+      "unmapped_kinds": {
+        "insider-of": 41322
       }
     },
     "transport": {
@@ -1330,13 +1974,30 @@
         "/home/brandonin/Downloads/kg/transport/openflights/routes_2026_p0.parquet"
       ],
       "kept_fraction": 1.0,
-      "output": "kg/normalized/v2/transport.ndjson.gz",
-      "output_sha256": "a9329a0d1f6e75867d3bd1d4018b31efc8a2f51fde9ed5dc81411cb5e2f85098",
+      "output": "kg/normalized/v2/transport.tsv.gz",
+      "output_sha256": "8a0918e4a27a514770b20c0450caa029db10b1f4ae53f3795341fcdd78ce358c",
       "rejected": {},
       "row_cap_per_file": null,
       "rows_seen": 73954,
       "source": "transport",
       "triples_kept": 73954,
+      "unmapped_kinds": {}
+    },
+    "wipo": {
+      "canonical_counts": {
+        "classified-as": 12950842
+      },
+      "files": [
+        "/home/brandonin/Downloads/kg/wipo/patent_wipo_p0.parquet"
+      ],
+      "kept_fraction": 1.0,
+      "output": "kg/normalized/v2/wipo.tsv.gz",
+      "output_sha256": "f21fb39da16f531b32e548ea2fa751f01d70aae7b8e1f4d303583ad79b57fd1d",
+      "rejected": {},
+      "row_cap_per_file": null,
+      "rows_seen": 12950842,
+      "source": "wipo",
+      "triples_kept": 12950842,
       "unmapped_kinds": {}
     }
   }

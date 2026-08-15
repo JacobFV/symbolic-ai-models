@@ -96,6 +96,49 @@ knowledge graphs are not built to carry them. The conclusion is stronger than
 what it replaced: normalising the remaining ~1 billion rows is not merely poor
 value, it is measured to be worth nothing at all for this purpose.
 
+## Correction: "coverage is ~100%" had a 69-word denominator
+
+I wrote, here and in `RESEARCH_LOG.md`, that *"coverage of the curriculum's
+vocabulary is already ~100%"* and used it to argue that more graph is the wrong
+prescription. **The denominator was a hand-classified subset**, and I never said
+so. `scripts/kg_coverage.py` builds three tables by hand — `STRICT` (69 words),
+`WIDE` (180), `PROPER` (14) — and the headline is 100% of `STRICT`.
+
+The repo ships an importable enumerator that nobody had pointed at the question:
+`curriculum_vocabulary()` returns **423** words the generators can coin, and
+`rendered_vocabulary()` **749** including field names that reach the page.
+`WIDE ∪ PROPER` is 194 and a strict subset of the 423, so **229 coinable words
+were never measured.**
+
+Re-run against the real denominators and the 60.6 M normalised node labels —
+which the first pass could not do, having thrown the node tables away
+(`scripts/kg_coverage_full.py`, `kg/normalized/v2/stats-vocab.json`):
+
+| | 423 coinable | 749 rendered |
+|---|---:|---:|
+| carries a label in the graph | 374 (**88.4%**) | 648 (86.5%) |
+| that node is anchorable | 271 (64.1%) | 443 (59.2%) |
+| **anchorable AND has a determiner** | **62 (14.7%)** | 97 (13.0%) |
+
+**88.4%, not ~100%. And the number that matters is 14.7%.**
+
+**The conclusion survives, and the reason I gave for it was wrong.** I argued
+"coverage is complete, so a bigger graph cannot help". The truth is that coverage
+of *determiners* is only 14.7%, so on its face there is enormous headroom — 85%
+of the curriculum's words have no statement of what follows from them.
+
+What closes that door is not coverage but the Wikidata result in the section
+above: **+194,756,799 triples, +118,393,519 anchorable entities, +0 with a
+determined attribute.** The headroom is real and **scale provably does not
+reach it**, because general knowledge graphs carry taxonomy and identity rather
+than consequences. That is a stronger claim than the one it replaces and it does
+not rest on a hand-picked denominator.
+
+Also noted by the agent that found this: `_words()`'s docstring in
+`kg_coverage.py` claims every module-level closed word list in
+`symbolic_ai_data/generators/` is in exactly one of its three tables. That is
+**false as written** — `semantics.THINGS` and `ontology.VERB_ISA` are in none.
+
 ## What would still refute it
 
 - **Single-valued is the wrong criterion.** An entity whose relation has several
