@@ -1,9 +1,11 @@
-"""The two controls the readout finding turns on, pinned so they cannot rot.
+"""The controls the readout finding turns on, pinned so they cannot rot.
 
 ``notes/findings/2026-08-14-the-action-readout-clears-the-repair-floor-on-179-lessons.md``
 reports a 0.423 gap between reading one fitted model's output as a **move** and
-reading it as **text**. Two things have to be true for that number to mean what
-it says, and both are properties of code rather than of a run:
+reading it as **text**, and says the two rows differ in one thing. They differ
+in three, and each of the agents below removes one of them. Whether those agents
+do what they claim is a property of code rather than of a run, so it is pinned
+here:
 
 1. ``graphread-capped`` really is ``graphread`` *under* ``wrap``'s shortlist —
    the same eight strings, ranked by the same shared prior, and no vote outside
@@ -13,10 +15,13 @@ it says, and both are properties of code rather than of a run:
 2. ``abstain`` really is the abstention path and nothing else, so that "what
    silence is worth on ``repair``" is a measured row rather than an inference
    from a model that happened to emit nothing.
+3. ``wrap-envcal`` really differs from ``wrap`` in *where the confidence map was
+   fitted* and in nothing else — which needs both halves: it must reduce to
+   ``wrap`` exactly on a ``choice``-only run, and must not on a ``repair`` one.
 
-Neither is checked by ``tests/test_agents.py``: the cross-product there asks
-whether an agent is well-formed, and both of these are well-formed however wrong
-they are.
+None of this is checked by ``tests/test_agents.py``: the cross-product there
+asks whether an agent is well-formed, and all three are well-formed however
+wrong they are.
 """
 
 from __future__ import annotations
@@ -58,6 +63,30 @@ def capped(fixtures):
     return _fitted("graphread-capped",
                    {"model": "ngram", "channel": "symbol", "max_actions": CAP},
                    fixtures)
+
+
+@pytest.fixture(scope="module")
+def calibratable():
+    """Enough episodes that a ``ScoreCalibrator`` actually fits.
+
+    ``ScoreCalibrator`` needs ten outcomes and refuses below that, and
+    ``choice`` yields one per held-out episode — so the small fixture above
+    leaves both maps *unfitted*, and two unfitted maps agree trivially. A
+    control test that passes because neither side was fitted is worse than no
+    test, which is the whole reason this is a second fixture rather than a
+    smaller number.
+    """
+    episodes = list(generate(LESSONS, n=30))
+    tok = make_tokenizer(RunConfig(vocab_size=900), episodes)
+    return episodes, tok
+
+
+def _fitted_in(name, extra, fixtures, env_names):
+    episodes, tok = fixtures
+    envs = {n: build_env(n) for n in env_names}
+    agent = build_agent(name, extra)
+    agent.fit(LearnContext(episodes=episodes, tok=tok, envs=envs))
+    return agent
 
 
 def _repair_views(agent, fixtures):
@@ -188,3 +217,52 @@ def test_abstain_matches_a_model_that_emits_nothing(fixtures):
     assert compared, "nothing was compared"
     assert silent.spoke == 0, \
         "ngram emitted source_votes after all; pick another silent route"
+
+
+# ---------------------------------------------------------------------------
+# control 3: the calibrator is fitted where the agent acts
+# ---------------------------------------------------------------------------
+def test_envcal_wrap_reduces_to_wrap_on_a_choice_only_run(calibratable):
+    """The equivalence that makes ``wrap-envcal`` a control and not a new agent.
+
+    ``wrap`` fits its confidence map on a freshly built ``choice`` whatever the
+    run contains. So a ``wrap-envcal`` whose run *is* ``choice`` must be
+    ``wrap``, exactly — same map, same decisions. If the two ever diverge here,
+    ``wrap-envcal`` is changing something besides where the map is fitted, and
+    the ``repair`` comparison it exists for would be measuring that instead.
+    """
+    episodes, tok = calibratable
+    extra = {"model": "ngram", "max_actions": 8}
+    plain = _fitted_in("wrap", extra, calibratable, ["choice"])
+    mine = _fitted_in("wrap-envcal", extra, calibratable, ["choice"])
+    assert plain.confidence_map.fitted, "the equivalence would be vacuous"
+    env_a, env_b = build_env("repair"), build_env("repair")
+    compared = 0
+    for ep in episodes:
+        theirs = [(m.action, round(m.confidence, 12))
+                  for m in rollout(env_a, plain, ep, tok=tok).moves]
+        ours = [(m.action, round(m.confidence, 12))
+                for m in rollout(env_b, mine, ep, tok=tok).moves]
+        compared += len(ours)
+        assert ours == theirs, "wrap-envcal on a choice-only run is not wrap"
+    assert compared, "nothing was compared"
+
+
+def test_envcal_wrap_calibrates_somewhere_else_on_a_repair_run(calibratable):
+    """And on a ``repair``-only run it must *not* be ``wrap``.
+
+    A control that quietly reduced to the thing it controls for would pass the
+    test above and then report a null for that reason. This is the other half:
+    the map fitted through ``repair`` has to differ from the map fitted through
+    ``choice``, or the third difference named in
+    ``symbolic_ai_agents/agents/wrapped/envcal.py`` does not exist and the note
+    has to say so.
+    """
+    extra = {"model": "ngram", "max_actions": 8}
+    on_choice = _fitted_in("wrap-envcal", extra, calibratable, ["choice"])
+    on_repair = _fitted_in("wrap-envcal", extra, calibratable, ["repair"])
+    assert on_choice.confidence_map.fitted and on_repair.confidence_map.fitted
+    probes = [i / 20.0 for i in range(21)]
+    assert [on_choice.confidence(p) for p in probes] != \
+           [on_repair.confidence(p) for p in probes], \
+        "calibrating on repair gave the same map as calibrating on choice"

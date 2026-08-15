@@ -78,19 +78,26 @@ class CappedGraphReadAgent(GraphReadAgent):
         #: paired comparison rather than something that needs a flag to become
         #: one. ``<= 0`` disables the cap and reproduces plain ``graphread``.
         self.max_actions = int(self.get("max_actions", 8))
-        #: decisions where the cap removed every vote the readout had, which is
-        #: the asymmetry against ``wrap`` named in the module docstring.
+        #: Decisions **while acting** where the cap removed every vote the
+        #: readout had — the asymmetry against ``wrap`` named in the module
+        #: docstring. Counted in :meth:`prefer` rather than in :meth:`_raw`,
+        #: because the calibrator calls ``_raw`` directly on held-out training
+        #: episodes and a counter incremented there prints a number larger than
+        #: the decisions that were scored. The first version did exactly that
+        #: and reported 537 of 2,703 when the truth was 387.
         self.truncated_out = 0
+        self._cap_bit = False
 
     @torch.no_grad()
     def _raw(self, obs: Observation) -> tuple[dict[str, float], float]:
+        self._cap_bit = False
         votes, raw = super()._raw(obs)
         if not votes:
             return votes, raw
         keep = set(self.shortlist(obs, obs.actions, self.max_actions))
         kept = {a: w for a, w in votes.items() if a in keep}
         if not kept:
-            self.truncated_out += 1
+            self._cap_bit = True
             return {}, 0.0
         total = sum(kept.values()) or 1.0
         kept = {a: w / total for a, w in kept.items()}
@@ -102,6 +109,12 @@ class CappedGraphReadAgent(GraphReadAgent):
         # this agent uses is measured under the cap it acts under.
         return kept, float(min(max(max(kept.values()) * raw / max(
             max(votes.values()), 1e-12), 0.0), 1.0))
+
+    def prefer(self, obs: Observation):
+        pref = super().prefer(obs)
+        if self._cap_bit:
+            self.truncated_out += 1
+        return pref
 
     def explain(self, obs: Observation, action: str, votes, conf: float) -> str:
         if not votes:
