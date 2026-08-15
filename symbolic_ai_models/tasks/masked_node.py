@@ -258,7 +258,7 @@ class MaskedNode(Task):
         rng = np.random.default_rng(4)
         for _ in range(4):
             for ep in train:
-                for ctx, label, type_, _is_ans in self._nodes(ep, tok, rng):
+                for ctx, label, type_, _is_ans, _cp in self._nodes(ep, tok, rng):
                     type_rule.observe(ctx, type_)
                     if label is not None:
                         label_rule.observe(ctx, label)
@@ -275,7 +275,7 @@ class MaskedNode(Task):
         scoring = np.random.default_rng(12345)
         for _ in range(8):
             for ep in episodes:
-                for ctx, label, type_, is_ans in self._nodes(ep, tok, scoring):
+                for ctx, label, type_, is_ans, copyable in self._nodes(ep, tok, scoring):
                     type_hits += type_rule.predict(ctx) == type_
                     type_n += 1
                     eval_types[type_] += 1
@@ -319,6 +319,47 @@ class MaskedNode(Task):
             out.update({"ansnode_acc": ans_hits / ans_n,
                         "ansnode_bits": ans_bits, "ansnode_n": float(ans_n)})
         return out
+
+    def split_floor(self, episodes: Sequence[Episode], tok: SymbolTokenizer,
+                    train: Sequence[Episode]) -> dict[str, float]:
+        """The label floor, computed **separately** on copyable and non-copyable fills.
+
+        Not part of :meth:`floor` and deliberately so: every `node` summary ever
+        written carries a fixed set of keys, and a run whose file grows a column
+        is a published artefact that changed. This is a second question asked of
+        the same machinery by whoever wants it — `scripts/copyable_split.py`.
+
+        It is the same rule, the same context ladder and the same masking draw as
+        :meth:`floor`, with one extra bucket, which is why the pooled number it
+        produces is bit-identical to ``floor()["label_acc"]``. That equality is
+        the guard against this having drifted into a second implementation of the
+        floor, and the caller asserts it.
+        """
+        rule = _ContextRule()
+        rng = np.random.default_rng(4)
+        for _ in range(4):
+            for ep in train:
+                for ctx, label, _t, _a, _c in self._nodes(ep, tok, rng):
+                    if label is not None:
+                        rule.observe(ctx, label)
+
+        hit = {True: 0, False: 0}
+        n = {True: 0, False: 0}
+        scoring = np.random.default_rng(12345)
+        for _ in range(8):
+            for ep in episodes:
+                for ctx, label, _t, _a, copyable in self._nodes(ep, tok, scoring):
+                    if label is None:
+                        continue
+                    n[copyable] += 1
+                    hit[copyable] += rule.predict(ctx) == label
+        total = n[True] + n[False]
+        return {
+            "floor_copyable": hit[True] / n[True] if n[True] else float("nan"),
+            "floor_not_copyable": hit[False] / n[False] if n[False] else float("nan"),
+            "floor_pooled": (hit[True] + hit[False]) / total if total else float("nan"),
+            "n_copyable": float(n[True]), "n_not_copyable": float(n[False]),
+        }
 
     def _copy_floor(self, episodes: Sequence[Episode],
                     train: Sequence[Episode], tok: SymbolTokenizer) -> float:
@@ -485,7 +526,14 @@ class MaskedNode(Task):
             )
             label = (tok.label_id(g.labels[i])
                      if self._scorable(g.labels[i], g.types[i], tok) else None)
-            yield ctx, label, g.types[i], i in answers
+            # Exactly `collate_graph`'s `target_source` condition: does some
+            # *visible* node of this graph carry the same label string. It rides
+            # along here rather than being recomputed by a caller, because a
+            # caller cannot see this method's masking draw and would have to
+            # reproduce the ladder to align with it.
+            copyable = bool(g.labels[i]) and any(
+                j not in hidden and g.labels[j] == g.labels[i] for j in range(n))
+            yield ctx, label, g.types[i], i in answers, copyable
 
     @staticmethod
     def _scorable(label: str, type_: str, tok: SymbolTokenizer) -> bool:

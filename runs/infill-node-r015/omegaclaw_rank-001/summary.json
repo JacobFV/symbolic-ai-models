@@ -1,0 +1,119 @@
+{
+  "config": {
+    "model": "omegaclaw_rank-001",
+    "tasks": [
+      "node"
+    ],
+    "task_weights": {
+      "node": 1.0
+    },
+    "data": null,
+    "lessons": "all",
+    "n_train": 20,
+    "n_eval": 4,
+    "language": "english",
+    "languages": "",
+    "max_len": 320,
+    "max_nodes": 128,
+    "mask_rate": 0.15,
+    "type_weight": 0.5,
+    "vocab_size": 8192,
+    "label_vocab_fraction": 0.3,
+    "d_model": 96,
+    "n_layers": 3,
+    "n_heads": 4,
+    "d_ff": 256,
+    "dropout": 0.1,
+    "extra": {},
+    "steps": 2000,
+    "batch_size": 16,
+    "lr": 0.0003,
+    "min_lr_ratio": 0.1,
+    "warmup": 100,
+    "weight_decay": 0.01,
+    "grad_clip": 1.0,
+    "eval_every": 250,
+    "log_every": 50,
+    "seed": 0,
+    "resume": true,
+    "device": "cpu",
+    "amp": true,
+    "out": "runs/infill-node-r015/omegaclaw_rank-001"
+  },
+  "model_config": {
+    "vocab_size": 8192,
+    "d_model": 96,
+    "n_layers": 3,
+    "n_heads": 4,
+    "d_ff": 256,
+    "dropout": 0.1,
+    "max_len": 328,
+    "max_nodes": 128,
+    "extra": {}
+  },
+  "model": "omegaclaw_rank-001",
+  "family": "rule-based",
+  "steps": 0,
+  "parameters": 872,
+  "n_train": 3580,
+  "n_eval": 716,
+  "vocab_size": 8192,
+  "floors": {
+    "node": {
+      "type_acc": 0.8601454659210886,
+      "type_bits": 2.3292035662165547,
+      "type_n": 51146.0,
+      "label_acc": 0.14321518927482088,
+      "label_bits": 9.369476110181317,
+      "label_n": 42293.0,
+      "copy_acc": 0.26580813816452037,
+      "rsymbol_acc": 0.14321518927482088,
+      "rsymbol_bits": 9.369476110181317,
+      "rsymbol_n": 42293.0,
+      "rnode_acc": 0.26580813816452037
+    }
+  },
+  "temperature": 1.2000000000000002,
+  "final": {
+    "node": {
+      "label_acc": 0.3560099369386585,
+      "label_bits": 8.096552005684131,
+      "label_n": 5233.0,
+      "type_acc": 0.8579760403530895,
+      "type_bits": 0.8964294759177315,
+      "type_n": 6344.0,
+      "label_coverage": 0.824873896595208,
+      "copy_ceiling": 0.721574622587426,
+      "copy_censored": 450.0,
+      "rsymbol_acc": 0.3560099369386585,
+      "rsymbol_bits": 8.096552005684131,
+      "rsymbol_n": 5233.0,
+      "label_floor": 0.14321518927482088,
+      "label_lift": 0.24836428587445317,
+      "type_floor": 0.8601454659210886,
+      "type_lift": -0.015512014553457926,
+      "rsymbol_floor": 0.14321518927482088,
+      "rsymbol_lift": 0.24836428587445317,
+      "label_floor_bits": 9.369476110181317,
+      "label_bits_lift": 0.13585862107209665,
+      "type_floor_bits": 2.3292035662165547,
+      "type_bits_lift": 0.615134765840219,
+      "rsymbol_floor_bits": 9.369476110181317,
+      "rsymbol_bits_lift": 0.13585862107209665
+    }
+  },
+  "seconds": 38.686240434646606,
+  "device": "cpu",
+  "renaming": {
+    "label_acc": 0.3523540496826172,
+    "renamed_label_acc": 0.3350282609462738,
+    "drop": 0.017325788736343384,
+    "symbols": 2105.0
+  },
+  "masking": {
+    "mask_mode": "scatter",
+    "mask_rate": 0.15,
+    "fit_mask_rate": 0.15,
+    "fit_mask_mode": "scatter"
+  }
+}

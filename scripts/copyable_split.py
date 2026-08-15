@@ -34,14 +34,34 @@ import torch
 torch.set_num_threads(4)
 
 from symbolic_ai_core.data.batch import IGNORE, collate_graph
+from symbolic_ai_models.tasks import make_task
 from symbolic_ai_models.train import load_data, load_run
 
+#: Which registered task each masking mode belongs to, so the floor is the
+#: floor of the arm being read rather than of `node`.
+TASK_OF = {"scatter": "node", "subtree": "nodesub",
+           "answer": "nodeans", "answer_one": "nodeans1"}
 
-def split(path: str, batch_size: int = 16) -> dict[str, float]:
+
+def split(path: str, batch_size: int = 16,
+          floors: dict | None = None) -> dict[str, float]:
     model, tok, cfg = load_run(path, device="cpu")
     summary = json.loads((Path(path) / "summary.json").read_text())
     mode = (summary.get("masking") or {}).get("mask_mode", "scatter")
-    _, ev = load_data(cfg)
+    train, ev = load_data(cfg)
+
+    if floors is not None and "floor_copyable" not in floors:
+        task = make_task(TASK_OF[mode], mask_rate=cfg.mask_rate,
+                         max_nodes=cfg.max_nodes)
+        floors.update(task.split_floor(ev, tok, train))
+        # The guard against `split_floor` having become a second implementation
+        # of the floor: pooled, it must be the number the run itself published.
+        published = next(
+            (v.get("label_floor") for v in (summary.get("final") or {}).values()
+             if isinstance(v, dict) and "label_floor" in v), None)
+        if published is not None:
+            assert abs(floors["floor_pooled"] - published) < 1e-12, (
+                f"split floor {floors['floor_pooled']} != published {published}")
 
     rng = np.random.default_rng(cfg.seed)
     hit = {True: 0, False: 0}
@@ -75,15 +95,27 @@ def main(paths: list[str]) -> int:
             f"{'acc | copyable':>16}{'acc | not':>11}{'acc all':>9}{'gap':>8}")
     print(head)
     print("-" * len(head))
+    floors: dict[str, float] = {}
     for p in paths:
         if not (Path(p) / "summary.json").exists():
             continue
-        r = split(p)
+        r = split(p, floors=floors)
         gap = r["acc_copyable"] - r["acc_not_copyable"]
         print(f"{r['model']:<22}{r['mode']:<9}{r['mask_rate']:>5.2f}"
               f"{r['n']:>7.0f}{r['copyable_share']:>10.3f}"
               f"{r['acc_copyable']:>16.3f}{r['acc_not_copyable']:>11.3f}"
               f"{r['acc_all']:>9.3f}{gap:>8.3f}")
+    if floors:
+        print("-" * len(head))
+        print(f"{'FLOOR (structure only)':<22}{'':<9}{'':>5}"
+              f"{floors['n_copyable'] + floors['n_not_copyable']:>7.0f}"
+              f"{floors['n_copyable'] / (floors['n_copyable'] + floors['n_not_copyable']):>10.3f}"
+              f"{floors['floor_copyable']:>16.3f}"
+              f"{floors['floor_not_copyable']:>11.3f}"
+              f"{floors['floor_pooled']:>9.3f}"
+              f"{floors['floor_copyable'] - floors['floor_not_copyable']:>8.3f}")
+        print("the pooled floor is asserted equal to the run's own `label_floor`, "
+              "which is what says this is the same floor and not a second one")
     return 0
 
 
