@@ -33,12 +33,18 @@
         "/r/dbpedia/field",
         "/r/dbpedia/language",
         "/r/dbpedia/occupation",
-        "has-concept"
+        "has-concept",
+        "has-topic",
+        "has-mesh",
+        "industry",
+        "religion",
+        "in-field"
       ]
     },
     "eventive": {
       "precondition-of": [
-        "/r/HasPrerequisite"
+        "/r/HasPrerequisite",
+        "/r/Entails"
       ],
       "subevent-of": [
         "/r/HasSubevent",
@@ -64,7 +70,8 @@
       "same-as": [
         "same-as",
         "/r/Synonym",
-        "represents"
+        "represents",
+        "duplicate-of"
       ],
       "similar-to": [
         "similar-to",
@@ -136,6 +143,9 @@
       "manner-of": [
         "/r/MannerOf"
       ],
+      "not-capable-of": [
+        "/r/NotCapableOf"
+      ],
       "not-desires": [
         "/r/NotDesires"
       ],
@@ -151,42 +161,100 @@
         "issued-by",
         "decided-by"
       ],
+      "based-on": [
+        "based-on"
+      ],
       "child-of": [
-        "child-of"
+        "child-of",
+        "father",
+        "mother"
+      ],
+      "created": [
+        "notable-work",
+        "introduces"
       ],
       "created-by": [
         "/r/CreatedBy",
-        "/r/dbpedia/influencedBy"
+        "/r/dbpedia/influencedBy",
+        "founder",
+        "influenced-by",
+        "made-by",
+        "manufacturer",
+        "by-studio"
       ],
       "depends-on": [
         "depends-on",
         "calls",
-        "regulates"
+        "regulates",
+        "IS_FEEDER_TO"
+      ],
+      "funded-by": [
+        "funded-by"
       ],
       "holds-role": [
         "holds-position",
         "holds-role",
         "served-on",
-        "led-by"
+        "led-by",
+        "position-held",
+        "RO:0000087"
+      ],
+      "holds-stake": [
+        "holds-stake",
+        "holds"
+      ],
+      "managed-by": [
+        "IS_FUND-MANAGED_BY"
       ],
       "note": "Institutional and kinship structure. Mostly from `graph` and `entity`.",
+      "owned-by": [
+        "owned-by"
+      ],
+      "owns": [
+        "owner-of"
+      ],
       "parent-of": [
-        "parent-of"
+        "parent-of",
+        "child"
+      ],
+      "preceded-by": [
+        "follows"
+      ],
+      "spouse-of": [
+        "spouse"
       ],
       "succeeded-by": [
-        "succeeded-by"
+        "succeeded-by",
+        "followed-by"
+      ],
+      "taught": [
+        "student"
+      ],
+      "uses": [
+        "uses",
+        "uses-aircraft"
       ]
     },
     "spatial": {
       "adjacent-to": [
         "neighbor-of",
-        "flies-to"
+        "flies-to",
+        "shares-border-with",
+        "route-to",
+        "route-from"
+      ],
+      "capital-of": [
+        "capital-of"
       ],
       "continent": [
         "continent"
       ],
       "country": [
-        "country"
+        "country",
+        "country-of-citizenship"
+      ],
+      "has-capital": [
+        "capital"
       ],
       "located-in": [
         "located-in",
@@ -197,13 +265,27 @@
         "in-continent",
         "in-jurisdiction",
         "jurisdiction",
-        "operates-from"
+        "operates-from",
+        "located-in-admin",
+        "location",
+        "headquarters-location",
+        "birthplace",
+        "deathplace",
+        "located-on-terrain"
       ],
       "uses-currency": [
-        "uses-currency"
+        "uses-currency",
+        "currency"
       ]
     },
     "taxonomic": {
+      "has-part": [
+        "BFO:0000051",
+        "contains",
+        "has-part",
+        "contains-admin",
+        "subsidiary"
+      ],
       "instance-of": [
         "instance-of",
         "org",
@@ -217,7 +299,22 @@
         "artwork",
         "entity",
         "assembly",
-        "part"
+        "part",
+        "actor",
+        "book",
+        "venue",
+        "topic",
+        "subfield",
+        "field",
+        "domain",
+        "security",
+        "patent",
+        "asset",
+        "technique",
+        "organization",
+        "anime",
+        "role",
+        "fact"
       ],
       "is-a": [
         "is-a",
@@ -226,21 +323,28 @@
         "/r/InstanceOf",
         "parent-taxon",
         "in-type",
-        "RO:0018034"
+        "RO:0018034",
+        "subclass-of"
       ],
       "member-of": [
         "member-of",
-        "affiliated-with"
+        "affiliated-with",
+        "employer",
+        "member-of-party",
+        "insider-of"
       ],
       "part-of": [
         "part-of",
         "/r/PartOf",
-        "BFO:0000051",
         "in-department",
         "in-classification",
         "BFO:0000050",
-        "contains",
-        "has-rank"
+        "has-rank",
+        "IS_SUBFUND_OF",
+        "IS_INTERNATIONAL_BRANCH_OF",
+        "IS_DIRECTLY_CONSOLIDATED_BY",
+        "IS_ULTIMATELY_CONSOLIDATED_BY",
+        "published-in"
       ]
     }
   },
@@ -324,14 +428,18 @@
     "/r/RelatedTo": "989,268 rows. ConceptNet's catch-all; asserts only co-occurrence.",
     "about": "363,511. Topicality, not a constraint.",
     "asserted-by/claim-subject/claim-object": "475,162. Reification of the claim table itself.",
+    "dated_occurrences": "GDELT's CAMEO codes (numeric `01`-`20` and their named glosses -- the same vocabulary in two notations, 39.2M rows), gharchive's 16 `*event` kinds (7.7M), govspend's `contributed` / `lobbied` / `awarded` / `hired` / `complaint-about-*` (~1M) and finance's `bought` / `sold` / `gifted` / `exercised-*` / `granted-shares` / `txn-*` (~4M). A dated occurrence between two actors is not a property of either. It does not join across sources -- a GDELT `fight` between two actor strings on a date is not the same fact as anything in Wikidata, which is what `purpose` says the vocabulary is for -- and it is neither an anchor nor a determiner, so admitting ~52M of them would inflate every degree statistic and move the usable population by zero. The *type* edges inside those sources are mapped (`actor`, `org` -> `instance-of`), so the sources still contribute anchorable entities. Counted, never silently dropped.",
     "derived-from": "613,319. Provenance metadata, not a fact about the world.",
     "described-at": "705,821. A URL, not a relation.",
     "in-reporter": "35,000. Bibliographic.",
     "note": "Deliberately NOT mapped, and counted as rejections rather than silently dropped. Each is high-volume and low-information: admitting them would add millions of edges that constrain nothing, inflate every degree statistic, and make the graph look richer than it is. This is the same judgement that kept a CSKG-only curriculum arm unregistered.",
-    "relates-to": "524,474. Same defect, different corpus."
+    "related-to": "464,460 sampled in `qa`. Same defect as `relates-to`, which v2 already rejects under the other spelling; listed here so the rejection is a decision rather than a string that happened not to be in the table.",
+    "relates-to": "524,474. Same defect, different corpus.",
+    "reports-metric": "619,672 rows in `sec_fin`. A reporting event linking a filer to an XBRL tag, not a property of the filer."
   },
   "revised": "2026-08-15",
-  "schema_version": 2,
+  "revision_note": "v3. Three changes, in decreasing order of how much they matter.\n(1) DIRECTION IS PART OF THE RELATION. v2's `part-of` pooled `BFO:0000050` (part of) with `BFO:0000051` (has part) and `contains` -- inverses on one canonical. Measured on `graph` alone that is 95,844 `part-of` rows against 52,871 `contains` rows, and a transitive closure over the pooled relation derives facts that are false. v2 kept the direction for kinship (`parent-of` / `child-of`) and destroyed it for meronymy; v3 splits out `has-part` and adds the inverses `preceded-by`, `owns`/`owned-by`, `has-capital`/`capital-of`.\n(2) A CANONICAL RELATION IS A PROPERTY OF AN ENTITY OR AN ORDERED PAIR. Wikidata's own vocabulary was 31.5% unmapped in v2 (sampled) -- including `subclass-of`, which is is-a. Those are mapped. Dated occurrences are not: see `rejected_relations.dated_occurrences`.\n(3) The property block is untouched apart from two ConceptNet relations with double-digit row counts, so `kg_derivable`'s determined-attribute definition is identical across v2 and v3 and the two measurements are comparable. Whether `has-part` should itself count as a determined attribute is a real question and it is asked separately, because changing the mapping and the definition in one step would make the result unattributable.",
+  "schema_version": 3,
   "scope": {
     "priority_order": [
       "cskg + graph -- the property and taxonomy relations, which are what derivability needs",
@@ -344,6 +452,9 @@
   "type_edges": {
     "action": "Rewrite `<x> --org--> <y>` as `<x> --instance-of--> <y>` with the type recorded on the node, and fold into the existing 68,476 instance-of edges.",
     "problem": "`org`, `person`, `concept`, `place`, `paper`, `airport`, `artwork`, `product`, `work` appear in the `kind` column but are not relations -- they name what the target IS. Left as relations they inflate the relation vocabulary and make `instance-of` look rarer than it is."
+  },
+  "unresolved": {
+    "obo_iris": "RO:0018036, RO:0018037, RO:0018038, RO:0018039 appear in `graph` and are left unmapped because nobody here has resolved them against the Relation Ontology. RO:0018033 and RO:0018034 were mapped to `is-a` in v2 by an author who did not record how that was checked, and v3 carries that forward unverified rather than silently blessing it. Resolving all six needs the RO release the corpus was built from."
   },
   "what_the_corpus_actually_is": {
     "distinct_kinds_sampled": 247,
