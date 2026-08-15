@@ -53,6 +53,26 @@ curriculum would differ from its baseline in the symbols *and* in the scene
 size, the coordinates and the question. It differs in the symbols only, which is
 what makes a score difference attributable.
 
+The two controls, and why one is not enough
+-------------------------------------------
+
+``kg:wordnet`` differs from ``base`` in **two** things: what the words mean, and
+that there are 13,810 of them instead of 2,105.
+
+* ``structured=True`` on a **scrambled graph** holds the vocabulary and the
+  neighbourhood structure fixed and destroys the meaning. That is the control
+  the decision note asks for.
+* ``structured=False`` — this class with the DAG switched off — holds the
+  vocabulary fixed and destroys *both*: every slot is six unrelated words of the
+  right part of speech.
+
+Three arms and a baseline separate three terms: ``base - flat`` is vocabulary
+size, ``flat - shuffled`` is neighbourhood structure, ``shuffled - kg`` is
+meaning. With only the scramble, a uniform drop across every model would have
+been unattributable between the first two, and an unmeasured confound has an
+unknown sign — see
+``notes/lessons/2026-08-14-an-unmeasured-confound-has-an-unknown-sign.md``.
+
 Where the graph has nothing to say
 ----------------------------------
 
