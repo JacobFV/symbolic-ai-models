@@ -774,6 +774,62 @@ the one this repo keeps paying for, with one difference worth recording: this is
 the first time the artefact was caught by re-measuring at a larger sample rather
 than by a later sweep contradicting a published claim.
 
+## The readout is worth more than the model, and it survived an independent attack
+
+`runs/agent-sweep/` and `runs/agents-readout179/`, all 179 lessons, 716
+evaluation episodes, 2,632 scored fills, `repair`. **The floor is `context`
+0.2025 in every row below**, which is what makes them one table.
+
+The same fitted `corefer-001` — same model, same episodes, same prior, same
+calibrator — read two ways:
+
+| agent | reads the output as | candidates | `label_acc` | lift |
+|---|---|---:|---:|---:|
+| `graphread` | **a move** | 24 | **0.5080** | **+0.383** |
+| `graphread-capped` | a move | 8 | 0.3609 | +0.199 |
+| **floor** (`context`) | — | | *0.2025* | *0* |
+| `abstain` | nothing at all | — | 0.0866 | −0.145 |
+| `wrap` | **text** | 8 | 0.0851 | −0.147 |
+| `wrap` | text | 24 | 0.0767 | −0.158 |
+| `wrap-envcal` | text | 24 | 0.0760 | −0.159 |
+| `random` | — | — | 0.0543 | −0.186 |
+
+**This is the largest effect in the repo and it is not a model difference.**
+Models span about 0.1 of lift. One readout swap spans 0.43 — and `corefer-001`
+was registered and sweeping the whole time, able to do this, with no way for the
+harness to ask.
+
+**It was attacked by an agent that did not write it, and the gap grew.** The
+author named two confounds and ran neither; both were run, with thresholds
+committed 22 minutes before the first number landed.
+
+- **The candidate cap is real, asymmetric, and runs backwards.** `wrap` sees 8 of
+  `repair`'s 24 candidates and `graphread` sees all 24, so part of the gap was
+  truncation. Capping `graphread` to 8 costs it 0.147 — so the cap was worth a
+  third of the published gap. But the direct control says `wrap` at **24** scores
+  **0.0767, *lower* than its 0.0851 at 8**: the extra candidates cost `wrap`
+  nothing because it was never using them. On equal candidate sets the gap is
+  **0.4312, larger than the 0.4229 published.**
+- **The calibrator was a third difference nobody had named** — `wrap` fitted on a
+  freshly built `choice`, `graphread` on the run's own environments. Equalising
+  it is worth 0.0007. Equalising all three differences leaves **0.4320**, the
+  largest of the four framings. A gap that grows as its confounds are removed is
+  the opposite of a confounded result.
+
+**And the comparison row turns out to be silence, which corrects the finding's
+own interpretation.** `wrap` 0.0851 against `abstain` 0.0866 — four fills of
+2,632, and *identical on `success` to sixteen figures* over 716 episodes. So the
+claim that "reading this model as text is actively bad" is unearned. The honest
+statement is cleaner and stronger: **reading these models as text is
+indistinguishable from saying nothing at all**, and eleven of nineteen models
+cannot emit a token anyway.
+
+**A slice finding died on the way.** "Abstention on `repair` is below chance" was
+measured on six lessons and inverts at 179: `abstain` 0.0866 against `random`
+0.0543 is **0.032 above** chance, not 0.060 below. Both rows moved, in opposite
+directions, and no mechanism for either move has been measured. The note named
+this as its own live risk and was right to.
+
 ## Awaiting independent challenge — the promotion queue
 
 `notes/` promotes into this file **only once something independent has tried to
@@ -787,7 +843,7 @@ finding that never gets challenged.
 |---|---|---|
 | `notes/findings/2026-08-14-graph-derived-roles-structure-not-locality.md` | a heat-kernel signature with **no hand-built coordinate** beats the hand-built role tuple (+0.107 vs +0.066), the pre-registered Laplacian eigenmap is **refuted** (−0.044, below the floor), and `vsa_perm_hks-004` is the **second-best pointer in the repo** at +0.092 copy lift | the shuffled control re-derived by someone else, and the composition retested — the three heads rank `vsa_perm_pure` and `vsa_perm_hks` differently and only the label head favours the published leader |
 | the dimension / throughput curve, same note | quality saturates at **d = 1,024** for every construction and the last 64x buys nothing; `vsa_sum-004` at d = 256 matches `vsa-002` at d = 4,096 on accuracy at **17x the throughput** | cheapest of the four to check: re-time it on a different machine state. It is a cost measurement, not a claim about reasoning, so it needs replication rather than a control |
-| `notes/findings/2026-08-14-the-action-readout-clears-the-repair-floor-on-179-lessons.md` | the same fitted `corefer-001` lands on **opposite sides of the `repair` floor** — 0.508 read as a move, 0.085 read as text — 0.423 apart | the two attacks its own author named and did not run: `graphread` on the same top-8 shortlist `wrap` gets, and the abstain-everywhere baseline at 179 lessons. **Under challenge now.** |
+| ~~the action readout~~ | — | **PROMOTED**, above. Attacked by an agent that did not write it; both named confounds run, plus a third nobody had named; the gap grew from 0.4229 to 0.4320 as they were removed. Its own interpretation was corrected in the process and a slice finding it rested on was refuted. |
 | `notes/findings/2026-08-13-one-parser-over-word-classes-transfers-the-class-identities-do-not.md` | over 46 WALS-coded languages, abstraction transfers and the induced class *identities* are a liability held out; `Treebank.coverage` predicts held-out transfer at **r = +0.886** and survives partialling out script and untranslated share | a second, independent handle on coverage — the one intervention tried moved bracket F1 by +0.002, which is not enough to call a +0.886 correlate a passenger. See `notes/questions/2026-08-14-a-second-handle-on-treebank-coverage.md` |
 
 The one thing the queue must not become is a parking lot for results nobody
