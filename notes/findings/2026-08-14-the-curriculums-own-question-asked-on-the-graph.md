@@ -223,12 +223,29 @@ scoring the same thing.)
 
 ## What would still refute this reading
 
-- **Undertraining.** `answer` masking hides about 1.2 nodes per episode where
-  scattered masking at 0.15 hides about 10, so a model fitted in the matched
-  regime sees roughly **eight times less supervision**. This repo has already
-  published one null that was an undertrained budget wearing an architecture's
-  name. The control is `extra.fit_mask_mode="scatter"` — fit under the full
-  regime, score under `answer` — and it is reported below.
+- ~~**Undertraining.**~~ **Measured, and it is not the explanation.** `answer`
+  masking hides about 1.2 nodes per episode where scattered masking at 0.15
+  hides about 10, so a model fitted in the matched regime sees roughly **eight
+  times less supervision**, and this repo has already published one null that
+  was an undertrained budget wearing an architecture's name. The control is
+  `extra.fit_mask_mode="scatter"` — fit under the full regime, score under
+  `answer` — in `runs/infill-ans-fitscatter`.
+
+  `ansnode_acc` on `nodeans`, floor 0.1011 in every cell (a floor is a property
+  of the task, so the two columns differ only in what the model was shown):
+
+  | model | fitted under `answer` | fitted under `scatter` |
+  |---|---:|---:|
+  | `corefer-001` | 0.0012 | **0.0000** |
+  | `ptrgen-001` | 0.0036 | **0.0000** |
+  | `routes-001` | 0.0000 | 0.0000 |
+  | `evidence-001` | 0.0000 | 0.0000 |
+
+  Eight times more supervision makes them **worse or equal, never better**.
+  `corefer-001`'s `label_bits` goes 11.861 → 12.677 and its fitted temperature
+  2.2 → 1.1. Whatever is missing is not examples. (The control was stopped after
+  the pointer arm — the six models whose zeros the objection was about — to
+  return the machine to the curve.)
 - **A different readout.** These rows score an argmax over 8,192 symbols. A
   readout restricted to the episode's own four options is the graph-side
   equivalent of the curriculum evaluation and is not measured here; the
