@@ -1,0 +1,31 @@
+{
+  "determining_relations": {
+    "agent-attribute": 130277,
+    "agent-effect": 97935,
+    "agent-intends": 56418,
+    "agent-needs": 94027,
+    "agent-reacts": 72531,
+    "agent-wants": 126219,
+    "capable-of": 27909,
+    "causes": 41662,
+    "defined-as": 1322,
+    "desires": 2885,
+    "has-a": 14735,
+    "has-property": 67983,
+    "made-of": 9971,
+    "manner-of": 7246,
+    "not-desires": 2723,
+    "other-effect": 34638,
+    "other-reacts": 30838,
+    "other-wants": 52841,
+    "precondition-of": 16352,
+    "subevent-of": 20074,
+    "used-for": 31131
+  },
+  "entities_BOTH": 15977,
+  "entities_anchorable": 119125858,
+  "entities_with_a_determined_attribute": 78642,
+  "note": "`entities_BOTH` is the population a derivability curriculum can draw from: anchorable AND carrying at least one determined attribute. `of_those_single_valued` is the subset where every determining relation has exactly one object, which is the clean case -- several objects means the lesson must choose, which is a different and harder task than deriving.",
+  "of_those_single_valued": 9849,
+  "triples_read": 216472379
+}
