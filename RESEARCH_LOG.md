@@ -956,20 +956,33 @@ Two controls, because the task design could have manufactured the null:
 cleanest quantitative prediction the repo has made. `corefer-001`, floors
 refitted at every rate:
 
-| | 0.15 | 0.35 | **0.60** |
-|---|---:|---:|---:|
-| copy ceiling | 0.722 | 0.680 | **0.583** |
-| acc \| copyable | 0.494 | 0.488 | **0.486** |
-| acc \| **not** copyable | 0.003 | 0.003 | **0.004** |
-| split floors, copyable / not | 0.158 / 0.106 | 0.159 / 0.106 | 0.158 / 0.104 |
-| **predicted from the supply alone** | — | 0.337 | **0.289** |
-| **observed `label_acc`** | 0.357 | 0.332 | **0.285** |
+| | 0.15 | 0.35 | 0.60 | **0.90** |
+|---|---:|---:|---:|---:|
+| copy ceiling | 0.722 | 0.680 | 0.583 | **0.302** |
+| acc \| copyable | 0.494 | 0.488 | 0.486 | — |
+| acc \| **not** copyable | 0.003 | 0.003 | 0.004 | — |
+| split floors, copyable / not | 0.158 / 0.106 | 0.159 / 0.106 | 0.158 / 0.104 | — |
+| **predicted from the supply alone** | — | 0.337 | **0.289** | 0.151 |
+| **observed `label_acc`** | 0.357 | 0.332 | **0.285** | **0.181** |
+| prediction error | — | +0.005 | **+0.004** | **+0.030** |
 
-**The ceiling fell 0.139 and the ability moved 0.008.** The prediction was
-committed while the 0.35 arm was still running and came in at **0.004 error** at
-0.60 — inside the noise band this file quotes for bits. Both split floors are
-within 0.002 of where they started, so nothing became harder for something that
-cannot read a symbol; only the opportunity to copy shrank.
+**Over most of the range the ceiling moves and the ability does not.** From 0.15
+to 0.60 the copy ceiling fell 0.139 while `acc | copyable` moved 0.008, and a
+supply-only model — hold both conditional accuracies at their 0.15 values, move
+only the share — predicted the pooled score to **0.005 and 0.004**. That
+prediction was committed while the 0.35 arm was still running. Both split floors
+stayed within 0.002, so nothing became harder for something that cannot read a
+symbol; only the opportunity to copy shrank.
+
+**At 0.90 the supply model breaks, and it breaks in the model's favour.**
+Predicted 0.151, observed **0.181** — a 0.030 miss where the previous two were
+0.004. Something other than supply is contributing once 90% of the graph is
+hidden, and *which* conditional moved has not been measured: the split for the
+0.90 arm was never computed, because the agent computing it hit a session limit.
+Recorded as an open question rather than explained, since the two available
+stories — `acc | copyable` rising because the survivors are easy, or `acc | not`
+finally becoming non-zero — have opposite implications and this file has been
+burned before by explaining a number it had not decomposed.
 
 Both pre-registered expectations were refuted: pointer models do **not** degrade
 fastest (they retain 86% against 65% for no-pointer rows — and the pointer axis
