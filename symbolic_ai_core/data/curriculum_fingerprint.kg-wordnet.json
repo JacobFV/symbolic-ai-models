@@ -1,13 +1,13 @@
 {
- "global": "d8260fa44238773d",
+ "global": "6718c958e5efca89",
  "languages": [
   "english"
  ],
  "lessons": {
   "abstraction_ladder": {
-   "raw": "bdc16e634f9c8f57",
+   "raw": "d4898c8a794950aa",
    "text": {
-    "english": "f5151f9bf37b32cf"
+    "english": "976a6b65e61505e7"
    }
   },
   "adversarial_argumentation": {
@@ -29,9 +29,9 @@
    }
   },
   "ambiguity_preservation": {
-   "raw": "fe8355915027409f",
+   "raw": "b10c5c092c7b9198",
    "text": {
-    "english": "2eb3e774377928f5"
+    "english": "9795cfc517426250"
    }
   },
   "analogy": {
@@ -77,9 +77,9 @@
    }
   },
   "belief_state": {
-   "raw": "695169f80368cb6c",
+   "raw": "7ba9ac11f86170a8",
    "text": {
-    "english": "0223bd8d0f8ca3ee"
+    "english": "819c847dd680193e"
    }
   },
   "capability_estimation": {
@@ -119,9 +119,9 @@
    }
   },
   "comparatives": {
-   "raw": "56b28589692eca4e",
+   "raw": "b11b564c2c92bb53",
    "text": {
-    "english": "53f720363ba7a8f1"
+    "english": "bfa0a7662e79e759"
    }
   },
   "compiler_construction": {
@@ -131,9 +131,9 @@
    }
   },
   "compositional_reference": {
-   "raw": "65bfd861b1b448be",
+   "raw": "05d785c3693e3a4b",
    "text": {
-    "english": "3b59aa24e845c347"
+    "english": "e35621fc2e46778b"
    }
   },
   "compressed_language": {
@@ -143,15 +143,15 @@
    }
   },
   "concept_invention": {
-   "raw": "71391f1e1642f0e2",
+   "raw": "3bf7626cbd294dbd",
    "text": {
-    "english": "eabce7443d20259e"
+    "english": "5ea6c23321c80c1e"
    }
   },
   "conceptual_chunking": {
-   "raw": "7cc119f83a018201",
+   "raw": "ce28e8af30059af9",
    "text": {
-    "english": "885e2a7a9009450c"
+    "english": "50dfb33b30cf1dd2"
    }
   },
   "conjecture_generation": {
@@ -173,9 +173,9 @@
    }
   },
   "continual_language": {
-   "raw": "71ff40a08bc2af60",
+   "raw": "0a12794283de7a45",
    "text": {
-    "english": "1064fbd39b8c5977"
+    "english": "f96a33c3e345e840"
    }
   },
   "contract_reasoning": {
@@ -203,9 +203,9 @@
    }
   },
   "counting_quantifier": {
-   "raw": "f137baeb61a7c719",
+   "raw": "80571bec85e5bb4e",
    "text": {
-    "english": "ac9634d51086b20e"
+    "english": "88dc678ff29a9d43"
    }
   },
   "cross_domain_unification": {
@@ -233,9 +233,9 @@
    }
   },
   "deception_detection": {
-   "raw": "9f01a6d95990ab99",
+   "raw": "af3860757a8e78f9",
    "text": {
-    "english": "ce0fc9426902d09a"
+    "english": "f3acd8c8c97df0e4"
    }
   },
   "decomposition": {
@@ -251,21 +251,21 @@
    }
   },
   "definitions": {
-   "raw": "9ebb191d5c7cc17d",
+   "raw": "df118a27aca1e1da",
    "text": {
-    "english": "cc85c5bc8491cf16"
+    "english": "fef05da40c8d887b"
    }
   },
   "deformalization": {
-   "raw": "33ab8b0af42916aa",
+   "raw": "8a553bd61fe44b18",
    "text": {
-    "english": "4bf23a824b967c53"
+    "english": "454d07a338ee9d41"
    }
   },
   "dialogue_game": {
-   "raw": "db45e75ac6766f8e",
+   "raw": "13dcf890f9702a4e",
    "text": {
-    "english": "0e7b66af4b8f37c8"
+    "english": "0f8f5face2b13dd0"
    }
   },
   "dimensional_analysis": {
@@ -281,15 +281,15 @@
    }
   },
   "distributed_knowledge": {
-   "raw": "f1514800f015269d",
+   "raw": "a910d65ba727b91b",
    "text": {
-    "english": "27771aac6b40731b"
+    "english": "5ad42fb0f9636ead"
    }
   },
   "document_world": {
-   "raw": "1ee902dfb70ac069",
+   "raw": "0a814c8370f717f3",
    "text": {
-    "english": "62b3e79a9ff18b8c"
+    "english": "05256c90cfe728c5"
    }
   },
   "dsl_invention": {
@@ -299,9 +299,9 @@
    }
   },
   "ellipsis": {
-   "raw": "d76d6d15228499fc",
+   "raw": "dfa443376bde918d",
    "text": {
-    "english": "3b960223d7efefa7"
+    "english": "f46f1a4a81417926"
    }
   },
   "emergence_discovery": {
@@ -311,9 +311,9 @@
    }
   },
   "entailment": {
-   "raw": "4f93072b73faea50",
+   "raw": "7e14a42040124693",
    "text": {
-    "english": "f4807d477841f75d"
+    "english": "a9742f63575bafb4"
    }
   },
   "event_semantics": {
@@ -353,15 +353,15 @@
    }
   },
   "falsification": {
-   "raw": "ab5eb58938bfef9c",
+   "raw": "165b9940e3844709",
    "text": {
-    "english": "bd34101407a097b8"
+    "english": "fc4a129dd78ff5e7"
    }
   },
   "few_shot_language_learning": {
-   "raw": "072eede4c5d9c3f9",
+   "raw": "a4f45dca7910df48",
    "text": {
-    "english": "dcd8214857fe97f1"
+    "english": "e729cc191f8fba54"
    }
   },
   "finite_state_language": {
@@ -371,15 +371,15 @@
    }
   },
   "formalization": {
-   "raw": "f036f8212a484341",
+   "raw": "e262b32b735626a4",
    "text": {
-    "english": "faa5a6b27aca88c0"
+    "english": "bf3bfd08d8c8faad"
    }
   },
   "general_language_agent": {
-   "raw": "8d794d772ef34435",
+   "raw": "ed4d1712d242458e",
    "text": {
-    "english": "b3ecf58ae1680abf"
+    "english": "fea33f6bbb2c54cb"
    }
   },
   "goal_generation": {
@@ -389,9 +389,9 @@
    }
   },
   "goal_inference": {
-   "raw": "d33ea3dfcf871679",
+   "raw": "208255a057cb6439",
    "text": {
-    "english": "7989a0bcfa093a73"
+    "english": "5a195c1ff90b2fe0"
    }
   },
   "goal_revision": {
@@ -425,9 +425,9 @@
    }
   },
   "implicature": {
-   "raw": "77c85625098e4436",
+   "raw": "ae3951b131c9e355",
    "text": {
-    "english": "f68c6d0922604be1"
+    "english": "c1fe39cc5354ee0a"
    }
   },
   "institution_design": {
@@ -443,21 +443,21 @@
    }
   },
   "instruction_composition": {
-   "raw": "e7793384bbc28c7c",
+   "raw": "be99a03957bad4f8",
    "text": {
-    "english": "8ab147f453212aff"
+    "english": "c75209ade725f412"
    }
   },
   "instruction_following_micro": {
-   "raw": "6a51044e2379d1de",
+   "raw": "95a4a8116a3f487f",
    "text": {
-    "english": "51ffb14614f00276"
+    "english": "c1282b4203539075"
    }
   },
   "interactive_reference": {
-   "raw": "4540ca4868dfd584",
+   "raw": "d3b49e302b6ce543",
    "text": {
-    "english": "e1890cb986bbdf88"
+    "english": "eaee815362a423ac"
    }
   },
   "interpreter_learning": {
@@ -479,15 +479,15 @@
    }
   },
   "knowledge_refactoring": {
-   "raw": "93c57f11ce51bf7c",
+   "raw": "94f50a35ca873fa1",
    "text": {
-    "english": "91ffc467d482890d"
+    "english": "8f6344eae7144333"
    }
   },
   "knowledge_update": {
-   "raw": "ec7cb5f0618d0ed3",
+   "raw": "ab689ec4fc5b3fa4",
    "text": {
-    "english": "69e284ddcb29b108"
+    "english": "5e6f396c763ea42c"
    }
   },
   "language_culture": {
@@ -515,9 +515,9 @@
    }
   },
   "lexicon_induction": {
-   "raw": "2a6e596a9422d12b",
+   "raw": "6e11821169edfc1e",
    "text": {
-    "english": "c7f8783d43e0845d"
+    "english": "7859e5310a252a6d"
    }
   },
   "logic_discovery": {
@@ -575,9 +575,9 @@
    }
   },
   "minimum_description_learning": {
-   "raw": "7366c82571e2d9d1",
+   "raw": "fd21450eb91cad6c",
    "text": {
-    "english": "c8792821237f2762"
+    "english": "9151ce15a5397e24"
    }
   },
   "multi_objective_reasoning": {
@@ -593,9 +593,9 @@
    }
   },
   "multimodal_symbolization": {
-   "raw": "bc24b4fa78af9ef5",
+   "raw": "5ee570e8860b4542",
    "text": {
-    "english": "5c88b6b80e9596b6"
+    "english": "c0306dfbe6926fad"
    }
   },
   "multiscale_modeling": {
@@ -611,15 +611,15 @@
    }
   },
   "natural_language_bridge": {
-   "raw": "3466e241eb863d74",
+   "raw": "e505cd717ee1c8b8",
    "text": {
-    "english": "d4b5f059f2c33e09"
+    "english": "189da8f6a50799a7"
    }
   },
   "negation": {
-   "raw": "5ef0f00119c80209",
+   "raw": "2fb5610a4ea36dac",
    "text": {
-    "english": "cf1dedafae220f77"
+    "english": "4449096365f2dc77"
    }
   },
   "negotiation_game": {
@@ -641,9 +641,9 @@
    }
   },
   "noisy_channel_language": {
-   "raw": "5a417ba9dbb90715",
+   "raw": "8666c5c7296ee18e",
    "text": {
-    "english": "9a9de984a7e43a25"
+    "english": "c96f06e5aaba5800"
    }
   },
   "norm_reasoning": {
@@ -659,21 +659,21 @@
    }
   },
   "ontology_construction": {
-   "raw": "09a86611a1199b8c",
+   "raw": "8a9e468c3dd789e1",
    "text": {
-    "english": "e545ed94872854bc"
+    "english": "aa3a0b39e88c7ef5"
    }
   },
   "ontology_revision": {
-   "raw": "9de4d331bc6977c0",
+   "raw": "04154df793ec2d51",
    "text": {
-    "english": "7bdcb646499e9f23"
+    "english": "0b0d0d4fc1cae9b0"
    }
   },
   "open_ended_concept_discovery": {
-   "raw": "db8d18432d405193",
+   "raw": "50901fc835564e13",
    "text": {
-    "english": "af000551ac082d06"
+    "english": "1f2ce96a5f3bda07"
    }
   },
   "open_ended_question_generation": {
@@ -683,9 +683,9 @@
    }
   },
   "open_world_language": {
-   "raw": "1f2e267e4c3a18e4",
+   "raw": "28400082815d0fb3",
    "text": {
-    "english": "b512e930923c01a7"
+    "english": "75280ef70112e36a"
    }
   },
   "palindrome": {
@@ -701,9 +701,9 @@
    }
   },
   "paraphrase": {
-   "raw": "6378e1c381d541a5",
+   "raw": "ce61a968df697cd0",
    "text": {
-    "english": "a2cf498b8eb8c82d"
+    "english": "e7e30f60e078bbe5"
    }
   },
   "parse_depth": {
@@ -719,15 +719,15 @@
    }
   },
   "predicate_logic": {
-   "raw": "6a907f4061c0b8de",
+   "raw": "9ea5543d96d57ee4",
    "text": {
-    "english": "c6bdf636d1947e3d"
+    "english": "7b3caa5628877116"
    }
   },
   "presupposition": {
-   "raw": "d3289b353542051f",
+   "raw": "87feb46e1dd61b56",
    "text": {
-    "english": "4c0f4450d62fce0d"
+    "english": "67b7ad1bf73f305a"
    }
   },
   "problem_formulation": {
@@ -785,21 +785,21 @@
    }
   },
   "quantification": {
-   "raw": "4aa5caa6b6042c60",
+   "raw": "e47238c3636baf0f",
    "text": {
-    "english": "cbef6a1568cc39fa"
+    "english": "d2194354b7c58615"
    }
   },
   "question_answering": {
-   "raw": "70d27a02c693e8d1",
+   "raw": "1e25dd463b364b21",
    "text": {
-    "english": "eec3ddc49aa1e2f3"
+    "english": "4b4afb56c8d70be4"
    }
   },
   "question_generation": {
-   "raw": "bf2aa5546a3b8345",
+   "raw": "12cbad381a061643",
    "text": {
-    "english": "0f1587ed885a8a2f"
+    "english": "cf0a3fb0d96fda45"
    }
   },
   "recursive_self_application": {
@@ -851,9 +851,9 @@
    }
   },
   "scope_ambiguity": {
-   "raw": "9d36103f05f51668",
+   "raw": "23414d27140b9e41",
    "text": {
-    "english": "8b933614b2a6e586"
+    "english": "92a8edf267cd6bf4"
    }
   },
   "self_error_diagnosis": {
@@ -887,15 +887,15 @@
    }
   },
   "set_operations": {
-   "raw": "b6df39a1575b136b",
+   "raw": "a371b0a49fa6954a",
    "text": {
-    "english": "90e93234266092b0"
+    "english": "71c9ddb932ab3fcf"
    }
   },
   "social_convention_learning": {
-   "raw": "01f8eea34eb68925",
+   "raw": "62766f53b8a2209e",
    "text": {
-    "english": "b060aee8a5a8b5bf"
+    "english": "3fb6de87411d4cf1"
    }
   },
   "source_provenance": {
@@ -911,15 +911,15 @@
    }
   },
   "spatial_language": {
-   "raw": "e03de1b33f5802b1",
+   "raw": "3b06f687e257d6bb",
    "text": {
-    "english": "f7223ddee02882dd"
+    "english": "8fa4dc8d096b5642"
    }
   },
   "speaker_listener_game": {
-   "raw": "979ba548d3912313",
+   "raw": "cdd647b57022fdf8",
    "text": {
-    "english": "93c4b23a1d6e20a9"
+    "english": "31654fd56827291b"
    }
   },
   "strategy_discovery": {
@@ -947,21 +947,21 @@
    }
   },
   "symbol_equivalence": {
-   "raw": "640733f13e539f8f",
+   "raw": "194d9f266a35fcf6",
    "text": {
-    "english": "5cfab23da88ba8c0"
+    "english": "18daa9623c5e0778"
    }
   },
   "symbol_grounding": {
-   "raw": "0f7695e598963ec5",
+   "raw": "28e34c3016d60c7b",
    "text": {
-    "english": "95d03b4b2d833c28"
+    "english": "66ff13eadf133d55"
    }
   },
   "symbolic_generalist": {
-   "raw": "809d7cecc439e08a",
+   "raw": "b4695a0bbe197c0a",
    "text": {
-    "english": "b429c2be597ec89c"
+    "english": "dcbd5f53e46b2e9b"
    }
   },
   "symbolic_world_builder": {
@@ -971,9 +971,9 @@
    }
   },
   "symmetry_reasoning": {
-   "raw": "4d3df749f5c31395",
+   "raw": "6b34a5b170da6cd2",
    "text": {
-    "english": "33716d53fb9487f0"
+    "english": "b456ccf68f114334"
    }
   },
   "teaching": {
@@ -983,9 +983,9 @@
    }
   },
   "temporal_language": {
-   "raw": "2870c64edbb23d72",
+   "raw": "6c3ec6bc47f4cfe4",
    "text": {
-    "english": "7b60a287a308d971"
+    "english": "f12ef2eeb0a3d8f7"
    }
   },
   "thematic_roles": {
@@ -1037,9 +1037,9 @@
    }
   },
   "underspecification_reasoning": {
-   "raw": "dfaa578a06017a09",
+   "raw": "30a5301f2fef67cb",
    "text": {
-    "english": "ee93e22c9605a2aa"
+    "english": "f5b4c05e243c4f4c"
    }
   },
   "unification": {

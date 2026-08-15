@@ -129,6 +129,31 @@ FAMILY_CAP = 120
 FAMILY_MIN_DISTINCT = 4
 
 _POOLS: dict[tuple, dict[str, Any]] = {}
+_FLAT: dict[tuple, dict[str, Any]] = {}
+
+
+def _flat_trace(kg: KnowledgeGraph) -> dict[str, Any]:
+    """Every slot source, filled with the whole graph by part of speech.
+
+    The vocabulary-size control's trace. Same words as the structured binder can
+    reach and the same 13,810-symbol lexicon, with no family, no taxonomy and no
+    per-object constraint — so a slot is six unrelated nouns instead of six
+    relatives, and an episode's lexicon is not a neighbourhood of anything.
+    """
+    key = (id(kg), kg.name, len(kg), kg.n_edges())
+    got = _FLAT.get(key)
+    if got is not None:
+        return got
+    nouns = [i for i in range(len(kg)) if kg.pos[i] == "n"]
+    verbs = [i for i in range(len(kg)) if kg.pos[i] == "v"]
+    adjs = [i for i in range(len(kg)) if kg.pos[i] == "a"]
+    got = {"family": None, "thing_family": None, "dimension": None,
+           "animate": None, "kinds": nouns, "things": nouns, "values": nouns,
+           "materials": nouns, "places": nouns, "surfaces": nouns,
+           "agents": nouns, "verbs": verbs, "dimension_values": adjs,
+           "licensed": []}
+    _FLAT[key] = got
+    return got
 
 
 def pools_for(kg: KnowledgeGraph, *, width: int = 8) -> dict[str, Any]:
@@ -192,6 +217,16 @@ class KGBinder:
     lesson_id: str
     seed: int
     width: int = 8
+    #: When False, every slot is drawn uniformly from the whole graph by part of
+    #: speech and :meth:`entity` does nothing. This is the **vocabulary-size
+    #: control**, and it exists because `base` and a KG arm differ in two things
+    #: at once: what the words mean *and* how many of them there are (2,105
+    #: symbols against 13,810). The scrambled graph controls the first and not
+    #: the second — it has the same vocabulary and the same neighbourhood
+    #: structure as its treatment. Without this arm, "every score dropped" is
+    #: unattributable between a larger lexicon and a structured one, which is the
+    #: shape of an unmeasured confound with an unknown sign.
+    structured: bool = True
 
     _rng: random.Random = field(init=False, repr=False)
     _cache: dict[tuple[str, int], list[str]] = field(default_factory=dict, init=False, repr=False)
@@ -203,13 +238,17 @@ class KGBinder:
 
     def __post_init__(self) -> None:
         h = hashlib.blake2b(
-            f"{self.kg.name}|{self.lesson_id}|{self.seed}".encode(), digest_size=8)
+            f"{self.kg.name}|{self.structured}|{self.lesson_id}|{self.seed}".encode(), digest_size=8)
         self._rng = random.Random(int.from_bytes(h.digest(), "big"))
         self._anchor()
 
     # ---- the DAG -----------------------------------------------------
     def _anchor(self) -> None:
         kg, rng = self.kg, self._rng
+        if not self.structured:
+            self._trace = _flat_trace(kg)
+            self._licensed = {}
+            return
         P = pools_for(kg, width=self.width)
         t: dict[str, Any] = {}
 
@@ -313,7 +352,7 @@ class KGBinder:
             # deterministic, seed-dependent choice of which n of the candidates,
             # so two episodes of the same lesson do not share a lexicon
             r = random.Random(hashlib.blake2b(
-                f"{self.kg.name}|{self.lesson_id}|{self.seed}|{slot}|{n}".encode(),
+                f"{self.kg.name}|{self.structured}|{self.lesson_id}|{self.seed}|{slot}|{n}".encode(),
                 digest_size=8).digest())
             out = r.sample(words, n)
         self._cache[key] = out
@@ -376,7 +415,8 @@ class KGBinder:
             return kg.word(n) if isinstance(n, int) else None
 
         return {
-            "kg": kg.name, "lesson": self.lesson_id, "seed": self.seed,
+            "kg": kg.name, "structured": self.structured,
+            "lesson": self.lesson_id, "seed": self.seed,
             "family": w(t.get("family")), "thing_family": w(t.get("thing_family")),
             "dimension": w(t.get("dimension")), "animate": t.get("animate"),
             "n_kinds": len(t.get("kinds") or []),

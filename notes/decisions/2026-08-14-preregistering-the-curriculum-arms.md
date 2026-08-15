@@ -8,7 +8,7 @@ related: [2026-08-14-semantic-constraint-from-a-knowledge-graph,
           2026-08-13-a-ranking-is-a-property-of-a-metric]
 ---
 
-# Pre-registering the three curriculum arms, before the sweep lands
+# Pre-registering the curriculum arms, before the sweep lands
 
 Written while `runs/kg179-{base,wordnet,shuffled}` are still running, so the
 reading cannot drift toward whatever the numbers turn out to be. That drift has
@@ -20,11 +20,27 @@ points because flat was the answer already written down.
 Three arms, **the same 179 lessons in each**, the same models, the same config
 (`configs/kg179.toml`), the same 20 training and 4 eval episodes per lesson.
 
-| arm | what differs |
-|---|---|
-| `base` | nothing. The curriculum every published number was measured on. |
-| `kg:wordnet` | the closed word lists are bound under a vendored WordNet projection, under a dependency DAG |
-| `kg:wordnet-shuffled` | the same, under a degree-preserving edge permutation of that graph |
+| arm | vocabulary | neighbourhood structure | meaning |
+|---|---|---|---|
+| `base` | 2,105 symbols | — | — |
+| `kg:wordnet` | 13,810 | yes | yes |
+| `kg:wordnet-shuffled` | 13,810 | yes | **no** |
+| `kg:wordnet-flat` | 13,810 | **no** | no |
+
+**Four arms, and the fourth was added after the first three were already
+running.** Writing the table above is what made it obvious: `base` and
+`kg:wordnet` differ in *two* things at once, what the words mean and that there
+are six times as many of them, and the scrambled control holds the first fixed
+while sharing the second. So "every score dropped" would have been
+unattributable between a larger lexicon and a structured one — an unmeasured
+confound, which has an unknown sign. `kg:wordnet-flat` draws every slot
+uniformly from the whole graph by part of speech: same 13,810 words, no family,
+no taxonomy, no per-object constraint. Three differences, three arms, one at a
+time.
+
+Adding it cost a re-record of the two KG fingerprints, because the binder's seed
+now carries the `structured` flag. Nothing was published on them; the `base`
+fingerprint (`68be4d098db17e28`) did not move, which is the one that matters.
 
 The manipulation is **symbols only**: zero of 716 measured episodes changed tree
 shape, arity, scene size, coordinates or which node carries the answer. Coverage
@@ -69,6 +85,21 @@ across the 24 models between `base` and `kg:wordnet`.** Prediction: below 0.90.
 A correlation at or above 0.95 means the curriculum got harder and told us
 nothing about which method is right — the decision note's second refutation
 condition, and I would report it as such.
+
+### H2b — where the drop comes from, if there is one
+
+With four arms the `base -> kg` drop decomposes. Written down before the
+numbers, with what each pattern would mean:
+
+| pattern | reading |
+|---|---|
+| `base` >> `flat` ≈ `shuffled` ≈ `kg` | the whole effect is **vocabulary size**. A six-times-larger lexicon is harder and nothing else happened. |
+| `base` >> `flat`, and `shuffled` ≈ `kg` > `flat` | **neighbourhood structure** helps — an episode drawing six related words is easier than six unrelated ones — and meaning adds nothing on top. |
+| `kg` > `shuffled` | **meaning** helps, and this is the only pattern that supports the decision note. |
+| `flat` > `kg` and `flat` > `shuffled` | structure *hurts*: six related words collide more, and a harder disambiguation is the whole story. Would be a real and unexpected finding about the curriculum. |
+
+I expect the second row and would be surprised by the third, for the reason in
+H3 below.
 
 ### H3 — the control, which is the cheapest death
 

@@ -3,7 +3,7 @@ date: 2026-08-14
 author: agent-kg-seam
 status: idea
 related: [2026-08-14-semantic-constraint-from-a-knowledge-graph,
-          2026-08-14-preregistering-the-three-curriculum-arms,
+          2026-08-14-preregistering-the-curriculum-arms,
           2026-08-13-a-real-pretrained-seed]
 ---
 

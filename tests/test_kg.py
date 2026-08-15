@@ -212,7 +212,8 @@ def test_the_base_curriculum_did_not_move():
                 == got["lessons"][lid]["text"]["english"]), lid
 
 
-@pytest.mark.parametrize("curriculum", ["kg:wordnet", "kg:wordnet-shuffled"])
+@pytest.mark.parametrize("curriculum",
+                         ["kg:wordnet", "kg:wordnet-shuffled", "kg:wordnet-flat"])
 def test_each_kg_curriculum_has_its_own_fingerprint(curriculum):
     """One golden file per curriculum. A KG arm sharing the base file would be
     exactly the silent redefinition the module exists to prevent."""
@@ -225,14 +226,18 @@ def test_each_kg_curriculum_has_its_own_fingerprint(curriculum):
         assert golden["lessons"][lid]["raw"] == got["lessons"][lid]["raw"], lid
 
 
-def test_the_curricula_are_three_different_worlds():
+def test_the_curricula_are_four_different_worlds():
     """A KG arm that reproduced the base arm would be a null by construction,
-    and a control that reproduced its treatment would be no control."""
+    and a control that reproduced its treatment would be no control. Two rows
+    identical to every digit are one row -- the cheapest detector this repo
+    has, and the one that caught `vsa_full_gated-002` reproducing its own
+    baseline."""
     got = {c: [ep.prompt for ep in C.generate(SOME, n=3, seed0=0, curriculum=c)]
            for c in C.CURRICULA}
-    assert got["base"] != got["kg:wordnet"]
-    assert got["kg:wordnet"] != got["kg:wordnet-shuffled"]
-    assert got["base"] != got["kg:wordnet-shuffled"]
+    for a in C.CURRICULA:
+        for b in C.CURRICULA:
+            if a < b:
+                assert got[a] != got[b], (a, b)
 
 
 def test_the_kg_arms_change_symbols_and_not_tree_shapes():
@@ -263,7 +268,7 @@ def test_the_kg_arms_change_symbols_and_not_tree_shapes():
     """
     lessons = [l for l in SOME if l != "few_shot_language_learning"]
     base = list(C.generate(lessons, n=4, seed0=0, curriculum="base"))
-    for cur in ("kg:wordnet", "kg:wordnet-shuffled"):
+    for cur in [c for c in C.CURRICULA if c != "base"]:
         other = list(C.generate(lessons, n=4, seed0=0, curriculum=cur))
         assert len(base) == len(other)
         for a, b in zip(base, other):
@@ -273,7 +278,7 @@ def test_the_kg_arms_change_symbols_and_not_tree_shapes():
 
 
 def test_a_kg_episode_is_a_pure_function_of_its_address():
-    for cur in ("kg:wordnet", "kg:wordnet-shuffled"):
+    for cur in [c for c in C.CURRICULA if c != "base"]:
         a = [ep.to_dict() for ep in C.generate(SOME, n=3, seed0=5, curriculum=cur)]
         b = [ep.to_dict() for ep in C.generate(SOME, n=3, seed0=5, curriculum=cur)]
         assert a == b

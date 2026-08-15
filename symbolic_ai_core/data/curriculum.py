@@ -129,7 +129,18 @@ def resolve_lessons(spec: str | Sequence[str] | None) -> list[str]:
 #: 179 names and ``curriculum_fingerprint.json`` does not move. A KG curriculum
 #: that added lessons would fail that fingerprint with "lessons that did not
 #: exist", and the fix would be this comment, not the golden file.
-CURRICULA: tuple[str, ...] = ("base", "kg:wordnet", "kg:wordnet-shuffled")
+#:
+#: Three KG arms, not two, and the third is the one a reader will want when the
+#: table shows every score dropping. ``base`` and a KG arm differ in **two**
+#: things at once: what the words mean, and that there are 13,810 of them
+#: instead of 2,105. ``kg:wordnet-shuffled`` controls the first and shares the
+#: second. ``kg:wordnet-flat`` shares the vocabulary and throws away the
+#: structure — every slot is six unrelated words of the right part of speech —
+#: so the three of them separate "a bigger lexicon", "a structured lexicon" and
+#: "a meaningful one". An unmeasured confound has an unknown sign, and this is
+#: the measurement.
+CURRICULA: tuple[str, ...] = ("base", "kg:wordnet", "kg:wordnet-shuffled",
+                              "kg:wordnet-flat")
 
 
 def curriculum_ids() -> list[str]:
@@ -149,8 +160,11 @@ def _binder_factory(curriculum: str):
         raise ValueError(f"unknown curriculum {curriculum!r}; have {list(CURRICULA)}")
     from symbolic_ai_kg import load as load_kg
     from symbolic_ai_kg.bind import KGBinder
-    kg = load_kg(curriculum[3:])
-    return lambda lesson_id, seed: KGBinder(kg, lesson_id, seed)
+    name = curriculum[3:]
+    structured = not name.endswith("-flat")
+    kg = load_kg(name[:-len("-flat")] if not structured else name)
+    return lambda lesson_id, seed: KGBinder(kg, lesson_id, seed,
+                                            structured=structured)
 
 
 def generate(lessons: Sequence[str], *, n: int, seed0: int = 0,
