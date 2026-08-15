@@ -351,6 +351,47 @@ def test_the_binder_reports_where_it_fell_back():
     assert "shape" not in d["slots_fallback"]
 
 
+def test_no_model_can_read_the_knowledge_graph():
+    """The leak guard, and the reason the renaming column is sufficient here.
+
+    The decision note's third refutation condition is that the graph *leaks the
+    answer* — a model recovers the graph and the "semantic" win is lookup. The
+    guard it names is that a winner must still win when the symbols are permuted
+    **and the graph permuted with them**.
+
+    That guard is already the ordinary renaming column, but only while the graph
+    is write-only: it shapes the corpus at generation time and no model consults
+    it at train or test time, so permuting the symbols *is* permuting the graph
+    as far as any model can tell. The moment a model imports
+    ``symbolic_ai_kg``, that stops being true and the renaming column stops
+    covering the leak — silently, because nothing about the numbers would look
+    different.
+
+    So assert the premise rather than trusting it. If this test fails, the
+    equivariance column no longer answers the leak question and a separate
+    permute-the-graph-with-the-symbols control has to be built.
+    """
+    import ast
+    import pathlib
+    import symbolic_ai_models
+    root = pathlib.Path(symbolic_ai_models.__file__).resolve().parent
+    offenders = []
+    for path in root.rglob("*.py"):
+        if "__pycache__" in path.parts:
+            continue
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        for node in ast.walk(tree):
+            names = ([a.name for a in node.names] if isinstance(node, ast.Import)
+                     else [node.module or ""] if isinstance(node, ast.ImportFrom)
+                     else [])
+            if any(n.split(".")[0] == "symbolic_ai_kg" for n in names):
+                offenders.append(path.name)
+    assert not offenders, (
+        f"{sorted(set(offenders))} import symbolic_ai_kg. A model that can read "
+        f"the graph can memorise it, and the renaming column no longer answers "
+        f"the leak question -- see this test's docstring.")
+
+
 def test_the_pools_are_not_empty():
     """A pool that came out empty would send every slot to its fallback and the
     treatment would silently be the baseline."""
