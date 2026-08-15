@@ -830,6 +830,71 @@ measured on six lessons and inverts at 179: `abstain` 0.0866 against `random`
 directions, and no mechanism for either move has been measured. The note named
 this as its own live risk and was right to.
 
+## `005`: the type head is saturated, not unattacked
+
+`runs/metta005`, 19 rows, all 179 lessons, same floors as every other row: label
+0.143, type 0.860, copy 0.266, copy ceiling 0.722. The IR-as-a-knob line's first
+candidate — **AtomSpace/MeTTa, whose native operation is match and rewrite**.
+
+**The type head moved for the first time, and it still lost.**
+
+| | type acc | type lift | type bits lift |
+|---|---:|---:|---:|
+| every other VSA-family row | 0.7922 | −0.4855 | +0.4931 |
+| **`metta_type-005`** | **0.8203** | **−0.2849** | **+0.5660** |
+
+That is **+0.201 of type lift**, the largest movement any row in this family has
+shown on the head this log called "the last one nothing has attacked" — and it is
+still **0.285 below the floor**. Both halves are the result. The reframe is what
+to take away: **the type column was saturated, not unattacked.** A six-level
+backed-off ladder over tree shape is simply very good, and reading what a node
+*contains* — a direction no key in this repo had ever had — is worth a fifth of
+the gap and loses anyway.
+
+Design rule 1 held, and was checked in the arithmetic rather than asserted:
+against `metta-005`, the `metta_type-005` row moves type lift by +0.201 while
+`label_lift`, `label_bits_lift` and `copy_lift` are **identical to four
+decimals**. The type gain did not come from the label route, which is the mistake
+`corefer` paid 0.174 -> 0.004 for.
+
+**Expressiveness is not the binding constraint — third independent
+confirmation.** The pre-registration predicted the label null and named the
+reason: `omegaclaw_reach-001` added `ilp`'s best discovered operator and lost;
+candidate recall climbing 82.7% -> 98.7% moved accuracy by 0.000. Confirmed wide,
+0.274 against `corefer`'s 0.357. MeTTa *can* express things `CLAWS` cannot — the
+typed slot-selected sibling, the downward direction, arbitrary-length joins,
+bounded transitive closure — and it does not help the head this repo leads with.
+
+**A structural bits gain that survives renaming.** +0.011 bits lift at a **+0.001**
+renaming drop, all 2,105 symbols permuted without refitting — against
+`ensemble-001`'s +1.14 that collapsed 0.467 -> 0.038 on the same test. A tenth
+the size, keeping essentially all of it. Accuracy is flat (0.213 vs 0.214), so an
+"atomspace roles win" headline and an "atomspace roles are a null" headline are
+both available from this table and both misreport it.
+
+**A `Graph` cannot be content-addressed into an atomspace.** The
+pre-registration's own proposed encoding would have collapsed **42.3% of all
+nodes** (26,351 of 62,253, affecting 97.1% of graphs), because a `Graph` is a tree
+of *occurrences* and an atomspace is a set of *values*. Caught by the round-trip
+test covering all 179 lessons rather than sampling a fixture — the
+`test_encoding_is_lossless` failure mode, caught before it could publish
+anything. An outside `hyperon 0.2.10` agrees on 1,575 bindings with 0
+disagreements, with a self-test proving the check can fail.
+
+**Cost fired, and the absolute rate is refused.** The IR alone is 2.6x, the full
+schedule 9.5x. The calibration control read `vsa_sum-004` at 0.50x its published
+throughput, so no absolute rate from that pass is quotable and none is quoted.
+For context `vsa_sum-004` at d=4,096 is already 15x below `APPROACH.md`'s target
+before any atomspace exists, and **a `005` row at d=256 was never run** — the
+cheap experiment this line skipped.
+
+**Not established here: the copy result.** `metta_perm_pure-005` reaches +0.1091
+copy lift against `corefer-001`'s +0.0959 — the first thing in this repo's
+history to lead the pointer, verified against the run directories with an
+identical floor, ceiling and n=5,785. It is **not** promoted, because it was not
+pre-registered and an unpredicted large effect is the single most likely thing
+here to be a harness artefact. It is in the queue below, awaiting a refuter.
+
 ## Roles derived from the graph, and a bandwidth nobody had fitted
 
 `runs/vsa_role`, 27 rows, all 179 lessons, same floors as every other row: label
@@ -977,6 +1042,8 @@ finding that never gets challenged.
 | ~~the action readout~~ | — | **PROMOTED**, above. Attacked by an agent that did not write it; both named confounds run, plus a third nobody had named; the gap grew from 0.4229 to 0.4320 as they were removed. Its own interpretation was corrected in the process and a slice finding it rested on was refuted. |
 | `notes/findings/2026-08-13-one-parser-over-word-classes-transfers-the-class-identities-do-not.md` | over 46 WALS-coded languages, abstraction transfers and the induced class *identities* are a liability held out; `Treebank.coverage` predicts held-out transfer at **r = +0.886** and survives partialling out script and untranslated share | a second, independent handle on coverage — the one intervention tried moved bracket F1 by +0.002, which is not enough to call a +0.886 correlate a passenger. See `notes/questions/2026-08-14-a-second-handle-on-treebank-coverage.md` |
 
+| **`metta_perm_pure-005` leads the copy head** | **+0.1091 copy lift against `corefer-001`'s +0.0959** — the first thing in this repo's history to lead the pointer, on a question five candidate-level features had failed at. Same floor 0.2658, same ceiling 0.7216, same n=5,785, and `corefer-001` reproduces its published number to four decimals in the same run | **it was not pre-registered.** The pre-registration named bits and the type head; it did not name the pointer, and an unpredicted large effect is the single most likely thing here to be a harness artefact rather than reasoning. The mechanism offered is an unrun story, labelled as one. Needs the scoring path audited by someone who did not write it. **Under challenge now.** |
+
 The one thing the queue must not become is a parking lot for results nobody
 intends to challenge. A finding that sits here unchallenged is not "pending"; it
 is unverified, and should be read that way.
@@ -1050,7 +1117,24 @@ redefined what an earlier published row had meant.
   +0.078 copy lift against `corefer`'s +0.096. The first thing that *did* move
   a pointer a long way is `vsa_perm-002`, and it moved it from far below the
   floor to +0.060 — still third of the pointers, so the ceiling is untouched.
-- **The type head is the last one nothing has attacked.** Every VSA row sits at
+
+  **Update: something is now first, and the ceiling still stands.**
+  `metta_perm_pure-005` reads **+0.1091** against `corefer-001`'s +0.0959, which
+  is the first time in this repo's history anything has led the pointer. It is
+  0.346 of a reachable 0.722, so **more than half the signal is still untouched**
+  and the question is unchanged in substance; what died is only "nothing has ever
+  been first". Not promoted — it was not pre-registered and is under challenge.
+- ~~**The type head is the last one nothing has attacked.**~~ **Attacked, and the
+  finding is that it was saturated rather than unattacked.** `metta_type-005`
+  reads what a node *contains* — a direction no key here has ever had — and moves
+  type lift from −0.486 to **−0.285**, the largest movement any VSA-family row has
+  shown, while still sitting 0.285 *below* the floor. Design rule 1 held: label,
+  label-bits and copy are identical to four decimals across that move. A
+  six-level backed-off ladder over tree shape is simply very good, and the open
+  question is now the sharper one — **is anything except tree shape worth
+  anything on this head at all?** Two of nineteen models are positive on type.
+  The original text follows, because it is what the attack was aimed at:
+  every VSA row sits at
   -0.486, unchanged since `vsa-002`, because the family's type vote is a
   four-feature lookup and the floor is a six-level backed-off ladder. Two of
   nineteen models are positive on type. Design rule 1 says the heads do not share
