@@ -115,9 +115,74 @@ def resolve_lessons(spec: str | Sequence[str] | None) -> list[str]:
     return names
 
 
+#: The curricula this repo can draw from, and what each one means.
+#:
+#: ``base`` is the 179 lessons every published number was measured on and is
+#: what a caller gets by saying nothing. ``kg:<name>`` is the same 179 lessons
+#: with their closed word lists bound under a knowledge graph — see
+#: ``symbolic_ai_kg`` and
+#: ``notes/decisions/2026-08-14-semantic-constraint-from-a-knowledge-graph.md``.
+#:
+#: **Beside, never instead.** The lesson ids are identical across curricula on
+#: purpose: it is what makes a macro average over 179 lessons comparable between
+#: them, and it is why ``symbolic_ai_data.lesson_ids()`` still returns exactly
+#: 179 names and ``curriculum_fingerprint.json`` does not move. A KG curriculum
+#: that added lessons would fail that fingerprint with "lessons that did not
+#: exist", and the fix would be this comment, not the golden file.
+#:
+#: Three KG arms, not two, and the third is the one a reader will want when the
+#: table shows every score dropping. ``base`` and a KG arm differ in **two**
+#: things at once: what the words mean, and that there are 13,810 of them
+#: instead of 2,105. ``kg:wordnet-shuffled`` controls the first and shares the
+#: second. ``kg:wordnet-flat`` shares the vocabulary and throws away the
+#: structure — every slot is six unrelated words of the right part of speech —
+#: so the three of them separate "a bigger lexicon", "a structured lexicon" and
+#: "a meaningful one". An unmeasured confound has an unknown sign, and this is
+#: the measurement.
+#:
+#: **There is a fifth graph registered in ``symbolic_ai_kg`` and no curriculum
+#: for it, on purpose.** ``load("cskg")`` returns a vendored commonsense
+#: projection with 30,513 property assertions against WordNet's zero, which is
+#: exactly the relation the per-object constraint was starving for. Its
+#: *taxonomy* is the problem: ConceptNet's ``IsA`` is flat and noisy, and the
+#: families it anchors are things like *(interior, crocheting, snout, crusade,
+#: conk, salesmanship)*. An arm whose "semantic neighbourhood" is that would be
+#: a treatment indistinguishable from the vocabulary-size control, and its null
+#: would be unreadable. Registering the curriculum would have invited exactly
+#: that sweep. See
+#: ``notes/decisions/2026-08-15-the-commonsense-arms-are-built-and-not-run.md``.
+CURRICULA: tuple[str, ...] = ("base", "kg:wordnet", "kg:wordnet-shuffled",
+                              "kg:wordnet-flat")
+
+
+def curriculum_ids() -> list[str]:
+    return list(CURRICULA)
+
+
+def _binder_factory(curriculum: str):
+    """``(lesson_id, seed) -> binder``, or ``None`` for the base curriculum.
+
+    Imported lazily so that ``symbolic_ai_core`` keeps working with
+    ``symbolic_ai_kg`` absent, and so the vendored 250 KB graph is not
+    decompressed by every process that imports the data layer.
+    """
+    if curriculum in ("base", "", None):
+        return None
+    if not curriculum.startswith("kg:"):
+        raise ValueError(f"unknown curriculum {curriculum!r}; have {list(CURRICULA)}")
+    from symbolic_ai_kg import load as load_kg
+    from symbolic_ai_kg.bind import KGBinder
+    name = curriculum[3:]
+    structured = not name.endswith("-flat")
+    kg = load_kg(name[:-len("-flat")] if not structured else name)
+    return lambda lesson_id, seed: KGBinder(kg, lesson_id, seed,
+                                            structured=structured)
+
+
 def generate(lessons: Sequence[str], *, n: int, seed0: int = 0,
              language: str = "english", max_nodes: int = 512,
-             on_error: str = "raise") -> Iterator[Episode]:
+             on_error: str = "raise",
+             curriculum: str = "base") -> Iterator[Episode]:
     """Draw ``n`` episodes of each lesson, starting from ``seed0``.
 
     Text and structure are generated from the same seed and therefore describe
@@ -147,13 +212,21 @@ def generate(lessons: Sequence[str], *, n: int, seed0: int = 0,
     # or the fingerprint — and every number resting on it — moves silently.
     from . import langdb
     langdb.ensure_for([language])
+    make_binder = _binder_factory(curriculum)
+    from symbolic_ai_data.binding import using
     for lid in lessons:
         L = lc.get(lid)
         for i in range(n):
             seed = seed0 + i
+            # One binder per episode, seeded from (graph, lesson, seed), so a
+            # KG episode is a pure function of its address exactly as a base
+            # episode is. Both halves are drawn inside the same `with`, or the
+            # text and the graph would be two different worlds.
+            binder = make_binder(lid, seed) if make_binder is not None else None
             try:
-                ex = L.example(seed, language=language)
-                st = L.structured(seed)
+                with using(binder):
+                    ex = L.example(seed, language=language)
+                    st = L.structured(seed)
             except Exception:
                 if on_error == "raise":
                     raise

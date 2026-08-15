@@ -1,0 +1,116 @@
+"""Where the knowledge graph came from, as data a test can assert against.
+
+Same rules as ``symbolic_ai_data/_vendor.py``: the content is somebody else's,
+the provenance lives in a module rather than a README so it is checkable, and
+nothing here reaches the network at import or at generation time.
+
+The one difference from that precedent is worth stating plainly rather than
+glossing. ``symbolic_ai_data`` is a **verbatim file-for-file copy**; this is a
+**deterministic projection** of a verbatim upstream artefact. Two hashes carry
+the claim instead of one:
+
+* :data:`UPSTREAM_SHA256` pins the bytes ``scripts/build_wordnet_kg.py``
+  downloads and refuses to parse anything else;
+* :data:`GRAPH_SHA256` pins the bytes that script wrote, which are the ones
+  committed here.
+
+``tests/test_kg_vendor.py`` checks the second on every run and the first only
+when the zip happens to be on the machine, because a test that needs the network
+is a test that fails for reasons unrelated to its subject — see
+``notes/lessons/2026-08-14-a-sandboxed-test-reports-environment-faults-under-its-own-name.md``.
+
+Why not vendor the zip itself: 10.8 MB, of which the projection keeps under 3%,
+and the rest is glosses and sense keys nothing here reads. Why not download at
+runtime: a curriculum that cannot generate offline is not reproducible, and
+``symbolic_ai_core/data/langdb.py`` records what happens when a data path can go
+inert without saying so — 58 languages were unreachable and every published
+number was measured on seven because a file was absent rather than because seven
+was the design.
+"""
+
+from __future__ import annotations
+
+from pathlib import Path
+
+__all__ = ["ROOT", "DATA", "UPSTREAM_URL", "UPSTREAM_SHA256", "GRAPH_PATH",
+           "GRAPH_SHA256", "LICENSE_PATH", "SELECTION", "RELEASE", "LICENSE_NAME",
+           "CSKG_UPSTREAM_URL", "CSKG_UPSTREAM_SHA256", "CSKG_GRAPH_PATH",
+           "CSKG_GRAPH_SHA256", "CSKG_LICENSE_PATH", "CSKG_SELECTION",
+           "CSKG_RELEASE", "CSKG_LICENSE_NAME"]
+
+ROOT = Path(__file__).resolve().parent
+DATA = ROOT / "data"
+
+RELEASE = "WordNet 3.0"
+LICENSE_NAME = "WordNet 3.0 License (Princeton University)"
+
+#: Princeton WordNet 3.0 as redistributed by the NLTK project. The NLTK
+#: redistribution is used rather than princeton.edu because it is a single
+#: immutable file under a stable URL with the license inside it.
+UPSTREAM_URL = ("https://raw.githubusercontent.com/nltk/nltk_data/gh-pages/"
+                "packages/corpora/wordnet.zip")
+
+#: sha256 of that zip, 10,775,600 bytes, taken 2026-08-14.
+UPSTREAM_SHA256 = "cbda5ea6eef7f36a97a43d4a75f85e07fccbb4f23657d27b4ccbc93e2646ab59"
+
+GRAPH_PATH = DATA / "wordnet30-physical.json.gz"
+LICENSE_PATH = DATA / "LICENSE.wordnet"
+
+#: sha256 of the committed projection. Filled in by the builder; asserted by
+#: ``tests/test_kg_vendor.py``.
+GRAPH_SHA256 = "8b456c5de1275195cd0e1b90f7adc9dd740616eec1eb78b05cdf5fecc967a99a"
+
+#: The selection rule, in one string, so it travels inside the artefact.
+SELECTION = (
+    "nouns in the ten physical lexicographer files with a single-word lowercase "
+    "lemma and SemCor tag count >= 1; verbs in the seven physical lexicographer "
+    "files under the same rule, with their sentence frames; adjectives carrying "
+    "an attribute pointer plus one hop of similar-to and antonym; the noun side "
+    "of every attribute pointer; all of it closed under hypernymy"
+)
+
+# --------------------------------------------------------------------------
+# CSKG: a second graph, and the provenance is weaker in one stated way
+# --------------------------------------------------------------------------
+#
+# WordNet is a *lexical* resource and the seam needed a *selectional* one.
+# WordNet contributes 1,408 ``part`` and 156 ``substance`` edges, which is all
+# the per-object attribute constraint has to draw on, so an object's second
+# attribute is bound to one of its kind's **parts**. CSKG states 46k property
+# assertions, which is the relation the decision note is actually about.
+#
+# The weakness, stated rather than glossed: what is hashed below is **not** a
+# public immutable URL the way ``UPSTREAM_SHA256`` is. It is a local re-export
+# of CSKG taken from a private bucket, because that is the artefact that was
+# read. A reader can verify that ``scripts/build_cskg_kg.py`` turns that parquet
+# into the committed bytes; they cannot re-fetch the parquet from the URL below,
+# which points at the upstream CSKG release the parquet derives from.
+
+CSKG_RELEASE = "CSKG (CommonSense Knowledge Graph), consolidated release"
+CSKG_LICENSE_NAME = "CC BY-SA 4.0"
+
+#: The upstream project. The parquet actually read is a re-export of it.
+CSKG_UPSTREAM_URL = "https://github.com/usc-isi-i2/cskg"
+
+#: sha256 of ``cskg/cskg_full_p0.parquet``, 28,838,905 bytes, taken 2026-08-15.
+CSKG_UPSTREAM_SHA256 = (
+    "e9a4fe2df2fe4fb85f95b00090506cc58b6d8e676008efb26102b3ef600a8f69")
+
+CSKG_GRAPH_PATH = DATA / "cskg-commonsense.json.gz"
+CSKG_LICENSE_PATH = DATA / "LICENSE.cskg"
+
+#: sha256 of the committed projection. Filled in by the builder; asserted by
+#: ``tests/test_kg.py``.
+CSKG_GRAPH_SHA256 = (
+    "fffb909eb5bf59f1c513890540253325544ec1f55cc25e1167b3cff065bcfaa7")
+
+CSKG_SELECTION = (
+    "English ConceptNet-style concepts /c/en/<lemma>[/<pos>] whose lemma is a "
+    "single lowercase alphabetic word, collapsed by lemma; the relations IsA, "
+    "InstanceOf, HasA, PartOf, MadeOf, HasProperty, MayHaveProperty, SimilarTo, "
+    "Antonym and CapableOf mapped onto isa/part/substance/property/similar/"
+    "antonym/can, with isa additionally requiring an explicit part-of-speech "
+    "tag on both endpoints; nodes kept only if touched by a selectional "
+    "relation, closed under isa; RelatedTo and Synonym dropped; nothing "
+    "inherited down the taxonomy"
+)

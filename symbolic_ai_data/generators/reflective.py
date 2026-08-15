@@ -9,11 +9,13 @@ from __future__ import annotations
 import random
 from typing import Any, Callable, Iterable, Mapping, Sequence
 
+from ..binding import SlotVocabulary
+
 
 NONCE_LETTERS = "kmtszlpvrgd"
 
 
-_SIZES = ["small", "big", "huge"]
+_SIZES = SlotVocabulary("size", ["small", "big", "huge"])
 
 
 def _shuffled(rng: random.Random, xs: Iterable[Any]) -> list[Any]:

@@ -1,0 +1,51 @@
+CSKG — the CommonSense Knowledge Graph
+======================================
+
+`cskg-commonsense.json.gz` in this directory is a derived subset of CSKG.
+
+Upstream work
+-------------
+
+    Filip Ilievski, Pedro Szekely, Bin Zhang.
+    "CSKG: The CommonSense Knowledge Graph."
+    Extended Semantic Web Conference (ESWC), 2021.
+    https://github.com/usc-isi-i2/cskg
+
+CSKG consolidates ConceptNet 5.7, WordNet 3.0, ATOMIC, Visual Genome, FrameNet,
+Roget and Wikidata-CS into one graph with a shared node space.
+
+License
+-------
+
+CSKG is distributed under the Creative Commons Attribution-ShareAlike 4.0
+International license (CC BY-SA 4.0):
+
+    https://creativecommons.org/licenses/by-sa/4.0/
+
+The constituent sources carry their own notices; ConceptNet 5 is CC BY-SA 4.0
+and WordNet 3.0 is under the Princeton WordNet license, whose notice is in
+`LICENSE.wordnet` beside this file.
+
+Statement of changes, as CC BY-SA 4.0 requires
+----------------------------------------------
+
+This is **not** a verbatim copy. `scripts/build_cskg_kg.py` projects CSKG down
+to a small subgraph and the selection rule is stated in full there and in
+`symbolic_ai_kg/_vendor.py::CSKG_SELECTION`. In summary, the derived file:
+
+  * keeps only English ConceptNet-style concept nodes whose lemma is a single
+    lowercase alphabetic word, collapsed by lemma rather than by sense;
+  * keeps ten of the fifty-eight relations, renaming them onto this repo's own
+    relation names (`IsA` -> `isa`, `HasProperty` and `MayHaveProperty` ->
+    `property`, `HasA` and reversed `PartOf` -> `part`, `MadeOf` ->
+    `substance`, `CapableOf` -> `can`, plus `similar` and `antonym`);
+  * drops `RelatedTo` and `Synonym` entirely;
+  * adds two fields CSKG does not have — a part-of-speech tag and a WordNet-
+    style lexicographer name — both **derived by this repo** from the graph's
+    own `isa` closure, not asserted by CSKG. See the module docstring of
+    `scripts/build_cskg_kg.py`, which says so plainly, because a derived
+    judgement presented as upstream data would be an attribution error as well
+    as a research one.
+
+Because CSKG is ShareAlike, this derived subset is offered under the same
+CC BY-SA 4.0 license.

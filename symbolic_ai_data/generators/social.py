@@ -9,36 +9,37 @@ from __future__ import annotations
 import random
 from typing import Any, Mapping, Sequence
 
+from ..binding import SlotVocabulary
 from .._structure import Ident, Lst, Pred, Term
 
-SIZES = ["small", "large"]
+SIZES = SlotVocabulary("size", ["small", "large"])
 
 
-ITEMS = ["wood", "ore", "grain", "clay", "gold", "salt"]
+ITEMS = SlotVocabulary("material", ["wood", "ore", "grain", "clay", "gold", "salt"])
 
 
-PLACES = ["attic", "cellar", "garden", "kitchen", "study", "barn"]
+PLACES = SlotVocabulary("place", ["attic", "cellar", "garden", "kitchen", "study", "barn"])
 
 
-ACTIONS = ["lift", "turn", "push", "wait", "open", "close"]
+ACTIONS = SlotVocabulary("act", ["lift", "turn", "push", "wait", "open", "close"])
 
 
 COMPANIES = ["acme", "zenith", "orbis", "helix", "vertex"]
 
 
-CITIES = ["paris", "lisbon", "osaka", "denver", "cairo", "oslo"]
+CITIES = SlotVocabulary("city", ["paris", "lisbon", "osaka", "denver", "cairo", "oslo"])
 
 
-PROPS = ["metallic", "fragile", "heavy", "hollow", "striped", "warm"]
+PROPS = SlotVocabulary("property", ["metallic", "fragile", "heavy", "hollow", "striped", "warm"])
 
 
-DETECT_CLASSES = ["cup", "book", "laptop", "plant", "bottle", "phone", "clock", "bowl"]
+DETECT_CLASSES = SlotVocabulary("thing", ["cup", "book", "laptop", "plant", "bottle", "phone", "clock", "bowl"])
 
 
-SURFACES = ["tray", "table", "shelf", "mat"]
+SURFACES = SlotVocabulary("surface", ["tray", "table", "shelf", "mat"])
 
 
-CONCEPTS = ["fire", "water", "stone", "cloud", "seed", "wind"]
+CONCEPTS = SlotVocabulary("substance", ["fire", "water", "stone", "cloud", "seed", "wind"])
 
 
 WORDS = ["tama", "luko", "reshi", "vune", "peki", "soga"]

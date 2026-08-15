@@ -57,6 +57,11 @@ def _add_train_flags(p: argparse.ArgumentParser) -> None:
     p.add_argument("--languages",
                    help="comma-separated packs; renders the same seeds in each "
                         "and interleaves them (an exact parallel corpus)")
+    p.add_argument("--curriculum",
+                   help="base (every published number) | kg:wordnet | "
+                        "kg:wordnet-shuffled. The same 179 lessons in each; the "
+                        "KG arms bind the closed word lists under a knowledge "
+                        "graph. Recorded in every summary.")
     p.add_argument("--steps", type=int)
     p.add_argument("--batch-size", dest="batch_size", type=int)
     p.add_argument("--lr", type=float)

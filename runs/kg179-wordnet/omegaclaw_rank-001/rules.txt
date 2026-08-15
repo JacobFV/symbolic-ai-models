@@ -1,0 +1,25 @@
+=== omegaclaw_rank-001: 11 claws, 873 context cells ===
+  prev           fired     3986   credited    977.0   rate 0.245
+  prev_sibling   fired     2203   credited    804.0   rate 0.365
+  echo           fired     3994   credited    803.0   rate 0.201
+  sibling0       fired     3093   credited    799.0   rate 0.258
+  slotmate       fired     3436   credited    624.0   rate 0.182
+  mirror         fired     2303   credited    412.0   rate 0.179
+  peer           fired     2761   credited    272.0   rate 0.099
+  child0         fired     1105   credited     44.0   rate 0.040
+  grandparent    fired     3162   credited     40.0   rate 0.013
+  parent         fired     3416   credited     39.0   rate 0.011
+  aunt           fired     2119   credited      1.0   rate 0.000
+  confidence map: label fitted, type fitted
+  --- global ranking (ties break upwards) ---
+  prev_sibling   0.365
+  sibling0       0.258
+  prev           0.245
+  echo           0.201
+  slotmate       0.182
+  mirror         0.179
+  peer           0.099
+  child0         0.040
+  grandparent    0.013
+  parent         0.012
+  aunt           0.001

@@ -1,0 +1,1090 @@
+{
+ "global": "daee6436b09e31e9",
+ "languages": [
+  "english"
+ ],
+ "lessons": {
+  "abstraction_ladder": {
+   "raw": "0cd48e8a389e9fe3",
+   "text": {
+    "english": "49e848c1a4a0b686"
+   }
+  },
+  "adversarial_argumentation": {
+   "raw": "9b252f0b9869f3f8",
+   "text": {
+    "english": "af2c372e26209a01"
+   }
+  },
+  "algorithm_analysis": {
+   "raw": "36ae308a22a3bfe4",
+   "text": {
+    "english": "cc051851a5ac251d"
+   }
+  },
+  "algorithm_discovery": {
+   "raw": "e94b1c7b3df46eb9",
+   "text": {
+    "english": "58734a80fe5743a2"
+   }
+  },
+  "ambiguity_preservation": {
+   "raw": "f693cd0e00a84282",
+   "text": {
+    "english": "b9f9e9af149af277"
+   }
+  },
+  "analogy": {
+   "raw": "5211d04f22009c77",
+   "text": {
+    "english": "bbfadd4cfbe1534d"
+   }
+  },
+  "anomaly_resolution": {
+   "raw": "b92c02be088925a3",
+   "text": {
+    "english": "f7b2d187ae53b0ae"
+   }
+  },
+  "anytime_reasoning": {
+   "raw": "aeaedc62ab437a60",
+   "text": {
+    "english": "a69b18e83b75e2c7"
+   }
+  },
+  "architecture_composition": {
+   "raw": "517b318dd36c188b",
+   "text": {
+    "english": "ee28fdf6685ef829"
+   }
+  },
+  "architecture_selection": {
+   "raw": "9182838f05ca3f1a",
+   "text": {
+    "english": "c11a97652441ae1e"
+   }
+  },
+  "argumentation": {
+   "raw": "90a3dfbd64ec1048",
+   "text": {
+    "english": "cde29192bb0790e2"
+   }
+  },
+  "belief_revision": {
+   "raw": "a5419d0bca00bba7",
+   "text": {
+    "english": "aa5ecb501e7128ce"
+   }
+  },
+  "belief_state": {
+   "raw": "063953b8b4eb0dc7",
+   "text": {
+    "english": "13e3a1ee3bb6a406"
+   }
+  },
+  "capability_estimation": {
+   "raw": "2c0551bc7468291e",
+   "text": {
+    "english": "5e3de83ddc9b21c1"
+   }
+  },
+  "causal_language": {
+   "raw": "e2736a755785d2ef",
+   "text": {
+    "english": "d49fa9ed87050f79"
+   }
+  },
+  "center_embedding": {
+   "raw": "6d0be899cdfbdf8c",
+   "text": {
+    "english": "bec6df38f0b3f295"
+   }
+  },
+  "civilization_simulator": {
+   "raw": "fb8bf05c0ed9485b",
+   "text": {
+    "english": "37d855de27e25d30"
+   }
+  },
+  "coalition_formation": {
+   "raw": "1b175558ea37926e",
+   "text": {
+    "english": "724f1235e53d06b1"
+   }
+  },
+  "collective_theory_building": {
+   "raw": "9402ddb82e5ed8de",
+   "text": {
+    "english": "598346f2052ded9a"
+   }
+  },
+  "comparatives": {
+   "raw": "b47e71aeb2783d52",
+   "text": {
+    "english": "2ae17c5184f6671d"
+   }
+  },
+  "compiler_construction": {
+   "raw": "f35e0a1e5684e9b8",
+   "text": {
+    "english": "3e334c33140b2d4e"
+   }
+  },
+  "compositional_reference": {
+   "raw": "fdd9c40feea68e30",
+   "text": {
+    "english": "34efd33c6e69bbd6"
+   }
+  },
+  "compressed_language": {
+   "raw": "d772b85daefc90a4",
+   "text": {
+    "english": "22ec82e54774cbb0"
+   }
+  },
+  "concept_invention": {
+   "raw": "44e372473f131bbd",
+   "text": {
+    "english": "1031bd900d77555c"
+   }
+  },
+  "conceptual_chunking": {
+   "raw": "80f69338afb27150",
+   "text": {
+    "english": "b0cfc8b6d0646d61"
+   }
+  },
+  "conjecture_generation": {
+   "raw": "c4e994669b0366b9",
+   "text": {
+    "english": "33b07e7fc46d29ce"
+   }
+  },
+  "conservation_law_discovery": {
+   "raw": "de45415e9b8601ee",
+   "text": {
+    "english": "a6ed783ac5e9664e"
+   }
+  },
+  "context_free_language": {
+   "raw": "f00937f9f598bfba",
+   "text": {
+    "english": "d605761ab9a6e231"
+   }
+  },
+  "continual_language": {
+   "raw": "9a4c53dc4ee5474b",
+   "text": {
+    "english": "3c975762ae798d57"
+   }
+  },
+  "contract_reasoning": {
+   "raw": "beae6486c218f889",
+   "text": {
+    "english": "8a6ba2c4641d355c"
+   }
+  },
+  "contradiction_tolerance": {
+   "raw": "dd054475b5a0acc9",
+   "text": {
+    "english": "b4bfc2052ef5dd7a"
+   }
+  },
+  "counterexample_generation": {
+   "raw": "72f02d1efaeacd97",
+   "text": {
+    "english": "9cd9a9652f50e16e"
+   }
+  },
+  "counterfactuals": {
+   "raw": "2d16d4ffa78d4a74",
+   "text": {
+    "english": "460d4f47b25b7ba7"
+   }
+  },
+  "counting_quantifier": {
+   "raw": "ce4eaf4ff5a95868",
+   "text": {
+    "english": "c5f274dcbf847407"
+   }
+  },
+  "cross_domain_unification": {
+   "raw": "a43eb232cafc35e6",
+   "text": {
+    "english": "24fae27598f6ad97"
+   }
+  },
+  "cultural_evolution": {
+   "raw": "01130befd826a7ba",
+   "text": {
+    "english": "5f35d7a8296818cb"
+   }
+  },
+  "curriculum_design": {
+   "raw": "16da4010bfe37485",
+   "text": {
+    "english": "72040e2605f52290"
+   }
+  },
+  "curriculum_invention": {
+   "raw": "0011b59961f32683",
+   "text": {
+    "english": "8be71c05908eadf3"
+   }
+  },
+  "deception_detection": {
+   "raw": "a3a36e594833d7b1",
+   "text": {
+    "english": "9cfd14a169a2fbe8"
+   }
+  },
+  "decomposition": {
+   "raw": "d3a8a5fab1ee7cc5",
+   "text": {
+    "english": "260a82744793e236"
+   }
+  },
+  "default_reasoning": {
+   "raw": "63288b80d4ed70b1",
+   "text": {
+    "english": "b451b4284855db18"
+   }
+  },
+  "definitions": {
+   "raw": "93dd8b6009940f77",
+   "text": {
+    "english": "6a7acd98fde5a090"
+   }
+  },
+  "deformalization": {
+   "raw": "665a4c9b6e000ffe",
+   "text": {
+    "english": "f79eb5f3936ca7bf"
+   }
+  },
+  "dialogue_game": {
+   "raw": "3c7dfbfdd1a58fd6",
+   "text": {
+    "english": "50ee6686b2db01d7"
+   }
+  },
+  "dimensional_analysis": {
+   "raw": "99797fd935af811b",
+   "text": {
+    "english": "6c403f56d885c0ae"
+   }
+  },
+  "discourse_state": {
+   "raw": "c202041cd1c8af83",
+   "text": {
+    "english": "741d69f49a65162c"
+   }
+  },
+  "distributed_knowledge": {
+   "raw": "f3d33c7ad4f17e39",
+   "text": {
+    "english": "bd5023679b525f06"
+   }
+  },
+  "document_world": {
+   "raw": "76e79cb3438474b9",
+   "text": {
+    "english": "fbed766d1b69c514"
+   }
+  },
+  "dsl_invention": {
+   "raw": "15a7d29354cd8400",
+   "text": {
+    "english": "809a0748fda7ec16"
+   }
+  },
+  "ellipsis": {
+   "raw": "aa3a30973b6837ff",
+   "text": {
+    "english": "3740863c5287c518"
+   }
+  },
+  "emergence_discovery": {
+   "raw": "ce1c722e1142259d",
+   "text": {
+    "english": "2fa891c979b2b3eb"
+   }
+  },
+  "entailment": {
+   "raw": "98e1a4a1030b7ca0",
+   "text": {
+    "english": "42d6b186d6755756"
+   }
+  },
+  "event_semantics": {
+   "raw": "243c3134f42d95f2",
+   "text": {
+    "english": "13c83c25ad635173"
+   }
+  },
+  "experimental_design": {
+   "raw": "b7a657c1b4c173e7",
+   "text": {
+    "english": "7d91a439d0c55057"
+   }
+  },
+  "explanation": {
+   "raw": "28e81fc6e15d7989",
+   "text": {
+    "english": "382637022ec23363"
+   }
+  },
+  "explanation_repair": {
+   "raw": "66e6643604e1dca8",
+   "text": {
+    "english": "2d61743cd4419126"
+   }
+  },
+  "expression_eval": {
+   "raw": "9de8a397205b2c6c",
+   "text": {
+    "english": "a75ee60636efc878"
+   }
+  },
+  "external_memory_design": {
+   "raw": "fca2aca9c32c0d6a",
+   "text": {
+    "english": "3a858b7ad1ea816a"
+   }
+  },
+  "falsification": {
+   "raw": "3d3813ff984497ff",
+   "text": {
+    "english": "353603295a022bb3"
+   }
+  },
+  "few_shot_language_learning": {
+   "raw": "8b5d3d0fa2e95ece",
+   "text": {
+    "english": "7232d6ff4780cd0b"
+   }
+  },
+  "finite_state_language": {
+   "raw": "bb208241291b73d7",
+   "text": {
+    "english": "bcdfefd19e9c3fd6"
+   }
+  },
+  "formalization": {
+   "raw": "9816836175de0d08",
+   "text": {
+    "english": "ccdbd78d764f9e4e"
+   }
+  },
+  "general_language_agent": {
+   "raw": "b446b9296db0d6a4",
+   "text": {
+    "english": "63e5477faac9a07e"
+   }
+  },
+  "goal_generation": {
+   "raw": "919f85536737ef60",
+   "text": {
+    "english": "0a643955a758547c"
+   }
+  },
+  "goal_inference": {
+   "raw": "ba424569c13ad725",
+   "text": {
+    "english": "34f5f65cb19edf90"
+   }
+  },
+  "goal_revision": {
+   "raw": "adb2f5094391923d",
+   "text": {
+    "english": "69e3d6c2b59b0e5e"
+   }
+  },
+  "grammar_induction": {
+   "raw": "1325ba7dc4226fff",
+   "text": {
+    "english": "9268e0cb03c0e716"
+   }
+  },
+  "hierarchical_planning": {
+   "raw": "db36349fec0de1e9",
+   "text": {
+    "english": "9b1eaf1926e93244"
+   }
+  },
+  "historical_reconstruction": {
+   "raw": "9c64e5e57924cf57",
+   "text": {
+    "english": "bc82ad87df738fcf"
+   }
+  },
+  "identity_continuity": {
+   "raw": "c1e6d5660e21aad3",
+   "text": {
+    "english": "b951eefe99d6c472"
+   }
+  },
+  "implicature": {
+   "raw": "89439d3c1b52b8e0",
+   "text": {
+    "english": "a79250fe1b8ecfd3"
+   }
+  },
+  "institution_design": {
+   "raw": "a7c3f6eecfce9614",
+   "text": {
+    "english": "fcbdbc7e178bd557"
+   }
+  },
+  "institution_learning": {
+   "raw": "63145c2cc61b7b52",
+   "text": {
+    "english": "303a03db1686c835"
+   }
+  },
+  "instruction_composition": {
+   "raw": "8e897f5f62f76a11",
+   "text": {
+    "english": "d183b99e4bc6c6f5"
+   }
+  },
+  "instruction_following_micro": {
+   "raw": "6c703633d5e65e60",
+   "text": {
+    "english": "3c005e24570a0f7d"
+   }
+  },
+  "interactive_reference": {
+   "raw": "517ad079f4aac433",
+   "text": {
+    "english": "26898aad30062f11"
+   }
+  },
+  "interpreter_learning": {
+   "raw": "8f0df1a17ec958fe",
+   "text": {
+    "english": "bcffbbd5fe08a600"
+   }
+  },
+  "invariance_discovery": {
+   "raw": "4c8cb504c534d06b",
+   "text": {
+    "english": "6f67ca0ae0ccd2c9"
+   }
+  },
+  "knowledge_gap_detection": {
+   "raw": "85f1feddeae815e9",
+   "text": {
+    "english": "7a2b4559591f821b"
+   }
+  },
+  "knowledge_refactoring": {
+   "raw": "ed253680f436c55b",
+   "text": {
+    "english": "f4ed45d1d2ff7194"
+   }
+  },
+  "knowledge_update": {
+   "raw": "c21d69ad8f4f3a7b",
+   "text": {
+    "english": "465b004a341e3a35"
+   }
+  },
+  "language_culture": {
+   "raw": "9a97b32d0bc034cb",
+   "text": {
+    "english": "13948f53cef8d7c9"
+   }
+  },
+  "language_design": {
+   "raw": "95c34909d91ba21a",
+   "text": {
+    "english": "4a34eaadb9aef80f"
+   }
+  },
+  "latent_rule_discovery": {
+   "raw": "07af549258d160d0",
+   "text": {
+    "english": "5c97dc66df7fbfbb"
+   }
+  },
+  "lemma_invention": {
+   "raw": "8a29cbc1278ea446",
+   "text": {
+    "english": "e727c0249c2ff6ae"
+   }
+  },
+  "lexicon_induction": {
+   "raw": "0be2ba8daf4f5034",
+   "text": {
+    "english": "4d167828ccec868b"
+   }
+  },
+  "logic_discovery": {
+   "raw": "c57ec096ec17b911",
+   "text": {
+    "english": "5d7cf18b7419f00c"
+   }
+  },
+  "logic_selection": {
+   "raw": "11e200e20c128585",
+   "text": {
+    "english": "bb89606904b62184"
+   }
+  },
+  "long_horizon_projects": {
+   "raw": "8e74495661cd251e",
+   "text": {
+    "english": "01178a36a0636d64"
+   }
+  },
+  "long_range_agreement": {
+   "raw": "9513d5ba210bf2da",
+   "text": {
+    "english": "4815f9788bc2f49b"
+   }
+  },
+  "mathematical_definition_learning": {
+   "raw": "349b47861ab99b88",
+   "text": {
+    "english": "895cb8a3ab738823"
+   }
+  },
+  "mechanism_design": {
+   "raw": "22c4815490eb4cb1",
+   "text": {
+    "english": "a025781f80b1afcc"
+   }
+  },
+  "mechanism_discovery": {
+   "raw": "170fefa51755b4d2",
+   "text": {
+    "english": "ea273b367d84f19c"
+   }
+  },
+  "metalinguistic_reasoning": {
+   "raw": "767dd9b352a47d83",
+   "text": {
+    "english": "33ba971f0a37f93d"
+   }
+  },
+  "metareasoning": {
+   "raw": "e15cb7b27e6298ec",
+   "text": {
+    "english": "8618cf2e650d1fd8"
+   }
+  },
+  "minimum_description_learning": {
+   "raw": "893a83366de986e4",
+   "text": {
+    "english": "1f66da833510a74d"
+   }
+  },
+  "multi_objective_reasoning": {
+   "raw": "0b42c0c7b6eaf44e",
+   "text": {
+    "english": "f6bdb1cf2b244163"
+   }
+  },
+  "multi_perspective_modeling": {
+   "raw": "ab8aa36bd5fc58e6",
+   "text": {
+    "english": "ca4b5236d4976192"
+   }
+  },
+  "multimodal_symbolization": {
+   "raw": "8190eeb57f270fe3",
+   "text": {
+    "english": "7152a378e5fefa5b"
+   }
+  },
+  "multiscale_modeling": {
+   "raw": "bf85681d1789cfda",
+   "text": {
+    "english": "dea8beb0e64da37e"
+   }
+  },
+  "narrative_modeling": {
+   "raw": "1811431cd98d33de",
+   "text": {
+    "english": "124e06df2eafe5cc"
+   }
+  },
+  "natural_language_bridge": {
+   "raw": "bdf085dbb53b0956",
+   "text": {
+    "english": "2bb2d150962eebf1"
+   }
+  },
+  "negation": {
+   "raw": "6d1b581873f3c7e5",
+   "text": {
+    "english": "63b5b9d033a63da4"
+   }
+  },
+  "negotiation_game": {
+   "raw": "224bf86d19908f52",
+   "text": {
+    "english": "68db2cd3a0816d1c"
+   }
+  },
+  "nesting_depth_compare": {
+   "raw": "a7bd31cc0a6188ce",
+   "text": {
+    "english": "91d77f8df762192e"
+   }
+  },
+  "next_symbol": {
+   "raw": "0567e0d1756845df",
+   "text": {
+    "english": "9b8304e5606cfb03"
+   }
+  },
+  "noisy_channel_language": {
+   "raw": "5a417ba9dbb90715",
+   "text": {
+    "english": "9a9de984a7e43a25"
+   }
+  },
+  "norm_reasoning": {
+   "raw": "5fe2453150047775",
+   "text": {
+    "english": "26db9f50566ae8a2"
+   }
+  },
+  "ontology_alignment": {
+   "raw": "feed798896cdaa0a",
+   "text": {
+    "english": "8189254d3f7efd8c"
+   }
+  },
+  "ontology_construction": {
+   "raw": "136a2db39d62d2fb",
+   "text": {
+    "english": "97e0a208abfc2c16"
+   }
+  },
+  "ontology_revision": {
+   "raw": "ddcfd1e2093d141d",
+   "text": {
+    "english": "4b5a9518f9b32ab2"
+   }
+  },
+  "open_ended_concept_discovery": {
+   "raw": "8aa7f63ee30dbdb9",
+   "text": {
+    "english": "0953ba8b1f550168"
+   }
+  },
+  "open_ended_question_generation": {
+   "raw": "facd464a02b03ed8",
+   "text": {
+    "english": "b5ddb5e0c2871daa"
+   }
+  },
+  "open_world_language": {
+   "raw": "ffea6be3fa5f9951",
+   "text": {
+    "english": "72bd5f026306a43b"
+   }
+  },
+  "palindrome": {
+   "raw": "973f14a495e70cc5",
+   "text": {
+    "english": "f7cac29f607131c3"
+   }
+  },
+  "paradigm_shift": {
+   "raw": "1a207c3ada83dc04",
+   "text": {
+    "english": "ebf3586ac4fb50d9"
+   }
+  },
+  "paraphrase": {
+   "raw": "dae51ec796dcfecc",
+   "text": {
+    "english": "a286575a2388f5d7"
+   }
+  },
+  "parse_depth": {
+   "raw": "fc18735f4fa08a7c",
+   "text": {
+    "english": "f53e503340427161"
+   }
+  },
+  "planning_language": {
+   "raw": "0af1bc1663430636",
+   "text": {
+    "english": "286e010d7bd82428"
+   }
+  },
+  "predicate_logic": {
+   "raw": "5252765fcd8ae6ef",
+   "text": {
+    "english": "8d02cd6dc8f072dd"
+   }
+  },
+  "presupposition": {
+   "raw": "adf851abd792215a",
+   "text": {
+    "english": "61e5f8e38723e5e7"
+   }
+  },
+  "problem_formulation": {
+   "raw": "dcd84ef41fe27979",
+   "text": {
+    "english": "d92d935c7467ad15"
+   }
+  },
+  "problem_reformulation": {
+   "raw": "a54f1fbfd25280a4",
+   "text": {
+    "english": "fd9a6933ab427e97"
+   }
+  },
+  "procedural_language": {
+   "raw": "28dbfb5411fbc26a",
+   "text": {
+    "english": "9e7f35fed4bb30d7"
+   }
+  },
+  "program_explanation": {
+   "raw": "2fca69846987dccc",
+   "text": {
+    "english": "bea15cbc74a3541a"
+   }
+  },
+  "program_synthesis": {
+   "raw": "704a994d4c12bd90",
+   "text": {
+    "english": "59316c1a0e100602"
+   }
+  },
+  "pronoun_coreference": {
+   "raw": "c256ead14c63a90b",
+   "text": {
+    "english": "2b72bdbf3a6a4a1f"
+   }
+  },
+  "proof_compression": {
+   "raw": "580c01815de77df5",
+   "text": {
+    "english": "d843514b83a763c5"
+   }
+  },
+  "proof_translation": {
+   "raw": "c02ced70f8a74541",
+   "text": {
+    "english": "3f2d64db24310184"
+   }
+  },
+  "protocol_discovery": {
+   "raw": "74f72e41aa716a64",
+   "text": {
+    "english": "75459d03b8bff34d"
+   }
+  },
+  "quantification": {
+   "raw": "1a7e69540c77ced0",
+   "text": {
+    "english": "42e7417f93db86a2"
+   }
+  },
+  "question_answering": {
+   "raw": "164eefb5c8748ada",
+   "text": {
+    "english": "545d85b9049ba534"
+   }
+  },
+  "question_generation": {
+   "raw": "c82a770ab0f5df3d",
+   "text": {
+    "english": "8bf7278f1ba07dbf"
+   }
+  },
+  "recursive_self_application": {
+   "raw": "a508392791a5f1b3",
+   "text": {
+    "english": "b2fe7c77917cab47"
+   }
+  },
+  "reflective_goal_reasoning": {
+   "raw": "56fd8e97427f929a",
+   "text": {
+    "english": "cae1c74d44692b81"
+   }
+  },
+  "representation_invention": {
+   "raw": "48426930436d7cc9",
+   "text": {
+    "english": "8ab43fc7ea93f219"
+   }
+  },
+  "representation_selection": {
+   "raw": "71ebcc2b7bf1e0a8",
+   "text": {
+    "english": "424e238873701db9"
+   }
+  },
+  "research_program": {
+   "raw": "709a97fb35292f08",
+   "text": {
+    "english": "4c9fb241711dfa56"
+   }
+  },
+  "resource_bounded_reasoning": {
+   "raw": "960a4d2a9386ea0b",
+   "text": {
+    "english": "453aeb94eb66bc72"
+   }
+  },
+  "scientific_civilization": {
+   "raw": "4a0638eb703cc3c9",
+   "text": {
+    "english": "0491e6c4b177307b"
+   }
+  },
+  "scientific_model_induction": {
+   "raw": "342411da7f21dbf3",
+   "text": {
+    "english": "f1b8bde96f933a84"
+   }
+  },
+  "scope_ambiguity": {
+   "raw": "69d5bea433edb6fb",
+   "text": {
+    "english": "ec1926be6ce3c290"
+   }
+  },
+  "self_error_diagnosis": {
+   "raw": "f40bc7717e0a33cd",
+   "text": {
+    "english": "7eb86700e424a9fa"
+   }
+  },
+  "self_model": {
+   "raw": "0d4cfcf8e63a0cf7",
+   "text": {
+    "english": "1ffbac80870cf336"
+   }
+  },
+  "self_repair": {
+   "raw": "f5738d7ea45cda38",
+   "text": {
+    "english": "6f49e9ad9a023506"
+   }
+  },
+  "semantic_compression": {
+   "raw": "f15dd589fa93c7ec",
+   "text": {
+    "english": "f4560d21db037e5a"
+   }
+  },
+  "sequence_copy": {
+   "raw": "070216ecbf78b92b",
+   "text": {
+    "english": "267cc6f7b5bb4806"
+   }
+  },
+  "set_operations": {
+   "raw": "9b6b2ffb35426d28",
+   "text": {
+    "english": "bedf219fcd9caa73"
+   }
+  },
+  "social_convention_learning": {
+   "raw": "f2265da62f8bdd08",
+   "text": {
+    "english": "c334fded4bf9b9ee"
+   }
+  },
+  "source_provenance": {
+   "raw": "12937d2c62cc227f",
+   "text": {
+    "english": "93b1a60bde8e1d39"
+   }
+  },
+  "source_reliability_learning": {
+   "raw": "aa639256dd6fdd1a",
+   "text": {
+    "english": "8d2c64f907e1e22e"
+   }
+  },
+  "spatial_language": {
+   "raw": "60bb9b2433addec5",
+   "text": {
+    "english": "b34e8c3d7daafe0a"
+   }
+  },
+  "speaker_listener_game": {
+   "raw": "7e8a39eb7476f2b8",
+   "text": {
+    "english": "619b1cd1e0d50f02"
+   }
+  },
+  "strategy_discovery": {
+   "raw": "4b3826f36d0d22db",
+   "text": {
+    "english": "06c0d5dc825c5e10"
+   }
+  },
+  "strategy_transfer": {
+   "raw": "46f1d0b82a97fc2e",
+   "text": {
+    "english": "24dc5995be353fa5"
+   }
+  },
+  "string_reversal": {
+   "raw": "225f30a897d6fdfa",
+   "text": {
+    "english": "f8a0cc4f31e966be"
+   }
+  },
+  "symbol_discrimination": {
+   "raw": "bf8782814b4f645a",
+   "text": {
+    "english": "68a4c5bbacc2dbec"
+   }
+  },
+  "symbol_equivalence": {
+   "raw": "104187b6db4d31d8",
+   "text": {
+    "english": "b220f55869ecd2ea"
+   }
+  },
+  "symbol_grounding": {
+   "raw": "477e3c037454b200",
+   "text": {
+    "english": "c9452dcf157e8218"
+   }
+  },
+  "symbolic_generalist": {
+   "raw": "8f9d2de4a81d0860",
+   "text": {
+    "english": "136a5da95e1e3895"
+   }
+  },
+  "symbolic_world_builder": {
+   "raw": "cda2778a29ef8e7e",
+   "text": {
+    "english": "bc87371bf93d5d70"
+   }
+  },
+  "symmetry_reasoning": {
+   "raw": "82e98d98367ea160",
+   "text": {
+    "english": "b87b253f9c310cc1"
+   }
+  },
+  "teaching": {
+   "raw": "588f86f2b1bec673",
+   "text": {
+    "english": "98c94bb4b8fa593b"
+   }
+  },
+  "temporal_language": {
+   "raw": "d992526b75d765f1",
+   "text": {
+    "english": "c0a8ff2197c57b6a"
+   }
+  },
+  "thematic_roles": {
+   "raw": "a2fcf11777cbee1b",
+   "text": {
+    "english": "e2011c74005b9bf2"
+   }
+  },
+  "theorem_proving": {
+   "raw": "d06fccfd1cf5e1c7",
+   "text": {
+    "english": "d0a1149655150d52"
+   }
+  },
+  "theory_comparison": {
+   "raw": "5ae73205aa8f6f7f",
+   "text": {
+    "english": "e12365af673c9d77"
+   }
+  },
+  "theory_transfer": {
+   "raw": "50eaecfd4db1c82d",
+   "text": {
+    "english": "71633631493916f1"
+   }
+  },
+  "tool_construction": {
+   "raw": "15cb20b099a62f22",
+   "text": {
+    "english": "8dcc487a06b9f03e"
+   }
+  },
+  "translation": {
+   "raw": "dad3f23116cc4767",
+   "text": {
+    "english": "a68128eaef08a968"
+   }
+  },
+  "tree_to_sequence": {
+   "raw": "431e3fa5aaa15924",
+   "text": {
+    "english": "1054c5e80ed04285"
+   }
+  },
+  "uncertain_symbolic_reasoning": {
+   "raw": "483d8257bbe5921d",
+   "text": {
+    "english": "4c0e406ed08346f8"
+   }
+  },
+  "underspecification_reasoning": {
+   "raw": "ee841660d9b3dd97",
+   "text": {
+    "english": "c82c6fe074b60963"
+   }
+  },
+  "unification": {
+   "raw": "16d0fd066450f1cb",
+   "text": {
+    "english": "407623a444e99ef9"
+   }
+  },
+  "universal_interface_transfer": {
+   "raw": "f4c87447276e3bdf",
+   "text": {
+    "english": "7e6fcde1602a2eb8"
+   }
+  },
+  "unknown_game": {
+   "raw": "8f4884ff62d594ff",
+   "text": {
+    "english": "8a5fbc8258a69810"
+   }
+  },
+  "value_learning": {
+   "raw": "e97874debdb986f3",
+   "text": {
+    "english": "0c3b8c9eb9b17218"
+   }
+  },
+  "variable_binding": {
+   "raw": "617952f072082300",
+   "text": {
+    "english": "d9637a80f16f550e"
+   }
+  },
+  "world_model_synthesis": {
+   "raw": "dda10ab61f21009f",
+   "text": {
+    "english": "d7c9905a78871b6a"
+   }
+  }
+ },
+ "n_lessons": 179,
+ "seeds": [
+  0,
+  1,
+  7,
+  1000000,
+  1000003
+ ]
+}

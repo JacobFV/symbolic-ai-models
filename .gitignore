@@ -34,8 +34,17 @@ __pycache__/
 #
 # Directories must be re-included explicitly or git will not descend into them
 # to find the negations.
+#
+# `copyable_split.txt` joined them on 2026-08-15, for the third instance of the
+# same miss. `label_acc` is 72% a copy score, so the number a note argues about
+# is usually `acc | not copyable` -- and that split is **not** in
+# `summary.json`. It is produced by `scripts/copyable_split.py`, which needs the
+# run's `model.pt`, which this file deliberately drops. So the split was
+# recomputable only by re-running the whole sweep, and a finding that rests on
+# it had no artefact a reader could check. A few hundred bytes per arm.
 /runs/**
 !/runs/**/
 !/runs/**/summary.json
 !/runs/**/rules.txt
 !/runs/**/policy.txt
+!/runs/**/copyable_split.txt

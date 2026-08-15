@@ -9,44 +9,45 @@ from __future__ import annotations
 import random
 from typing import Any, Mapping, Sequence
 
+from ..binding import SlotVocabulary
 from .._structure import Ident, Lst, Num, Pred, Term
 from .base import COLORS
 
 SECTION = "II/III"
 
 
-PLACES = ["kitchen", "garden", "cellar", "attic", "porch", "study"]
+PLACES = SlotVocabulary("place", ["kitchen", "garden", "cellar", "attic", "porch", "study"])
 
 
-LOCATIONS = ["table", "shelf", "box", "floor", "cart", "crate"]
+LOCATIONS = SlotVocabulary("surface", ["table", "shelf", "box", "floor", "cart", "crate"])
 
 
-OBJECTS = ["tea", "book", "lamp", "clock", "apple", "coin"]
+OBJECTS = SlotVocabulary("thing", ["tea", "book", "lamp", "clock", "apple", "coin"])
 
 
-ACTIONS = ["slept", "sang", "cooked", "read", "painted", "waited"]
+ACTIONS = SlotVocabulary("intransitive", ["slept", "sang", "cooked", "read", "painted", "waited"])
 
 
-TRANS_VERBS = ["likes", "reads", "sells", "paints", "carries", "builds"]
+TRANS_VERBS = SlotVocabulary("transitive", ["likes", "reads", "sells", "paints", "carries", "builds"])
 
 
-EVENT_NAMES = ["storm", "parade", "recital", "eclipse", "auction", "rehearsal",
-               "blackout", "harvest"]
+EVENT_NAMES = SlotVocabulary("event", ["storm", "parade", "recital", "eclipse", "auction", "rehearsal",
+               "blackout", "harvest"])
 
 
-SIZES = ["tiny", "small", "large", "huge"]
+SIZES = SlotVocabulary("size", ["tiny", "small", "large", "huge"])
 
 
 POSITIONS = ["left", "right", "front", "back"]
 
 
-BASE_KINDS = ["bird", "fish", "robot", "insect", "mammal", "fungus"]
+BASE_KINDS = SlotVocabulary("kind", ["bird", "fish", "robot", "insect", "mammal", "fungus"])
 
 
 DERIVED_KINDS = ["warm", "flies", "swims", "glows", "hums", "floats"]
 
 
-ACTIVITIES = ["smoking", "running", "singing", "writing", "fishing", "cycling"]
+ACTIVITIES = SlotVocabulary("activity", ["smoking", "running", "singing", "writing", "fishing", "cycling"])
 
 
 THINGS = [("hamster", "animal"), ("otter", "animal"), ("magpie", "animal"),
