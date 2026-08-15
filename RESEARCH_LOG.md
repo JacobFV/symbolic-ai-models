@@ -774,6 +774,26 @@ the one this repo keeps paying for, with one difference worth recording: this is
 the first time the artefact was caught by re-measuring at a larger sample rather
 than by a later sweep contradicting a published claim.
 
+## Awaiting independent challenge — the promotion queue
+
+`notes/` promotes into this file **only once something independent has tried to
+break the finding**, because this repo has had author-designed controls pass
+while being hollow. Four results are currently strong, measured on the full
+curriculum, and **not yet in this file on purpose**. They are listed here so the
+queue is visible rather than implicit — a finding nobody knows is waiting is a
+finding that never gets challenged.
+
+| finding | what it claims | what would promote it |
+|---|---|---|
+| `notes/findings/2026-08-14-graph-derived-roles-structure-not-locality.md` | a heat-kernel signature with **no hand-built coordinate** beats the hand-built role tuple (+0.107 vs +0.066), the pre-registered Laplacian eigenmap is **refuted** (−0.044, below the floor), and `vsa_perm_hks-004` is the **second-best pointer in the repo** at +0.092 copy lift | the shuffled control re-derived by someone else, and the composition retested — the three heads rank `vsa_perm_pure` and `vsa_perm_hks` differently and only the label head favours the published leader |
+| the dimension / throughput curve, same note | quality saturates at **d = 1,024** for every construction and the last 64x buys nothing; `vsa_sum-004` at d = 256 matches `vsa-002` at d = 4,096 on accuracy at **17x the throughput** | cheapest of the four to check: re-time it on a different machine state. It is a cost measurement, not a claim about reasoning, so it needs replication rather than a control |
+| `notes/findings/2026-08-14-the-action-readout-clears-the-repair-floor-on-179-lessons.md` | the same fitted `corefer-001` lands on **opposite sides of the `repair` floor** — 0.508 read as a move, 0.085 read as text — 0.423 apart | the two attacks its own author named and did not run: `graphread` on the same top-8 shortlist `wrap` gets, and the abstain-everywhere baseline at 179 lessons. **Under challenge now.** |
+| `notes/findings/2026-08-13-one-parser-over-word-classes-transfers-the-class-identities-do-not.md` | over 46 WALS-coded languages, abstraction transfers and the induced class *identities* are a liability held out; `Treebank.coverage` predicts held-out transfer at **r = +0.886** and survives partialling out script and untranslated share | a second, independent handle on coverage — the one intervention tried moved bracket F1 by +0.002, which is not enough to call a +0.886 correlate a passenger. See `notes/questions/2026-08-14-a-second-handle-on-treebank-coverage.md` |
+
+The one thing the queue must not become is a parking lot for results nobody
+intends to challenge. A finding that sits here unchallenged is not "pending"; it
+is unverified, and should be read that way.
+
 ## What is shaky
 
 - **Every neural number is a lower bound.** All four re-run networks were still

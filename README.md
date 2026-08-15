@@ -478,6 +478,10 @@ symbolic-ai-models/
     envs/                 #   choice, retry, repair, probe
     agents/               #   random, shortcut, context (floors); recall, careful
     train.py trace.py     #   rollouts; trajectories, for reading, not a metric
+  symbolic_ai_atomspace/  # 005: the IR as a knob -- match and rewrite over atoms
+  symbolic_ai_lean/       # 006: the IR as a knob -- a kernel that can *refuse*
+                          #   both: Graph is the one shared thing never varied.
+                          #   notes/decisions/2026-08-14-the-ir-is-a-knob.md
   notes/                  # the lab notebook; one file per note (worktrees merge)
     questions/            #   the parking lot: ideas, whether or not chased
     findings/ decisions/
