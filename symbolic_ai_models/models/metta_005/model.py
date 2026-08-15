@@ -417,6 +417,13 @@ class Metta(AtomSpaceRoles, VSAModel):
     replacing this one. (That observation came off a six-lesson slice and is
     used here only to size the design; every number reported is the full sweep.)
 
+    **On 179 lessons the slice was wrong and the fit is interior at 2.0** — see
+    :class:`MettaGated`. The design decision this row embodies survives the
+    correction and is *better* justified by it: pinning an equal share is what
+    made the treatment measurable independently of what the likelihood happened
+    to want, and having both rows is what let the slice be caught rather than
+    believed. But the stated reason above was, on the full curriculum, false.
+
     What would refute the line, written before the number landed:
 
     * landing level with ``metta_tuple-005`` — the extra queries bought
@@ -472,6 +479,30 @@ class MettaGated(Metta):
     predicts. If instead it lands interior and beats ``metta-005``, the equal
     share was the wrong choice and the extras are worth a fraction of a role
     rather than a whole one.
+
+    **Measured on all 179 lessons: refuted, and in the second direction.** The
+    prediction above is left standing verbatim because a prediction rewritten
+    after the number is not a prediction. The knob lands **interior at 2.0**,
+    and the recorded curve is monotone increasing to it and then turns down::
+
+        0 -> -4.1417   0.25 -> -4.1145   0.5 -> -4.0888
+        1 -> -4.0676   2    -> -4.0639   4   -> -4.0661
+
+    So it is not a truncated grid, not a flat objective with a noisy argmax and
+    not a boundary — it is a real optimum, identical to four decimals in the
+    ``_pure`` row. The likelihood prefers the atomspace-only signatures at
+    *twice* the weight of the four hand-built coordinates.
+
+    The six-lesson wiring check said 0.0. A hundred and seventy-nine lessons say
+    2.0. That is the **tenth** slice inversion in this repo's history and it is
+    the reason the wiring check's number was labelled a design aid rather than a
+    result when it was recorded.
+
+    What the knob buys is **bits, not accuracy**: 6.477 against
+    ``metta_tuple-005``'s 6.581 and ``vsa_sum-004``'s 6.583, with label accuracy
+    flat at 0.227 against 0.226 and 0.228. Exactly the split the
+    pre-registration named as the only place a legitimate win could appear, and
+    exactly this repo's oldest measured fact about its two label metrics.
     """
 
     knob_grid = AtomSpaceRoles.knob_grid

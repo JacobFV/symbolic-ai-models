@@ -15,21 +15,74 @@ Floors, identical across every row and asserted to be by
 `scripts/metta_table.py` before it prints: **label 0.143, type 0.860, copy
 0.266, copy ceiling 0.722.**
 
-## The headline: the likelihood switched the treatment off
+## The headline: the likelihood wants the atomspace queries, and pays for them in bits rather than in accuracy
 
-The pre-registration named this outcome in advance. Its second refutation
-condition was *"the learned pattern set converges on the twelve claws — then the
-IR bought expressiveness nobody needed, `omegaclaw_reach` already told us so, and
-the line closes with a null worth one note."*
+**A correction first, because it is the tenth time this has happened here.** The
+six-lesson wiring check said the knob ran to **0.0** — "the extras contribute
+nothing" — and that reading was written into this line's model docstrings as the
+pre-registered expectation. On all 179 lessons it is **refuted**. The knob is
+`extra_weight`, the share of a node's role given to the signature groups only an
+atomspace can produce, fitted on held-out **training** episodes by the
+log-likelihood of the calibrated mixture — the model that actually ships:
 
-That is what happened, and it happened in the sharpest available form. The one
-knob — `extra_weight`, the share of a node's role given to the signature groups
-only an atomspace can produce — is fitted on held-out **training** episodes by
-the log-likelihood of the calibrated mixture, the model that actually ships. It
-lands at **0.0**: the likelihood declines to spend any of the role on the typed
-sibling, the child types or the path.
+| `extra_weight` | hand-built share of role | held-out mixture LL |
+|---:|---:|---:|
+| 0.0 (= `metta_tuple-005`) | 100% | −4.1417 |
+| 0.25 | 62.8% | −4.1145 |
+| 0.5 | 47.5% | −4.0888 |
+| 1.0 (= `metta-005`) | 32.3% | −4.0676 |
+| **2.0** | **20.0%** | **−4.0639** |
+| 4.0 | 11.4% | −4.0661 |
 
-<!-- KNOBVERDICT -->
+This is the one thing an argmax could not have told us and the curve does.
+It is **monotone increasing from 0 to 2 and then turns down**, so it is none of
+the three failure modes: not a truncated grid, not a flat objective with a noisy
+argmax, and not a boundary. It is a **genuine interior optimum with a real
+turnaround**, identical in both the `_pure` and non-`_pure` rows to four decimal
+places. The likelihood does not merely tolerate the typed sibling, the child
+types and the path — it prefers them at **twice** the weight of the four
+coordinates `vsa-002` asserts, and it prefers each step toward them
+monotonically.
+
+Six lessons said zero; a hundred and seventy-nine say two. Slice number ten.
+
+**And the gain is bits, not accuracy** — which is exactly, and only, where the
+pre-registration said a legitimate win could appear.
+
+## The bits gain is real, small, and survives renaming
+
+The sharp test named in the pre-registration: *"if a pattern-matching IR gains
+bits, that gain is structural and must survive a permutation of all 2,105
+symbols without refitting."* The `_pure` rows are that test, because
+`structural_fallback` is where every VSA row's renaming sensitivity lives.
+
+| row (role channel only, `_pure`) | lbl acc | bits | bits lift | rename |
+|---|---:|---:|---:|---:|
+| `vsa_sum_pure-004` | 0.214 | 6.724 | +0.282 | −0.000 |
+| `metta_tuple_pure-005` | 0.213 | 6.722 | +0.283 | −0.002 |
+| `metta_pure-005` (share 1.0) | 0.210 | 6.627 | +0.293 | **+0.002** |
+| `metta_gated_pure-005` (share 2.0) | 0.213 | **6.613** | **+0.294** | **+0.001** |
+
+**+0.011 of bits lift over the identical machinery with only the query schedule
+changed, at a renaming drop of +0.001.** All 2,105 symbols permuted, no
+refitting. The gain is structural: no query in the schedule reads the `label`
+relation, asserted on the schedule *and* empirically by permuting every label
+and requiring the signatures to come out bit-identical.
+
+For scale, this is a tenth of what `ensemble-001` claimed and did not keep. That
+row reached 4.77 bits and lost 0.467 → 0.038 of it under renaming, because the
+gain was vocabulary memorisation. This one is 0.011 and keeps essentially all of
+it. **A small honest number and a large dishonest one are not on the same
+scale**, and the whole point of running the permutation early was to find out
+which kind this was.
+
+**Accuracy does not move**: 0.213 against 0.213, and `metta_pure-005` is
+*worse* at 0.210. So the atomspace roles improve the **density estimate** and not
+the **decision** — this repo's oldest measured fact, `label_acc` and
+`label_bits` ranking these models close to inversely, showing up one more time.
+Quoting either number alone would misreport the line in opposite directions.
+
+## Read the table with this in mind
 
 ## Read the table with this in mind
 
