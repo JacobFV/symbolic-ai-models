@@ -332,13 +332,29 @@ def test_fitting_is_stable_across_processes(name, fixtures, cfg, tmp_path):
         "print(hashlib.sha1(x.numpy().tobytes()).hexdigest())\n")
 
     def run(seed: str) -> str:
-        # No GPU: this test is about hash order, and letting several
-        # subprocesses initialise CUDA at once made the suite flaky under load.
-        env = {"PATH": "/usr/bin:/bin", "PYTHONHASHSEED": seed,
+        # Inherit the environment and override only what this test is about.
+        #
+        # It used to build `env` from scratch as {PATH, PYTHONHASHSEED, HOME,
+        # CUDA_VISIBLE_DEVICES}, which also dropped everything the dynamic
+        # loader needs. torch then failed to import in the child --
+        # `ImportError: libcusparseLt.so.0` -- and the assertion below turned
+        # that into a *returncode* failure under the name
+        # "fitting is stable across processes", i.e. an environment fault
+        # wearing a nondeterminism fault's name. It reproduced only under load,
+        # which is the worst way for it to appear: a genuine hash-order bug and
+        # this look identical in the summary line.
+        #
+        # Hash ordering is controlled by PYTHONHASHSEED alone. The GPU is still
+        # masked, because several subprocesses initialising CUDA at once did
+        # make the suite flaky under load, and that part was right.
+        import os
+        env = {**os.environ, "PYTHONHASHSEED": seed,
                "HOME": str(tmp_path), "CUDA_VISIBLE_DEVICES": ""}
         out = subprocess.run([sys.executable, str(script)], capture_output=True,
                              text=True, env=env, timeout=600)
-        assert out.returncode == 0, out.stderr[-2000:]
+        assert out.returncode == 0, (
+            f"{name}: the child failed to run at all, which is an environment "
+            f"fault and not a determinism result:\n{out.stderr[-2000:]}")
         return out.stdout.strip().splitlines()[-1]
 
     assert run("1") == run("999"), f"{name}: output depends on hash seed"
