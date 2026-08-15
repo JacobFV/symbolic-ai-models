@@ -36,7 +36,7 @@ import hashlib
 import numpy as np
 import pytest
 
-from symbolic_ai_core.data.batch import (answer_nodes, choose_hidden,
+from symbolic_ai_core.data.batch import (IGNORE, answer_nodes, choose_hidden,
                                          collate_graph)
 from symbolic_ai_core.data.curriculum import generate, resolve_lessons
 from symbolic_ai_core.data.tokenizer import SymbolTokenizer
@@ -398,6 +398,53 @@ def test_the_equivariant_floor_is_zero_where_nothing_is_copyable(episodes):
     label = task.split_floor(ev, tok, train)
     assert copy["copyfloor_n_copyable"] == label["n_copyable"]
     assert copy["copyfloor_n_not_copyable"] == label["n_not_copyable"]
+
+
+def test_the_copyable_bucket_is_not_the_same_population_at_every_rate(frozen):
+    """The guard for `notes/lessons/2026-08-15-a-conditional-is-not-a-fixed-question.md`.
+
+    `label_acc` is split by `target_source`, which asks whether a **visible**
+    node carries the hidden label — and the mask rate is what decides which
+    nodes are visible. So conditioning on copyability does *not* hold the
+    question fixed, and reading `acc | copyable` across rates as "the ability"
+    was wrong for exactly that reason: at 0.90 the bucket is the labels repeated
+    often enough to have left a visible copy.
+
+    Two properties, both consequences of the definition rather than of any
+    fixture. The share is the mechanically certain half; the multiplicity is the
+    half that was missed. No measured constant is pinned — 1.2 is a margin
+    chosen to be well below the effect (0.15 -> 0.90 roughly doubles it on the
+    full curriculum) and well above nothing.
+    """
+    eps, tok = frozen
+    share, mean_mult = {}, {}
+    for rate in (0.15, 0.90):
+        b = collate_graph(eps, tok, max_nodes=128, mask_rate=rate,
+                          rng=np.random.default_rng(11))
+        scored = b.target_tokens != IGNORE
+        copyable = b.target_source != IGNORE
+        share[rate] = float((scored & copyable).sum()) / float(scored.sum())
+        mult: list[int] = []
+        for i in range(int(b.tokens.shape[0])):
+            row = b.label_group[i]
+            ok = row != IGNORE
+            if not bool(ok.any()):
+                continue
+            counts = np.bincount(row[ok].numpy())
+            for j in np.flatnonzero((scored[i] & copyable[i] & ok).numpy()):
+                mult.append(int(counts[int(row[j])]))
+        assert mult, "no copyable fills at all, so the test measures nothing"
+        mean_mult[rate] = sum(mult) / len(mult)
+
+    assert share[0.90] < share[0.15], (
+        "the copyable share must fall with the mask rate: `target_source` only "
+        "accepts a visible node")
+    assert mean_mult[0.90] > 1.2 * mean_mult[0.15], (
+        "the copyable bucket at a high mask rate must be enriched in repeated "
+        "labels. If this fails, either the masking draw changed or "
+        "`target_source` stopped requiring the source to be visible -- and "
+        "either way `acc | copyable` has quietly become a different question "
+        "from the one the mask-rate curve compares across rates.")
 
 
 def test_every_graph_task_is_registered_and_named(episodes):

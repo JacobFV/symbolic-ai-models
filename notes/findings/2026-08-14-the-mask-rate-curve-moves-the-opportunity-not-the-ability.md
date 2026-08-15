@@ -9,6 +9,23 @@ related: [2026-08-14-the-label-score-is-a-copy-score,
 
 # Rung 1: raising the mask rate moves the opportunity to copy, not the ability
 
+> **Corrected in two places, 2026-08-15.**
+> **(a) The 0.90 arm, and the title's second half.**
+> `notes/findings/2026-08-15-the-ninety-percent-point-is-a-different-bucket-not-a-better-model.md`
+> computed the split this note left running. `acc | copyable` **rises** to
+> 0.5971 at `mask_rate=0.90` — the flat-conditionals reading holds at 0.35 and
+> 0.60 and breaks at 0.90, because copyability is defined by what is *visible*
+> and so the bucket's composition is a function of the rate. `acc | not copyable`
+> falls to 0.0013, so the "nothing is being reconstructed" half is stronger than
+> ever. The `copy_lift` column of these same runs falls monotonically and is
+> negative for six of six pointer models by 0.60.
+> **(b) The rung-4 bound below is the wrong way round** —
+> `notes/findings/2026-08-15-rung-fours-bound-points-the-other-way.md`.
+> Determinism gives `exact_match >= graph exactness`, not `<=`. The 0.0380 is a
+> **lower** bound and the interval is [0.038, 0.15]. The numbers in the tables
+> below are reproduced to the digit by an independent refit and are not in
+> dispute; the inequality around them is.
+
 **All 179 lessons, 716 evaluation episodes, `runs/infill-node-r015` and
 `runs/infill-node-r035`, twelve pre-registered models plus floors refitted at
 each rate.** The 0.60 and 0.90 arms were still running when this was written and
@@ -63,7 +80,10 @@ still open; the cliff-at-0.35 half is closed.
 | **0.15** | 0.722 | 0.357 | 0.143 | 0.250 | 6.955 | 5,233 |
 | **0.35** | 0.680 | 0.332 | 0.142 | 0.222 | 7.399 | 12,264 |
 | **0.60** | 0.583 | 0.285 | 0.136 | 0.173 | 7.925 | 21,172 |
-| 0.90 | *running* | | | | | |
+| **0.90** | 0.302 | 0.181 | 0.126 | 0.063 | 9.516 | 31,671 |
+
+`label_lift` is the normalised form, `(acc − floor) / (1 − floor)`, which is why
+it is not the difference of the two preceding columns.
 
 And the arm, both rates complete, `label_acc` / `label_lift`:
 
@@ -144,9 +164,12 @@ part, because there the supply runs out and the models have nowhere to go but th
 
 ## Rung 4's bound, at both rates
 
-The render is a deterministic function of the term, so `exact_match <=` graph
-exact-match (`scripts/graph_exact.py`, run's own draw, `label_acc` bit-identical
-to the published one):
+~~The render is a deterministic function of the term, so `exact_match <=` graph
+exact-match~~ — **the inequality is backwards; determinism gives
+`exact_match >=` graph exact-match, and the numbers below are lower bounds.**
+See `notes/findings/2026-08-15-rung-fours-bound-points-the-other-way.md`.
+(`scripts/graph_exact.py`, run's own draw, `label_acc` bit-identical to the
+published one):
 
 | `corefer-001` | 0.15 | 0.35 |
 |---|---:|---:|
@@ -255,12 +278,20 @@ about local context and not about the models.
 ## What would refute this
 
 - ~~`acc|copyable` falling materially at 0.60~~ — **checked, it did not**: 0.494
-  → 0.488 → 0.486 while the ceiling fell 0.722 → 0.583. The condition still
-  stands for 0.90, where the ceiling should finally collapse.
+  → 0.488 → 0.486 while the ceiling fell 0.722 → 0.583. ~~The condition still
+  stands for 0.90, where the ceiling should finally collapse.~~ **Resolved at
+  0.90, and the condition was the wrong one**: `acc | copyable` did not fall, it
+  **rose** to 0.5971, and so did the structure-only floor's copyable column
+  (0.158 → 0.183), which is a predictor that cannot improve. The bucket changed,
+  not the ability. Held at constant evidence concentration the model at 0.90 is
+  *worse*. See
+  `notes/findings/2026-08-15-the-ninety-percent-point-is-a-different-bucket-not-a-better-model.md`.
 - The copy ceiling *not* collapsing at 0.90. `target_source` accepts any visible
   same-label node, and with 10% of nodes visible a repeated label often still has
   one, so the collapse is not as automatic as it sounds. If the ceiling holds up,
   the 0.90 arm is a much weaker test of generation than the ladder assumed.
+  **Checked: it collapses to 0.302, and the 0.90 arm is a weaker test anyway**,
+  for the different reason above.
 
 ## Reproducibility of the 0.15 rows, checked
 

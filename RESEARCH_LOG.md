@@ -959,9 +959,9 @@ refitted at every rate:
 | | 0.15 | 0.35 | 0.60 | **0.90** |
 |---|---:|---:|---:|---:|
 | copy ceiling | 0.722 | 0.680 | 0.583 | **0.302** |
-| acc \| copyable | 0.494 | 0.488 | 0.486 | — |
-| acc \| **not** copyable | 0.003 | 0.003 | 0.004 | — |
-| split floors, copyable / not | 0.158 / 0.106 | 0.159 / 0.106 | 0.158 / 0.104 | — |
+| acc \| copyable | 0.494 | 0.488 | 0.486 | **0.597** |
+| acc \| **not** copyable | 0.003 | 0.003 | 0.004 | **0.001** |
+| split floors, copyable / not | 0.158 / 0.106 | 0.159 / 0.106 | 0.158 / 0.104 | **0.183 / 0.102** |
 | **predicted from the supply alone** | — | 0.337 | **0.289** | 0.151 |
 | **observed `label_acc`** | 0.357 | 0.332 | **0.285** | **0.181** |
 | prediction error | — | +0.005 | **+0.004** | **+0.030** |
@@ -974,15 +974,29 @@ prediction was committed while the 0.35 arm was still running. Both split floors
 stayed within 0.002, so nothing became harder for something that cannot read a
 symbol; only the opportunity to copy shrank.
 
-**At 0.90 the supply model breaks, and it breaks in the model's favour.**
+**At 0.90 the supply model breaks, and not in the model's favour after all.**
 Predicted 0.151, observed **0.181** — a 0.030 miss where the previous two were
-0.004. Something other than supply is contributing once 90% of the graph is
-hidden, and *which* conditional moved has not been measured: the split for the
-0.90 arm was never computed, because the agent computing it hit a session limit.
-Recorded as an open question rather than explained, since the two available
-stories — `acc | copyable` rising because the survivors are easy, or `acc | not`
-finally becoming non-zero — have opposite implications and this file has been
-burned before by explaining a number it had not decomposed.
+0.004. The split, computed on a refit that is bit-identical to the published
+arm and pre-registered before it landed: `acc | copyable` **rises** to 0.597 and
+`acc | not copyable` **falls** to 0.001. The cause is survivorship, and the proof
+is a predictor that cannot improve — the structure-only split floor's copyable
+column is 0.158 / 0.159 / 0.158 and then **0.183**, flat for three rates and up
+exactly where the model's went up. **Copyability is defined by what is
+*visible*, so the mask rate controls the bucket's composition**: the share of
+the copyable bucket whose label occurs ten or more times goes 22% -> 42%, which
+is two thirds of the movement. Hold the evidence at constant *concentration*
+(visible same-label nodes over visible labelled nodes, which falls from 61.6 to
+7.3 per fill) and the comparison inverts — the 0.15 conversion rates applied to
+the 0.90 mix predict **0.212**, so the fine supply variable overshoots by 0.031
+almost exactly as the coarse one undershoots by 0.030. And `copy_lift`, which
+was in every `summary.json` all along, falls monotonically for **six of six**
+pointer models and is negative for all six by 0.60 (`corefer` +0.096, +0.057,
+−0.013, **−0.149**). *The ability was never flat; the conditional that looked
+flat is a mixture whose weights the knob controls.* See
+`notes/findings/2026-08-15-the-ninety-percent-point-is-a-different-bucket-not-a-better-model.md`
+and the lesson it produced,
+`notes/lessons/2026-08-15-a-conditional-is-not-a-fixed-question.md`. Provisional:
+author-designed controls only.
 
 Both pre-registered expectations were refuted: pointer models do **not** degrade
 fastest (they retain 86% against 65% for no-pointer rows — and the pointer axis
@@ -997,12 +1011,24 @@ nine of nine models are worse: supply barely moves (ceiling 0.722 -> 0.698) whil
 advantage collapses 0.052 -> 0.002, so what is lost is **local context**, not
 model capability.
 
-**And partial credit has been flattering everything by a factor of ten.** Because
-the renderer is deterministic, `exact_match` is bounded above by whole-graph
-exactness. `corefer-001` gets **0.0380** of episodes entirely right at
-`mask_rate=0.15` against its 0.357 partial-credit score, **0.0014** at 0.35, and
-**0.0000** on the answer task. The ordering differs too — `ruleinduce` is fourth
-pooled and first exact.
+**And partial credit has been flattering everything by a factor of ten.**
+`corefer-001` gets **0.0380** of episodes entirely right at `mask_rate=0.15`
+against its 0.357 partial-credit score, **0.0014** at 0.35, and **0.0000** on
+the answer task. The ordering differs too — `ruleinduce` is fourth pooled and
+first exact.
+
+**The rung-4 bound this was first written with points the other way.** It said
+that because the renderer is deterministic, `exact_match` is bounded *above* by
+whole-graph exactness. Determinism gives the opposite implication: a function
+maps equal inputs to equal outputs, so a right graph renders to right text and
+`exact_match >=` graph exactness. An upper bound needs the render to be
+**injective**, which nothing here has measured. Measured instead: **a third of
+all scored fills carry symbols that never appear in the prompt at all**, so a
+wrong graph can still render right, and `corefer-001`'s rung-4 number lies in
+**[0.038, 0.15]** at 0.15 — one episode in seven at the top end, not "essentially
+unachieved". At 0.90 both ends are ~0 and the conclusion is safe. Rung 4 is
+therefore **open**, not answered by a bound. See
+`notes/findings/2026-08-15-rung-fours-bound-points-the-other-way.md`.
 
 ## `005`: the type head is saturated, not unattacked
 
@@ -1294,10 +1320,14 @@ Each of these was in the README as a result:
 | "rgt is first of nineteen on type at +0.587" | measured against a floor 0.065 too low; +0.395, and below a counting baseline |
 | "Every rule-based model clears the label floor" | `ctw` and `synth` do not |
 | "Every rule-based model sees the training set in full" | `ilp` saw 1.1% of available examples |
+| "The mask rate moves the opportunity, not the ability" | half true: nothing is reconstructed, but `acc \| copyable` is a mixture the mask rate reweights, and `copy_lift` falls for six of six pointer models and is negative by 0.60 |
+| "The render is deterministic, so `exact_match <=` graph exactness" | determinism gives `>=`; an upper bound needs injectivity, and a third of hidden symbols never reach the page |
 
 The pattern is worth naming: **six-lesson slices and weak floors both produce
 confident results with the wrong sign.** Three separate conclusions inverted when
-moved from six lessons to 179.
+moved from six lessons to 179. The last two rows add a third mechanism —
+**a conditional that the manipulated knob redefines, and a bound quoted in the
+direction that closed the question** — both recorded in `notes/lessons/`.
 
 ## How to add a variant
 

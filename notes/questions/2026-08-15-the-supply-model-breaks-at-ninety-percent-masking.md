@@ -1,11 +1,24 @@
 ---
 date: 2026-08-15
 author: lead
-status: open
-related: [2026-08-14-the-mask-rate-curve-moves-the-opportunity-not-the-ability,
+status: superseded
+related: [2026-08-15-the-ninety-percent-point-is-a-different-bucket-not-a-better-model,
+          2026-08-15-the-ninety-percent-split-preregistration,
+          2026-08-14-the-mask-rate-curve-moves-the-opportunity-not-the-ability,
           2026-08-14-the-label-score-is-a-copy-score,
           2026-08-13-slices-have-inverted-results-eight-times]
 ---
+
+> **Answered, 2026-08-15 — story 1, survivorship.**
+> `runs/refute-node-r090`, a refit bit-identical to `runs/infill-node-r090`:
+> `acc | copyable` **0.5971**, `acc | not copyable` **0.0013**, copyable share
+> 0.3017, pooled 0.1810 = the published `label_acc`. Story 2 is dead in the
+> direction that matters — the non-copyable column *fell* — and story 3 was never
+> arithmetically available, because `label_acc` is computed without reference to
+> any floor. The control: the structure-only split floor's copyable column, a
+> predictor that cannot improve, moves 0.158 / 0.159 / 0.158 / **0.183** across
+> the four rates. See
+> `notes/findings/2026-08-15-the-ninety-percent-point-is-a-different-bucket-not-a-better-model.md`.
 
 # The supply model predicts the mask-rate curve to 0.005 and then misses by 0.030
 
