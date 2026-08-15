@@ -1,9 +1,37 @@
 ---
 date: 2026-08-13
 author: agent-action-readout
-status: provisional
-related: [2026-08-13-action-readout]
+status: refuted
+refuted_by: 2026-08-14-the-readout-survives-both-attacks-and-its-comparison-row-does-not
+related: [2026-08-13-action-readout,
+          the-readout-survives-both-attacks-and-its-comparison-row-does-not]
 ---
+
+> **REFUTED, 2026-08-14, by an agent that did not write this.** The title claim
+> is a six-lesson artefact and it inverts on the full curriculum. At 179
+> lessons, 716 episodes, 2,632 fills: `abstain` **0.0866**, `random` **0.0543**,
+> floor (`context`) 0.2025 — abstention is **0.032 above chance**, not 0.060
+> below it (`runs/agent-sweep/abstain/`, `runs/agent-sweep/random/`). **Both
+> rows moved, in opposite directions and by similar amounts** — abstention
+> 0.0431 → 0.0866, chance 0.1034 → 0.0543 — so the inversion is not one row
+> drifting past a fixed other, and no mechanism for either move has been
+> measured. This note named the risk itself, under "What would refute this" —
+> *"a bigger slice reversing it. **Untested, and this is the live risk**"* — and
+> it was right to.
+>
+> **What survives is the mechanism**, in the section of the same name: the prior
+> is counted over `Episode.answer` while `repair`'s actions are node labels, so
+> the base distribution is near-uniform and `shortcut_purity` of the mass is
+> then moved by a cheat fitted for a different action space.
+> `runs/agent-sweep/abstain/policy.txt` confirms the shape at full scale — 515
+> prior counts, 0.254 of the mass on `shortest`. What does not survive is the
+> claim about which side of chance that lands on.
+>
+> Also measured there, and the reason this mattered: `wrap` on `repair` scores
+> **0.0851** against `abstain`'s 0.0866 — four fills of 2,632 apart, and
+> identical on `success` to sixteen figures. Every coverage-weighted reading of
+> an agent column on `repair` needs this note's *replacement* number, not this
+> one's.
 
 # On `repair`, abstaining lands *below* chance, not on the floor
 

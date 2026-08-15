@@ -152,16 +152,12 @@ class WrappedModel(PolicyAgent):
         """The actions worth paying a forward pass for, ranked by the shared prior.
 
         Truncation is a handicap and is stated as one in the module docstring.
-        Ranking by the *shared* prior rather than by anything this agent knows
-        keeps the rule agent-independent, so two wrapped models face the same
-        shortlist and the comparison between them is still about the models.
+        The rule itself now lives on
+        :meth:`~symbolic_ai_agents.agents.base.PolicyAgent.shortlist`, unchanged,
+        because ``graphread-capped`` exists to face *this exact* shortlist and a
+        second copy of the ranking would drift away from this one silently.
         """
-        options = list(obs.actions)
-        if len(options) <= self.max_actions:
-            return options
-        prior = self._prior_over(obs, options)
-        return sorted(options, key=lambda a: (-prior.get(a, 0.0),
-                                              options.index(a)))[:self.max_actions]
+        return self.shortlist(obs, obs.actions, self.max_actions)
 
     def prefer(self, obs: Observation) -> Preference:
         votes, raw = self._raw(obs)

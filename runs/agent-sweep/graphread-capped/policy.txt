@@ -1,0 +1,29 @@
+=== graphread-capped(corefer-001, channel=symbol): 3,732 model parameters ===
+  capped at 8 candidates, ranked by the shared prior — the shortlist `wrap` scores
+  388 decisions lost every vote to the cap and abstained
+  spoke on 2,233 of 2,703 decisions (82.6%); the rest abstained onto the shared prior
+  `choice`, `retry` and `probe` carry no graph, so every decision there is one of the abstentions above
+  confidence map: fitted
+
+prior log-odds -2.462
+top evidence:
+  ('query_rel', (('ROOT', 6), 'other'))    -5.138
+  ('query_rel', (('list', 6), 'other'))    -5.091
+  ('query_rel', (('record', 1), 'other'))  -4.968
+  ('query_rel', (('record', 2), 'other'))  -4.954
+  ('query_rel', (('record', 0), 'other'))  -4.875
+  ('query_dist', (('ROOT', 6), 6))         -4.861
+  ('query_rel', (('str', 0), 'same_head_same_slot')) +4.765
+  ('query_rel', (('record', 3), 'other'))  -4.329
+  ('query_dist', (('record', 1), 5))       -4.278
+  ('query_dist', (('record', 2), 5))       -4.266
+  ('query_dist', (('record', 0), 5))       -4.024
+  ('query_dist', (('field', 0), 5))        -3.993
+  ('said', 1)                              -3.934
+  ('query_dist', (('record', 0), 6))       -3.913
+  ('query_rel', (('record', 2), 'same_head')) -3.867
+  ('query_dist', (('record', 2), 4))       -3.824
+  ('query_dist', (('record', 0), 4))       -3.784
+  ('query_dist', (('field', 0), 6))        -3.784
+  ('query_rel', (('list', 5), 'sibling'))  +3.760
+  ('query_rel', (('list', 4), 'sibling'))  +3.737

@@ -3,6 +3,48 @@
 State for autonomous continuation. Read `git log --oneline | head -20` first;
 this file says what the work *is*, the log says how far it got.
 
+## Open: the IR is the third seam, and two lines are running against it
+
+`text -> Graph` is a parameter (the parsers package) and `Graph -> scored
+prediction` is a parameter (the readout). Both hold the **middle term fixed**.
+`Graph` — five parallel arrays in `symbolic_ai_core/data/graph.py` — is what
+every model, parser, readout, floor and published number here is defined over,
+and it has never been varied. That is the same shape as this repo's most
+expensive standing lesson: the named shared parts each moved more than the
+entire model spread, and `Graph` has had less scrutiny than the tokenizer.
+
+Two candidates, chosen to differ on **what the representation can refuse**:
+
+| | `005` `symbolic_ai_atomspace/` | `006` `symbolic_ai_lean/` |
+|---|---|---|
+| native operation | match and rewrite over atoms | **typecheck** |
+| a bad answer | scores low | **is rejected** |
+| pre-registration | `notes/decisions/2026-08-14-atomspace-metta-ir-preregistration.md` | `notes/decisions/2026-08-14-lean-ir-preregistration.md` |
+
+The fork itself is `notes/decisions/2026-08-14-the-ir-is-a-knob.md`. Three things
+it fixes in advance, because each is a mistake already paid for here:
+
+- **Both pre-registrations predict against themselves.** `005` says it will
+  *not* beat `corefer` on label accuracy, because `omegaclaw_reach-001` already
+  added `ilp`'s best discovered operator and lost, and reach was measured not to
+  be the constraint. `006` carries a **gating diagnostic that can close it in an
+  afternoon before any model is written**: the pointer's problem is
+  discrimination, not recall, so a kernel helps only if it prunes candidates
+  without pruning the gold one — one number, no model needed.
+- **A metric that is 1.000 by construction is a definition, not a result.**
+  `006`'s `type_acc` will be near-perfect because an elaborator *derives* a type
+  where this repo *predicts* one. It is asserted as a test and never quoted as a
+  lift. This is the UAS-0.95 mistake `symbolic_ai_parsers` already had to retract.
+- **No external toolchain in the hot path.** `hyperon` ships no wheel for this
+  project's Python and there is no Lean on this machine, and more to the point a
+  subprocess elaborator inside a 179-lesson sweep would break `APPROACH.md`'s
+  cost budget. Both are native, with the real system as an out-of-band
+  conformance oracle — the `symbolic_ai_data` and WALS patterns, both of which
+  have already worked.
+
+Neither replaces `Graph`; both register beside it, so one sweep prints the
+flat-graph row and the IR row against the same floors.
+
 ## Done: parsing is decoupled from reasoning. Almost nothing uses it.
 
 The split was built and works:

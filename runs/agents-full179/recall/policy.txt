@@ -1,0 +1,5 @@
+=== recall: 17554 (context, action) cells, 2 rounds at epsilon 0.35 ===
+  choice      1385 cells   best: 'zz zz sz'=+1.00(n=1), 'zv vl vv'=+1.00(n=2), 'zuvo'=+1.00(n=2)
+  probe       2909 cells   best: 'zztk'=+1.00(n=1), 'zz zz sz'=+1.00(n=1), 'zz zz sz'=+1.00(n=1)
+  repair      9681 cells   best: 'd'=+1.00(n=1), 'bind'=+1.00(n=5), 'b'=+1.00(n=1)
+  retry       3579 cells   best: 'zz zz sz'=+1.00(n=1), 'zv vl vv'=+1.00(n=2), 'zuvo'=+1.00(n=2)

@@ -1,0 +1,2 @@
+=== abstain: the abstention path ===
+  abstains on every decision; the row is 515 prior counts with 0.254 of the mass on `shortest`

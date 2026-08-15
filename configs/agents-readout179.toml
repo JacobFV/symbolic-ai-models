@@ -1,0 +1,36 @@
+# The readout comparison, on every generatable lesson.
+#
+#   uv run symbolic-ai-agents sweep --config configs/agents-readout179.toml \
+#       --agents graphread,graphread-capped,wrap,abstain,random --resume
+#
+# These are the settings `runs/agents-full179-readout/` was produced at, written
+# down as a file so that the rows added to it later are the *same* run rather
+# than a reconstruction of one. They are not `configs/agents-full.toml`'s: this
+# is `n_train=8, n_eval=4` where that is 20/8, and `repair` alone where that is
+# four environments. Both differences make the run affordable and both weaken
+# the floor, which is stated in every note quoting a number from here.
+#
+# The floor is refitted inside each run from `n_train` episodes, so a row from
+# this file may never be compared with a row from `configs/agents-full.toml`
+# without saying so. Rows from this file are comparable with each other, which
+# is what the readout question needs.
+
+agent = "graphread"
+envs = "repair"
+lessons = "all"
+
+n_train = 8
+n_eval = 4
+vocab_size = 8192
+max_nodes = 256
+
+tries = 3
+mask_rate = 0.15
+max_steps = 8
+max_actions = 24
+probe_cost = 0.1
+max_probes = 6
+
+keep = 32
+seed = 0
+out = "runs/agents-readout179"
