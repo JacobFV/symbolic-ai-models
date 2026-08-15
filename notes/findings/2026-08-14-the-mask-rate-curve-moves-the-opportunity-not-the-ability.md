@@ -16,17 +16,43 @@ are marked as such; nothing here is averaged over rates.
 
 ## The two pre-registered expectations, and what happened
 
-**R1 — "pointer models degrade fastest".** *Half right, and the axis was
-wrong.* Pointer-bearing models do fall, but so do models with no pointer head at
-all (`omegaclaw_rank-001`, `omegaclaw_ctx-001`), by the same amount, while
-pointer-bearing `ruleinduce-001` falls less. The axis that separates is
-renaming-invariance, not `source_votes` — see
-`notes/findings/2026-08-14-the-label-score-is-a-copy-score.md`. Recorded as a
-wrong pre-registration rather than re-drawn.
+**R1 — "pointer models degrade fastest".** *Refuted, in the opposite
+direction.* Mean `label_lift` over the pre-registered arms:
+
+| arm | 0.15 | 0.35 | retained |
+|---|---:|---:|---:|
+| six with a pointer | 0.201 | 0.172 | **86%** |
+| six without | 0.116 | 0.075 | **65%** |
+
+The decision note called the opposite outcome "the most interesting result
+available here", and this is it: pointer models degrade **slowest**. But the
+reason is not that they are reconstructing — the copyable split below says they
+are not — it is that the pre-registered axis is the wrong one. The no-pointer arm
+contains both `omegaclaw_rank-001` (0.248 → 0.206, no pointer head, retains like
+a pointer) and `grammar-001` (0.051 → 0.009). Split the twelve by renaming drop
+instead, `label_lift` at 0.15 → 0.35:
+
+| renaming drop ≤ 0.031 | | | | drop ≥ 0.088 | | |
+|---|---:|---:|---|---|---:|---:|
+| `evidence-001` | 0.089 → 0.091 | 102% | | `brill-001` | 0.172 → 0.108 | 63% |
+| `vsa_perm-002` | 0.213 → 0.198 | 93% | | `grammar-001` | 0.051 → 0.009 | 18% |
+| `corefer-001` | 0.250 → 0.222 | 89% | | `ngram-001` | 0.031 → −0.014 | *below floor* |
+| `ptrgen-001` | 0.225 → 0.196 | 87% | | `ctw-001` | −0.040 → −0.056 | *below floor* |
+| `omegaclaw_ctx-001` | 0.234 → 0.198 | 85% | | | | |
+| `omegaclaw_rank-001` | 0.248 → 0.206 | 83% | | | | |
+| `routes-001` | 0.210 → 0.164 | 78% | | | | |
+| `ruleinduce-001` | 0.217 → 0.162 | 75% | | | | |
+
+Every equivariant row retains 75% or more and one gains; two of the four
+vocabulary rows fall through the floor. The axis is renaming-invariance, not
+`source_votes` — the same correction the copyable split forces, arriving
+independently.
 
 **R2 — "the curve falls off a cliff at 0.35".** *Refuted.* The registered
 threshold was: a cliff means the mean pointer `label_lift` at 0.35 is below half
-its 0.15 value. It is 0.222 against 0.250 — **89% retained**, not 50%.
+its 0.15 value. It is 0.172 against 0.201 — 86% retained, not 50%. The 0.35→0.60
+and 0.60→0.90 steps have not landed, so the registered *shape* condition is
+still open; the cliff-at-0.35 half is closed.
 
 ## The curve, with its floors
 
@@ -38,6 +64,24 @@ its 0.15 value. It is 0.222 against 0.250 — **89% retained**, not 50%.
 | **0.35** | 0.680 | 0.332 | 0.142 | 0.222 | 7.399 | 12,264 |
 | 0.60 | *running* | | | | | |
 | 0.90 | *running* | | | | | |
+
+And the arm, both rates complete, `label_acc` / `label_lift`:
+
+| model | 0.15 | 0.35 |
+|---|---|---|
+| `corefer-001` | 0.357 / 0.250 | 0.332 / 0.222 |
+| `omegaclaw_rank-001` | 0.356 / 0.248 | 0.319 / 0.206 |
+| `omegaclaw_ctx-001` | 0.344 / 0.234 | 0.312 / 0.198 |
+| `ptrgen-001` | 0.336 / 0.225 | 0.311 / 0.196 |
+| `ruleinduce-001` | 0.329 / 0.217 | 0.282 / 0.162 |
+| `vsa_perm-002` | 0.326 / 0.213 | 0.312 / 0.198 |
+| `routes-001` | 0.323 / 0.210 | 0.283 / 0.164 |
+| `brill-001` | 0.290 / 0.172 | 0.235 / 0.108 |
+| `evidence-001` | 0.219 / 0.089 | 0.221 / 0.091 |
+| `grammar-001` | 0.187 / 0.051 | 0.150 / 0.009 |
+| `ngram-001` | 0.170 / 0.031 | 0.131 / −0.014 |
+| `ctw-001` | 0.109 / −0.040 | 0.095 / −0.056 |
+| **floor** | *0.143* | *0.142* |
 
 The floor barely moves (0.143 → 0.142) because a structure-only lookup does not
 care how much else is hidden. The **copy ceiling** does move, and it is the
@@ -159,6 +203,28 @@ fundamentally easier problem than generating a constituent", and this is what
 that looks like when measured: the coreferent is still visible, and the local
 context that would say *which* visible node it is has been hidden along with the
 rest of the subtree.
+
+**The whole arm, and nine of nine are worse.** `label_lift`, scattered →
+subtree, floors refitted per regime (0.143 → 0.126). R3 would have been refuted
+by any row at or above its scattered value:
+
+| model | scattered | subtree |
+|---|---:|---:|
+| `corefer-001` | 0.250 | 0.170 |
+| `omegaclaw_rank-001` | 0.248 | 0.183 |
+| `ptrgen-001` | 0.225 | 0.147 |
+| `vsa_perm-002` | 0.213 | 0.143 |
+| `routes-001` | 0.210 | 0.107 |
+| `evidence-001` | 0.089 | 0.067 |
+| `grammar-001` | 0.051 | **−0.016** |
+| `ngram-001` | 0.031 | **−0.041** |
+| `gparse-none` (abstains) | — | −0.096 |
+
+The two counting models fall *below* the floor. Their copyable split stays flat
+under contiguity as well (`grammar-001` −0.021, `ngram-001` 0.000), so their
+fall is not a copyability effect: a hidden parent and hidden siblings remove the
+context their rules key on, which is the same thing that costs the copying
+models their coreferent. One mechanism, two symptoms.
 
 Four models measured both ways, `acc | copyable` at budget 0.15:
 
