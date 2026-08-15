@@ -179,7 +179,8 @@ __all__ = ["RoleEmbedding", "VSAAtomRoles", "VSASum", "VSASumPure",
            "VSAPermHKS", "VSAPermHKSPure",
            # the refuter's rows; see the block at the foot of this module
            "NullRoles", "VSANull", "VSANullPure", "VSAHKSWide", "VSAHKSWidePure",
-           "VSASpectralWidePure", "VSASpectralShuffledMatchedPure"]
+           "VSASpectralWidePure", "VSASpectralShuffledMatchedPure",
+           "VSAHKSShuffledWidePure", "VSAPermHKSWide", "VSAPermHKSWidePure"]
 
 
 def _shape_hash(parent: Sequence[int]) -> int:
@@ -1059,3 +1060,62 @@ class VSASpectralShuffledMatchedPure(VSASpectralShuffledPure):
     """
 
     knob_grid = (16.0,)
+
+
+# ---------------------------------------------------------------------------
+# the second round: vsa_hks_wide-004's grid landed interior at 0.25 and took
+# the signature from +0.107 to +0.160 label lift, so every comparison the
+# finding note drew against the pinned 0.5 has to be drawn again at 0.25.
+# ---------------------------------------------------------------------------
+@register("vsa_hks_shuf_wide_pure-004",
+          doc="The signature's shuffled control, pinned to the wide fit's 0.25.")
+class VSAHKSShuffledWidePure(VSAHKSShuffledPure):
+    """The load-bearing control, re-matched at the bandwidth that actually fits.
+
+    ``vsa_hks_shuf_pure-004`` matched ``vsa_hks_pure-004`` at 0.5 by luck, not by
+    construction: both refit independently and happened to land together. At the
+    wide grid the treatment moves to 0.25, so an independently refitting control
+    could drift again and the "bit-identical Gram value multiset" property would
+    stop holding exactly when the headline moved. Pinning the grid to the single
+    value 0.25 makes the property true by construction rather than by accident.
+
+    **Prediction, written before the sweep.** It lands below the floor, near
+    ``vsa_hks_shuf_pure-004``'s -0.071, and far below the +0.160 the treatment
+    now scores -- so the correspondence conclusion survives the bandwidth
+    correction. *Refuted if* it rises with its treatment, which would say the
+    wide grid bought a better *value distribution* rather than better use of the
+    graph, and that the shuffle was never the load-bearing control.
+    """
+
+    knob_grid = (0.25,)
+
+
+@register("vsa_perm_hks_wide-004",
+          doc="vsa_perm_hks-004 with the bandwidth grid extended past its boundary.")
+class VSAPermHKSWide(VSAPermHKS):
+    """The composition, redone at the bandwidth the signature actually wants.
+
+    The finding note's section 5 -- "the three heads disagree about the
+    composition" -- compares ``vsa_perm_pure-002`` (+0.227 label) against
+    ``vsa_perm_hks_pure-004`` (+0.161 label, +0.092 copy) and concludes there is
+    no single ranking. Both signature rows in that comparison fitted the pinned
+    0.5. Since ``vsa_hks_wide_pure-004`` shows 0.25 is worth +0.053 of label lift
+    on its own, that whole comparison was drawn at the wrong point.
+
+    **Prediction, written before the sweep.** It gains roughly what the plain
+    signature gained and lands near or above ``vsa_perm_pure-002``'s +0.227 on
+    label while keeping its copy advantage -- which would *collapse* the
+    disagreement the note reports, leaving one model ahead on all three heads.
+    *Refuted if* the gain does not transfer through the permutation channel, in
+    which case the two mechanisms are substitutes and the note's reading stands.
+    """
+
+    knob_grid = VSAHKSWide.knob_grid
+
+
+@register("vsa_perm_hks_wide_pure-004",
+          doc="vsa_perm_hks_wide-004 without the shared memorising fallback.")
+class VSAPermHKSWidePure(VSAPermHKSWide):
+    """The equivariant row that section 5's table has to be redrawn against."""
+
+    structural_fallback = False

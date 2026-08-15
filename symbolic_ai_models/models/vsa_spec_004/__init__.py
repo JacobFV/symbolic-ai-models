@@ -1,4 +1,5 @@
-from .model import (NullRoles, RoleEmbedding, VSAAtomRoles, VSAHKS,
+from .model import (NullRoles, VSAHKSShuffledWidePure,
+                    VSAPermHKSWide, VSAPermHKSWidePure, RoleEmbedding, VSAAtomRoles, VSAHKS,
                     VSAHKSLikelihood, VSAHKSLikelihoodPure, VSAHKSPure,
                     VSAHKSShuffled, VSAHKSShuffledPure, VSAHKSSum,
                     VSAHKSSumPure, VSAHKSWide, VSAHKSWidePure, VSANull,
@@ -8,7 +9,8 @@ from .model import (NullRoles, RoleEmbedding, VSAAtomRoles, VSAHKS,
                     VSASpectralShuffledMatchedPure, VSASpectralShuffledPure,
                     VSASpectralWidePure, VSASum, VSASumPure)
 
-__all__ = ["NullRoles", "RoleEmbedding", "VSAAtomRoles", "VSAHKS",
+__all__ = ["NullRoles", "VSAHKSShuffledWidePure", "VSAPermHKSWide",
+           "VSAPermHKSWidePure", "RoleEmbedding", "VSAAtomRoles", "VSAHKS",
            "VSAHKSLikelihood", "VSAHKSLikelihoodPure", "VSAHKSPure",
            "VSAHKSShuffled", "VSAHKSShuffledPure", "VSAHKSSum", "VSAHKSSumPure",
            "VSAHKSWide", "VSAHKSWidePure", "VSANull", "VSANullPure",
