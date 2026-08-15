@@ -321,7 +321,8 @@ class MaskedNode(Task):
         return out
 
     def split_floor(self, episodes: Sequence[Episode], tok: SymbolTokenizer,
-                    train: Sequence[Episode]) -> dict[str, float]:
+                    train: Sequence[Episode], *,
+                    fit_per_bucket: bool = False) -> dict[str, float]:
         """The label floor, computed **separately** on copyable and non-copyable fills.
 
         Not part of :meth:`floor` and deliberately so: every `node` summary ever
@@ -334,14 +335,32 @@ class MaskedNode(Task):
         produces is bit-identical to ``floor()["label_acc"]``. That equality is
         the guard against this having drifted into a second implementation of the
         floor, and the caller asserts it.
+
+        ``fit_per_bucket`` fits **one rule per bucket** instead of one rule
+        scored in two, and is an **upper bound rather than a floor**. A floor
+        fitted pooled and merely *reported* bucketed is not the best a
+        structure-only lookup does on the sub-population — the pooled table
+        answers every context with the label commonest over both buckets, which
+        is the copyable bucket's answer wherever they disagree. But the bucket
+        is not a feature any predictor may use: copyability is whether the
+        **hidden** label appears on a visible node, so conditioning on it is
+        conditioning on the answer. Splitting the score by it is a legitimate
+        decomposition; splitting the *predictor* by it is not a floor. What this
+        gives is the ceiling of the bucketed lookup, which is the honest way to
+        ask whether the reported column was too weak. The pooled value it
+        returns is **not** the run's ``label_floor``, and a caller must not
+        assert it against one.
         """
-        rule = _ContextRule()
+        rules: dict[bool, _ContextRule] = {True: _ContextRule(),
+                                           False: _ContextRule()}
+        pooled = _ContextRule()
         rng = np.random.default_rng(4)
         for _ in range(4):
             for ep in train:
-                for ctx, label, _t, _a, _c in self._nodes(ep, tok, rng):
+                for ctx, label, _t, _a, copyable in self._nodes(ep, tok, rng):
                     if label is not None:
-                        rule.observe(ctx, label)
+                        (rules[copyable] if fit_per_bucket
+                         else pooled).observe(ctx, label)
 
         hit = {True: 0, False: 0}
         n = {True: 0, False: 0}
@@ -351,6 +370,7 @@ class MaskedNode(Task):
                 for ctx, label, _t, _a, copyable in self._nodes(ep, tok, scoring):
                     if label is None:
                         continue
+                    rule = rules[copyable] if fit_per_bucket else pooled
                     n[copyable] += 1
                     hit[copyable] += rule.predict(ctx) == label
         total = n[True] + n[False]
@@ -359,6 +379,89 @@ class MaskedNode(Task):
             "floor_not_copyable": hit[False] / n[False] if n[False] else float("nan"),
             "floor_pooled": (hit[True] + hit[False]) / total if total else float("nan"),
             "n_copyable": float(n[True]), "n_not_copyable": float(n[False]),
+        }
+
+    def split_copy_floor(self, episodes: Sequence[Episode],
+                         tok: SymbolTokenizer,
+                         train: Sequence[Episode]) -> dict[str, float]:
+        """The **equivariant** floor for each bucket: a structure-only pointer.
+
+        :meth:`split_floor` is a lookup table over *symbol identities*, so it is
+        renaming-**variant** by construction — permute the vocabulary and it
+        scores zero. Reading a renaming-invariant model against it on the
+        non-copyable bucket compares two hypothesis classes on the one
+        sub-population where the extra membership is the whole question, and the
+        comparison is decided before any model runs: on a fill whose label sits
+        on no visible node, an exactly equivariant predictor has nothing to
+        point at, so *every* member of that class — the oracle included — scores
+        0. ``acc | not copyable`` for such a model measures its
+        non-equivariance, not its reasoning.
+
+        This is that comparison made explicit. Same masking draw and the same
+        rule as :meth:`_copy_floor` — the commonest relative offset to a
+        same-label node per structural context, applied blind — restricted to
+        the fills the **label** score covers, and reported per bucket.
+        ``ceiling_*`` is the oracle pointer: 1.0 where a source exists and 0.0
+        where none does, which is the copyable partition restated and the
+        strongest score any equivariant model can reach.
+
+        One difference from :meth:`_copy_floor`, and it is not a refinement but
+        a different question. ``copy_acc`` counts a landing on **any** node with
+        the same label, hidden ones included, and so does the pointer score in
+        :func:`_pointer_counts` — consistently, which is what makes them
+        comparable to each other. That is the right rule for "which node
+        corefers with this one" and the wrong one for a floor on the *label*
+        score: a symbol on a masked node cannot be read, so a landing there
+        names nothing. ``anynode_*`` is the ``copy_acc`` rule, reported beside
+        the visible-only one so the difference is a measured number rather than
+        a remark — it is why ``anynode_not_copyable`` is above zero while
+        ``copyfloor_not_copyable`` is exactly zero.
+        """
+        rule: dict[tuple, collections.Counter] = collections.defaultdict(
+            collections.Counter)
+        rng = np.random.default_rng(4)
+        for _ in range(4):
+            for ep in train:
+                for ctx, i, source, *_ in self._pointer_examples(ep, rng, tok):
+                    if source is not None:
+                        rule[ctx][i - source] += 1
+
+        overall: collections.Counter = collections.Counter()
+        for counts in rule.values():
+            overall.update(counts)
+        fallback = overall.most_common(1)[0][0] if overall else 1
+
+        hit = {True: 0, False: 0}
+        anyhit = {True: 0, False: 0}
+        n = {True: 0, False: 0}
+        scoring = np.random.default_rng(12345)
+        for _ in range(8):
+            for ep in episodes:
+                for ctx, i, source, labels, scorable, hidden in \
+                        self._pointer_examples(ep, scoring, tok):
+                    if not scorable:
+                        continue
+                    counts = rule.get(ctx)
+                    offset = counts.most_common(1)[0][0] if counts else fallback
+                    j = i - offset
+                    copyable = source is not None
+                    n[copyable] += 1
+                    landed = (0 <= j < len(labels) and j != i
+                              and labels[j] == labels[i])
+                    anyhit[copyable] += landed
+                    hit[copyable] += landed and j not in hidden
+        total = n[True] + n[False]
+        div = lambda a, b: a / b if b else float("nan")
+        return {
+            "copyfloor_copyable": div(hit[True], n[True]),
+            "copyfloor_not_copyable": div(hit[False], n[False]),
+            "copyfloor_pooled": div(hit[True] + hit[False], total),
+            "anynode_copyable": div(anyhit[True], n[True]),
+            "anynode_not_copyable": div(anyhit[False], n[False]),
+            "anynode_pooled": div(anyhit[True] + anyhit[False], total),
+            "ceiling_copyable": 1.0, "ceiling_not_copyable": 0.0,
+            "copyfloor_n_copyable": float(n[True]),
+            "copyfloor_n_not_copyable": float(n[False]),
         }
 
     def _copy_floor(self, episodes: Sequence[Episode],
@@ -381,7 +484,7 @@ class MaskedNode(Task):
         rng = np.random.default_rng(4)
         for _ in range(4):
             for ep in train:
-                for ctx, i, source, _ in self._pointer_examples(ep, rng):
+                for ctx, i, source, *_ in self._pointer_examples(ep, rng):
                     if source is not None:
                         rule[ctx][i - source] += 1
 
@@ -394,7 +497,7 @@ class MaskedNode(Task):
         scoring = np.random.default_rng(12345)
         for _ in range(8):
             for ep in episodes:
-                for ctx, i, _, labels in self._pointer_examples(ep, scoring):
+                for ctx, i, _s, labels, *_ in self._pointer_examples(ep, scoring):
                     counts = rule.get(ctx)
                     offset = counts.most_common(1)[0][0] if counts else fallback
                     j = i - offset
@@ -403,11 +506,27 @@ class MaskedNode(Task):
                         and labels[j] == labels[i]
         return hits / total if total else float("nan")
 
-    def _pointer_examples(self, ep: Episode, rng: np.random.Generator):
-        """``(context, node, a visible same-label node or None, labels)``.
+    def _pointer_examples(self, ep: Episode, rng: np.random.Generator,
+                          tok: SymbolTokenizer | None = None):
+        """``(context, node, a visible same-label node or None, labels, scorable)``.
 
         Same masking regime as everything else here, and the same reason: a
         floor measured under conditions the models do not face is not a floor.
+
+        ``scorable`` is :meth:`_scorable` — whether the **label** score covers
+        this fill — and is ``True`` for every fill when no tokenizer is given,
+        which is what :meth:`_copy_floor` wants: the copy head is scored over
+        every labelled masked node, including the ones the vocabulary cannot
+        name. :meth:`split_copy_floor` passes a tokenizer because it is a floor
+        for the *label* score and has to cover the same fills that does.
+
+        ``hidden`` rides along because *whether the node a pointer lands on is
+        visible* is not a question this method's other outputs can answer, and
+        it decides what the pointer is worth. ``copy_acc`` — the model's score
+        and this floor alike — counts a landing on a **hidden** same-label node
+        as a hit, which is right for "which node corefers with this one" and
+        wrong for any floor on the **label** score, since a model cannot read a
+        symbol it cannot see. See :meth:`split_copy_floor`.
         """
         g = ep.graph
         n = min(len(g), self.max_nodes)
@@ -424,7 +543,9 @@ class MaskedNode(Task):
             ctx = (parent_type, min(g.slot[i], 8), min(g.depth[i], 8))
             source = next((j for j in range(n)
                            if j not in hidden and labels[j] == labels[i]), None)
-            yield ctx, i, source, labels
+            scorable = (True if tok is None
+                        else self._scorable(g.labels[i], g.types[i], tok))
+            yield ctx, i, source, labels, scorable, hidden
 
     def _hidden(self, ep: Episode, n: int, rng: np.random.Generator) -> set[int]:
         """The nodes this draw hides, by the *same* rule the collator uses.

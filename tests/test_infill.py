@@ -347,6 +347,59 @@ def test_the_split_floor_pools_back_to_the_floor(episodes):
     assert pooled["n_copyable"] + pooled["n_not_copyable"] > 0
 
 
+def test_fitting_the_split_floor_per_bucket_leaves_the_pooled_one_alone(episodes):
+    """`fit_per_bucket` must be a different number, and must not be a floor.
+
+    A rule fitted on both buckets and merely *reported* in two is not the best a
+    lookup does on either. Fitting one per bucket says what that would be worth
+    — but copyability is whether the *hidden* label sits on a visible node, so
+    no predictor may condition on it and this is a ceiling, not a floor. Two
+    things to hold: the buckets keep their sizes (same draw, same ladder), and
+    the pooled value is no longer the run's `label_floor`, so nobody may assert
+    it against one.
+    """
+    train, ev, tok = episodes
+    task = make_task("node", mask_rate=0.15, max_nodes=128)
+    pooled = task.split_floor(ev, tok, train)
+    per_bucket = task.split_floor(ev, tok, train, fit_per_bucket=True)
+    for k in ("n_copyable", "n_not_copyable"):
+        assert per_bucket[k] == pooled[k]
+    # No direction is asserted, on purpose. Conditioning on the bucket makes the
+    # table sharper and its evidence per context thinner at the same time, and
+    # which wins is the measurement -- an assertion here would be this repo's
+    # habit of pinning a slice constant into a test that runs on a fixture.
+    assert 0.0 <= per_bucket["floor_not_copyable"] <= 1.0
+
+
+def test_the_equivariant_floor_is_zero_where_nothing_is_copyable(episodes):
+    """The comparison the split table never makes, and the one that decides it.
+
+    `split_floor` is a table over symbol *identities*: renaming-variant, and so
+    in a strictly larger hypothesis class than an equivariant model. On the
+    non-copyable bucket that class difference is the entire question, because a
+    predictor that may only point has nothing to point at — so the structure-only
+    pointer, and the oracle pointer above it, both score exactly 0 there. A
+    renaming-invariant model scoring "below the floor" on that bucket is
+    therefore not a measurement about the model.
+    """
+    train, ev, tok = episodes
+    task = make_task("node", mask_rate=0.15, max_nodes=128)
+    copy = task.split_copy_floor(ev, tok, train)
+    assert copy["copyfloor_not_copyable"] == 0.0
+    assert copy["ceiling_not_copyable"] == 0.0
+    assert copy["copyfloor_copyable"] > 0.0
+    # And the reason `copy_acc` does not show that zero: it counts a landing on
+    # a *hidden* same-label node, which names nothing a model could read. The
+    # gap is a property of the metric, so it is asserted to exist rather than
+    # asserted to be any particular size.
+    assert copy["anynode_not_copyable"] > copy["copyfloor_not_copyable"]
+    # Same draw and same partition as the label floor, so the two tables are
+    # rows of one table rather than two measurements that happen to be adjacent.
+    label = task.split_floor(ev, tok, train)
+    assert copy["copyfloor_n_copyable"] == label["n_copyable"]
+    assert copy["copyfloor_n_not_copyable"] == label["n_not_copyable"]
+
+
 def test_every_graph_task_is_registered_and_named(episodes):
     assert set(GRAPH_TASKS) <= set(TASKS)
     for name in GRAPH_TASKS:
