@@ -29,6 +29,60 @@ so the answers are exact and unannotated.
 Nineteen models, two families. Rule-based ones are the subject; six neural ones
 exist as a control and are off by default.
 
+## Read this before any number below it: `label_acc` is 72% a copy score
+
+**Status: under independent challenge as of 2026-08-15.** It is a *decomposition*
+of the published numbers rather than a new measurement — `0.72 x copyable +
+0.28 x not` reproduces every row in this file **including the floor**, verified
+independently (corefer 0.3565 vs 0.357, grammar 0.1874 vs 0.187, floor 0.1434 vs
+0.143). What could still make it true-but-trivial is named at the end.
+
+`label_acc` has been this repo's central number from the beginning. It mixes two
+questions in a 72:28 ratio and nothing ever reported them apart: **does some
+visible node of the same graph already carry the answer's label?**
+`runs/infill-node-r015`, all 179 lessons, 5,233 fills, the published
+`mask_rate=0.15` setting on the run's own draw.
+
+| model | acc \| copyable | acc \| **not** | acc (all) | renaming drop |
+|---|---:|---:|---:|---:|
+| `corefer-001` | 0.494 | **0.003** | 0.357 | 0.003 |
+| `omegaclaw_rank-001` | 0.469 | 0.063 | 0.356 | 0.017 |
+| `ptrgen-001` | 0.462 | 0.010 | 0.336 | 0.005 |
+| `routes-001` | 0.448 | **0.000** | 0.323 | −0.000 |
+| `vsa_perm-002` | 0.435 | 0.043 | 0.326 | 0.010 |
+| `brill-001` | 0.350 | 0.137 | 0.290 | 0.130 |
+| `grammar-001` | 0.191 | **0.178** | 0.187 | 0.159 |
+| `ngram-001` | 0.175 | 0.154 | 0.170 | 0.143 |
+| **floor** (content-blind lookup) | *0.158* | *0.106* | *0.143* | — |
+
+**Every renaming-invariant model is *below* the content-blind floor on the
+quarter it cannot copy, and every vocabulary model is above it.** Sort the table
+by renaming drop and the gap sorts with it: the nine rows dropping ≤0.027 land at
+0.000–0.081 against a 0.106 floor; the three dropping ≥0.088 land at 0.090–0.178.
+
+**The published ranking inverts on the sub-population.** `corefer-001` is first
+of twelve pooled and **eleventh** where nothing can be copied; `grammar-001` is
+eighth and **first**. A ranking is a property of its metric — and now also of its
+sub-population, and this repo has only ever published the pooled one.
+
+**The plain reading: these models do coreference. Where there is no coreferent to
+find, they are worse than a table.** "The best model reaches 0.357" should be
+read as "reaches 0.494 at finding a symbol already on screen, and 0.003 at
+producing one that is not."
+
+**The same fact, arrived at independently and from the other side.** Hiding every
+node that carries the episode's *answer* — 0% copyable by construction — gives
+`corefer-001` **0.001** against a 0.101 floor, and nine of twelve models land on
+the abstention row, four of them matching "say nothing" to nine decimal places.
+See the generation section below.
+
+**What would make this true but uninteresting**, and it is being checked now: if
+the non-copyable fills are mostly the invented nonce symbols the vocabulary
+cannot name, then "everything scores zero" is a fact about coverage rather than
+about reasoning, and the floor's 0.106 becomes the thing needing explanation.
+Pooled `label_coverage` is 0.82; per-bucket coverage had not been measured when
+this was written.
+
 ## What is established
 
 **Every ranking this repo has published is an accuracy ranking, and the models
@@ -829,6 +883,84 @@ measured on six lessons and inverts at 179: `abstain` 0.0866 against `random`
 0.0543 is **0.032 above** chance, not 0.060 below. Both rows moved, in opposite
 directions, and no mechanism for either move has been measured. The note named
 this as its own live risk and was right to.
+
+## Generation: absent, not mis-measured — and the reframe that predicted otherwise was wrong
+
+The pre-registered claim was that the `lm` task's total failure (11 of 19 models
+unable to emit a token, `exact_match` 0.000 everywhere) was a **readout artefact**,
+because the same fitted `corefer-001` scores 0.508 read as a move and 0.085 read
+as text. Masked-node prediction at 15% is parse-tree infilling, the renderer is
+deterministic, so generation should reduce to graph completion plus an exact
+render. **That was checked first because it could refute, and it did.**
+
+`runs/infill-ans`: hide every node whose label is the episode's answer. All 179
+lessons, 716 episodes, 841 scored fills, floor **0.101** refitted under this
+regime.
+
+| model | `ansnode_acc` | lift | renaming drop |
+|---|---:|---:|---:|
+| `grammar-001` | 0.181 | +0.089 | 0.184 |
+| `ngram-001` | 0.169 | +0.075 | 0.164 |
+| *floor* | *0.101* | — | — |
+| `gparse-none` — **emits nothing** | 0.004 | −0.108 | — |
+| `corefer-001` | **0.001** | −0.111 | 0.001 |
+| `routes-001`, `evidence-001` | 0.000 | −0.112 | — |
+
+**Nine of twelve models land on the abstention row**, and `ptrgen-001`,
+`vsa_perm-002` and both `omegaclaw` rows match "say nothing" to **nine decimal
+places** — two of them in bits as well. The only three rows that clear the floor
+lose all of it under a symbol permutation. Changing the readout releases nothing:
+the models that can answer on the graph are the same memorisers that could
+already answer on the text.
+
+Two controls, because the task design could have manufactured the null:
+
+- **`nodeans1`** hides only the *first* copy, so a pointer has something to point
+  at: `corefer` goes 0.001 -> **0.072**, sixty-fold, and is *still* below its
+  0.092 floor. So the zero was substantially design — **and the pointer still
+  does not answer.**
+- **Undertraining**: answer-masking supplies 8x fewer examples, so fit under
+  scatter and score under answer. `corefer` 0.0012 -> **0.0000**, `ptrgen`
+  0.0036 -> 0.0000. More supervision makes it worse.
+
+**The mask rate is a supply knob, not a difficulty knob** — and this is the
+cleanest quantitative prediction the repo has made. `corefer-001`, floors
+refitted at every rate:
+
+| | 0.15 | 0.35 | **0.60** |
+|---|---:|---:|---:|
+| copy ceiling | 0.722 | 0.680 | **0.583** |
+| acc \| copyable | 0.494 | 0.488 | **0.486** |
+| acc \| **not** copyable | 0.003 | 0.003 | **0.004** |
+| split floors, copyable / not | 0.158 / 0.106 | 0.159 / 0.106 | 0.158 / 0.104 |
+| **predicted from the supply alone** | — | 0.337 | **0.289** |
+| **observed `label_acc`** | 0.357 | 0.332 | **0.285** |
+
+**The ceiling fell 0.139 and the ability moved 0.008.** The prediction was
+committed while the 0.35 arm was still running and came in at **0.004 error** at
+0.60 — inside the noise band this file quotes for bits. Both split floors are
+within 0.002 of where they started, so nothing became harder for something that
+cannot read a symbol; only the opportunity to copy shrank.
+
+Both pre-registered expectations were refuted: pointer models do **not** degrade
+fastest (they retain 86% against 65% for no-pointer rows — and the pointer axis
+was itself wrong, since `omegaclaw_rank` has no pointer head and behaves exactly
+like `corefer`; the axis that works is the renaming column), and there is no
+cliff at 0.35.
+
+**Masking a whole subtree is the knob that moves the ability.** At matched budget,
+nine of nine models are worse: supply barely moves (ceiling 0.722 -> 0.698) while
+`acc | copyable` drops 0.111 for `corefer`, 0.113 for `ptrgen`, 0.133 for
+`routes` — twenty times what the mask rate cost. The floor's own copyable
+advantage collapses 0.052 -> 0.002, so what is lost is **local context**, not
+model capability.
+
+**And partial credit has been flattering everything by a factor of ten.** Because
+the renderer is deterministic, `exact_match` is bounded above by whole-graph
+exactness. `corefer-001` gets **0.0380** of episodes entirely right at
+`mask_rate=0.15` against its 0.357 partial-credit score, **0.0014** at 0.35, and
+**0.0000** on the answer task. The ordering differs too — `ruleinduce` is fourth
+pooled and first exact.
 
 ## `005`: the type head is saturated, not unattacked
 
