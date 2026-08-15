@@ -48,6 +48,28 @@ The two cases are the whole lesson. The same symptom means "your experiment did
 not run" in one case and "your hypothesis is dead" in the other, and **only the
 direction of the boundary tells you which**.
 
+### Amendment, 2026-08-14: the second case study was wrong, and this lesson's own guard is why
+
+An independent refuter did what guard 1 below says to do and never got done for
+`vsa_spec_pure-004`: extended the grid to `(4, 16, 64, 256, 1024)` and refit.
+**The fit stays at `t = 16`** and `vsa_spec_wide_pure-004` comes out bit-identical
+to `vsa_spec_pure-004` (0.105 / −0.044 / 7.380 / 0.212 / copy 0.096, every digit).
+So `t = 16` was **an interior optimum all along**, not a mis-specified grid, and
+the paragraph above describing it as one is wrong. The conclusion it supported —
+the eigenmap is refuted — is untouched, and "a wider grid cannot rescue it" has
+gone from an argument to a measurement.
+
+Worse, and the reason this amendment matters more than the correction: the same
+sweep's *winning* arm, `vsa_hks-004`, fitted `knob = 0.5` — the **bottom** of
+`(0.5, 1, 2, 4)` — in all four registered rows, and nobody applied this lesson to
+it. Extended to `(0.0625 … 4)`, it lands **interior at 0.25 and gains +0.053 of
+label lift**. The guard was invoked on the arm that lost, where it was not needed
+and gave the wrong reading, and skipped on the arm that won, where it was worth
+0.053. See `notes/lessons/2026-08-14-a-guard-applied-only-to-the-arm-that-lost.md`
+and `notes/findings/2026-08-14-the-graph-roles-survive-the-attack-and-their-bandwidth-does-not.md`.
+
+The lesson below is unharmed. Its example was.
+
 ## The cost
 
 One registered model, one sweep, and one write-up that would have reported a

@@ -460,10 +460,23 @@ def test_the_embedding_family_is_exactly_equivariant(name):
 def test_every_variant_answers_and_fits_inside_its_own_grid(fixtures, cfg, name):
     """A model that abstained everywhere would pass every claim above vacuously.
 
-    The grid check is the pre-registered guard against a boundary optimum being
-    reported as a result — ``vsa_full_gated-002`` made exactly that mistake once,
-    fitting to the top of a grid that stopped too early and coming out
-    bit-identical to the model it was meant to distinguish itself from.
+    **The grid check below is NOT a guard against a boundary optimum**, whatever
+    an earlier version of this docstring said. ``_fit_scalars`` searches
+    ``knob_grid`` and assigns from it, so ``model._knob in model.knob_grid`` is
+    true by construction and can never fail — including when the fit pins to an
+    endpoint, which is the case it was believed to catch. An independent refuter
+    found all four registered heat-kernel rows fitted ``knob = 0.5``, the bottom
+    of ``(0.5, 1, 2, 4)``, with this assertion passing the whole time; extended,
+    the fit lands interior at 0.25 and the row gains +0.053 of label lift
+    (``vsa_hks_wide-004``, ``notes/findings/2026-08-14-the-graph-roles-survive-
+    the-attack-and-their-bandwidth-does-not.md``).
+
+    The assertion is kept because it does catch a knob assigned from *outside*
+    the grid, which is a different and real bug. The boundary check that would
+    have caught the real defect is "extend the grid past the optimum and refit",
+    and it cannot live in a unit test on three lessons — it is a registered row
+    and a sweep. ``vsa_hks_wide-004`` and ``vsa_spec_wide_pure-004`` are those
+    rows for this module.
     """
     train, evaluation, tok = fixtures
     model = fit(name, fixtures, cfg)

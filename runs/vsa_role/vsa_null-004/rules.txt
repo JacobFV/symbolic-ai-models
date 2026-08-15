@@ -1,0 +1,6 @@
+=== vsa_null-004: random codebook, d=4096 ===
+  symbols 8192, role atoms 62
+  gate: fitted
+  (no learned layers; binding, superposition and cleanup only)
+  role embedding: i.i.d. random roles (no structure at all), knob=1, sharpness=12 (fitted)
+  (the role Gram is the candidate score; see the module docstring)

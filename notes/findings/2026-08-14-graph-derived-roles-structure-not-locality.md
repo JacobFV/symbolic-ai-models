@@ -3,8 +3,22 @@ date: 2026-08-14
 author: agent-spectral-roles
 status: provisional
 related: [spectral-roles-preregistration, the-harness-moves-more-than-the-models,
-          slices-have-inverted-results-eight-times, a-ranking-is-a-property-of-a-metric]
+          slices-have-inverted-results-eight-times, a-ranking-is-a-property-of-a-metric,
+          the-graph-roles-survive-the-attack-and-their-bandwidth-does-not]
 ---
+
+> **Independently attacked, 2026-08-14. Every conclusion below survives; several
+> of its numbers do not.** See
+> `notes/findings/2026-08-14-the-graph-roles-survive-the-attack-and-their-bandwidth-does-not.md`.
+> In short: **do not quote any `vsa_hks*` number from this note.** The signature's
+> bandwidth was fitted at the bottom of its grid; extended, it lands interior at
+> 0.25 and `vsa_hks_pure-004`'s **+0.107 becomes +0.160** (`vsa_hks_wide_pure-004`),
+> which strengthens §3 and refutes §4's "worth less than half of a positional
+> channel". Also corrected there: "gradedness contributes nothing on its own"
+> (it is worth 18% of the embedding, against the new `vsa_null_pure-004` bottom
+> row), the multiset property is *not* what the test asserts, §3's slice
+> mechanism numbers do not hold at 179 lessons, and `t = 16` is an interior
+> optimum rather than a mis-specified grid. §5 survives untouched.
 
 # Roles derived from the graph: structure works, locality is worse than nothing, and neither reaches permutation
 
