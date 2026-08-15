@@ -1,0 +1,27 @@
+=== label ===
+  baseline: 922 context defaults
+  1. IF depth=3 THEN label := prev_sibling   [+2598 -958]
+  2. IF arity=3 THEN label := prev_sibling   [+45 -5]
+  3. IF parent_head=5740 THEN label := peer   [+9 -5]
+=== type ===
+  baseline: 7 context defaults
+  1. IF has_peer=False THEN label := prev_sibling   [+5686 -926]
+  2. IF parent_type='pred' THEN label := peer   [+137 -10]
+  3. IF parent_head=5745 THEN label := parent   [+82 -31]
+  4. IF parent_head=5828 THEN label := parent   [+65 -26]
+  5. IF parent_head=5787 THEN label := parent   [+33 -21]
+  6. IF arity=0 THEN label := peer   [+39 -28]
+  7. IF parent_head=6267 THEN label := parent   [+9 -0]
+  8. IF parent_head=5861 THEN label := parent   [+37 -29]
+  9. IF parent_head=6733 THEN label := parent   [+6 -0]
+  10. IF parent_head=6849 THEN label := parent   [+5 -0]
+  11. IF parent_head=6939 THEN label := parent   [+5 -0]
+  12. IF parent_head=7008 THEN label := parent   [+5 -0]
+  13. IF parent_head=1 THEN label := prev_sibling   [+4 -0]
+  14. IF parent_head=3600 THEN label := parent   [+16 -12]
+  15. IF parent_head=7012 THEN label := parent   [+4 -0]
+  16. IF parent_head=6766 THEN label := parent   [+4 -0]
+  17. IF parent_head=6362 THEN label := parent   [+3 -0]
+  18. IF parent_head=6878 THEN label := parent   [+3 -0]
+  19. IF parent_head=6904 THEN label := parent   [+3 -0]
+  20. IF parent_head=6759 THEN label := parent   [+3 -0]
