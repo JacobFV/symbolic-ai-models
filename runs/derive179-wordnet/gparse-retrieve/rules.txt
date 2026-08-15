@@ -1,0 +1,16 @@
+gparse-retrieve: parser=retrieve-001 boundary contexts=1 fired=1.000 answer in parse=0.902 confidence by margin=[0.434, 0.415, 0.468, 0.607, 0.168]
+  ('pl', 'smaller', 1) +5.84
+  ('path', 'ex', 'arm arm') +5.25
+  ('path', 'ex', 'buffer buffer') +5.25
+  ('pl', 'arm bay arm', 1) +5.25
+  ('pl.m', 'arm arm', 3) +5.25
+  ('pl.m', 'buffer buffer', 3) +5.25
+  ('pl', 'abdomen arm', 1) +4.74
+  ('pl', 'abdomen arm abdomen', 1) +4.74
+  ('pl', 'abdomen bay', 1) +4.74
+  ('pl', 'abdomen bay abdomen', 1) +4.74
+  ('pl', 'abdomen buffer', 1) +4.74
+  ('pl', 'abdomen buffer abdomen', 1) +4.74
+  ('pl', 'abdomen lace abdomen', 1) +4.74
+  ('pl', 'annex bay', 1) +4.74
+  ('pl', 'annex buffer', 1) +4.74

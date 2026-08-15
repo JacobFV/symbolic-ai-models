@@ -1,0 +1,33 @@
+=== label ===
+DecisionList(6 rules, 23 params)
+  IF sibling_type(=0,=pred) ∧ slot(>0) ∧ ¬parent_type(=pred) THEN ('prev',)  [16249/18138]
+  IF parent_type(=pred) ∧ has_peer() ∧ slot(>0) THEN ('peer',)  [7617/12136]
+  IF sibling_type(=0,=pred) ∧ depth(=3) ∧ ¬parent_type(=pred) THEN ('sibling', 0)  [2952/3108]
+  IF depth(=1) THEN ('const', 5735)  [2158/2214]
+  IF sibling_type(>0,=pred) ∧ slot(>0) ∧ ¬slot(=1) THEN ('prev',)  [2102/2420]
+  IF sibling_type(=1,=pred) ∧ ¬sibling_type(=0,_) ∧ ¬depth(=4) THEN ('sibling', 1)  [819/894]
+  ELSE ('peer',)
+=== type ===
+DecisionList(17 rules, 53 params)
+  IF sibling_type(_,=pred) ∧ ¬parent_type(=pred) ∧ ¬depth(=4) THEN 12  [27272/27430]
+  IF arity(=0) ∧ ¬parent_type(=str) ∧ ¬sibling_type(_,=char) THEN 6  [50351/72411]
+  IF sibling_type(_,=field) THEN 15  [8183/8183]
+  IF depth(=2) ∧ ¬parent_head(=5735) ∧ ¬arity(=1) THEN 9  [4695/5160]
+  IF arity(=0) THEN 16  [2388/2388]
+  IF depth(=0) THEN 10  [2136/2136]
+  IF sibling_type(_,=pred) ∧ ¬arity(=3) ∧ ¬arity(=5) THEN 12  [1733/1765]
+  IF arity(=2) ∧ ¬sibling_type(>0,_) ∧ ¬depth(=4) THEN 12  [1343/1440]
+  IF parent_head(=5735) THEN 12  [715/715]
+  IF ¬arity(=1) ∧ ¬sibling_type(_,=record) ∧ ¬sibling_type(_,=str) THEN 9  [2551/3813]
+  IF sibling_type(_,=str) THEN 4  [342/342]
+  IF sibling_type(>0,_) ∧ arity(=1) THEN 9  [451/525]
+  IF n_siblings(=0) ∧ ¬parent_type(=field) ∧ ¬parent_type(=record) THEN 12  [363/414]
+  IF parent_type(=pred) ∧ slot(=1) ∧ ¬n_siblings(=2) THEN 12  [425/661]
+  IF depth(=1) THEN 15  [151/151]
+  IF sibling_type(_,=record) THEN 10  [92/92]
+  IF parent_type(=list) ∧ ¬sibling_type(_,=list) THEN 12  [99/100]
+  ELSE 9
+=== text ===
+DecisionList(1 rules, 4 params)
+  IF back1(=264) ∧ ¬back3(=263) THEN ('const', 263)  [9713/10002]
+  ELSE ('const', 265)

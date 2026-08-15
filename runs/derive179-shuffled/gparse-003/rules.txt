@@ -1,0 +1,16 @@
+gparse-003: parser=template-002 boundary contexts=1 fired=1.000 answer in parse=0.662 confidence by margin=[0.319, 0.132, 0.021, 0.834, 0.07]
+  ('pl', 'air', 5) +5.40
+  ('path', '', 'garden') +4.89
+  ('path', 'query', 'kitchen') +4.89
+  ('pl', 'cart', 5) +4.89
+  ('pl', 'floor', 5) +4.89
+  ('pl', 'kitchen', 0) +4.89
+  ('pl', 'klr', 0) +4.89
+  ('pl', 'kns', 0) +4.89
+  ('pl', 'lsnp', 0) +4.89
+  ('pl', 'naz', 1) +4.89
+  ('pl', 'nkp', 2) +4.89
+  ('pl', 'ppkr', 2) +4.89
+  ('pl', 'ppp', 2) +4.89
+  ('pl', 'rpz', 0) +4.89
+  ('pl', 'trkt', 0) +4.89

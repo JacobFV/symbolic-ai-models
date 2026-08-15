@@ -1,0 +1,1 @@
+gparse-none: parser=none boundary contexts=1 fired=0.000 answer in parse=0.000 confidence by margin=[0.0, 0.0, 0.0, 0.0, 0.0]

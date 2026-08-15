@@ -1,0 +1,16 @@
+gparse-oracle: parser=oracle boundary contexts=1 fired=1.000 answer in parse=0.902 confidence by margin=[0.418, 0.387, 0.286, 0.246, 0.266]
+  ('pl', 'smaller', 1) +5.67
+  ('path', 'demonstrations', 'arm arm') +5.08
+  ('path', 'demonstrations', 'buffer buffer') +5.08
+  ('pl', 'arm bay arm', 1) +5.08
+  ('pl.m', 'arm arm', 3) +5.08
+  ('pl.m', 'buffer buffer', 3) +5.08
+  ('pl', 'abdomen arm', 1) +4.57
+  ('pl', 'abdomen arm abdomen', 1) +4.57
+  ('pl', 'abdomen bay', 1) +4.57
+  ('pl', 'abdomen bay abdomen', 1) +4.57
+  ('pl', 'abdomen buffer', 1) +4.57
+  ('pl', 'abdomen buffer abdomen', 1) +4.57
+  ('pl', 'abdomen lace abdomen', 1) +4.57
+  ('pl', 'annex bay', 1) +4.57
+  ('pl', 'annex buffer', 1) +4.57

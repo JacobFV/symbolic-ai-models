@@ -1,0 +1,16 @@
+gparse-retrieve: parser=retrieve-001 boundary contexts=1 fired=1.000 answer in parse=0.902 confidence by margin=[0.434, 0.415, 0.468, 0.607, 0.168]
+  ('pl', 'smaller', 1) +5.84
+  ('path', 'ex', 'bedframe bedframe') +5.25
+  ('path', 'ex', 'bight bight') +5.25
+  ('pl', 'bight air bight', 1) +5.25
+  ('pl.m', 'bedframe bedframe', 3) +5.25
+  ('pl.m', 'bight bight', 3) +5.25
+  ('pl', 'aileron air', 1) +4.74
+  ('pl', 'aileron bedframe', 1) +4.74
+  ('pl', 'aileron bedframe aileron', 1) +4.74
+  ('pl', 'aileron calcaneus', 1) +4.74
+  ('pl', 'bedframe aileron bedframe', 0) +4.74
+  ('pl', 'bedframe aileron bedframe', 2) +4.74
+  ('pl', 'bedframe air bedframe', 1) +4.74
+  ('pl', 'bedframe bedframe', 0) +4.74
+  ('pl', 'bedframe bedframe', 1) +4.74

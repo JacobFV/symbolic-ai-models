@@ -1,0 +1,16 @@
+=== ensemble-pointers: ptrgen-001 x corefer-001 ===
+  weight w = 0.90 on ptrgen-001, 0.10 on corefer-001
+  --- ptrgen-001 ---
+    === ptrgen-001: 317 pointer features, 6000 questions ===
+    gate: fitted
+      score -> mass: 0.08->0.44, 0.20->0.55, 0.26->0.62, 0.33->0.68, 0.41->0.74, 0.52->0.75, 0.76->0.77, 0.99->0.95
+    top pointer features:
+      ('query_rel', (('pred', 3), 'other'))        -10.135
+      ('query_rel', (('ROOT', 3), 'other'))        -9.988
+  --- corefer-001 ---
+    prior log-odds -2.235
+    top evidence:
+      ('query_rel', (('list', 6), 'other'))    -5.947
+      ('query_dist', (('list', 0), 6))         -5.766
+      ('query_rel', (('list', 6), 'same_depth')) -5.393
+      ('query_rel', (('record', 1), 'other'))  -5.168
