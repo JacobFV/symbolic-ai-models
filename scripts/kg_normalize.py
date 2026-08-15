@@ -181,7 +181,14 @@ def normalise(source: str, files: list[Path], kmap: dict[str, str],
     tsv = out_path.name.endswith(".tsv.gz")
     with gzip.open(out_path, "wt", encoding="utf-8") as out:
         if tsv:
-            out.write("s\tp\to\tsrc\torig_kind\n")
+            # `val` carries the one payload column the (s, p, o) shape drops.
+            # Two sources have one and both were being discarded silently:
+            # `govspend` has `value` (a complaint COUNT -- 3,450 against one
+            # company, which makes the row an aggregate rather than an event and
+            # is why rejecting govspend as a "dated occurrence" was wrong), and
+            # `graph` has `weight`, so every edge weight in the repo's own graph
+            # was going in the bin. Empty when the source has neither.
+            out.write("s\tp\to\tsrc\torig_kind\tval\n")
         for path in files:
             for r in rows_of(path, cap):
                 s_raw = r.get("source_id") or r.get("sourceId")
@@ -200,11 +207,15 @@ def normalise(source: str, files: list[Path], kmap: dict[str, str],
                     unmapped[k_raw] += 1
                     rejected["kind:unmapped"] += 1
                     continue
+                v = r.get("value")
+                if v is None:
+                    v = r.get("weight")
+                v = "" if v is None else str(v).replace("\t", " ")
                 if tsv:
-                    out.write(f"{s}\t{canon}\t{t}\t{source}\t{k_raw}\n")
+                    out.write(f"{s}\t{canon}\t{t}\t{source}\t{k_raw}\t{v}\n")
                 else:
-                    out.write(json.dumps({"s": s, "p": canon, "o": t,
-                                          "src": source, "orig_kind": k_raw}) + "\n")
+                    out.write(json.dumps({"s": s, "p": canon, "o": t, "src": source,
+                                          "orig_kind": k_raw, "val": v}) + "\n")
                 kept += 1
                 canonical[canon] += 1
 

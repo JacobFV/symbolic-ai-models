@@ -41,15 +41,79 @@
         "in-field"
       ]
     },
+    "disclosure": {
+      "note": "What a filer discloses. A standing fact, not an occurrence.",
+      "reports-metric": [
+        "reports-metric"
+      ]
+    },
     "eventive": {
-      "precondition-of": [
-        "/r/HasPrerequisite",
-        "/r/Entails"
+      "acted-on": [
+        "01",
+        "02",
+        "03",
+        "04",
+        "05",
+        "06",
+        "07",
+        "08",
+        "09",
+        "10",
+        "11",
+        "12",
+        "13",
+        "14",
+        "15",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20"
       ],
-      "subevent-of": [
-        "/r/HasSubevent",
-        "/r/HasFirstSubevent",
-        "/r/HasLastSubevent"
+      "awarded": [
+        "awarded"
+      ],
+      "complaint-about": [
+        "complaint-about-issue",
+        "complaint-about-product"
+      ],
+      "contributed": [
+        "contributed"
+      ],
+      "gh-event": [
+        "commitcommentevent",
+        "createevent",
+        "deleteevent",
+        "discussionevent",
+        "forkevent",
+        "gollumevent",
+        "issuecommentevent",
+        "issuesevent",
+        "memberevent",
+        "publicevent",
+        "pullrequestevent",
+        "pullrequestreviewcommentevent",
+        "pullrequestreviewevent",
+        "pushevent",
+        "releaseevent",
+        "watchevent"
+      ],
+      "hired": [
+        "hired"
+      ],
+      "lobbied": [
+        "lobbied"
+      ],
+      "note": "Relations whose instances are HAPPENINGS rather than standing facts. v3 rejected these outright and that was wrong: it threw away 48M rows because the schema had one table, which is a schema limitation dressed as a principle. They are ingested and tagged instead. The distinction is real and belongs in CLOSURE -- no transitive or inverse rule may traverse an eventive relation -- not in ingestion. Consumers filter on this group; nothing is discarded to protect them.",
+      "traded": [
+        "bought",
+        "sold",
+        "gifted",
+        "exercised-derivative",
+        "converted",
+        "acquired-by-will",
+        "opened",
+        "closed"
       ]
     },
     "identity": {
@@ -428,18 +492,17 @@
     "/r/RelatedTo": "989,268 rows. ConceptNet's catch-all; asserts only co-occurrence.",
     "about": "363,511. Topicality, not a constraint.",
     "asserted-by/claim-subject/claim-object": "475,162. Reification of the claim table itself.",
-    "dated_occurrences": "GDELT's CAMEO codes (numeric `01`-`20` and their named glosses -- the same vocabulary in two notations, 39.2M rows), gharchive's 16 `*event` kinds (7.7M), govspend's `contributed` / `lobbied` / `awarded` / `hired` / `complaint-about-*` (~1M) and finance's `bought` / `sold` / `gifted` / `exercised-*` / `granted-shares` / `txn-*` (~4M). A dated occurrence between two actors is not a property of either. It does not join across sources -- a GDELT `fight` between two actor strings on a date is not the same fact as anything in Wikidata, which is what `purpose` says the vocabulary is for -- and it is neither an anchor nor a determiner, so admitting ~52M of them would inflate every degree statistic and move the usable population by zero. The *type* edges inside those sources are mapped (`actor`, `org` -> `instance-of`), so the sources still contribute anchorable entities. Counted, never silently dropped.",
     "derived-from": "613,319. Provenance metadata, not a fact about the world.",
     "described-at": "705,821. A URL, not a relation.",
     "in-reporter": "35,000. Bibliographic.",
     "note": "Deliberately NOT mapped, and counted as rejections rather than silently dropped. Each is high-volume and low-information: admitting them would add millions of edges that constrain nothing, inflate every degree statistic, and make the graph look richer than it is. This is the same judgement that kept a CSKG-only curriculum arm unregistered.",
     "related-to": "464,460 sampled in `qa`. Same defect as `relates-to`, which v2 already rejects under the other spelling; listed here so the rejection is a decision rather than a string that happened not to be in the table.",
-    "relates-to": "524,474. Same defect, different corpus.",
-    "reports-metric": "619,672 rows in `sec_fin`. A reporting event linking a filer to an XBRL tag, not a property of the filer."
+    "relates-to": "524,474. Same defect, different corpus."
   },
   "revised": "2026-08-15",
+  "revised_v4": "2026-08-15",
   "revision_note": "v3. Three changes, in decreasing order of how much they matter.\n(1) DIRECTION IS PART OF THE RELATION. v2's `part-of` pooled `BFO:0000050` (part of) with `BFO:0000051` (has part) and `contains` -- inverses on one canonical. Measured on `graph` alone that is 95,844 `part-of` rows against 52,871 `contains` rows, and a transitive closure over the pooled relation derives facts that are false. v2 kept the direction for kinship (`parent-of` / `child-of`) and destroyed it for meronymy; v3 splits out `has-part` and adds the inverses `preceded-by`, `owns`/`owned-by`, `has-capital`/`capital-of`.\n(2) A CANONICAL RELATION IS A PROPERTY OF AN ENTITY OR AN ORDERED PAIR. Wikidata's own vocabulary was 31.5% unmapped in v2 (sampled) -- including `subclass-of`, which is is-a. Those are mapped. Dated occurrences are not: see `rejected_relations.dated_occurrences`.\n(3) The property block is untouched apart from two ConceptNet relations with double-digit row counts, so `kg_derivable`'s determined-attribute definition is identical across v2 and v3 and the two measurements are comparable. Whether `has-part` should itself count as a determined attribute is a real question and it is asked separately, because changing the mapping and the definition in one step would make the result unattributable.",
-  "schema_version": 3,
+  "schema_version": 4,
   "scope": {
     "priority_order": [
       "cskg + graph -- the property and taxonomy relations, which are what derivability needs",
