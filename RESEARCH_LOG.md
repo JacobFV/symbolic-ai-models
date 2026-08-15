@@ -31,7 +31,11 @@ exist as a control and are off by default.
 
 ## Read this before any number below it: `label_acc` is 72% a copy score
 
-**Status: under independent challenge as of 2026-08-15.** It is a *decomposition*
+**Status: challenged and survived, 2026-08-15 — with one of its three readings
+refuted and corrected in place below.** An agent that did not write it re-ran the
+whole arm from scratch (the published weights are untracked) and reproduced all
+twelve summaries **bit-identically** in `final`, `floors` and `renaming`. It is a
+*decomposition*
 of the published numbers rather than a new measurement — `0.72 x copyable +
 0.28 x not` reproduces every row in this file **including the floor**, verified
 independently (corefer 0.3565 vs 0.357, grammar 0.1874 vs 0.187, floor 0.1434 vs
@@ -55,10 +59,35 @@ visible node of the same graph already carry the answer's label?**
 | `ngram-001` | 0.175 | 0.154 | 0.170 | 0.143 |
 | **floor** (content-blind lookup) | *0.158* | *0.106* | *0.143* | — |
 
-**Every renaming-invariant model is *below* the content-blind floor on the
-quarter it cannot copy, and every vocabulary model is above it.** Sort the table
-by renaming drop and the gap sorts with it: the nine rows dropping ≤0.027 land at
-0.000–0.081 against a 0.106 floor; the three dropping ≥0.088 land at 0.090–0.178.
+**Correction, within the day, by the refuter: the "below the floor" reading is
+wrong and I published it here before it was checked.** It is true that every
+renaming-invariant model scores 0.000–0.081 on the non-copyable quarter against a
+0.106 lookup floor. It is not a valid comparison. **That floor is a memorising
+lookup, and the bucket boundary is exactly the line a renaming-invariant model
+cannot cross by construction** — naming a symbol no visible node carries requires
+remembering the vocabulary, which is the one thing these models are built not to
+do.
+
+Read against a **renaming-invariant pointer floor**, which is in the same
+hypothesis class, the sign changes:
+
+| floor | copyable | not copyable | pooled |
+|---|---:|---:|---:|
+| lookup (`split_floor`) — memorises | 0.1581 | **0.1058** | 0.1432 |
+| pointer (`split_copy_floor`) — equivariant | 0.3345 | **0.0000** | 0.2394 |
+| **oracle** pointer | 1.0000 | **0.0000** | 0.7216 |
+
+A pointer scores **exactly zero** on the non-copyable bucket *even with an
+oracle*, because there is nothing to point at. So `corefer-001`'s 0.0034 there is
+not "below a floor" — it is marginally above the only floor its own hypothesis
+class admits, and the ceiling for any pointer on that quarter is zero. Against
+the pointer floor on the copyable bucket it is **+0.159**, genuinely above.
+
+The finding that survives is therefore sharper and less damning: **these models
+are pointers, and a pointer cannot generate a symbol that is not already
+present.** That is a statement about the hypothesis class, not a failure to reach
+a baseline. The lesson is
+`notes/lessons/2026-08-15-a-floor-outside-the-models-hypothesis-class.md`.
 
 **The published ranking inverts on the sub-population.** `corefer-001` is first
 of twelve pooled and **eleventh** where nothing can be copied; `grammar-001` is
