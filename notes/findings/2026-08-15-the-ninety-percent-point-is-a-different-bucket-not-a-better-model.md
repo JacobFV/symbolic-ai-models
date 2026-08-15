@@ -147,6 +147,28 @@ concentration bands, mix explaining 77% of its +0.107, and a standardised
 shortfall of **−0.120** where `corefer-001`'s is −0.099. Two models, same signs,
 same places.
 
+**And `routes-001`, whose pooled `acc | copyable` *fell*, shows what the mix was
+hiding.** It is the third case and the clearest:
+
+| `routes-001` | m=2 | m=3-4 | m=5-9 | m=10+ | v/V 0.05-0.1 | v/V 0.1-0.2 | v/V 0.2-0.4 | v/V 0.4-1 |
+|---|---|---|---|---|---|---|---|---|
+| 0.15 | 0.176 | 0.425 | 0.436 | 0.669 | 0.463 | 0.624 | 0.758 | 0.954 |
+| 0.90 | 0.298 | 0.414 | **0.327** | **0.501** | **0.227** | **0.367** | **0.501** | **0.774** |
+
+Its two largest multiplicity strata fall by **0.109 and 0.168**, and the pooled
+conditional falls by only 0.033 — the mix carried it most of the way back up. The
+pooled number *understates* the degradation by a factor of four here, which is
+the same mechanism that made `corefer`'s look like an improvement.
+
+Standardised shortfalls over the concentration mix, all three negative and in the
+same order as `copy_lift` at 0.90:
+
+| model | v/V-standardised `acc \| copyable` | observed | shortfall | `copy_lift` at 0.90 |
+|---|---:|---:|---:|---:|
+| `corefer-001` | 0.696 | 0.597 | **−0.099** | −0.149 |
+| `ptrgen-001` | 0.688 | 0.569 | **−0.120** | −0.153 |
+| `routes-001` | 0.657 | 0.415 | **−0.242** | −0.219 |
+
 **The two supply models bracket the truth, and they miss by the same amount in
 opposite directions.** Carrying the 0.15 numbers forward to predict `label_acc`
 at 0.90:
@@ -265,7 +287,9 @@ zero and the ladder's conclusion needs no bound at all.
 
 ## Provisional, and what it is not
 
-The stratifications (m, v/V, node type) are `corefer-001` and `ptrgen-001`. The conditional
+The stratifications (m, v/V, node type) are `corefer-001`, `ptrgen-001` and
+`routes-001` — one that rose a lot, one that rose a lot, one that fell, and all
+three negative once concentration is held. The conditional
 split is six models, the `copy_lift` table is all six pointer-bearing models on
 the full published sweep, and the twelve-model split of the 0.90 arm was still
 fitting `ctw-001` when this was written.
