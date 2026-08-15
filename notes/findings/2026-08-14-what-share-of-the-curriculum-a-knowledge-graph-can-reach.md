@@ -18,27 +18,44 @@ before anyone interprets a number. This is that measurement. It was taken twice:
 once as a property of the curriculum with no graph in the room, and once as what
 the graph actually vendored here does to it.
 
-**Full 179 lessons in both passes.** Training seeds only (0-7 for the static
-pass, 0-3 for the binder pass). No slice.
+**Full 179 lessons in both passes.** The static pass uses training seeds 0-7;
+the binder pass uses eight training seeds and four eval seeds, 2,148 episodes per
+arm. No slice.
+
+Everything below the first table is reproduced by
+`uv run python scripts/kg_coverage.py`, so a reader can disagree with the code
+rather than with a paragraph.
 
 ## The headline
 
 | | strict | wide | actually reached |
 |---|---:|---:|---:|
-| lessons with a graph-addressable word anywhere | 55 (30.7%) | **121 (67.6%)** | **54 (30.2%)** |
+| lessons with a graph-addressable word anywhere | 55 (30.7%) | **121 (67.6%)** | **56 (31.3%)** |
 | lessons whose *answer* is such a word | 16 (8.9%) | 27 (15.1%) | — |
-| share of graph nodes carrying such a word | 4.19% | **10.00%** | **5.30%** |
+| share of graph nodes carrying such a word | 4.19% | **10.00%** | **5.21%** |
 | macro mean over lessons of answer share | 6.70% | 12.15% | — |
 
 Read the last column first, because it is the one a sweep is going to be
-divided by. **The vendored graph changes 54 of 179 lessons and 5.3% of all graph
-node labels** (2,640 of 49,843 over 716 episodes). Everything else in every
-episode is what it always was.
+divided by. **The vendored graph changes 56 of 179 lessons and 5.21% of all
+graph node labels** (7,745 of 148,612 over 2,148 episodes). The scrambled control
+changes 55 lessons and 5.22% of labels — the same manipulation, differently
+wired, which is what a control has to be. Everything else in every episode is
+what it always was.
 
 So an effect confined to what the graph touches arrives at the 179-lesson macro
 average multiplied by roughly **0.05 on the node task**. A lift of 0.10 where the
 graph reaches is a lift of 0.005 in the table. That is the number to hold in
 mind before reading any of the three arms, and it was measured before they ran.
+
+**The 5.21% is a share of *labels*, not of information.** Two further deflations
+sit on top of it and are worth stating because neither is visible in that
+number. The nodes the graph reaches are `ident` nodes carrying content words,
+and `ident` is 42% of all nodes — so the graph reaches about an eighth of the
+nodes it could in principle. And `label_coverage` — the share of masked labels
+the 8,192-token vocabulary can name at all — falls from 0.825 to 0.78 for
+`ngram-001` between `base` and `kg:wordnet`, because a 13,810-word lexicon does
+not fit where a 2,105-symbol one did. A part of any measured drop is that, and
+it is not semantics.
 
 ## What the two passes mean and why they differ
 
@@ -192,13 +209,19 @@ things — 157 such families on this graph), and then:
   the verbs whose WordNet frames admit a subject of that animacy — **bound**;
 * each scene object's second attribute is drawn from the subset of the episode's
   attribute vocabulary that the graph licenses **for that object's own kind** —
-  its parts and its substances. 170 of 320 scene objects (53.1%) got a
+  its parts and its substances. 514 of 986 scene objects (52.1%) got a
   kind-constrained attribute; the rest fell back because the graph had nothing
   to say about that kind.
 
-Fallback rates over 179 lessons x 4 seeds, per slot: `name` 95/95 (excluded, see
-above), `material` 8/8 and `substance` 8/8 (WordNet's substance meronymy is 156
-edges and simply too sparse), everything else **0**.
+Fallback rates over 179 lessons x 12 seeds, per slot: `name` 288/288 (excluded,
+see above), `material` 25/25 and `substance` 22/24 (WordNet's substance meronymy
+is 156 edges and simply too sparse to fill a six-word slot), `thing` 1/49, and
+every other slot — `shape` 291, `color` 412, `size` 86, `property` 50, `place`
+37, `surface` 36, `act` 27, `kind` 25, `transitive` 24 — **0**.
+
+The two 100% rows are the honest cost of a small graph. Nothing in this
+curriculum's `material` slot is bound by WordNet; those episodes are the
+baseline's words with the rest of the episode rebound around them.
 
 ### The failure this coverage pass caught, which a score would not have
 
