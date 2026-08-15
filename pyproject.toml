@@ -15,6 +15,7 @@ dependencies = [
 symbolic-ai-models = "symbolic_ai_models.cli:main"
 symbolic-ai-agents = "symbolic_ai_agents.cli:main"
 symbolic-ai-parsers = "symbolic_ai_parsers.cli:main"
+symbolic-ai-lean = "symbolic_ai_lean.cli:main"
 
 [build-system]
 requires = ["hatchling"]

@@ -1,0 +1,73 @@
+{
+  "modes": [
+    "open",
+    "declared",
+    "closed",
+    "arity",
+    "hybrid",
+    "shifted"
+  ],
+  "n_episodes": 537,
+  "n_holes": 4443,
+  "n_copyable": 3192,
+  "seed0": 500,
+  "n": 3,
+  "mask_rate": 0.15,
+  "max_nodes": 128,
+  "mask_seed": 0,
+  "lessons": "all",
+  "seconds": 2.1996573440000002,
+  "checks": 640662,
+  "rows": {
+    "open": {
+      "median_prune": 0.2857142857142857,
+      "mean_prune": 0.37034907044097604,
+      "median_prune_label": 0.19999999999999996,
+      "gold_survival": 0.9877819548872181,
+      "matched_random": 0.6341158446201152
+    },
+    "declared": {
+      "median_prune": 0.3548387096774194,
+      "mean_prune": 0.43463800806147657,
+      "median_prune_label": 0.35,
+      "gold_survival": 0.9843358395989975,
+      "matched_random": 0.48553344589747394
+    },
+    "closed": {
+      "median_prune": 0.796875,
+      "mean_prune": 0.7062596837229281,
+      "median_prune_label": 0.8571428571428572,
+      "gold_survival": 0.7966791979949874,
+      "matched_random": 0.25579707318004696
+    },
+    "arity": {
+      "median_prune": 0.37037037037037035,
+      "mean_prune": 0.47098106199994394,
+      "median_prune_label": 0.36363636363636365,
+      "gold_survival": 0.9884085213032582,
+      "matched_random": 0.5055855772324495
+    },
+    "hybrid": {
+      "median_prune": 0.3877551020408163,
+      "mean_prune": 0.4960827724841751,
+      "median_prune_label": 0.4,
+      "gold_survival": 0.981203007518797,
+      "matched_random": 0.47794251467778137
+    },
+    "shifted": {
+      "median_prune": 0.2857142857142857,
+      "mean_prune": 0.3725600150190663,
+      "median_prune_label": 0.19999999999999996,
+      "gold_survival": 0.5783208020050126,
+      "matched_random": 0.6630161968795564
+    }
+  },
+  "coverage": {
+    "symbols": 9743,
+    "demoted": 219,
+    "nodes": 32381,
+    "untyped": 42,
+    "undeclared_candidates": 17351,
+    "candidate_checks": 106777
+  }
+}

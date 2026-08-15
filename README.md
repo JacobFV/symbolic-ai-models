@@ -480,6 +480,12 @@ symbolic-ai-models/
     train.py trace.py     #   rollouts; trajectories, for reading, not a metric
   symbolic_ai_atomspace/  # 005: the IR as a knob -- match and rewrite over atoms
   symbolic_ai_lean/       # 006: the IR as a knob -- a kernel that can *refuse*
+    expr.py kernel.py     #   native, total, fuel-bounded; Lean 4's Expr, subset
+    translate.py          #   Graph <-> Expr, the identity on all 179 lessons
+    elaborate.py gate.py  #   `symbolic-ai-lean gate`: the pre-registered gate,
+    emit.py               #   which CLOSED -- the kernel prunes 0.355 of the
+                          #   candidates at 0.984 gold survival and an arity
+                          #   count prunes 0.370 at 0.988. No model registered.
                           #   both: Graph is the one shared thing never varied.
                           #   notes/decisions/2026-08-14-the-ir-is-a-knob.md
   notes/                  # the lab notebook; one file per note (worktrees merge)
