@@ -1,0 +1,25 @@
+=== label ===
+DecisionList(2 rules, 6 params)
+  IF ¬parent_head(_) THEN ('prev',)  [272/272]
+  IF parent_head(=1) ∧ ¬sibling_type(_,=num) THEN ('const', 387)  [196/300]
+  ELSE ('const', 278)
+=== type ===
+DecisionList(13 rules, 37 params)
+  IF parent_type(=pred) ∧ arity(=0) ∧ depth(=4) THEN 6  [16324/16888]
+  IF sibling_type(_,=ident) ∧ ¬depth(=6) THEN 6  [988/1008]
+  IF depth(=3) ∧ arity(=0) ∧ ¬sibling_type(_,=num) THEN 3  [1980/2268]
+  IF arity(=0) ∧ ¬sibling_type(_,_) ∧ ¬n_siblings(=2) THEN 6  [796/964]
+  IF parent_type(=str) THEN 16  [264/264]
+  IF depth(=4) ∧ ¬has_peer() THEN 16  [240/240]
+  IF arity(=2) THEN 12  [192/192]
+  IF sibling_type(_,=list) THEN 6  [188/188]
+  IF arity(=0) ∧ ¬sibling_type(_,=token) ∧ ¬sibling_type(_,=str) THEN 5  [252/288]
+  IF ¬has_peer() THEN 9  [160/160]
+  IF depth(=1) THEN 15  [160/160]
+  IF arity(>0) THEN 4  [160/160]
+  IF depth(=6) THEN 6  [12/12]
+  ELSE 3
+=== text ===
+DecisionList(1 rules, 4 params)
+  IF back1(=264) ∧ ¬back3(=263) THEN ('const', 263)  [9668/9972]
+  ELSE ('const', 265)

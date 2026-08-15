@@ -1,0 +1,45 @@
+=== 31 induced classes (text) ===
+  { ',', ' and', ';', ' outranks', ' follows', ' mirrors', ' parent', ' the', ' a', ' an' ... (+258) }
+  { ' kes', ' zun', ' quen', ' tav', ' dov', ' reth', ' mor', ' pil', ' sam', ' lorn' }
+  { '<0x37>', '<0x39>', '<0x31>', '<0x33>', '<0x30>', '<0x32>', '<0x36>', '<0x38>' }
+  { ' hollow', ' heavy', ' fibrous', ' porous', ' warm', ' rigid', ' striped', ' glossy' }
+  { ' zolt', ' kirn', ' bex', ' sogi', ' tavu', ' muva', ' nelo', ' wibra' }
+  { ' kesh', ' ryn', ' idris', ' tamm', ' orin', ' dola', ' ferro', ' vela' }
+  { ' bob', ' alice', ' carol', ' dave', ' erin', ' frank' }
+  { ' oslo', ' cairo', ' osaka', ' denver', ' paris', ' lisbon' }
+  { ' sp', ' rm', ' pt', ' sk', ' mt', ' nt' }
+  { ' fungus', ' fish', ' mammal', ' bird', ' robot' }
+  { ' zenith', ' orbis', ' acme', ' vertex', ' helix' }
+  { 'c', 'b', 'a', 'd' }
+  { '-', 'e', 'mod' }
+  { ' subgoal', ' entity', ' property' }
+  { ' power', ' predict', ' rank' }
+  { ' tool', ' plant', ' vehicle' }
+  { ' scale', ' translate', ' permute' }
+  { ' most', ' least', ' position' }
+  { ' thesis', ' teach' }
+  { ' end', ' start' }
+=== 24 promoted patterns ===
+  N2 -> C331 C331
+  N3 -> N2 N2
+  N4 -> '\n  ' C263
+  N5 -> N2 C331
+  N6 -> N3 N3
+  N7 -> C331 '\n'
+  N8 -> N2 N4
+  N9 -> C331 N4
+  N10 -> ' exactly' ' one'
+  N11 -> ' with' C331
+  N12 -> '?' '\n\n'
+  N13 -> N12 'Answer'
+=== 32 induced classes (graph) ===
+  { '2', '3', '4', '1', '0', '5', '6', '7', '8', '9' }
+  { 'blue', 'yellow', 'green', 'orange', 'purple', 'red', 'cube', 'prism', 'rod', 'disc' }
+  { 'b2', 'b1', 'b0', 'b3', 'b4', 'a0', 'a1', 'a2', 'a3', 'a4' }
+  { 'pil', 'quen', 'lorn', 'kes', 'zun', 'tav', 'dov', 'mor', 'reth', 'sam' }
+  { 'x0', 'x1', 'x2', 'x4', 'x5', 'x3', 'x7', 'x8', 'x6' }
+  { 'clock', 'coin', 'tea', 'book', 'apple', 'lamp', 'cup', 'key' }
+  { 'i5', 'i4', 'i0', 'i3', 'i2', 'i1', 'i6', 'i7' }
+  { 'ryn', 'kesh', 'idris', 'orin', 'tamm', 'dola', 'vela', 'ferro' }
+  { 'bob', 'alice', 'carol', 'dave', 'erin', 'frank' }
+  { 'search', 'planning', 'arithmetic', 'recall', 'parsing', 'grounding' }

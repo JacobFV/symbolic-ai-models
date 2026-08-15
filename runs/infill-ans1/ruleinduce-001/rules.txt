@@ -1,0 +1,22 @@
+=== label ===
+DecisionList(2 rules, 7 params)
+  IF ¬parent_head(_) THEN ('prev',)  [272/272]
+  IF depth(=4) ∧ ¬slot(=2) ∧ ¬sibling_type(=2,_) THEN ('peer',)  [248/340]
+  ELSE ('const', 278)
+=== type ===
+DecisionList(10 rules, 27 params)
+  IF parent_type(=pred) ∧ arity(=0) ∧ depth(=4) THEN 6  [9304/9592]
+  IF depth(=3) ∧ arity(=0) ∧ ¬sibling_type(_,=ident) THEN 3  [1520/1888]
+  IF arity(=0) ∧ ¬parent_type(=str) ∧ ¬depth(=6) THEN 6  [1080/1432]
+  IF arity(=2) THEN 12  [192/192]
+  IF ¬parent_head(_) THEN 9  [160/160]
+  IF depth(=1) THEN 15  [160/160]
+  IF arity(>0) THEN 4  [160/160]
+  IF depth(=5) THEN 16  [80/80]
+  IF ¬sibling_type(_,=ident) THEN 6  [36/36]
+  IF slot(=1) THEN 5  [32/32]
+  ELSE 6
+=== text ===
+DecisionList(1 rules, 4 params)
+  IF back1(=264) ∧ ¬back3(=263) THEN ('const', 263)  [9668/9972]
+  ELSE ('const', 265)

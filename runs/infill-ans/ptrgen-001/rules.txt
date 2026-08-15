@@ -1,0 +1,24 @@
+=== ptrgen-001: 75 pointer features, 1944 questions ===
+gate: fitted
+  score -> mass: 0.09->0.00, 0.24->0.00, 0.28->0.00, 0.33->0.00, 0.38->0.00, 0.46->0.00, 0.67->0.00, 0.95->0.00
+top pointer features:
+  ('query_rel', (('ROOT', 3), 'other'))        -7.806
+  ('query_rel', (('ROOT', 4), 'other'))        -6.629
+  ('said', 2)                                  -6.356
+  ('rel', 'other')                             -6.160
+  ('query_rel', (('ROOT', 5), 'other'))        -6.100
+  ('query_dist', (('ROOT', 3), 4))             -5.912
+  ('said', 1)                                  -5.661
+  ('query_dist', (('ROOT', 6), 0))             -5.190
+  ('query_dist', (('ROOT', 5), 0))             -4.593
+  ('dist', 5)                                  -4.593
+  ('query_dist', (('ROOT', 0), 5))             -4.347
+  ('query_rel', (('ROOT', 0), 'other'))        -4.317
+  ('query_rel', (('ROOT', 6), 'other'))        -4.206
+  ('query_dist', (('ROOT', 2), 0))             -4.062
+  ('query_dist', (('ROOT', 4), 4))             -3.964
+  ('query_rel', (('ROOT', 5), 'same_depth'))   -3.908
+  ('query_rel', (('ROOT', 1), 'other'))        -3.849
+  ('query_rel', (('ROOT', 4), 'same_depth'))   -3.776
+  ('query_dist', (('ROOT', 2), 4))             -3.668
+  ('query_rel', (('ROOT', 2), 'other'))        -3.657

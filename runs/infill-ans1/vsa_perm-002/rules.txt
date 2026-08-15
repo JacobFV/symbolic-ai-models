@@ -1,0 +1,6 @@
+=== vsa_perm-002: channels role+permutation, d=4096 ===
+  symbols 8192, role atoms 62
+  offset routes 60 contexts, role routes 60 contexts
+  top_k 6, channel weight 1.00
+  gate: fitted
+  (pointer cleans up against addresses, not against fillers)

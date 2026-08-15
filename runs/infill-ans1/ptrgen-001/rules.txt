@@ -1,0 +1,24 @@
+=== ptrgen-001: 225 pointer features, 4612 questions ===
+gate: fitted
+  score -> mass: 0.17->0.46, 0.27->0.46, 0.33->0.46, 0.37->0.46, 0.45->0.46, 0.52->0.57, 0.63->0.57, 0.80->0.57
+top pointer features:
+  ('query_rel', (('ROOT', 3), 'other'))        -10.056
+  ('query_rel', (('ROOT', 2), 'other'))        -9.896
+  ('query_rel', (('ROOT', 6), 'other'))        -9.578
+  ('query_rel', (('pred', 3), 'same_head'))    -9.167
+  ('query_rel', (('pred', 3), 'other'))        -8.637
+  ('query_rel', (('ROOT', 4), 'other'))        -8.455
+  ('query_rel', (('ROOT', 0), 'other'))        -8.254
+  ('query_rel', (('record', 1), 'same_head'))  -7.712
+  ('query_rel', (('record', 4), 'same_head'))  -7.496
+  ('query_dist', (('pred', 0), 5))             -7.472
+  ('query_rel', (('ROOT', 5), 'other'))        -6.912
+  ('query_rel', (('record', 3), 'same_head'))  -6.843
+  ('query_dist', (('ROOT', 0), 5))             -6.638
+  ('query_dist', (('ROOT', 3), 4))             -6.620
+  ('query_dist', (('record', 1), 4))           -6.546
+  ('query_rel', (('list', 0), 'same_head'))    -6.492
+  ('query_dist', (('record', 3), 4))           -6.333
+  ('query_dist', (('record', 4), 2))           -6.317
+  ('said', 0)                                  -6.153
+  ('said', 1)                                  -6.129
