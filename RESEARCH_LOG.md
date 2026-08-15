@@ -992,10 +992,20 @@ almost exactly as the coarse one undershoots by 0.030. And `copy_lift`, which
 was in every `summary.json` all along, falls monotonically for **six of six**
 pointer models and is negative for all six by 0.60 (`corefer` +0.096, +0.057,
 −0.013, **−0.149**). And the survivorship is a fact about the bucket rather than
-about the models: split six ways at 0.90, `acc | copyable` **rises for four**
-(`corefer` +0.103, `ptrgen` +0.107, `evidence` +0.165, `vsa_perm` +0.081) and
-**falls for two** (`routes` −0.033, `ruleinduce` −0.038) — through a bucket that
-got 0.025 easier for a lookup table. `routes-001` shows what the mix hides: its
+about the models: split **all twelve ways** at 0.90, `acc | copyable` rises for
+six and falls for six, and the line between them is the mechanism — **every one
+of the four vocabulary models falls** (`brill` −0.226, `ngram` −0.108, `grammar`
+−0.090, `ctw` −0.033) while five of the eight equivariant rows rise (`evidence`
++0.165, `ptrgen` +0.107, `corefer` +0.103). Survivorship hands its gift to
+predictors that *point*, because what survives into the copyable bucket is a
+repeated label. `routes` (−0.033) and `ruleinduce` (−0.038) are equivariant and
+still lose ground, through a bucket that got 0.025 easier for a lookup table.
+**Story 2 is dead for eleven of twelve**: `acc | not copyable` *falls* everywhere
+except `ptrgen` (0.010 → 0.034), so the memorisation channel carries *less* of
+the mixture at 90% masking, not more. And the pooled leader leads on the wrong
+channel — `ptrgen` is first pooled at 0.195 and `corefer` first on copying at
+0.597, the gap being entirely `ptrgen`'s memorisation column, which is exactly
+zero under renaming. `routes-001` shows what the mix hides: its
 two largest multiplicity strata fall by **0.109 and 0.168** while its pooled
 conditional falls by 0.033. Standardised over the concentration mix, **all five
 models measured are below their own 0.15 conversion rate** — `corefer` −0.099,

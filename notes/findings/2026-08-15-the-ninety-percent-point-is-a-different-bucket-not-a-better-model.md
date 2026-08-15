@@ -258,36 +258,56 @@ better than supply allows. It is a coarse supply variable undershooting by
 almost exactly as much as the fine one overshoots — the bucket really did get
 easier, and the model really did convert less of it.
 
-## Six models, and two of them fall through the easier bucket
+## All twelve models, and the split divides them by mechanism
 
-The split is not `corefer-001`'s alone. Same run, same draw, same floor,
-`acc | copyable` / `acc | not copyable`, against the same six models' 0.15 rows
-from `the-label-score-is-a-copy-score`:
+The whole arm, one floor fit, `acc | copyable` / `acc | not copyable`, against
+the twelve 0.15 rows in `the-label-score-is-a-copy-score`:
 
-| model | 0.15 | **0.90** | Δ `acc \| copyable` | renaming drop at 0.90 |
+| model | 0.15 | **0.90** | Δ `acc \| copyable` | Δ `acc \| not` |
 |---|---|---|---:|---:|
-| `corefer-001` | 0.494 / 0.003 | **0.597 / 0.001** | **+0.103** | 0.0003 |
-| `ptrgen-001` | 0.462 / 0.010 | **0.569 / 0.034** | **+0.107** | 0.0294 |
-| `vsa_perm-002` | 0.435 / 0.043 | **0.516 / 0.035** | **+0.081** | 0.0315 |
-| `evidence-001` | 0.303 / 0.001 | **0.468 / 0.005** | **+0.165** | 0.0076 |
-| `routes-001` | 0.448 / 0.000 | **0.415 / 0.000** | **−0.033** | −0.0001 |
-| `ruleinduce-001` | 0.425 / 0.081 | **0.387 / 0.037** | **−0.038** | 0.0280 |
-| **split floor** | *0.158 / 0.106* | ***0.183 / 0.102*** | *+0.025* | — |
+| `corefer-001` | 0.494 / 0.003 | **0.597 / 0.001** | **+0.103** | −0.002 |
+| `ptrgen-001` | 0.462 / 0.010 | **0.569 / 0.034** | **+0.107** | +0.024 |
+| `omegaclaw_rank-001` | 0.469 / 0.063 | **0.544 / 0.029** | **+0.075** | −0.034 |
+| `omegaclaw_ctx-001` | 0.457 / 0.051 | **0.522 / 0.021** | **+0.065** | −0.030 |
+| `vsa_perm-002` | 0.435 / 0.043 | **0.516 / 0.035** | **+0.081** | −0.008 |
+| `evidence-001` | 0.303 / 0.001 | **0.468 / 0.005** | **+0.165** | +0.004 |
+| `routes-001` | 0.448 / 0.000 | **0.415 / 0.000** | −0.033 | 0.000 |
+| `ruleinduce-001` | 0.425 / 0.081 | **0.387 / 0.037** | −0.038 | −0.044 |
+| `ctw-001` | 0.116 / 0.090 | **0.083 / 0.062** | −0.033 | −0.028 |
+| `grammar-001` | 0.191 / 0.178 | **0.101 / 0.065** | −0.090 | −0.113 |
+| `ngram-001` | 0.175 / 0.154 | **0.067 / 0.041** | −0.108 | −0.113 |
+| `brill-001` | 0.350 / 0.137 | **0.124 / 0.048** | **−0.226** | −0.089 |
+| **split floor** | *0.158 / 0.106* | ***0.183 / 0.102*** | *+0.025* | *−0.004* |
 
-**Four of six rise and two of six fall — through a bucket that got easier for a
-lookup table.** `routes-001` and `ruleinduce-001` do not merely fail to gain the
-floor's +0.025, they lose ground in absolute terms, which is the ability half
-showing through the composition half without any stratification at all. So the
-+0.030 that started this is not a property of these models; it is a property of
-the *bucket*, and what the models do on top of it differs in sign.
+**Six rise and six fall, and the line between them is the mechanism.** Every one
+of the four vocabulary models falls — `brill-001` by 0.226 — while five of the
+eight equivariant rows rise. Survivorship hands its gift to predictors that
+*point*, because what survives into the copyable bucket is a repeated label; a
+model that *names* gets nothing from that and loses the context its rules key on.
+This is the mask-rate curve's own renaming axis and rung 2's contiguity result
+arriving together, in one column.
 
-The non-copyable column tracks renaming, exactly as the refuter's account
-predicts: the three rows with drops of 0.028–0.032 are the three with
-`acc | not copyable` of 0.034–0.037, and the three with drops under 0.008 are at
-0.000–0.005. The memorisation channel is small everywhere at 0.90 and is not
-where the miss came from — but it is not uniformly *zero* either, and
-`ptrgen-001`'s tripling from 0.010 to 0.034 is the one place story 2 has any
-substance. It is worth 0.024 of a pooled 0.195.
+`routes-001` and `ruleinduce-001` are the interesting pair: equivariant, and they
+still fall — they do not merely fail to gain the floor's +0.025, they lose ground
+absolutely. So the +0.030 that started all this is not a property of these
+models. It is a property of the **bucket**, and what the models do on top of it
+differs in sign.
+
+**Story 2 is dead for all twelve, not just for `corefer-001`.** The non-copyable
+column falls for **eleven of twelve** — `grammar-001` 0.178 → 0.065, `ngram-001`
+0.154 → 0.041, `brill-001` 0.137 → 0.048, `ruleinduce-001` 0.081 → 0.037 — and
+rises materially for exactly one, `ptrgen-001` at 0.010 → 0.034, worth 0.024 of
+its pooled 0.195. The memorisation channel does not carry more of the mixture at
+90% masking; it carries less, in eleven of twelve cases.
+
+**And the pooled leader at 0.90 leads on the channel it is worst at.** All twelve
+share one copyable share, so pooled rank is fixed by `0.302 c + 0.698 n`.
+`ptrgen-001` is first pooled at 0.195 and second on `acc | copyable`;
+`corefer-001` is **first** on copying at 0.597 and third pooled. The gap is
+entirely `ptrgen`'s memorisation column — the one thing the copy-score note
+showed goes to exactly zero under renaming. `a-ranking-is-a-property-of-a-metric`
+again, and this time the metric's leader is chosen by the component the repo has
+the least reason to want.
 
 ## `copy_lift` was in every `summary.json` and says it plainly
 
@@ -362,10 +382,11 @@ zero and the ladder's conclusion needs no bound at all.
 
 ## Provisional, and what it is not
 
-The stratifications (m, v/V, node type) are five of the six models —
-`corefer-001`, `ptrgen-001`, `vsa_perm-002`, `evidence-001` and `routes-001`;
-the biggest riser, three middling risers and the faller, all five negative once
-concentration is held. The conditional
+The conditional split at 0.90 is **all twelve models** on the full arm. The
+stratifications (m, v/V, node type) are six of them — `corefer-001`,
+`ptrgen-001`, `vsa_perm-002`, `evidence-001`, `routes-001` and `grammar-001`,
+which is the biggest riser, three middling risers, an equivariant faller and the
+vocabulary control; all six negative once concentration is held. The conditional
 split is six models, the `copy_lift` table is all six pointer-bearing models on
 the full published sweep, and the twelve-model split of the 0.90 arm was still
 fitting `ctw-001` when this was written.
