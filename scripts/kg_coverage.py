@@ -40,6 +40,100 @@ from symbolic_ai_kg.scramble import swap_report
 #: them — the same reasoning ``symbolic_ai_core/data/fingerprint.py`` gives.
 DEFAULT_SEEDS = tuple(range(8)) + (1_000_000, 1_000_001, 1_000_002, 1_000_003)
 
+# --------------------------------------------------------------------------
+# section 0: the curriculum's own vocabulary, classified by hand
+#
+# This is a **judgement**, so it lives in the repo where it can be argued with
+# rather than in a paragraph. Every module-level closed word list in
+# `symbolic_ai_data/generators/` is in exactly one of the three tables below.
+# The answer is reported as a range -- STRICT and WIDE -- because a point
+# estimate would hide that the classification is a choice.
+# --------------------------------------------------------------------------
+
+#: Concrete nouns and adjectives a WordNet-shaped graph plainly carries.
+STRICT_VOCAB = {
+    "base": ["COLORS", "SHAPES"],
+    "semantics": ["PLACES", "LOCATIONS", "OBJECTS", "SIZES", "BASE_KINDS"],
+    "social": ["ITEMS", "PLACES", "DETECT_CLASSES", "SURFACES", "CONCEPTS", "CITIES"],
+    "ontology": ["THINGS"],
+}
+#: STRICT plus verbs, directions, sizes and technical-but-English labels.
+WIDE_EXTRA = {
+    "semantics": ["ACTIONS", "TRANS_VERBS", "EVENT_NAMES", "DERIVED_KINDS",
+                  "ACTIVITIES", "POSITIONS", "DIRS", "EGO"],
+    "social": ["SIZES", "ACTIONS", "PROPS"],
+    "ontology": ["PROPS", "REL_NAMES", "OPS"],
+    "selfmodel": ["SKILLS", "STAGES", "FEATURES", "PROPS", "KINDS", "SIZES"],
+    "epistemics": ["DOMAINS", "OPERATORS", "ATTRS"],
+    "reflective": ["_SIZES", "_ARITH"],
+    "extra": ["SIZES"],
+    "science": ["_DIMS", "_CAUSES"],
+}
+#: Proper names: entity slots a graph could bind, which WordNet does not carry.
+PROPER_VOCAB = {"base": ["NAMES"], "ontology": ["PERSONS"], "epistemics": ["SOURCES"]}
+#: Explicitly unreachable, listed so the exclusion is visible rather than
+#: implied. Several of these are nonce *by design* -- `lexical_novelty` is a
+#: declared difficulty axis and those lessons are about learning a new word.
+NONCE_VOCAB = {
+    "ontology": ["B_CONCEPT_NAMES", "A_CONCEPT_NAMES", "NEW_PRED_NAMES",
+                 "MACRO_NAMES", "TYPE_NAMES", "OPTION_LABELS", "ENCODINGS"],
+    "social": ["WORDS", "TAGS", "COMPANIES"],
+    "epistemics": ["OPTION_LABELS", "PROVENANCE_LABELS", "ARG_LABELS", "GAP_LABELS"],
+    "selfmodel": ["MODULE_NAMES", "SLOTS", "ASSUMPTIONS"],
+}
+
+
+def _words(spec):
+    from symbolic_ai_data import generators as G
+    out: dict[str, list[str]] = {}
+    for mod, names in spec.items():
+        m = getattr(__import__(f"symbolic_ai_data.generators.{mod}",
+                               fromlist=["x"]), "__dict__")
+        for name in names:
+            v = m.get(name)
+            if v is None:
+                print(f"  MISSING {mod}.{name}", file=sys.stderr)
+                continue
+            for item in v:
+                for w in ([item] if isinstance(item, str) else
+                          [x for x in item if isinstance(x, str)]):
+                    out.setdefault(w, []).append(f"{mod}.{name}")
+    return out
+
+
+def static_pass(lessons, seeds):
+    """How much of the curriculum a graph *could* address, before one exists."""
+    strict = _words(STRICT_VOCAB)
+    wide = dict(strict)
+    wide.update(_words(WIDE_EXTRA))
+    nonce = _words(NONCE_VOCAB)
+    overlap = sorted(set(wide) & set(nonce))
+    out = {"overlap": overlap, "n_strict": len(strict), "n_wide": len(wide)}
+    for name, vocab in (("strict", strict), ("wide", wide)):
+        node_any = ans_any = 0
+        node_hit = node_tot = 0
+        ans_macro = 0.0
+        for lid in lessons:
+            L = lc.get(lid)
+            nh = nn = ah = 0
+            for s in seeds:
+                st = L.structured(s)
+                if any(w in vocab for w in str(st["answer"]).replace("_", " ").split()):
+                    ah += 1
+                g = C.graph_from_json(st["observation"], max_nodes=512)
+                for lab in g.labels:
+                    nn += 1
+                    nh += any(w in vocab for w in str(lab).replace("_", " ").split())
+            node_any += nh > 0
+            ans_any += ah > 0
+            node_hit += nh
+            node_tot += nn
+            ans_macro += ah / len(seeds)
+        out[name] = {"lessons_with_a_node": node_any, "lessons_with_an_answer": ans_any,
+                     "node_share": node_hit / max(node_tot, 1),
+                     "answer_macro": ans_macro / len(lessons)}
+    return out
+
 
 def reach(lessons, seeds, arms=("kg:wordnet", "kg:wordnet-shuffled")):
     base = {}
@@ -127,6 +221,18 @@ def main(argv=None) -> int:
     P = pools_for(load("wordnet"))
     print("\n  anchor pools: " + ", ".join(
         f"{k} {len(v)}" for k, v in sorted(P.items()) if isinstance(v, list)))
+
+    print("\n=== 0. what a graph could address, before one exists")
+    st = static_pass(lessons, seeds)
+    print(f"    strict vocabulary {st['n_strict']} words, wide {st['n_wide']}; "
+          f"claimed both real and nonce: {st['overlap']}")
+    print(f"    {'':14s} {'lessons w/ node':>16s} {'lessons w/ answer':>18s} "
+          f"{'node share':>12s} {'answer macro':>14s}")
+    for name in ("strict", "wide"):
+        d = st[name]
+        print(f"    {name:14s} {d['lessons_with_a_node']:6d} ({d['lessons_with_a_node']/n:5.1%})"
+              f" {d['lessons_with_an_answer']:8d} ({d['lessons_with_an_answer']/n:5.1%})"
+              f" {d['node_share']:12.4f} {d['answer_macro']:14.4f}")
 
     print("\n=== 1. reach")
     r = reach(lessons, seeds)
