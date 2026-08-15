@@ -131,8 +131,14 @@ Work done on a branch gets **merged into `master` when it is green**. Do not
 park it, do not ask for approval, do not leave it for the user to decide. A
 finished branch sitting unmerged is unfinished work that looks finished.
 
-The bar is the same as any commit: `uv run pytest tests/ -q` passes. If it does
+The bar is the same as any commit: `uv run pytest tests/` passes. If it does
 not, fix it or say plainly that it is broken — but the default is merge.
+
+**Run it without `-q`.** `pyproject.toml` already sets `addopts = "-q"`, so
+passing it again makes `-qq` and pytest prints **no summary line at all** — you
+get an exit code and no test count. The exit code is a real signal (non-zero on
+any failure, 5 if nothing was collected), but it cannot tell a green suite from
+a silently shrinking one. Report the count: it is **2,008**.
 
 Two traps this repo has already hit:
 

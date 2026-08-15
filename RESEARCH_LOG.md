@@ -888,12 +888,46 @@ For context `vsa_sum-004` at d=4,096 is already 15x below `APPROACH.md`'s target
 before any atomspace exists, and **a `005` row at d=256 was never run** — the
 cheap experiment this line skipped.
 
-**Not established here: the copy result.** `metta_perm_pure-005` reaches +0.1091
-copy lift against `corefer-001`'s +0.0959 — the first thing in this repo's
-history to lead the pointer, verified against the run directories with an
-identical floor, ceiling and n=5,785. It is **not** promoted, because it was not
-pre-registered and an unpredicted large effect is the single most likely thing
-here to be a harness artefact. It is in the queue below, awaiting a refuter.
+**The copy result survives an independent attack, and shrinks by two thirds.**
+`metta_perm_pure-005` reaches **+0.1091** copy lift against `corefer-001`'s
++0.0959 — the first thing in this repo's history to lead the pointer. A refuter
+who did not write it eliminated the three artefact hypotheses that would have
+killed it:
+
+- **Same question.** The scored `(batch, row, node)` key lists are *identical*
+  across all four models on every draw; pads and self excluded symmetrically.
+- **Not the shared back-off.** `structural_fallback` reaches `symbol_logits`
+  only, never the pointer. Decisively: the flat pointer back-off scores **0.0000**
+  and coverage is **1.000** for every model, so on this head abstention is
+  punished rather than subsidised and the "back-off wearing the model's name"
+  mechanism cannot operate.
+- **Not one lucky mask.** Paired McNemar plus a lesson-cluster bootstrap over
+  five draws, including 716 **fresh** episodes: `metta` leads 5/5 and the order
+  never flips.
+
+**But the improvement was quoted against the wrong baseline, and the honest
+number is a third of it.** The finding compared to `vsa_perm_pure-002` (+0.060)
+and omitted `vsa_perm_hks_wide_pure-004` at **+0.0926** — which this same log
+names the second-best pointer. Decomposed properly: **+0.0327 for graph-derived
+roles at all, and +0.0165 for the atomspace specifically.** That increment is
+significant on all five draws; the headline +0.049 was never the atomspace's.
+
+And **on the published draw alone the lead over `corefer` is not significant** —
+56 items in 5,785, McNemar p = 0.057. Replication carries it, not that mask. Two
+further honest notes: second place is a coin flip (`corefer` vs `hks_wide`
+changes sign across draws), and the lead is bought on questions with 3+
+coreferent sources and given back on two-source questions.
+
+One thing the leading row has outright: **its pointer is bit-identical under a
+permutation of all 2,105 symbols**, where `corefer`'s moves because
+`_pair_features` reads prompt mention counts. It reads strictly less and wins.
+
+**Correction to a number quoted throughout this file.** `copy_ceiling` is
+computed over `label_n` = 5,233 and quoted against `copy_acc`, which is scored
+over 5,785. On its own denominator the ceiling is **0.7305**, not 0.7216. Every
+"0.722 copy ceiling" here is that mismatch; the conclusion it supports — that
+more than half the reachable signal is untouched — is unaffected, since 0.346 of
+0.7305 is if anything further from the ceiling.
 
 ## Roles derived from the graph, and a bandwidth nobody had fitted
 
@@ -1042,7 +1076,7 @@ finding that never gets challenged.
 | ~~the action readout~~ | — | **PROMOTED**, above. Attacked by an agent that did not write it; both named confounds run, plus a third nobody had named; the gap grew from 0.4229 to 0.4320 as they were removed. Its own interpretation was corrected in the process and a slice finding it rested on was refuted. |
 | `notes/findings/2026-08-13-one-parser-over-word-classes-transfers-the-class-identities-do-not.md` | over 46 WALS-coded languages, abstraction transfers and the induced class *identities* are a liability held out; `Treebank.coverage` predicts held-out transfer at **r = +0.886** and survives partialling out script and untranslated share | a second, independent handle on coverage — the one intervention tried moved bracket F1 by +0.002, which is not enough to call a +0.886 correlate a passenger. See `notes/questions/2026-08-14-a-second-handle-on-treebank-coverage.md` |
 
-| **`metta_perm_pure-005` leads the copy head** | **+0.1091 copy lift against `corefer-001`'s +0.0959** — the first thing in this repo's history to lead the pointer, on a question five candidate-level features had failed at. Same floor 0.2658, same ceiling 0.7216, same n=5,785, and `corefer-001` reproduces its published number to four decimals in the same run | **it was not pre-registered.** The pre-registration named bits and the type head; it did not name the pointer, and an unpredicted large effect is the single most likely thing here to be a harness artefact rather than reasoning. The mechanism offered is an unrun story, labelled as one. Needs the scoring path audited by someone who did not write it. **Under challenge now.** |
+| ~~the copy lead~~ | — | **PROMOTED**, above. Survived an independent attack that eliminated three artefact hypotheses — same scored key lists, back-off provably absent from the pointer, leads 5/5 draws including fresh episodes. The *improvement* did not survive: quoted against the wrong baseline, the atomspace-specific increment is **+0.0165**, not +0.049. The attack also found a denominator mismatch in `copy_ceiling` affecting every copy number in this file. |
 
 The one thing the queue must not become is a parking lot for results nobody
 intends to challenge. A finding that sits here unchallenged is not "pending"; it

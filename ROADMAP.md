@@ -15,6 +15,29 @@ entire model spread, and `Graph` has had less scrutiny than the tokenizer.
 
 Two candidates, chosen to differ on **what the representation can refuse**:
 
+**Which name is the line, and which is the version.** `005` and `006` are how
+these two lines are *discussed*; they are not how the models are *named*. A model
+is `metta_perm_pure-005`, where **`metta` is the line** and `-005` is an ordinary
+version suffix like any `-001`. Nothing is registered under a bare `005`.
+
+| line | package | one word | models |
+|---|---|---|---|
+| `005` | `symbolic_ai_atomspace/` | **match** | `metta`, `metta_tuple`, `metta_perm`, `metta_type`, `metta_gated`, `metta_shuf`, each with a `_pure` twin |
+| `006` | `symbolic_ai_lean/` | **typecheck** | none — the gate closed before a model was registered |
+
+Each model's characteristic feature is already its base name: `_tuple` is the
+four hand-built coordinates as queries (the harness check), `_perm` the
+positional channel, `_type` a type head keyed on what a node contains, `_gated`
+the query share fitted rather than assumed, `_shuf` the shuffled control, and
+`_pure` the shared memorising fallback switched off.
+
+**Do not rename the `-005` suffix to a word.** A bare name resolves over
+*numbered* versions only (`symbolic_ai_core/registry.py`), so `metta-atomspace`
+would make `build("metta")` raise rather than resolve. That rule is not an
+oversight — it was written after `ptrgen-argmax`, a control, became what
+`ptrgen` meant, because a string sort put word suffixes above numbers and a
+sweep trained the ablation while labelling it the model.
+
 | | `005` `symbolic_ai_atomspace/` | `006` `symbolic_ai_lean/` |
 |---|---|---|
 | native operation | match and rewrite over atoms | **typecheck** |
@@ -1615,7 +1638,7 @@ equivalent, so a single long run still loses everything.
    that flattered the result being written up. Quote sweep numbers; use scratch
    scripts to form hypotheses, never to report.
 
-1. Never commit with tests failing. `uv run pytest tests/ -q`.
+1. Never commit with tests failing. `uv run pytest tests/` -- **without** `-q`: pyproject.toml already sets `addopts = "-q"`, so passing it again makes `-qq` and pytest prints no summary at all. You get an exit code and no count, which cannot tell a green suite from a silently shrinking one. The count is 2,008.
 2. One coherent change per commit, with a message saying what was learned.
 3. Report negative results. A parser that does not help is a finding.
 4. Do not tune against the evaluation set; seeds >= 1_000_000 are eval only.
