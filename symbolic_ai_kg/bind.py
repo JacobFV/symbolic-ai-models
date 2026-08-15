@@ -128,7 +128,7 @@ FAMILY_DEPTH = 3
 FAMILY_CAP = 120
 FAMILY_MIN_DISTINCT = 4
 
-_POOLS: dict[int, dict[str, Any]] = {}
+_POOLS: dict[tuple, dict[str, Any]] = {}
 
 
 def pools_for(kg: KnowledgeGraph, *, width: int = 8) -> dict[str, Any]:
@@ -138,7 +138,11 @@ def pools_for(kg: KnowledgeGraph, *, width: int = 8) -> dict[str, Any]:
     has eight words), so a family that cannot fill eight is not in the pool and
     no slot ever has to be padded.
     """
-    key = id(kg)
+    # Keyed on identity *and* on the graph's own shape. `id()` alone is a
+    # dangling-pointer bug waiting to happen: a temporary graph -- a scramble
+    # built inside a test -- can be freed and a different one allocated at the
+    # same address, and the second would silently inherit the first's pools.
+    key = (id(kg), kg.name, len(kg), kg.n_edges())
     got = _POOLS.get(key)
     if got is not None and got["width"] == width:
         return got
