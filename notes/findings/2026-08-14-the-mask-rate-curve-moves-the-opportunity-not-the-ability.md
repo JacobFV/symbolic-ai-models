@@ -64,6 +64,18 @@ predict.*
 | `ptrgen-001` acc \| not copyable | 0.010 | 0.015 |
 | floor, copyable / not | 0.158 / 0.106 | 0.159 / 0.106 |
 
+Six models measured both ways, `acc | copyable` then `acc | not`:
+
+| model | 0.15 | 0.35 |
+|---|---|---|
+| `corefer-001` | 0.494 / 0.003 | 0.488 / 0.003 |
+| `ptrgen-001` | 0.462 / 0.010 | 0.450 / 0.015 |
+| `routes-001` | 0.448 / 0.000 | 0.416 / 0.000 |
+| `vsa_perm-002` | 0.435 / 0.043 | 0.442 / 0.035 |
+| `ruleinduce-001` | 0.425 / 0.081 | 0.380 / 0.073 |
+| `evidence-001` | 0.303 / 0.001 | 0.324 / 0.002 |
+| `grammar-001` | 0.191 / 0.178 | 0.149 / 0.151 |
+
 **Both conditional accuracies are flat and both floors are flat.** The entire
 0.357 → 0.332 move is the copyable share falling from 0.722 to 0.680; carrying
 `acc|copyable` forward unchanged predicts 0.337 against an observed 0.332.
