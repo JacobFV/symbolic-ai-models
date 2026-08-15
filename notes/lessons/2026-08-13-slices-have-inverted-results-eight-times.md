@@ -4,10 +4,10 @@ author: lead
 status: measured
 ---
 
-# A slice is a different curriculum, and it has inverted results eleven times
+# A slice is a different curriculum, and it has inverted results thirteen times
 
 Every confident wrong result this repo has published came from measuring a
-*sample* of the world rather than covering it. The count is **eleven**, three of
+*sample* of the world rather than covering it. The count is **thirteen**, three of
 them in one day.
 
 *The filename says eight and is deliberately frozen there* — other notes,
@@ -28,6 +28,8 @@ the count.
 | Indo-European ranks at the median, Spanish nearest Chinese (7 packs) | at 46 languages a real, if weak, family signal appears |
 | fitting the softmax temperature collapses held-out accuracy 0.126 → 0.040, so it must be held fixed (3 lessons) | at 179 the likelihood picks sharpness 12 unaided and the row is **bit-identical** to the fixed one; the trap does not exist at scale |
 | abstention on `repair` scores **below chance** (6 lessons) | at 179 it is **0.032 above** chance — `abstain` 0.0866, `random` 0.0543. Both rows moved, in opposite directions, and no mechanism for either was measured |
+| the eigenmap's mechanism: the graph-nearest labelled node carries the answer **0.000** of the time and a label-carrying node is **always** an even number of hops away (3 lessons) | 0.022 and **91.2%** at 179 lessons. The *direction* survives and the eigenmap stays refuted; the absolutes that were quoted do not |
+| `metta-005`'s likelihood switches the treatment **off** — the knob fits to 0.0, the pre-registered refutation condition (6-lesson wiring check) | at 179 it lands **interior at 2.0**, on a monotone curve that rises 0.078 over five points and then turns. The likelihood *prefers* the treatment at twice the weight of the hand-built coordinates |
 
 **Why:** lesson families differ enormously in which structure is available, so a
 handful of them re-weights every model's strengths. The tokenizer case is the
@@ -43,12 +45,19 @@ expect the full run to cut it by roughly an order of magnitude — and say so
 
 **The guard is starting to work, and that is worth recording too.** The first
 seven entries were caught by a *later sweep contradicting a published claim* —
-the expensive way. The last three were caught by **re-measuring at a larger
-sample before publishing**: the +0.051 renaming drop was chased to 192 episodes
-and evaporated, and the temperature trap was registered as its own row precisely
-so the full curriculum could price it, which is how it was found not to exist.
-That is the same mistake being paid for at a tenth of the price, and it is the
-outcome this file was written to produce.
+the expensive way, and the only way anyone was catching them at first. Most of
+the recent ones were caught **before the claim was published**, by re-measuring
+at full scale on purpose: the +0.051 renaming drop was chased to 192 episodes and
+evaporated; the temperature trap was registered as its own row precisely so the
+full curriculum could price it, which is how it was found not to exist; and
+`metta-005`'s knob was caught because the agent recorded the whole likelihood
+curve instead of its argmax, which turned an argument into one glance.
+
+The two that still cost full price are the ones where a *slice mechanism* was
+written into a note as an explanation — abstention-below-chance and the
+eigenmap's hop-parity. A number gets re-measured because it looks like a number;
+a *mechanism* reads as understanding and nobody re-measures an explanation. That
+is where the next one will come from.
 
 **The variant that catches people twice:** do not pin a constant measured on one
 slice into a test that runs on another fixture. A test asserting the curated
