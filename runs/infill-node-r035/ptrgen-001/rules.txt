@@ -1,0 +1,24 @@
+=== ptrgen-001: 296 pointer features, 6000 questions ===
+gate: fitted
+  score -> mass: 0.08->0.56, 0.19->0.56, 0.24->0.56, 0.30->0.56, 0.38->0.59, 0.51->0.66, 0.74->0.82, 0.98->0.96
+top pointer features:
+  ('query_rel', (('ROOT', 5), 'other'))        -9.329
+  ('query_dist', (('str', 0), 5))              -8.709
+  ('query_rel', (('pred', 4), 'other'))        -8.662
+  ('query_dist', (('ROOT', 4), 5))             -7.937
+  ('query_rel', (('list', 6), 'same_depth'))   -7.932
+  ('query_rel', (('list', 6), 'same_head'))    -7.888
+  ('query_rel', (('str', 0), 'same_depth'))    -7.396
+  ('query_dist', (('pred', 3), 5))             -6.510
+  ('query_dist', (('list', 1), 6))             -6.382
+  ('query_dist', (('list', 0), 6))             -5.772
+  ('query_rel', (('pred', 1), 'sibling'))      -5.714
+  ('query_rel', (('ROOT', 4), 'other'))        -5.539
+  ('query_dist', (('record', 3), 4))           -5.305
+  ('query_rel', (('list', 4), 'same_depth'))   -5.292
+  ('query_rel', (('list', 3), 'other'))        -5.290
+  ('query_dist', (('record', 1), 5))           -5.268
+  ('query_dist', (('str', 0), 6))              -5.266
+  ('query_rel', (('pred', 2), 'sibling'))      -5.242
+  ('query_rel', (('ROOT', 3), 'other'))        -5.146
+  ('query_dist', (('list', 2), 6))             -5.071

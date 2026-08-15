@@ -201,25 +201,34 @@ not exactly right cannot render to text that is. So `exact_match <= ` graph
 exact-match, and `scripts/graph_exact.py` computes the cheap side by rescoring
 the sweep's own fitted model on all 179 lessons.
 
+Scored on the run's own masking draw, so every `label acc` below is
+bit-identical to the row's published one — the check that the exactness is about
+the same fills the headline is.
+
 | run | label acc | episodes | every hidden label right | …and every type |
 |---|---:|---:|---:|---:|
-| `corefer-001`, `node` @0.15 | 0.357 | 706 | **0.0397** | **0.0368** |
-| `ptrgen-001`, `node` @0.15 | 0.334 | 706 | 0.0326 | 0.0312 |
+| `corefer-001`, `node` @0.15 | 0.357 | 711 | **0.0380** | **0.0352** |
+| `ptrgen-001`, `node` @0.15 | 0.336 | 711 | 0.0281 | 0.0267 |
+| `grammar-001`, `node` @0.15 | 0.187 | 711 | 0.0295 | 0.0253 |
+| `corefer-001`, `node` @0.35 | 0.332 | 715 | 0.0014 | 0.0014 |
 | `corefer-001`, `nodeans` | 0.030 | 505 | **0.0000** | **0.0000** |
 | `grammar-001`, `nodeans` | 0.192 | 505 | 0.1842 | 0.1842 |
 
-Two things fall out. On the **curriculum's own question**, `corefer-001` gets
+Three things fall out. On the **curriculum's own question**, `corefer-001` gets
 *no* episode's hidden region exactly right — 0 of 505 — so `exact_match` through
 a perfect renderer would be 0.0000, and the ladder's third refutation condition
 holds for it. On **ordinary scattered masking at 0.15**, `exact_match` would not
-be zero, but it would be **0.037 where the published number is 0.357**: partial
-credit is worth roughly a factor of ten, and that factor is what the repo's
-whole leaderboard has been denominated in.
+be zero, but it would be **0.035 where the published number is 0.357**: partial
+credit is worth a factor of ten, and that factor is what the repo's whole
+leaderboard is denominated in. And it is not a stable factor — at
+`mask_rate=0.35` the same model's published accuracy falls 7% while its
+whole-episode exactness falls **25-fold**, to 1 episode in 715, because there
+are about seventeen labels to get right at once instead of seven.
 
-(The mask draw here is an independent sample from the same regime rather than
-the sweep's own draw, so `label_acc` agrees with `summary.json` to about 0.002 —
-0.357 against 0.357, 0.334 against 0.336 — which is the check that this is
-scoring the same thing.)
+`grammar-001` is worth a second look here: it is *below* `corefer-001` on
+`label_acc` (0.187 vs 0.357) and *above* it on `nodeans` exactness (0.184 vs
+0.000). Which model is better at "produce the graph" depends entirely on which
+graph you ask for.
 
 ## What would still refute this reading
 

@@ -28,6 +28,7 @@ from __future__ import annotations
 
 import json
 import os
+import random
 import sys
 from pathlib import Path
 
@@ -38,8 +39,14 @@ import torch
 
 torch.set_num_threads(4)
 
-from symbolic_ai_core.data.batch import IGNORE, collate_graph
+from symbolic_ai_core.data.batch import IGNORE
+from symbolic_ai_core.data.sampler import batches
+from symbolic_ai_models.tasks import make_task
 from symbolic_ai_models.train import load_data, load_run
+
+#: Which registered task each masking mode belongs to.
+TASK_OF = {"scatter": "node", "subtree": "nodesub",
+           "answer": "nodeans", "answer_one": "nodeans1"}
 
 
 def run(path: str, batch_size: int = 16) -> dict[str, float]:
@@ -49,18 +56,24 @@ def run(path: str, batch_size: int = 16) -> dict[str, float]:
     mode = masking.get("mask_mode", "scatter")
     _, ev = load_data(cfg)
 
-    rng = np.random.default_rng(cfg.seed)
+    # The run's own draw, not another sample from the same regime:
+    # `evaluate_model` resets the task's rng to 12345 and walks the episodes
+    # unshuffled under `random.Random(0)`. `label_acc` below is then bit-identical
+    # to the row's published one, which is the check that this scores the same
+    # fills the exactness is being claimed about.
+    task = make_task(TASK_OF[mode], mask_rate=cfg.mask_rate,
+                     max_nodes=cfg.max_nodes, seed=cfg.seed)
+    task.rng = np.random.default_rng(12345)
+    model.eval()
     lab_hit = lab_n = 0
     ep_lab_hit = ep_all_hit = ep_n = 0
-    for start in range(0, len(ev), batch_size):
-        chunk = ev[start:start + batch_size]
-        batch = collate_graph(chunk, tok, max_nodes=cfg.max_nodes,
-                              mask_rate=cfg.mask_rate, mask_mode=mode, rng=rng)
+    for batch in batches(ev, task, tok, batch_size=cfg.batch_size,
+                         rng=random.Random(0), shuffle=False):
         with torch.no_grad():
             out = model(batch)
         label_pred = out.symbol_logits.argmax(-1)
         type_pred = out.type_logits.argmax(-1)
-        for b in range(len(chunk)):
+        for b in range(int(batch.tokens.shape[0])):
             lab_mask = batch.target_tokens[b] != IGNORE
             typ_mask = batch.target_types[b] != IGNORE
             if not bool(lab_mask.any()):
