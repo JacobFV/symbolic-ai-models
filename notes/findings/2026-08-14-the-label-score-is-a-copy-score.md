@@ -140,6 +140,14 @@ gets 0.291 of the non-copyable ones, twenty times `corefer`'s.
 Author-designed controls only. Three of them could have failed and did not: the
 flat counting columns, the pooled-floor assertion, and the within-type split
 (which was named as the refutation condition in the first version of this note
-and then run). What is still missing is an *independent* attempt to break it —
-the obvious next one being whether `acc | copyable` survives a renaming
-permutation, i.e. whether even the copying is structural.
+and then run). What is still missing is an *independent* attempt to break it.
+
+One question that looked like it needed a run and does not: **is the copying
+itself structural?** A symbol permutation preserves label *equality*, so it
+leaves the copyable/non-copyable partition exactly where it was, and
+`corefer-001`'s overall accuracy under renaming is 0.3531 → 0.3499. With
+`acc | not copyable` pinned near 0.003 in both, `acc | copyable` can only be
+≈0.489 renamed against 0.494 plain. So yes — the copying is structural, and what
+it is not is *generation*. That is the whole finding in one line: this repo's
+symbolic models are equivariant, they are reading real structure, and the
+structure they read is "which visible node says this too".
