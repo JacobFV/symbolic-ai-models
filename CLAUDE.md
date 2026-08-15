@@ -23,6 +23,32 @@ history), and a genuine fork in the *research direction* where the evidence does
 not pick a side — say which way you lean and why, then proceed on your own
 recommendation unless told otherwise.
 
+## Delegation: what may be handed off, and to what
+
+Parallel agents are how this repo gets through a wide front, and two of them have
+already produced findings the lead would not have had time to run. The rule is
+about *which cognition* the work needs, not about how much of it there is.
+
+- **Mass-research and implementation fan-outs run on Opus.** When a workflow or a
+  batch of subagents is doing the *research* — designing an experiment, choosing
+  a control, deciding what a number means, writing a model — every agent in it
+  gets Opus. The ideas here are novel enough that a cheaper model does not fail
+  loudly; it fails by producing a plausible experiment with the wrong control,
+  and this repo's whole cost history is confident wrong readings that looked
+  fine. A weaker model is not a cheaper version of this work, it is a different
+  and worse experiment.
+- **Directly managed subagents are fine at whatever fits.** Work whose result you
+  will read and check yourself — find every call site, run this sweep and report
+  the table, port this test — does not need the strong model, because you are the
+  one doing the judging.
+- The test is *who decides*. If the agent's judgement lands in a finding, it is
+  research and it runs on Opus. If your judgement is between it and the record,
+  it is managed work.
+
+Give every parallel agent **its own worktree**. An agent told to "make a branch"
+makes it in this checkout and moves your HEAD mid-task — see rule -0.3 in
+`ROADMAP.md`.
+
 ## This is research, not a queue of tickets
 
 The task list is a record of what looked worth doing when it was written. It is
