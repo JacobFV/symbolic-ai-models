@@ -14,13 +14,14 @@ import random
 from typing import Any, Mapping, Sequence
 
 from .._structure import Ident, Lst, Num, Pred, Rec, Term
+from ..binding import SlotVocabulary, bind_scene
 
 __all__ = ["COLORS", "SHAPES", "NAMES", "_scene", "_scene_term",
            "_balanced", "_is_balanced", "_max_depth", "_mini_tree"]
 
-COLORS = ["red", "blue", "green", "yellow", "purple", "orange"]
-SHAPES = ["cube", "sphere", "cone", "prism", "disc", "rod"]
-NAMES = ["alice", "bob", "carol", "dave", "erin", "frank"]
+COLORS = SlotVocabulary("color", ["red", "blue", "green", "yellow", "purple", "orange"])
+SHAPES = SlotVocabulary("shape", ["cube", "sphere", "cone", "prism", "disc", "rod"])
+NAMES = SlotVocabulary("name", ["alice", "bob", "carol", "dave", "erin", "frank"])
 
 
 def _scene(rng: random.Random, n: int) -> list[dict[str, Any]]:
@@ -28,7 +29,7 @@ def _scene(rng: random.Random, n: int) -> list[dict[str, Any]]:
     for i in range(n):
         objs.append({"id": f"o{i}", "color": rng.choice(COLORS), "shape": rng.choice(SHAPES),
                      "x": rng.randint(0, 9), "y": rng.randint(0, 9)})
-    return objs
+    return bind_scene(objs, rng) or objs
 
 
 def _scene_term(objs: Sequence[Mapping[str, Any]], query: Term) -> Term:

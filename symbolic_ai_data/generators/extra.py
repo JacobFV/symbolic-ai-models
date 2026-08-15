@@ -11,6 +11,7 @@ from contextvars import ContextVar
 from typing import Any, Mapping, Sequence
 
 from .._structure import Ident, Lst, Num, Pred, Term
+from ..binding import SlotVocabulary, bind_scene
 from ..languages import DEFAULT_LANGUAGE, get_language
 from .base import COLORS, SHAPES
 
@@ -143,7 +144,7 @@ def then_word() -> str:
     return lexicon.then or _ENGLISH.then
 
 
-SIZES = ["small", "big"]
+SIZES = SlotVocabulary("size", ["small", "big"])
 
 
 NONCE_LETTERS = "kmtszlpvr"
@@ -166,7 +167,8 @@ def _objects(rng: random.Random, n: int, *, distinct_colors: bool = False,
     ids = _shuffled(rng, [f"o{i}" for i in range(n)])
     colors = rng.sample(COLORS, n) if distinct_colors else [rng.choice(COLORS) for _ in range(n)]
     shapes = rng.sample(SHAPES, n) if distinct_shapes else [rng.choice(SHAPES) for _ in range(n)]
-    return [{"id": ids[i], "color": colors[i], "shape": shapes[i]} for i in range(n)]
+    objs = [{"id": ids[i], "color": colors[i], "shape": shapes[i]} for i in range(n)]
+    return bind_scene(objs, rng) or objs
 
 
 def _obj_list(objs: Sequence[Mapping[str, Any]]) -> Term:

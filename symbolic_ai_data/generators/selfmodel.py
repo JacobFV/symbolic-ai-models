@@ -10,6 +10,7 @@ import random
 from itertools import permutations
 from typing import Any, Mapping, Sequence
 
+from ..binding import SlotVocabulary
 from .._structure import Ident, Lst, Pred, Term
 from .base import COLORS, SHAPES
 
@@ -29,13 +30,13 @@ MODULE_NAMES = ["lexer", "chart", "earley", "tabling", "astar", "bfs", "sat", "r
 FEATURES = ["recursion", "typing", "search", "memory", "probabilistic", "symbolic_io"]
 
 
-PROPS = ["fragile", "portable", "magnetic", "opaque", "heavy", "hollow"]
+PROPS = SlotVocabulary("property", ["fragile", "portable", "magnetic", "opaque", "heavy", "hollow"])
 
 
-KINDS = ["tool", "vessel", "device", "fixture"]
+KINDS = SlotVocabulary("kind", ["tool", "vessel", "device", "fixture"])
 
 
-SIZES = ["small", "medium", "big"]
+SIZES = SlotVocabulary("size", ["small", "medium", "big"])
 
 
 ASSUMPTIONS = ("positivity", "monotonicity", "boundedness", "small_steps")

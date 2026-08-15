@@ -133,6 +133,20 @@ def comparison_table(summaries: Sequence[dict[str, Any]], sort_by: str = "ans li
             line += f"{_fmt(r.get(label), spec):>10}"
         lines.append(line)
     lines.append("-" * len(head))
+    # Which curriculum, printed whenever it is not the default or the table
+    # mixes more than one. A score is comparable only to a score drawn from the
+    # same curriculum, and a table that silently pools two of them is the
+    # `symbolic_ai_core/registry.py` failure with a new way in: every published
+    # number here is defined on `base`, and `kg:*` rows are a different corpus
+    # wearing the same model names.
+    curricula = sorted({(s.get("config") or {}).get("curriculum", "base")
+                        for s in summaries})
+    if curricula != ["base"]:
+        lines.append("curriculum: " + ", ".join(curricula)
+                     + ("   <- MIXED. These rows are not comparable to each "
+                        "other; a floor and a copy ceiling are properties of a "
+                        "curriculum." if len(curricula) > 1 else
+                        "   (not `base`: not comparable to any published number)"))
     lines.append("lift = (score - floor) / (1 - floor); 0 is the prior, 1 is perfect")
     lines.append("params: neural = tensor weights, rule-based = discrete rules "
                  "and counts. The two are not comparable and are not meant to be.")

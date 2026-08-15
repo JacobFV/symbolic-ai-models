@@ -1,0 +1,45 @@
+=== 38 induced classes (text) ===
+  { ',', ' and', ';', ' outranks', ' follows', ' mirrors', ' parent', ' the', ' a', ' an' ... (+254) }
+  { ' kes', ' zun', ' quen', ' tav', ' dov', ' reth', ' mor', ' pil', ' sam', ' lorn' }
+  { ' zolt', ' kirn', ' bex', ' sogi', ' tavu', ' muva', ' nelo', ' wibra' }
+  { ' kesh', ' ryn', ' idris', ' tamm', ' orin', ' dola', ' ferro', ' vela' }
+  { ' bob', ' alice', ' carol', ' dave', ' erin', ' frank' }
+  { ' sp', ' rm', ' pt', ' sk', ' mt', ' nt' }
+  { ' memory', ' search', ' typing', ' probabilistic', ' recursion' }
+  { ' acme', ' zenith', ' orbis', ' vertex', ' helix' }
+  { 'c', 'b', 'a', 'd' }
+  { ' order', ' interval', ' numbers' }
+  { '-', 'e', 'mod' }
+  { ' zogo', ' vugo', ' tese' }
+  { ' subgoal', ' entity', ' property' }
+  { ' power', ' predict', ' rank' }
+  { ' tool', ' plant', ' vehicle' }
+  { ' scale', ' translate', ' permute' }
+  { ' most', ' least', ' position' }
+  { '\n  ', ' work' }
+  { ' thesis', ' teach' }
+  { ' end', ' start' }
+=== 24 promoted patterns ===
+  N2 -> C331 C331
+  N3 -> N2 N2
+  N4 -> C264 C263
+  N5 -> N3 N3
+  N6 -> N2 C331
+  N7 -> C331 N4
+  N8 -> N2 N4
+  N9 -> N3 C331
+  N10 -> N5 N5
+  N11 -> ' exactly' ' one'
+  N12 -> ' with' C331
+  N13 -> '?' '\n\n'
+=== 28 induced classes (graph) ===
+  { '2', '3', '4', '1', '0', '5', '6', '7', '8', '9' }
+  { 'b2', 'b1', 'b0', 'b3', 'b4', 'a0', 'a1', 'a2', 'a4', 'a3' }
+  { 'quen', 'pil', 'kes', 'zun', 'tav', 'dov', 'mor', 'lorn', 'reth', 'sam' }
+  { 'x0', 'x1', 'x2', 'x4', 'x5', 'x3', 'x7', 'x8', 'x6' }
+  { 'i5', 'i4', 'i0', 'i3', 'i2', 'i1', 'i6', 'i7' }
+  { 'ryn', 'kesh', 'idris', 'orin', 'tamm', 'dola', 'vela', 'ferro' }
+  { 'bob', 'alice', 'carol', 'dave', 'erin', 'frank' }
+  { 'search', 'planning', 'arithmetic', 'recall', 'parsing', 'grounding' }
+  { 'res4', 'res3', 'res1', 'res0', 'res2', 'res5' }
+  { 'q2', 'q3', 'q1', 'q0', 'q4', 'q5' }

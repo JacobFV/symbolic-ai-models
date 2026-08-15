@@ -49,6 +49,7 @@ from __future__ import annotations
 from pathlib import Path
 
 __all__ = ["SOURCE", "VERSION", "COMMIT", "HEAD_AT_VENDORING", "OMITTED",
+           "MODIFIED",
            "ADDED", "ROOT"]
 
 ROOT = Path(__file__).resolve().parent
@@ -79,4 +80,22 @@ HEAD_AT_VENDORING = "ba8acd62f63f72b74ca5d9cb495a048161c85906"
 OMITTED = ("grammar/data/site-languages.db.gz", "grammar/data/languages.db")
 
 #: Written here rather than upstream.
-ADDED = ("_vendor.py", "LICENSE")
+#:
+#: ``binding.py`` is the seam that lets something outside choose this
+#: curriculum's closed word lists — see
+#: ``notes/decisions/2026-08-14-semantic-constraint-from-a-knowledge-graph.md``.
+#: It is **inert unless a binder is active**: with none set, every draw is the
+#: draw that was always made, which is what
+#: ``tests/test_curriculum_fingerprint.py`` says across 179 lessons, 5 seeds and
+#: 7 languages. Adding it required touching seven upstream files — ``base.py``,
+#: ``extra.py``, ``semantics.py``, ``social.py``, ``selfmodel.py``,
+#: ``ontology.py`` and ``reflective.py`` — which is a departure from "verbatim"
+#: and is recorded here rather than in a commit message. Each change is one of
+#: two shapes: a module-level ``list`` of words became a ``SlotVocabulary`` with
+#: the same words, or a scene builder gained a ``bind_scene(...) or objs`` tail.
+MODIFIED = ("generators/base.py", "generators/extra.py",
+            "generators/semantics.py", "generators/social.py",
+            "generators/selfmodel.py", "generators/ontology.py",
+            "generators/reflective.py")
+
+ADDED = ("_vendor.py", "LICENSE", "binding.py")
