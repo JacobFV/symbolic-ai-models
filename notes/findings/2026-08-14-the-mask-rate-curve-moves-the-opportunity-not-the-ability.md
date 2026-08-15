@@ -106,6 +106,28 @@ of seven. Partial credit and exactness are not the same measurement rescaled;
 they diverge with the size of the hole, which is precisely the axis this rung
 varies.
 
+All twelve rows at `mask_rate=0.15`, ordered by whole-episode exactness — the
+first `exact_match` bound this repo has that means anything:
+
+| model | `label_acc` | every label right | …and every type |
+|---|---:|---:|---:|
+| `ruleinduce-001` | 0.329 | **0.0394** | **0.0380** |
+| `corefer-001` | 0.357 | 0.0380 | 0.0352 |
+| `vsa_perm-002` | 0.326 | 0.0338 | 0.0309 |
+| `omegaclaw_rank-001` | 0.356 | 0.0309 | 0.0183 |
+| `grammar-001` | 0.187 | 0.0295 | 0.0253 |
+| `ptrgen-001` | 0.336 | 0.0281 | 0.0267 |
+| `routes-001` | 0.323 | 0.0281 | 0.0141 |
+| `brill-001` | 0.290 | 0.0253 | 0.0183 |
+| `evidence-001` | 0.219 | 0.0225 | 0.0141 |
+| `ngram-001` | 0.170 | 0.0169 | 0.0084 |
+
+The ordering is not the `label_acc` ordering: `ruleinduce-001` is fourth on the
+published number and first here, `omegaclaw_rank-001` is second and fourth,
+`grammar-001` is ninth and fifth. Twelve models spanning 0.109–0.357 of partial
+credit span 0.008–0.038 of whole-episode correctness, and the map between the two
+is not monotone.
+
 ## What would refute this
 
 - `acc|copyable` falling materially at 0.60 or 0.90. That would be a second
