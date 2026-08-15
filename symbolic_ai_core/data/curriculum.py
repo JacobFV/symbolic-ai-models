@@ -139,6 +139,18 @@ def resolve_lessons(spec: str | Sequence[str] | None) -> list[str]:
 #: so the three of them separate "a bigger lexicon", "a structured lexicon" and
 #: "a meaningful one". An unmeasured confound has an unknown sign, and this is
 #: the measurement.
+#:
+#: **There is a fifth graph registered in ``symbolic_ai_kg`` and no curriculum
+#: for it, on purpose.** ``load("cskg")`` returns a vendored commonsense
+#: projection with 30,513 property assertions against WordNet's zero, which is
+#: exactly the relation the per-object constraint was starving for. Its
+#: *taxonomy* is the problem: ConceptNet's ``IsA`` is flat and noisy, and the
+#: families it anchors are things like *(interior, crocheting, snout, crusade,
+#: conk, salesmanship)*. An arm whose "semantic neighbourhood" is that would be
+#: a treatment indistinguishable from the vocabulary-size control, and its null
+#: would be unreadable. Registering the curriculum would have invited exactly
+#: that sweep. See
+#: ``notes/decisions/2026-08-15-the-commonsense-arms-are-built-and-not-run.md``.
 CURRICULA: tuple[str, ...] = ("base", "kg:wordnet", "kg:wordnet-shuffled",
                               "kg:wordnet-flat")
 

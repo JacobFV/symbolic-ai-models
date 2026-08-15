@@ -12,9 +12,12 @@ This package is the seam for fixing that at the data level. It holds
 * :mod:`symbolic_ai_kg.graph` — a small typed graph and the queries a binder
   needs (hypernym chain, parts, substances, co-hyponyms, attribute values,
   which verbs take an animate subject);
-* :mod:`symbolic_ai_kg.registry` — **the graph is a parameter**. ``load("wordnet")``
-  and ``load("wordnet-shuffled")`` are two names in one table; a larger graph
-  arriving later is a new entry and a new data file, not a design change;
+* :mod:`symbolic_ai_kg.registry` — **the graph is a parameter**, and that claim
+  has now been cashed. ``load("wordnet")``, ``load("wordnet-shuffled")``,
+  ``load("cskg")`` and ``load("cskg-shuffled")`` are four names in one table;
+  adding the commonsense graph was two rows here, one builder script and one
+  vendored file, with no change above this package and no movement in any
+  WordNet fingerprint;
 * :mod:`symbolic_ai_kg.scramble` — the degree-preserving edge permutation that
   makes "semantics helped" separable from "more structure helped";
 * :mod:`symbolic_ai_kg.bind` — the dependency DAG: a lesson anchors some

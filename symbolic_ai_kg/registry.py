@@ -15,6 +15,22 @@ Names shipped now:
     its degree-preserving edge permutation — the control, derived at load time
     from the same bytes with a pinned seed, so it cannot drift independently of
     its treatment.
+``cskg``
+    the vendored projection of CSKG, a **commonsense** graph rather than a
+    lexical one: 30,513 property assertions where WordNet has none. It is the
+    "a larger graph swaps in as data, not design" claim being cashed — this
+    module gained two rows and nothing above it changed.
+
+    **It has no curriculum arm**, and that is a decision rather than an
+    oversight: its ``isa`` is flat and noisy enough that the families the binder
+    anchors are things like *(interior, crocheting, snout, crusade, conk,
+    salesmanship)*, and the per-object constraint fires on 17% of scene objects
+    against WordNet's 53%. An arm built on it would be the vocabulary-size
+    control wearing a treatment's name. See
+    ``notes/decisions/2026-08-15-the-commonsense-arms-are-built-and-not-run.md``.
+``cskg-shuffled``
+    its control, same construction and same pinned seed. Registered so that the
+    graph and its control cannot drift apart if someone does build the arm.
 
 Loading is cached by name because a graph is immutable in use and building the
 adjacency index over ~50k edges is not free. The cache is keyed on the name
@@ -50,9 +66,21 @@ def _wordnet_shuffled() -> KnowledgeGraph:
                                      name="wordnet-shuffled")
 
 
+def _cskg() -> KnowledgeGraph:
+    return KnowledgeGraph.load(_vendor.CSKG_GRAPH_PATH)
+
+
+def _cskg_shuffled() -> KnowledgeGraph:
+    return degree_preserving_shuffle(_cskg(), seed=SHUFFLE_SEED,
+                                     rounds=SHUFFLE_ROUNDS,
+                                     name="cskg-shuffled")
+
+
 _SOURCES: dict[str, Callable[[], KnowledgeGraph]] = {
     "wordnet": _wordnet,
     "wordnet-shuffled": _wordnet_shuffled,
+    "cskg": _cskg,
+    "cskg-shuffled": _cskg_shuffled,
 }
 
 #: Every graph this repo can be asked for, in a stable order.

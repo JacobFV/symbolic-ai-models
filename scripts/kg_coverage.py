@@ -1,7 +1,8 @@
 """Regenerate every number in the KG coverage finding.
 
-    uv run python scripts/kg_coverage.py            # the full 179-lesson grid
-    uv run python scripts/kg_coverage.py --seeds 4  # cheaper, same shape
+    uv run python scripts/kg_coverage.py             # the full 179-lesson grid
+    uv run python scripts/kg_coverage.py --seeds 4   # cheaper, same shape
+    uv run python scripts/kg_coverage.py --kg cskg   # the commonsense graph
 
 The finding note
 (``notes/findings/2026-08-14-what-share-of-the-curriculum-a-knowledge-graph-can-
@@ -198,27 +199,37 @@ def main(argv=None) -> int:
     p = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     p.add_argument("--seeds", type=int, default=0,
                    help="use seeds 0..N-1 only; 0 means the full default grid")
+    p.add_argument("--kg", default="wordnet",
+                   help="which registered graph to report reach and fallback "
+                        "for; the census section always prints every graph")
     p.add_argument("--json", help="also write the raw numbers here")
     args = p.parse_args(argv)
     seeds = tuple(range(args.seeds)) if args.seeds else DEFAULT_SEEDS
+    # The arms a graph induces. `-flat` is a WordNet-only arm: it was added to
+    # separate the vocabulary-size term, which that run measured at 26% and
+    # found small, so the commonsense graph does not repeat it.
+    arms = ([f"kg:{args.kg}", f"kg:{args.kg}-shuffled"]
+            + ([f"kg:{args.kg}-flat"] if args.kg == "wordnet" else []))
     lessons = [i for i in lc.lesson_ids() if lc.get(i).status == "implemented"]
     n = len(lessons)
     print(f"{n} lessons x {len(seeds)} seeds {seeds}\n")
 
     print("=== 3. the graph and its control (printed first: it is the cheapest)")
     cen = census()
-    keys = sorted(cen["wordnet"])
+    keys = sorted({k for c in cen.values() for k in c})
     print(f"  {'':22s}" + "".join(f"{k.replace('edge:', ''):>11s}" for k in keys))
     for name in KG_NAMES:
-        print(f"  {name:22s}" + "".join(f"{cen[name][k]:>11d}" for k in keys))
-    print(f"  censuses identical: {cen['wordnet'] == cen['wordnet-shuffled']}")
-    rep = swap_report(load("wordnet"), seed=SHUFFLE_SEED, rounds=SHUFFLE_ROUNDS)
+        print(f"  {name:22s}"
+              + "".join(f"{cen[name].get(k, 0):>11d}" for k in keys))
+    print(f"  censuses identical: "
+          f"{cen[args.kg] == cen[args.kg + '-shuffled']}")
+    rep = swap_report(load(args.kg), seed=SHUFFLE_SEED, rounds=SHUFFLE_ROUNDS)
     print(f"\n  scramble at seed {SHUFFLE_SEED}, {SHUFFLE_ROUNDS} attempts per edge:")
     print(f"    {'relation':12s} {'edges':>7s} {'swaps':>9s} {'kept':>6s} {'kept share':>11s}")
     for rel, d in sorted(rep.items(), key=lambda kv: -kv[1]["edges"]):
         print(f"    {rel:12s} {d['edges']:7d} {d['swaps']:9d} {d['kept']:6d} "
               f"{d['kept_share']:11.4f}")
-    P = pools_for(load("wordnet"))
+    P = pools_for(load(args.kg))
     print("\n  anchor pools: " + ", ".join(
         f"{k} {len(v)}" for k, v in sorted(P.items()) if isinstance(v, list)))
 
@@ -235,7 +246,7 @@ def main(argv=None) -> int:
               f" {d['node_share']:12.4f} {d['answer_macro']:14.4f}")
 
     print("\n=== 1. reach")
-    r = reach(lessons, seeds)
+    r = reach(lessons, seeds, arms=arms)
     for arm, d in r.items():
         print(f"  {arm}")
         print(f"    lessons changed          {len(d['lessons_changed']):4d}/{n} "
@@ -248,7 +259,7 @@ def main(argv=None) -> int:
               f"({(d['nodes_arm'] - d['nodes_base'])/max(d['nodes_base'],1):+.5%})")
 
     print("\n=== 2. fallback, per slot")
-    f = fallback(lessons, seeds)
+    f = fallback(lessons, seeds, kg_name=args.kg)
     print(f"    {'slot':16s} {'asked':>8s} {'fell back':>10s} {'share':>8s}")
     for slot in sorted(f["asked"]):
         a, b = f["asked"][slot], f["fell"].get(slot, 0)

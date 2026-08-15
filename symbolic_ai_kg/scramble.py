@@ -76,7 +76,13 @@ def topological_rank(edges: Sequence[tuple[int, int]], n: int) -> list[int]:
                 if indeg[w] == 0:
                     nxt.append(w)
         frontier = sorted(nxt)
-    order.extend(sorted(i for i in range(n) if i not in set(order)))
+    # `set(order)` hoisted out of the comprehension deliberately: inside it, it
+    # was rebuilt once per candidate and the pass was O(n^2). At WordNet's
+    # 13,810 nodes that is slow and survivable; at the CSKG projection's 36,257
+    # it is 1.3 billion operations and was the whole cost of building the
+    # control. Same result -- `order` is not modified by the comprehension.
+    placed = set(order)
+    order.extend(sorted(i for i in range(n) if i not in placed))
     rank = [0] * n
     for pos, v in enumerate(order):
         rank[v] = pos

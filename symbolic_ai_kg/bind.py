@@ -34,8 +34,9 @@ variable         anchored?     drawn from
                                admit a subject of that animacy
 ``materials``    **bound**     substance meronyms of ``kinds``,
                                inherited down the taxonomy
-``o.color``      **bound**     the part or substance the graph
-                               licenses for *that object's own kind*
+``o.color``      **bound**     the property, substance or part the
+                               graph licenses for *that object's own
+                               kind*
 ===============  ============  =====================================
 
 The last row is the one that makes this a DAG rather than a vocabulary swap.
@@ -205,7 +206,7 @@ def pools_for(kg: KnowledgeGraph, *, width: int = 8) -> dict[str, Any]:
         # shared parent, so every object in a scene drew from the same
         # single-element candidate set and the dependency edge did nothing.
         sets = {frozenset(kg.parts_of(x)) | frozenset(kg.substances_of(x))
-                for x in d}
+                | frozenset(kg.properties_of(x)) for x in d}
         sets.discard(frozenset())
         if len(sets) >= FAMILY_MIN_DISTINCT:
             families.append(n)
@@ -317,8 +318,14 @@ class KGBinder:
         # the shared word list or those questions stop denoting anything. The
         # constraint then lives in the *joint* draw -- see `entity` -- which is
         # where it belongs anyway.
+        # `properties_of` is empty on WordNet's projection and carries most of
+        # the constraint on a commonsense one. Listed first so that where a
+        # graph states real properties the slot gets adjectives rather than
+        # parts: WordNet could only offer `beak, wing` for what an object is
+        # *like*, which is a constraint the graph was not really making.
         lic: list[int] = []
         for k in kinds:
+            lic.extend(kg.properties_of(k))
             lic.extend(kg.substances_of(k))
             lic.extend(kg.parts_of(k))
         seen2: set[int] = set()
@@ -343,7 +350,8 @@ class KGBinder:
         self._licensed: dict[str, tuple[str, ...]] = {}
         for k in kinds:
             cand = tuple(dict.fromkeys(
-                [self.kg.word(m) for m in kg.substances_of(k)]
+                [self.kg.word(m) for m in kg.properties_of(k)]
+                + [self.kg.word(m) for m in kg.substances_of(k)]
                 + [self.kg.word(m) for m in kg.parts_of(k)]))
             self._licensed[self.kg.word(k)] = cand
 

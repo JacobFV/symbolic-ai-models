@@ -33,7 +33,10 @@ from __future__ import annotations
 from pathlib import Path
 
 __all__ = ["ROOT", "DATA", "UPSTREAM_URL", "UPSTREAM_SHA256", "GRAPH_PATH",
-           "GRAPH_SHA256", "LICENSE_PATH", "SELECTION", "RELEASE", "LICENSE_NAME"]
+           "GRAPH_SHA256", "LICENSE_PATH", "SELECTION", "RELEASE", "LICENSE_NAME",
+           "CSKG_UPSTREAM_URL", "CSKG_UPSTREAM_SHA256", "CSKG_GRAPH_PATH",
+           "CSKG_GRAPH_SHA256", "CSKG_LICENSE_PATH", "CSKG_SELECTION",
+           "CSKG_RELEASE", "CSKG_LICENSE_NAME"]
 
 ROOT = Path(__file__).resolve().parent
 DATA = ROOT / "data"
@@ -64,4 +67,50 @@ SELECTION = (
     "files under the same rule, with their sentence frames; adjectives carrying "
     "an attribute pointer plus one hop of similar-to and antonym; the noun side "
     "of every attribute pointer; all of it closed under hypernymy"
+)
+
+# --------------------------------------------------------------------------
+# CSKG: a second graph, and the provenance is weaker in one stated way
+# --------------------------------------------------------------------------
+#
+# WordNet is a *lexical* resource and the seam needed a *selectional* one.
+# WordNet contributes 1,408 ``part`` and 156 ``substance`` edges, which is all
+# the per-object attribute constraint has to draw on, so an object's second
+# attribute is bound to one of its kind's **parts**. CSKG states 46k property
+# assertions, which is the relation the decision note is actually about.
+#
+# The weakness, stated rather than glossed: what is hashed below is **not** a
+# public immutable URL the way ``UPSTREAM_SHA256`` is. It is a local re-export
+# of CSKG taken from a private bucket, because that is the artefact that was
+# read. A reader can verify that ``scripts/build_cskg_kg.py`` turns that parquet
+# into the committed bytes; they cannot re-fetch the parquet from the URL below,
+# which points at the upstream CSKG release the parquet derives from.
+
+CSKG_RELEASE = "CSKG (CommonSense Knowledge Graph), consolidated release"
+CSKG_LICENSE_NAME = "CC BY-SA 4.0"
+
+#: The upstream project. The parquet actually read is a re-export of it.
+CSKG_UPSTREAM_URL = "https://github.com/usc-isi-i2/cskg"
+
+#: sha256 of ``cskg/cskg_full_p0.parquet``, 28,838,905 bytes, taken 2026-08-15.
+CSKG_UPSTREAM_SHA256 = (
+    "e9a4fe2df2fe4fb85f95b00090506cc58b6d8e676008efb26102b3ef600a8f69")
+
+CSKG_GRAPH_PATH = DATA / "cskg-commonsense.json.gz"
+CSKG_LICENSE_PATH = DATA / "LICENSE.cskg"
+
+#: sha256 of the committed projection. Filled in by the builder; asserted by
+#: ``tests/test_kg.py``.
+CSKG_GRAPH_SHA256 = (
+    "fffb909eb5bf59f1c513890540253325544ec1f55cc25e1167b3cff065bcfaa7")
+
+CSKG_SELECTION = (
+    "English ConceptNet-style concepts /c/en/<lemma>[/<pos>] whose lemma is a "
+    "single lowercase alphabetic word, collapsed by lemma; the relations IsA, "
+    "InstanceOf, HasA, PartOf, MadeOf, HasProperty, MayHaveProperty, SimilarTo, "
+    "Antonym and CapableOf mapped onto isa/part/substance/property/similar/"
+    "antonym/can, with isa additionally requiring an explicit part-of-speech "
+    "tag on both endpoints; nodes kept only if touched by a selectional "
+    "relation, closed under isa; RelatedTo and Synonym dropped; nothing "
+    "inherited down the taxonomy"
 )

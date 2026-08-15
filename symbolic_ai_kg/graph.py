@@ -27,11 +27,21 @@ from typing import Iterable, Mapping, Sequence
 
 __all__ = ["KnowledgeGraph", "RELATIONS", "ANIMATE_FRAMES", "INANIMATE_FRAMES"]
 
-#: The relations the projection carries. ``isa`` is hypernymy for both nouns and
+#: The relations a projection may carry. ``isa`` is hypernymy for both nouns and
 #: verbs; ``part``/``substance``/``member`` are meronymies written source-has-
 #: target; ``attr`` links an adjective to the noun naming the dimension it is a
 #: value of; ``similar`` and ``antonym`` are the adjective's own structure.
-RELATIONS = ("isa", "part", "substance", "member", "attr", "similar", "antonym")
+#:
+#: ``property`` and ``can`` are **not in WordNet's projection** and every query
+#: over them returns the empty tuple there, which is what lets a graph that has
+#: them arrive without moving a single published WordNet number. They are what a
+#: commonsense graph states and a lexical one does not: ``property`` is
+#: thing -> adjective ("a lemon is sour"), ``can`` is thing -> verb.
+#:
+#: No graph is required to carry all of these. The list is what the loader will
+#: index if it finds it, not a schema anything must satisfy.
+RELATIONS = ("isa", "part", "substance", "member", "attr", "similar", "antonym",
+             "property", "can")
 
 #: WordNet sentence frames whose subject slot is "Somebody". Princeton's own
 #: numbering, not a judgement made here: frame 2 is "Somebody ----s", 8 is
@@ -54,9 +64,32 @@ class KnowledgeGraph:
     frames: dict[int, tuple[int, ...]] = field(default_factory=dict)
     selection: str = ""
     provenance: Mapping[str, str] = field(default_factory=dict)
+    #: Which relations this graph states at the *parent* and therefore have to
+    #: be read through the hypernym chain to be visible at a leaf. It is a
+    #: property of the source, not of the relation name, and getting it wrong is
+    #: silent in both directions:
+    #:
+    #: * WordNet states meronymy at the parent — ``penguin`` has no ``part``
+    #:   edges and ``bird`` has ``beak`` and ``wing`` — so *without* the climb
+    #:   the relation is empty exactly where a curriculum draws;
+    #: * ConceptNet states properties at the concept, and *with* the climb every
+    #:   chain reaches a general ancestor carrying most of the adjective
+    #:   vocabulary, so six different kinds license the same ~1,130 words and
+    #:   the constrained draw is a uniform draw with more machinery.
+    #:
+    #: Both failures produce a graph that loads, generates and looks fine.
+    inherit: frozenset[str] = frozenset({"part", "substance", "member"})
 
     _fwd: dict[str, dict[int, tuple[int, ...]]] = field(default_factory=dict, repr=False)
     _rev: dict[str, dict[int, tuple[int, ...]]] = field(default_factory=dict, repr=False)
+    #: Memo for the two walks everything else is built on. A graph is immutable
+    #: in use and both are pure functions returning tuples, so this changes no
+    #: value anywhere — asserted by the fingerprints, which did not move when it
+    #: was added. It is here because the binder re-walks the same few hundred
+    #: families once per episode: on the 36k-node commonsense graph that was the
+    #: dominant cost of generating a corpus.
+    _anc: dict[tuple[int, int], tuple[int, ...]] = field(default_factory=dict, repr=False)
+    _desc: dict[tuple[int, int], tuple[int, ...]] = field(default_factory=dict, repr=False)
 
     # ---- construction ------------------------------------------------
     def __post_init__(self) -> None:
@@ -64,6 +97,7 @@ class KnowledgeGraph:
 
     def _index(self) -> None:
         self._fwd, self._rev = {}, {}
+        self._anc, self._desc = {}, {}
         for rel in self.edges:
             f: dict[int, list[int]] = {}
             r: dict[int, list[int]] = {}
@@ -85,6 +119,11 @@ class KnowledgeGraph:
             frames={int(k): tuple(v) for k, v in d.get("frames", {}).items()},
             selection=d.get("selection", ""),
             provenance=dict(d.get("source", {})),
+            # Absent in the WordNet artefact, which predates the field; its
+            # default is that artefact's behaviour, so the bytes already
+            # committed keep meaning what they meant.
+            inherit=frozenset(d["inherit"]) if "inherit" in d
+            else frozenset({"part", "substance", "member"}),
         )
 
     @classmethod
@@ -105,7 +144,7 @@ class KnowledgeGraph:
             lex=list(self.lex),
             edges={rel: [tuple(e) for e in pairs] for rel, pairs in edges.items()},
             frames=dict(self.frames), selection=self.selection,
-            provenance=dict(self.provenance))
+            provenance=dict(self.provenance), inherit=frozenset(self.inherit))
 
     # ---- basics ------------------------------------------------------
     def __len__(self) -> int:
@@ -140,6 +179,9 @@ class KnowledgeGraph:
 
         Sorted rather than set-ordered on purpose; see the module docstring.
         """
+        got = self._anc.get((n, limit))
+        if got is not None:
+            return got
         seen: set[int] = set()
         order: list[int] = []
         frontier = [n]
@@ -152,7 +194,8 @@ class KnowledgeGraph:
             if not nxt:
                 break
             frontier = sorted(nxt)
-        return tuple(order)
+        got = self._anc[(n, limit)] = tuple(order)
+        return got
 
     def descendants(self, n: int, *, max_depth: int = 3) -> tuple[int, ...]:
         """Everything under ``n`` within ``max_depth`` hyponym hops.
@@ -168,6 +211,9 @@ class KnowledgeGraph:
         ``two_objects_of_different_kinds_draw_from_different_candidate_sets`` is
         the assertion that caught it.
         """
+        got = self._desc.get((n, max_depth))
+        if got is not None:
+            return got
         seen: set[int] = set()
         frontier = [n]
         for _ in range(max_depth):
@@ -179,7 +225,8 @@ class KnowledgeGraph:
             if not nxt:
                 break
             frontier = sorted(nxt)
-        return tuple(sorted(seen))
+        got = self._desc[(n, max_depth)] = tuple(sorted(seen))
+        return got
 
     def kinds_under(self, n: int, *, min_lemmas: int = 1) -> tuple[int, ...]:
         """Direct hyponyms with at least ``min_lemmas`` printable lemmas."""
@@ -197,20 +244,57 @@ class KnowledgeGraph:
         return ancestor in self.ancestors(n)
 
     # ---- what a thing is made of and made from -----------------------
-    def parts_of(self, n: int, *, inherited: bool = True) -> tuple[int, ...]:
+    def parts_of(self, n: int, *, inherited: bool | None = None) -> tuple[int, ...]:
         return self._meronyms("part", n, inherited)
 
-    def substances_of(self, n: int, *, inherited: bool = True) -> tuple[int, ...]:
+    def substances_of(self, n: int, *, inherited: bool | None = None) -> tuple[int, ...]:
         return self._meronyms("substance", n, inherited)
 
-    def members_of(self, n: int, *, inherited: bool = True) -> tuple[int, ...]:
+    def members_of(self, n: int, *, inherited: bool | None = None) -> tuple[int, ...]:
         return self._meronyms("member", n, inherited)
 
-    def _meronyms(self, rel: str, n: int, inherited: bool) -> tuple[int, ...]:
-        """Meronymy is inherited down the taxonomy and WordNet does not restate
-        it: ``penguin`` has no part edges, ``bird`` has ``beak`` and ``wing``.
-        Walking the ancestors is what makes the relation usable at the leaves,
-        which is where a curriculum draws."""
+    def properties_of(self, n: int, *, inherited: bool | None = None) -> tuple[int, ...]:
+        """Adjectives the graph licenses for this kind. **Not inherited.**
+
+        Empty on every graph without a ``property`` relation, WordNet's
+        projection included — which is the property that lets a commonsense
+        graph be added beside it without redefining anything already published.
+
+        The default differs from :meth:`parts_of` and that difference is the
+        whole point. Meronymy *has* to be inherited on WordNet: ``penguin`` has
+        no part edges and ``bird`` has ``beak`` and ``wing``, so without the
+        climb the relation is empty at the leaves where a curriculum draws.
+        Property assertions are the opposite — ConceptNet states them at the
+        concept (``penguin HasProperty black``) — and inheriting them is a
+        WordNet-shaped assumption that does not transfer.
+
+        Measured before this default was chosen, because the failure it avoids
+        is silent. With inheritance on, ``penguin``, ``dog``, ``brick``, ``car``,
+        ``chair`` and ``apple`` each end up licensing ~1,130 properties out of
+        the graph's 1,315 adjectives, because every chain reaches a general
+        ancestor that has been assigned everything. Six kinds with the same
+        candidate set is a uniform draw with more machinery — the exact defect
+        the seam exists to remove, reintroduced one relation over. Direct
+        assertions give ``penguin`` 12 and ``dog`` 284, which differ.
+        """
+        return self._meronyms("property", n, inherited)
+
+    def abilities_of(self, n: int, *, inherited: bool | None = None) -> tuple[int, ...]:
+        """Verbs this kind is asserted capable of. Empty without ``can``.
+
+        Not inherited, for the reason :meth:`properties_of` gives.
+        """
+        return self._meronyms("can", n, inherited)
+
+    def _meronyms(self, rel: str, n: int, inherited: bool | None) -> tuple[int, ...]:
+        """Read a relation at ``n``, climbing the taxonomy iff the graph says to.
+
+        ``inherited=None`` means "ask the graph", which is the only correct
+        default: whether a relation is stated at the parent or at the concept is
+        a fact about the source. See :attr:`inherit`.
+        """
+        if inherited is None:
+            inherited = rel in self.inherit
         got = list(self.out(rel, n))
         if inherited:
             for a in self.ancestors(n):

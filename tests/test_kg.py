@@ -76,6 +76,109 @@ def test_the_graph_carries_its_own_provenance():
     assert payload["selection"] == _vendor.SELECTION
 
 
+def test_the_vendored_cskg_graph_is_the_bytes_that_were_vendored():
+    """Same contract as WordNet's, for the second graph."""
+    got = hashlib.sha256(_vendor.CSKG_GRAPH_PATH.read_bytes()).hexdigest()
+    assert got == _vendor.CSKG_GRAPH_SHA256, (
+        f"the vendored CSKG projection is not the one recorded in _vendor.py "
+        f"({got} != {_vendor.CSKG_GRAPH_SHA256}). Rebuild it with "
+        f"`uv run --with pyarrow python scripts/build_cskg_kg.py`, or if the "
+        f"change is intended, re-record the constant *and* every number drawn "
+        f"on it.")
+
+
+def test_the_cskg_licence_and_its_statement_of_changes_travel_with_the_data():
+    """CC BY-SA 4.0 requires attribution *and* an indication of changes, and
+    this projection changes a great deal: ten of fifty-eight relations, a
+    lemma-collapsed node space, and two fields (part of speech, lexname) this
+    repo derived rather than found. A notice that omitted the last of those
+    would misattribute a judgement made here to the upstream data."""
+    text = _vendor.CSKG_LICENSE_PATH.read_text(encoding="utf-8")
+    assert "CC BY-SA 4.0" in text
+    assert "usc-isi-i2/cskg" in text
+    assert "Statement of changes" in text
+    assert "derived by this repo" in text
+
+
+def test_the_cskg_graph_carries_its_own_provenance():
+    with gzip.open(_vendor.CSKG_GRAPH_PATH, "rb") as f:
+        payload = json.loads(f.read().decode("utf-8"))
+    assert payload["source"]["sha256"] == _vendor.CSKG_UPSTREAM_SHA256
+    assert payload["selection"] == _vendor.CSKG_SELECTION
+
+
+def test_the_commonsense_graph_states_the_relation_the_lexical_one_cannot():
+    """Why a second graph exists at all, as an assertion rather than a claim.
+
+    The per-object attribute constraint draws on what the graph licenses for a
+    kind. On WordNet that is 1,408 ``part`` and 156 ``substance`` edges, so an
+    object's second attribute is one of its kind's *parts* -- ``beak``,
+    ``wing`` -- which is not what the slot means. CSKG states 30,513 property
+    assertions, so the same slot could get adjectives.
+    """
+    wn, cs = load("wordnet"), load("cskg")
+    assert not wn.edges.get("property")
+    assert len(cs.edges["property"]) > 10_000
+    by = cs.by_lemma()
+    penguin, dog = by["penguin"][0], by["dog"][0]
+    assert cs.properties_of(penguin) and cs.properties_of(dog)
+    # and the constraint is per-kind rather than shared
+    assert set(cs.properties_of(penguin)) != set(cs.properties_of(dog))
+    # every property query on the lexical graph is empty, which is what makes
+    # adding the relation unable to move a published WordNet number
+    assert wn.properties_of(wn.by_lemma()["dog"][0]) == ()
+
+
+def test_whether_a_relation_is_inherited_is_a_property_of_the_source():
+    """The regression guard for :attr:`KnowledgeGraph.inherit`.
+
+    Both settings load, generate and look fine, and each is silently wrong on
+    the other graph:
+
+    * WordNet states meronymy at the parent, so *without* the climb the relation
+      is empty at exactly the leaves a curriculum draws from;
+    * ConceptNet states properties at the concept, so *with* the climb every
+      chain reaches a general ancestor carrying most of the adjective
+      vocabulary. Measured: six unrelated kinds each license ~1,130 of the
+      graph's 1,365 adjectives, which is a uniform draw wearing a constraint's
+      name -- the exact defect the seam exists to remove.
+    """
+    wn, cs = load("wordnet"), load("cskg")
+    assert wn.inherit == frozenset({"part", "substance", "member"})
+    assert cs.inherit == frozenset()
+
+    # WordNet: the leaves have nothing of their own and the climb is what makes
+    # the relation usable. Asserted over the graph rather than on one lemma,
+    # because a lemma is a fixture and this is a claim about the source.
+    only_inherited = [n for n in range(len(wn))
+                      if not wn.out("part", n) and wn.parts_of(n)]
+    assert len(only_inherited) > 1000, len(only_inherited)
+
+    # CSKG: the climb is what would destroy the constraint. Compared on the
+    # kinds whose taxonomy actually reaches a general ancestor -- `penguin` and
+    # `car` have short chains under the pos-tagged `isa` filter and barely move,
+    # which is itself the point: the damage is not uniform and averaging over
+    # kinds would hide it.
+    by = cs.by_lemma()
+    ws = [w for w in ("penguin", "dog", "brick", "car", "chair", "apple")
+          if w in by]
+    direct = {w: set(cs.properties_of(by[w][0])) for w in ws}
+    climbed = {w: set(cs.properties_of(by[w][0], inherited=True)) for w in ws}
+    assert len(set(map(frozenset, direct.values()))) == len(ws), "direct collapse"
+
+    big = [w for w in ws if len(climbed[w]) > 500]
+    assert len(big) >= 3, (climbed and {w: len(c) for w, c in climbed.items()})
+    small = min(len(climbed[w]) for w in big)
+    assert len(set.intersection(*[climbed[w] for w in big])) > 0.9 * small, (
+        "the climbed sets were expected to converge on nearly one vocabulary; "
+        "if they no longer do, the graph changed and this default should be "
+        "re-derived rather than kept")
+    # and the same kinds share almost nothing when the relation is read where
+    # the graph states it
+    assert len(set.intersection(*[direct[w] for w in big])) < 0.5 * min(
+        len(direct[w]) for w in big)
+
+
 def test_nothing_in_the_package_reaches_the_network():
     """The one thing that downloads is a script, and it is not importable from
     the package. ``symbolic_ai_data``'s ``site-languages.db.gz`` was recorded as
@@ -226,7 +329,7 @@ def test_each_kg_curriculum_has_its_own_fingerprint(curriculum):
         assert golden["lessons"][lid]["raw"] == got["lessons"][lid]["raw"], lid
 
 
-def test_the_curricula_are_four_different_worlds():
+def test_the_curricula_are_all_different_worlds():
     """A KG arm that reproduced the base arm would be a null by construction,
     and a control that reproduced its treatment would be no control. Two rows
     identical to every digit are one row -- the cheapest detector this repo
@@ -392,10 +495,29 @@ def test_no_model_can_read_the_knowledge_graph():
         f"the leak question -- see this test's docstring.")
 
 
-def test_the_pools_are_not_empty():
-    """A pool that came out empty would send every slot to its fallback and the
-    treatment would silently be the baseline."""
+def test_a_pool_is_empty_only_where_the_graph_has_no_relation_to_fill_it():
+    """A pool that came out empty sends every slot to its fallback, and the
+    treatment is then silently the baseline. So the assertion is not "no pool is
+    ever empty" -- that is false, and weakening it to a warning would be
+    exactly a guard applied only where it is convenient. It is: **a pool is
+    empty only when the graph has no edges of the relation that fills it**.
+
+    ``dimensions`` is the case that made this necessary and it is a real
+    limitation rather than a bug. A dimension is a noun naming an attribute
+    (``weight``, with ``heavy`` and ``light`` under it), stated by WordNet's
+    ``=`` attribute pointer and by nothing in CSKG -- ConceptNet says ``lemon
+    HasProperty sour`` and never says which dimension ``sour`` is a value of.
+    So the CSKG arms fall back on the ``property`` and ``size`` slots 100% of
+    the time, which is reported in the fallback table beside the result exactly
+    as WordNet's 100% on ``name`` and ``material`` is.
+    """
+    fills = {"families": "isa", "dimensions": "attr", "persons": "isa",
+             "places": "isa", "artifacts": "isa"}
     for name in KG_NAMES:
-        P = pools_for(load(name))
-        for key in ("families", "dimensions", "persons", "places", "artifacts"):
-            assert P[key], (name, key)
+        kg = load(name)
+        P = pools_for(kg)
+        for key, rel in fills.items():
+            if kg.edges.get(rel):
+                assert P[key], (name, key, "graph has the relation and no pool")
+            elif P[key]:                                    # pragma: no cover
+                raise AssertionError((name, key, "pool without the relation"))
