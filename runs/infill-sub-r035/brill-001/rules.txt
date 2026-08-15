@@ -1,0 +1,27 @@
+=== label ===
+  baseline: 1007 context defaults
+  1. IF parent_type='list' THEN label := prev_sibling   [+10646 -4013]
+  2. IF parent_head=6518 THEN label := prev_sibling   [+5 -0]
+  3. IF parent_head=6237 THEN label := peer   [+3 -0]
+=== type ===
+  baseline: 6 context defaults
+  1. IF parent_type='pred' THEN label := peer   [+6580 -314]
+  2. IF parent_type='list' THEN label := prev_sibling   [+2763 -9]
+  3. IF parent_head=5787 THEN label := parent   [+67 -30]
+  4. IF parent_type='field' THEN label := peer   [+37 -6]
+  5. IF parent_head=5798 THEN label := prev_sibling   [+14 -0]
+  6. IF parent_head=5787 THEN label := peer   [+14 -1]
+  7. IF parent_head=6518 THEN label := parent   [+12 -0]
+  8. IF parent_head=734 THEN label := parent   [+12 -2]
+  9. IF parent_head=5826 THEN label := parent   [+26 -17]
+  10. IF parent_head=6458 THEN label := parent   [+9 -0]
+  11. IF parent_head=7008 THEN label := parent   [+9 -0]
+  12. IF parent_head=5808 THEN label := prev_sibling   [+10 -2]
+  13. IF parent_head=5946 THEN label := prev_sibling   [+8 -0]
+  14. IF parent_head=6733 THEN label := parent   [+8 -0]
+  15. IF parent_head=7017 THEN label := parent   [+8 -0]
+  16. IF parent_head=6939 THEN label := parent   [+7 -0]
+  17. IF parent_head=7022 THEN label := parent   [+7 -0]
+  18. IF parent_head=6816 THEN label := parent   [+6 -0]
+  19. IF parent_head=6982 THEN label := parent   [+6 -0]
+  20. IF parent_head=6988 THEN label := parent   [+6 -0]

@@ -1,0 +1,119 @@
+{
+  "config": {
+    "model": "grammar-001",
+    "tasks": [
+      "nodesub"
+    ],
+    "task_weights": {
+      "nodesub": 1.0
+    },
+    "data": null,
+    "lessons": "all",
+    "n_train": 20,
+    "n_eval": 4,
+    "language": "english",
+    "languages": "",
+    "max_len": 320,
+    "max_nodes": 128,
+    "mask_rate": 0.35,
+    "type_weight": 0.5,
+    "vocab_size": 8192,
+    "label_vocab_fraction": 0.3,
+    "d_model": 96,
+    "n_layers": 3,
+    "n_heads": 4,
+    "d_ff": 256,
+    "dropout": 0.1,
+    "extra": {},
+    "steps": 2000,
+    "batch_size": 16,
+    "lr": 0.0003,
+    "min_lr_ratio": 0.1,
+    "warmup": 100,
+    "weight_decay": 0.01,
+    "grad_clip": 1.0,
+    "eval_every": 250,
+    "log_every": 50,
+    "seed": 0,
+    "resume": true,
+    "device": "cpu",
+    "amp": true,
+    "out": "runs/infill-sub-r035/grammar-001"
+  },
+  "model_config": {
+    "vocab_size": 8192,
+    "d_model": 96,
+    "n_layers": 3,
+    "n_heads": 4,
+    "d_ff": 256,
+    "dropout": 0.1,
+    "max_len": 328,
+    "max_nodes": 128,
+    "extra": {}
+  },
+  "model": "grammar-001",
+  "family": "rule-based",
+  "steps": 0,
+  "parameters": 65600,
+  "n_train": 3580,
+  "n_eval": 716,
+  "vocab_size": 8192,
+  "floors": {
+    "nodesub": {
+      "type_acc": 0.7713763988474167,
+      "type_bits": 2.138822046732047,
+      "type_n": 119384.0,
+      "label_acc": 0.12778595876781024,
+      "label_bits": 9.313175391141346,
+      "label_n": 100504.0,
+      "copy_acc": 0.1750750296110928,
+      "rsymbol_acc": 0.12778595876781024,
+      "rsymbol_bits": 9.313175391141346,
+      "rsymbol_n": 100504.0,
+      "rnode_acc": 0.1750750296110928
+    }
+  },
+  "temperature": 1.0,
+  "final": {
+    "nodesub": {
+      "label_acc": 0.10319410319410319,
+      "label_bits": 8.075773556689827,
+      "label_n": 12617.0,
+      "type_acc": 0.6183743215171212,
+      "type_bits": 1.572901681321545,
+      "type_n": 14923.0,
+      "label_coverage": 0.8454734302754138,
+      "copy_ceiling": 0.5850043591979076,
+      "copy_censored": 1089.0,
+      "rsymbol_acc": 0.10319410319410319,
+      "rsymbol_bits": 8.075773556689827,
+      "rsymbol_n": 12617.0,
+      "label_floor": 0.12778595876781024,
+      "label_lift": -0.02819474854929619,
+      "type_floor": 0.7713763988474167,
+      "type_lift": -0.669231332893676,
+      "rsymbol_floor": 0.12778595876781024,
+      "rsymbol_lift": -0.02819474854929619,
+      "label_floor_bits": 9.313175391141346,
+      "label_bits_lift": 0.13286572865668686,
+      "type_floor_bits": 2.138822046732047,
+      "type_bits_lift": 0.26459441367512737,
+      "rsymbol_floor_bits": 9.313175391141346,
+      "rsymbol_bits_lift": 0.13286572865668686
+    }
+  },
+  "seconds": 65.46633005142212,
+  "device": "cpu",
+  "renaming": {
+    "label_acc": 0.09690261632204056,
+    "renamed_label_acc": 0.0008758659241721034,
+    "drop": 0.09602675039786845,
+    "symbols": 2105.0
+  },
+  "masking": {
+    "mask_mode": "subtree",
+    "mask_rate": 0.35,
+    "fit_mask_rate": 0.35,
+    "fit_mask_mode": "subtree"
+  }
+}

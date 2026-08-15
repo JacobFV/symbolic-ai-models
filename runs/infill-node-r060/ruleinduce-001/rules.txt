@@ -1,0 +1,17 @@
+=== label ===
+DecisionList(4 rules, 15 params)
+  IF sibling_type(_,=pred) ∧ slot(>0) ∧ ¬depth(=4) THEN ('prev',)  [51721/62600]
+  IF depth(=1) THEN ('const', 5735)  [8563/8687]
+  IF sibling_type(=0,=pred) ∧ depth(=3) ∧ ¬parent_type(=pred) THEN ('sibling', 0)  [5688/5904]
+  IF slot(=7) ∧ ¬sibling_type(_,=char) ∧ ¬sibling_type(_,=token) THEN ('prev',)  [5224/5481]
+  ELSE ('prev',)
+=== type ===
+DecisionList(3 rules, 11 params)
+  IF arity(=0) ∧ ¬depth(=3) ∧ ¬sibling_type(_,=char) THEN 6  [73978/107453]
+  IF sibling_type(_,=pred) ∧ ¬sibling_type(=1,=ident) ∧ ¬parent_head(=5736) THEN 12  [32609/32771]
+  IF depth(=1) THEN 15  [12369/12369]
+  ELSE 12
+=== text ===
+DecisionList(1 rules, 4 params)
+  IF back1(=264) ∧ ¬back3(=263) THEN ('const', 263)  [9668/9972]
+  ELSE ('const', 265)
