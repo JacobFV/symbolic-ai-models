@@ -9,6 +9,16 @@ related: [the-action-readout-clears-the-repair-floor-on-179-lessons,
 
 # Pre-registration: the two attacks on the action-readout finding
 
+> **Outcome, added after the fact and nothing above it edited:**
+> `notes/findings/2026-08-14-the-readout-survives-both-attacks-and-its-comparison-row-does-not.md`.
+> `C` = 0.3609 (threshold for "survives in the form claimed" was ≥ 0.2966);
+> `W24` = 0.0767, which is *below* `wrap` at 8 rather than above it, so the
+> primary test landed in the "stronger form" branch. `abstain` = 0.0866 against
+> `random` 0.0543 — Attack 2's outcome (2) *and* (3) both landed, which the
+> thresholds did not anticipate could happen together. The one thing this
+> document got wrong is recorded as its own lesson:
+> `notes/lessons/2026-08-14-an-unmeasured-confound-has-an-unknown-sign.md`.
+
 Written **before any of the runs below were started**, by an agent that did not
 write the finding it is attacking. Committed on its own so that the thresholds
 are in git ahead of the numbers, which is the only defence this repo has found

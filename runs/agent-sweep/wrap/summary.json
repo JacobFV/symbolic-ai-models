@@ -1,0 +1,69 @@
+{
+  "config": {
+    "agent": "wrap",
+    "envs": [
+      "repair"
+    ],
+    "data": null,
+    "lessons": "all",
+    "n_train": 8,
+    "n_eval": 4,
+    "language": "english",
+    "max_nodes": 256,
+    "vocab_size": 8192,
+    "label_vocab_fraction": 0.3,
+    "tries": 3,
+    "mask_rate": 0.15,
+    "max_steps": 8,
+    "max_actions": 24,
+    "probe_cost": 0.1,
+    "max_probes": 6,
+    "extra": {
+      "model": "corefer-001",
+      "channel": "symbol"
+    },
+    "seed": 0,
+    "keep": 32,
+    "out": "runs/agent-sweep/wrap"
+  },
+  "agent": "wrap",
+  "family": "rule-based",
+  "steps": 0,
+  "parameters": 3732,
+  "n_train": 1432,
+  "n_eval": 716,
+  "vocab_size": 7831,
+  "floors": {
+    "repair": {
+      "return": 0.196305533386539,
+      "success": 0.06983240223463687,
+      "moves": 3.775139664804469,
+      "probes": 0.0,
+      "n": 716.0,
+      "label_acc": 0.20250759878419453,
+      "recoverable": 0.6596491228070176,
+      "fills": 2632.0,
+      "floor_by": "context"
+    }
+  },
+  "final": {
+    "repair": {
+      "return": 0.07260574620909821,
+      "success": 0.019553072625698324,
+      "moves": 3.775139664804469,
+      "probes": 0.0,
+      "n": 716.0,
+      "label_acc": 0.0851063829787234,
+      "recoverable": 0.6596491228070176,
+      "fills": 2632.0,
+      "return_floor": 0.196305533386539,
+      "return_lift": -0.15391394655070398,
+      "success_floor": 0.06983240223463687,
+      "success_lift": -0.05405405405405404,
+      "label_acc_floor": 0.20250759878419453,
+      "label_acc_lift": -0.14721295855169128,
+      "floor_by": "context"
+    }
+  },
+  "seconds": 263.7672233581543
+}
