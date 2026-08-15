@@ -182,6 +182,20 @@ exception is `evidence-001` in the 0.2–0.4 band, 0.698 against 0.697 — above
 0.001, which is a fifth of this repo's own noise floor. Counted honestly rather
 than rounded into the claim.
 
+**And the control that says `v/V` is measuring the pointer's supply and not
+difficulty in general.** `grammar-001` names rather than points, so its accuracy
+should not depend on how concentrated the coreferent evidence is. At 0.15 it does
+not — 0.169, 0.188, 0.177, 0.185 across the four bands, a spread of 0.019 where
+`corefer-001` spans 0.525 to 0.960. The covariate separates the two mechanisms
+exactly as it should, which is not something the banding was chosen to do.
+
+At 0.90 `grammar-001` gets worse at **everything**: `acc | copyable` 0.191 →
+0.101 and `acc | not copyable` 0.178 → 0.065, the latter falling in every
+multiplicity stratum. That is the rung-2 mechanism arriving by the other route —
+its rules key on context, and at 90% masking the context is gone. So the sixth
+standardised shortfall is **−0.118**, and no model measured here converts its
+supply at 0.90 as well as it did at 0.15.
+
 **The two supply models bracket the truth, and they miss by the same amount in
 opposite directions.** Carrying the 0.15 numbers forward to predict `label_acc`
 at 0.90:
