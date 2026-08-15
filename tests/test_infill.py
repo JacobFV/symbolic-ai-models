@@ -329,6 +329,24 @@ def test_the_fitting_regime_can_be_forced_away_from_the_scoring_one(episodes):
     assert model.fit_mask_rate == pytest.approx(0.15)
 
 
+def test_the_split_floor_pools_back_to_the_floor(episodes):
+    """A second floor is a floor that drifts, so this one must not be a second.
+
+    `split_floor` answers a different question — what a structure-only lookup
+    gets on the copyable half and on the other — using the same rule, the same
+    context ladder and the same masking draw. If it has become an independent
+    implementation, its pooled number stops matching `floor()`'s, and that is
+    the only cheap detector there is. It fails on any change to one and not the
+    other.
+    """
+    train, ev, tok = episodes
+    task = make_task("node", mask_rate=0.15, max_nodes=128)
+    pooled = task.split_floor(ev, tok, train)
+    assert pooled["floor_pooled"] == pytest.approx(
+        task.floor(ev, tok, train)["label_acc"], abs=1e-12)
+    assert pooled["n_copyable"] + pooled["n_not_copyable"] > 0
+
+
 def test_every_graph_task_is_registered_and_named(episodes):
     assert set(GRAPH_TASKS) <= set(TASKS)
     for name in GRAPH_TASKS:
