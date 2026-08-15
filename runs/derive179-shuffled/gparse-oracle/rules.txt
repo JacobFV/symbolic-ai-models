@@ -1,0 +1,16 @@
+gparse-oracle: parser=oracle boundary contexts=1 fired=1.000 answer in parse=0.902 confidence by margin=[0.42, 0.38, 0.291, 0.246, 0.266]
+  ('pl', 'smaller', 1) +5.67
+  ('path', 'demonstrations', 'bedframe bedframe') +5.08
+  ('path', 'demonstrations', 'bight bight') +5.08
+  ('pl', 'bight air bight', 1) +5.08
+  ('pl.m', 'bedframe bedframe', 3) +5.08
+  ('pl.m', 'bight bight', 3) +5.08
+  ('pl', 'aileron air', 1) +4.57
+  ('pl', 'aileron bedframe', 1) +4.57
+  ('pl', 'aileron bedframe aileron', 1) +4.57
+  ('pl', 'aileron calcaneus', 1) +4.57
+  ('pl', 'bedframe aileron bedframe', 0) +4.57
+  ('pl', 'bedframe aileron bedframe', 2) +4.57
+  ('pl', 'bedframe air bedframe', 1) +4.57
+  ('pl', 'bedframe bedframe', 0) +4.57
+  ('pl', 'bedframe bedframe', 1) +4.57

@@ -22,7 +22,14 @@ This package is the seam for fixing that at the data level. It holds
   makes "semantics helped" separable from "more structure helped";
 * :mod:`symbolic_ai_kg.bind` — the dependency DAG: a lesson anchors some
   variables outright and binds the rest under constraint from the ones already
-  bound.
+  bound;
+* :mod:`symbolic_ai_kg.derive` — the slot that is **not drawn at all**. ``bind``
+  re-labels the curriculum and its scramble is therefore an isomorphism, which
+  is why that control tied at −0.0013 and could not have done anything else.
+  ``derive`` makes an object's attribute *follow* from its kind through a fixed
+  corpus-wide map, and its control — the same map permuted per episode — removes
+  the one channel the treatment has. See
+  ``notes/decisions/2026-08-15-derivability-is-the-treatment-and-the-per-episode-permutation-is-the-control.md``.
 
 Nothing here changes the existing curriculum. The KG curricula are registered
 beside it under their own names and the 179-lesson fingerprint stays green;
@@ -31,8 +38,10 @@ that test firing would mean this package had broken rule 1 of the decision note.
 
 from __future__ import annotations
 
+from .derive import DeriveBinder, anchor_map
 from .graph import KnowledgeGraph
 from .registry import KG_NAMES, load
 from .scramble import degree_preserving_shuffle
 
-__all__ = ["KnowledgeGraph", "KG_NAMES", "load", "degree_preserving_shuffle"]
+__all__ = ["KnowledgeGraph", "KG_NAMES", "load", "degree_preserving_shuffle",
+           "DeriveBinder", "anchor_map"]

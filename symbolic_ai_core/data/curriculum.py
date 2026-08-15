@@ -151,8 +151,32 @@ def resolve_lessons(spec: str | Sequence[str] | None) -> list[str]:
 #: would be unreadable. Registering the curriculum would have invited exactly
 #: that sweep. See
 #: ``notes/decisions/2026-08-15-the-commonsense-arms-are-built-and-not-run.md``.
+#: **The ``derive:`` arms are a different manipulation from the ``kg:`` ones and
+#: must not be tabulated with them.** ``kg:`` re-labels the curriculum: where the
+#: generator drew ``rng.choice(COLORS)`` it draws a graph-consistent colour
+#: instead, so the answer sits in the same place, reachable by the same route.
+#: That is why ``kg:wordnet-shuffled`` tied its treatment at −0.0013 and could
+#: not have done otherwise — a degree-preserving permutation of a fixed graph is
+#: a fixed graph, and to a learner whose only input is this corpus the two arms
+#: are one problem relabelled.
+#:
+#: ``derive:wordnet`` does not draw the attribute slot at all. An object's
+#: attribute *follows* from its kind through a six-pair map fixed for the whole
+#: corpus (``pigboat --has-part--> anchor``), so the fill is neither copyable nor
+#: a memorised marginal but inferable from the visible kind beside it.
+#: ``derive:wordnet-perm`` is its control: the same six kinds, the same six
+#: values, the same bijection, composed with a **fresh permutation per episode**.
+#: Every marginal, the value multiset, the collision structure and therefore the
+#: copyable share are identical by construction; the one thing removed is
+#: cross-episode co-occurrence, which is the only channel the treatment has.
+#: ``derive:wordnet-shuffled`` reads the same six kinds' values off the scrambled
+#: graph and is **predicted to tie** — it is a measured check of an argument, not
+#: a load-bearing control. See
+#: ``notes/decisions/2026-08-15-derivability-is-the-treatment-and-the-per-episode-permutation-is-the-control.md``.
 CURRICULA: tuple[str, ...] = ("base", "kg:wordnet", "kg:wordnet-shuffled",
-                              "kg:wordnet-flat")
+                              "kg:wordnet-flat",
+                              "derive:wordnet", "derive:wordnet-perm",
+                              "derive:wordnet-shuffled")
 
 
 def curriculum_ids() -> list[str]:
@@ -168,6 +192,8 @@ def _binder_factory(curriculum: str):
     """
     if curriculum in ("base", "", None):
         return None
+    if curriculum.startswith("derive:"):
+        return _derive_factory(curriculum[len("derive:"):])
     if not curriculum.startswith("kg:"):
         raise ValueError(f"unknown curriculum {curriculum!r}; have {list(CURRICULA)}")
     from symbolic_ai_kg import load as load_kg
@@ -177,6 +203,28 @@ def _binder_factory(curriculum: str):
     kg = load_kg(name[:-len("-flat")] if not structured else name)
     return lambda lesson_id, seed: KGBinder(kg, lesson_id, seed,
                                             structured=structured)
+
+
+def _derive_factory(name: str):
+    """``(lesson_id, seed) -> DeriveBinder`` for one ``derive:`` arm.
+
+    The anchor set is selected **once, from the real graph**, and pinned into
+    every arm. Without the pin the scramble would change which nouns have the
+    most parts, so the control would differ from its treatment in the six kind
+    words as well as in the map — and a control that moves the vocabulary is not
+    controlling the correspondence, it is confounding it.
+    """
+    from symbolic_ai_kg import load as load_kg
+    from symbolic_ai_kg.derive import DeriveBinder, anchor_map
+
+    permute = name.endswith("-perm")
+    graph_name = name[:-len("-perm")] if permute else name
+    kinds, _ = anchor_map(load_kg("wordnet"))
+    kg = load_kg(graph_name)
+    kinds, values = anchor_map(kg, kinds=kinds)
+    return lambda lesson_id, seed: DeriveBinder(
+        kinds=kinds, values=values, lesson_id=lesson_id, seed=seed,
+        permute=permute, graph=name)
 
 
 def generate(lessons: Sequence[str], *, n: int, seed0: int = 0,

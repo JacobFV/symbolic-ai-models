@@ -1,0 +1,24 @@
+Uninstalled 1 package in 0.51ms
+Installed 1 package in 2ms
+model                 mode      rate      n  copyable  acc | copyable  acc | not  acc all     gap
+-------------------------------------------------------------------------------------------------
+analogy-001           scatter   0.15   5233     0.721           0.436      0.064    0.332   0.372
+brill-001             scatter   0.15   5233     0.721           0.346      0.139    0.288   0.208
+corefer-001           scatter   0.15   5233     0.721           0.494      0.005    0.358   0.489
+ctw-001               scatter   0.15   5233     0.721           0.105      0.089    0.101   0.016
+evidence-001          scatter   0.15   5233     0.721           0.304      0.002    0.220   0.302
+grammar-001           scatter   0.15   5233     0.721           0.179      0.178    0.179   0.001
+ngram-001             scatter   0.15   5233     0.721           0.163      0.149    0.159   0.014
+omegaclaw_flat-001    scatter   0.15   5233     0.721           0.315      0.060    0.244   0.255
+omegaclaw_rank-001    scatter   0.15   5233     0.721           0.468      0.064    0.356   0.405
+ptrgen-001            scatter   0.15   5233     0.721           0.458      0.019    0.335   0.439
+routes-001            scatter   0.15   5233     0.721           0.447      0.000    0.323   0.447
+symbolalg-001         scatter   0.15   5233     0.721           0.177      0.080    0.150   0.097
+vsa-002               scatter   0.15   5233     0.721           0.282      0.056    0.219   0.227
+vsa_pure-002          scatter   0.15   5233     0.721           0.279      0.000    0.201   0.279
+workspace-001         scatter   0.15   5233     0.721           0.481      0.029    0.355   0.452
+ilp-001               scatter   0.15   5233     0.721           0.408      0.053    0.310   0.355
+ensemble-pointers     scatter   0.15   5233     0.721           0.466      0.019    0.342   0.447
+-------------------------------------------------------------------------------------------------
+FLOOR (structure only)                42293     0.715           0.161      0.105    0.145   0.055
+the pooled floor is asserted equal to the run's own `label_floor`, which is what says this is the same floor and not a second one

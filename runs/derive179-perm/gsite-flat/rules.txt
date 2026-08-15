@@ -1,0 +1,1 @@
+gsite-flat: parser=flat fired=1.000 confidence by walk depth=[0.277, 0.277, 0.277, 0.277, 0.277]
