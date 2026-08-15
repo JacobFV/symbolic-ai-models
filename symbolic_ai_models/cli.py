@@ -59,9 +59,14 @@ def _add_train_flags(p: argparse.ArgumentParser) -> None:
                         "and interleaves them (an exact parallel corpus)")
     p.add_argument("--curriculum",
                    help="base (every published number) | kg:wordnet | "
-                        "kg:wordnet-shuffled. The same 179 lessons in each; the "
-                        "KG arms bind the closed word lists under a knowledge "
-                        "graph. Recorded in every summary.")
+                        "kg:wordnet-shuffled | derive:wordnet | "
+                        "derive:wordnet-perm. The same 179 lessons in each. The "
+                        "kg: arms bind the closed word lists under a knowledge "
+                        "graph -- a relabelling. The derive: arms do not draw the "
+                        "attribute slot at all: it follows from the object's kind "
+                        "through a corpus-wide map, and derive:wordnet-perm is "
+                        "that map permuted per episode, which is the control that "
+                        "can fail. Recorded in every summary.")
     p.add_argument("--steps", type=int)
     p.add_argument("--batch-size", dest="batch_size", type=int)
     p.add_argument("--lr", type=float)

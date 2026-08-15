@@ -35,6 +35,13 @@ __pycache__/
 # Directories must be re-included explicitly or git will not descend into them
 # to find the negations.
 #
+# `derived_split.json` joined them on 2026-08-15 for the same reason as
+# `copyable_split.txt`, one line below: it is the whole result of the
+# derivability arms -- `acc | derived, not copyable` and the derivation floor
+# that says the control could fail -- it is not in `summary.json`, and
+# `scripts/derived_split.py` needs the run's `model.pt` to recompute it. 6 KB
+# per arm against 139 MB of checkpoints.
+#
 # `copyable_split.txt` joined them on 2026-08-15, for the third instance of the
 # same miss. `label_acc` is 72% a copy score, so the number a note argues about
 # is usually `acc | not copyable` -- and that split is **not** in
@@ -48,3 +55,4 @@ __pycache__/
 !/runs/**/rules.txt
 !/runs/**/policy.txt
 !/runs/**/copyable_split.txt
+!/runs/**/derived_split.json

@@ -1,0 +1,67 @@
+# The derivability arms: the same 179 lessons, three curricula.
+#
+#   uv run symbolic-ai-models sweep --config configs/derive179.toml \
+#       --curriculum derive:wordnet          --out runs/derive179-wordnet
+#   uv run symbolic-ai-models sweep --config configs/derive179.toml \
+#       --curriculum derive:wordnet-perm     --out runs/derive179-perm
+#   uv run symbolic-ai-models sweep --config configs/derive179.toml \
+#       --curriculum derive:wordnet-shuffled --out runs/derive179-shuffled
+#
+# What separates these from `configs/kg179.toml`, which is otherwise identical
+# knob for knob. The `kg:` arms **re-label** the curriculum: where the generator
+# drew `rng.choice(COLORS)` it drew a graph-consistent colour instead, so the
+# answer sat in the same place, reachable by the same route. That is why
+# `kg:wordnet-shuffled` tied its treatment at -0.0013 on the non-copyable
+# quarter and could not have done anything else -- a degree-preserving
+# permutation of a fixed graph is a fixed graph, and to a learner whose only
+# input is this corpus the two arms are one problem relabelled. See
+# `notes/lessons/2026-08-15-a-degree-preserving-scramble-is-an-isomorphism-not-a-control.md`.
+#
+# The `derive:` arms do not draw the attribute slot at all. It **follows** from
+# the object's kind through a six-pair map fixed for the whole corpus:
+# ship->bay, building->annex, garment->arm, auto->buffer, body->abdomen,
+# shoe->lace, read off WordNet's `part` relation.
+#
+#   * `derive:wordnet`          the treatment.
+#   * `derive:wordnet-perm`     the control, and the load-bearing one. Same six
+#                               kinds, same six values, same bijection, composed
+#                               with a fresh uniform permutation **per episode**.
+#                               Every marginal, the value multiset, the collision
+#                               structure and therefore the copyable share are
+#                               identical by construction -- checked in
+#                               `tests/test_kg_derive.py` and measured at 0 of
+#                               1,432 episodes differing in tree shape. The one
+#                               thing removed is cross-episode co-occurrence,
+#                               which is the only channel the treatment has, so
+#                               this control **can** fail.
+#   * `derive:wordnet-shuffled` the same six kinds' values read off the scrambled
+#                               graph. **Predicted to tie** with the treatment,
+#                               and run as a measured check of that argument
+#                               rather than as a control.
+#
+# The measurement is `scripts/derived_split.py`, not the pooled table. The
+# derived slot is 0.20% of graph positions in 11 of 179 lessons, so the pooled
+# `label_acc` cannot move by more than about 0.003 even if the derived bucket
+# goes from 1/6 to 1.00. A pooled null here is not a result about derivability.
+#
+# Every knob below is copied from `configs/kg179.toml` unchanged, including
+# `n_eval`, so the `acc | not copyable` column is read against the same
+# evaluation contract the published KG arms were. n on the derived bucket is
+# bought in the analysis, from further eval-range seeds of the carrying lessons,
+# not by changing the sweep.
+
+tasks = "lm,node"
+lessons = "all"
+n_train = 20
+n_eval = 4
+
+vocab_size = 8192
+d_model = 96
+n_layers = 3
+n_heads = 4
+d_ff = 256
+dropout = 0.1
+max_len = 320
+max_nodes = 128
+batch_size = 16
+device = "cpu"
