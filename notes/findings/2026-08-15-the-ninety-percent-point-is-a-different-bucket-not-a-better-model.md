@@ -163,11 +163,17 @@ the same mechanism that made `corefer`'s look like an improvement.
 Standardised shortfalls over the concentration mix, all three negative and in the
 same order as `copy_lift` at 0.90:
 
-| model | v/V-standardised `acc \| copyable` | observed | shortfall | `copy_lift` at 0.90 |
-|---|---:|---:|---:|---:|
-| `corefer-001` | 0.696 | 0.597 | **−0.099** | −0.149 |
-| `ptrgen-001` | 0.688 | 0.569 | **−0.120** | −0.153 |
-| `routes-001` | 0.657 | 0.415 | **−0.242** | −0.219 |
+| model | pooled Δ `acc \| copyable` | v/V-standardised | observed | shortfall | `copy_lift` at 0.90 |
+|---|---:|---:|---:|---:|---:|
+| `corefer-001` | +0.103 | 0.696 | 0.597 | **−0.099** | −0.149 |
+| `ptrgen-001` | +0.107 | 0.688 | 0.569 | **−0.120** | −0.153 |
+| `evidence-001` | **+0.165** | 0.618 | 0.468 | **−0.149** | −0.148 |
+| `routes-001` | −0.033 | 0.657 | 0.415 | **−0.242** | −0.219 |
+
+`evidence-001` is the sharpest single row in this note: the **largest** pooled
+rise of the six, +0.165, and a −0.149 shortfall once concentration is held —
+within 0.001 of its own `copy_lift`. Four models, four negative shortfalls, and
+the pooled column has the wrong sign for three of them.
 
 **The two supply models bracket the truth, and they miss by the same amount in
 opposite directions.** Carrying the 0.15 numbers forward to predict `label_acc`
@@ -287,9 +293,9 @@ zero and the ladder's conclusion needs no bound at all.
 
 ## Provisional, and what it is not
 
-The stratifications (m, v/V, node type) are `corefer-001`, `ptrgen-001` and
-`routes-001` — one that rose a lot, one that rose a lot, one that fell, and all
-three negative once concentration is held. The conditional
+The stratifications (m, v/V, node type) are `corefer-001`, `ptrgen-001`,
+`evidence-001` and `routes-001` — the biggest riser, two middling risers and the
+faller, all four negative once concentration is held. The conditional
 split is six models, the `copy_lift` table is all six pointer-bearing models on
 the full published sweep, and the twelve-model split of the 0.90 arm was still
 fitting `ctw-001` when this was written.
