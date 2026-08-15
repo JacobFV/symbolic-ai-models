@@ -37,7 +37,8 @@ from .graph import STRUCTURAL, TYPE_TO_ID, Graph
 from .tokenizer import SymbolTokenizer
 
 __all__ = ["SymbolicBatch", "RELATIONS", "N_RELATIONS", "MAX_SLOT",
-           "relation_matrix", "collate_text", "collate_graph", "IGNORE"]
+           "relation_matrix", "collate_text", "collate_graph", "IGNORE",
+           "MASK_MODES", "choose_hidden", "answer_nodes"]
 
 #: The loss ignores this index, matching ``F.cross_entropy``'s default.
 IGNORE = -100
@@ -177,6 +178,150 @@ def relation_matrix(g: Graph, n: int,
 
 
 # ---------------------------------------------------------------------------
+# what gets hidden
+# ---------------------------------------------------------------------------
+#: The masking regimes. ``scatter`` is what every published number in this repo
+#: was measured under and its behaviour is frozen: same arithmetic, same draws
+#: from the same generator, in the same order.
+#:
+#: The other two exist because scattered masking at 15% is a very particular
+#: question. It leaves a hidden node's siblings, children and parent visible
+#: almost always, so "predict this node" is interpolation inside a graph that is
+#: 85% given. ``subtree`` removes a whole constituent instead, at the same
+#: budget, which is the difference between filling a gap and generating a
+#: phrase. ``answer`` removes the one constituent the curriculum itself asks
+#: about. See ``notes/decisions/2026-08-14-generation-is-parse-tree-infilling.md``.
+#:
+#: ``answer_one`` is ``answer``'s control and exists because ``answer`` hides
+#: **every** node carrying the answer, which is correct — leaving a copy visible
+#: would make the curriculum's question a copy exercise — and which also means a
+#: pointer head cannot answer it at all, since a pointer emits the label of a
+#: *visible* node. "Pointers score zero on `answer`" is therefore true by
+#: construction and is no evidence about pointers. ``answer_one`` hides the first
+#: occurrence only, so on the episodes with more than one the copy route is open
+#: and the same models can be asked the same question with the mechanism they
+#: actually have. Without it the rung-3 null cannot be told apart from its own
+#: design.
+MASK_MODES = ("scatter", "subtree", "answer", "answer_one")
+
+
+def _children(g: Graph, n: int) -> dict[int, list[int]]:
+    kids: dict[int, list[int]] = {}
+    for i in range(n):
+        p = g.parent[i]
+        if 0 <= p < n:
+            kids.setdefault(p, []).append(i)
+    return kids
+
+
+def _subtrees(n: int, kids: dict[int, list[int]]) -> list[set[int]]:
+    """``subtrees[i]`` is ``i`` and everything under it, within the first ``n``.
+
+    Built bottom-up over the pre-order array: a node's index is always greater
+    than its parent's, so one reverse pass suffices and no recursion is needed.
+    """
+    out: list[set[int]] = [set() for _ in range(n)]
+    for i in range(n - 1, -1, -1):
+        s = {i}
+        for k in kids.get(i, ()):
+            s |= out[k]
+        out[i] = s
+    return out
+
+
+def answer_nodes(g: Graph, n: int, answer: str | None) -> list[int]:
+    """Which of the first ``n`` nodes carry the episode's answer as their label.
+
+    Exact string equality after stripping, and structural types excluded because
+    they carry no label at all. On the full curriculum this finds a node in
+    **78.9%** of evaluation episodes (565 of 716) with a mean of 2.03 copies
+    where it finds any; in the other 21.1% the answer is a conclusion rather
+    than an entity the question mentions, and there is nothing on the graph to
+    ask for. Those episodes are left **unscored** rather than turned into some
+    other question — "no answer here" and "here is a question" must not share a
+    code path.
+    """
+    a = (answer or "").strip()
+    if not a:
+        return []
+    return [i for i in range(n)
+            if g.labels[i] and g.labels[i].strip() == a
+            and g.types[i] not in STRUCTURAL]
+
+
+def choose_hidden(g: Graph, n: int, rng: np.random.Generator, *,
+                  mask_rate: float = 0.15, mode: str = "scatter",
+                  answer: str | None = None) -> np.ndarray:
+    """Which nodes this draw hides. One function, so the floor cannot diverge.
+
+    :meth:`~symbolic_ai_models.tasks.masked_node.MaskedNode.floor` draws its own
+    masks in order to be fitted and scored under the regime the models face.
+    That is only true while the two draw the same way, and they used to do so by
+    each containing the same line. They now call this.
+
+    ``scatter`` is unchanged and deliberately so: one ``rng.random(n)`` call, the
+    same comparison, the same return type.
+    """
+    if mode == "scatter":
+        return np.flatnonzero(rng.random(n) < mask_rate)
+    if mode == "subtree":
+        return _subtree_hidden(g, n, rng, mask_rate)
+    if mode in ("answer", "answer_one"):
+        kids = _children(g, n)
+        subs = _subtrees(n, kids)
+        roots = answer_nodes(g, n, answer)
+        if mode == "answer_one":
+            roots = roots[:1]
+        hidden: set[int] = set()
+        for i in roots:
+            hidden |= subs[i]
+        return np.array(sorted(hidden), dtype=np.int64)
+    raise ValueError(f"unknown mask mode {mode!r}; have {list(MASK_MODES)}")
+
+
+def _subtree_hidden(g: Graph, n: int, rng: np.random.Generator,
+                    mask_rate: float) -> np.ndarray:
+    """Whole constituents, drawn until ``mask_rate`` of the nodes are hidden.
+
+    A subtree is only accepted if the nodes it would newly hide fit in what is
+    left of the budget, so the *amount* hidden matches the scattered regime at
+    the same rate and the comparison between them is about the shape of the hole
+    rather than its size. Without that rule one draw can take half the graph and
+    a nominal 15% run is really a 50% one.
+
+    Candidates are drawn **in proportion to how many nodes they newly hide**,
+    not uniformly. Uniform drawing is what this did first and it barely varied
+    anything: these terms are bushy, most nodes are leaves, so a uniform draw
+    picks a leaf almost every time and the mean hidden run came out at 1.6 nodes
+    against scattered masking's 1.2. Weighting by size makes the hole an actual
+    constituent, which is the only version of the comparison worth running.
+
+    The root is never a candidate: hiding it hides everything, at every rate.
+    """
+    if n <= 1:
+        return np.zeros(0, dtype=np.int64)
+    kids = _children(g, n)
+    subs = _subtrees(n, kids)
+    budget = max(1, int(round(mask_rate * n)))
+    hidden: set[int] = set()
+    while len(hidden) < budget:
+        room = budget - len(hidden)
+        cands, sizes = [], []
+        for i in range(1, n):
+            if i in hidden:
+                continue
+            new = len(subs[i] - hidden)
+            if 0 < new <= room:
+                cands.append(i)
+                sizes.append(new)
+        if not cands:
+            break
+        w = np.asarray(sizes, dtype=np.float64)
+        hidden |= subs[cands[int(rng.choice(len(cands), p=w / w.sum()))]]
+    return np.array(sorted(hidden), dtype=np.int64)
+
+
+# ---------------------------------------------------------------------------
 # collators
 # ---------------------------------------------------------------------------
 def collate_text(episodes: Sequence[Episode], tok: SymbolTokenizer, *,
@@ -280,7 +425,8 @@ def text_batch(ids: Sequence[int], tok: SymbolTokenizer,
 def collate_graph(episodes: Sequence[Episode], tok: SymbolTokenizer, *,
                   max_nodes: int = 256, mask_rate: float = 0.15,
                   rng: np.random.Generator | None = None,
-                  mask_all: bool = False) -> SymbolicBatch:
+                  mask_all: bool = False,
+                  mask_mode: str = "scatter") -> SymbolicBatch:
     """Masked-node prediction over the episode's term graph.
 
     A masked node loses **both** its label and its type, and both are predicted:
@@ -292,6 +438,17 @@ def collate_graph(episodes: Sequence[Episode], tok: SymbolTokenizer, *,
     Structural types carry no label, so they are masked for their type only and
     excluded from the label loss; predicting the empty label of a list is free
     and would otherwise pad the score.
+
+    ``mask_mode`` chooses *which* nodes are hidden — see :data:`MASK_MODES`. It
+    changes nothing else: the same targets, the same pointer bookkeeping, the
+    same withheld ``same_label`` edges. ``scatter`` is the default and is what
+    every published number in this repo means.
+
+    **The tree skeleton is never hidden, in any mode.** ``relation_matrix``
+    keeps parent, child-slot, sibling and ancestor for a masked node and
+    withholds only its coreference edges, so even at a 0.9 mask rate the
+    question is "what are the labels and types on this shape", never "what
+    shape". Any reading of these numbers as generation is bounded by that.
     """
     rng = rng or np.random.default_rng()
     graphs = [ep.graph for ep in episodes]
@@ -309,6 +466,12 @@ def collate_graph(episodes: Sequence[Episode], tok: SymbolTokenizer, *,
     lab_grp = torch.full((B, L), IGNORE, dtype=torch.long)
 
     n_masked = 0
+    #: Per element, the positions whose label *is* the episode's answer. Filled
+    #: only in ``answer`` mode, where it is what makes the score comparable with
+    #: `answer_acc`: the hidden set also contains the answer node's descendants
+    #: (8 of 283 answer-bearing episodes have any), and those are hidden inputs
+    #: rather than the question being asked.
+    answer_at: list[list[int]] = []
     for b, (g, n) in enumerate(zip(graphs, lens)):
         label_ids = [tok.label_id(l) if l else -1 for l in g.labels[:n]]
         type_ids = [TYPE_TO_ID[t] for t in g.types[:n]]
@@ -320,8 +483,17 @@ def collate_graph(episodes: Sequence[Episode], tok: SymbolTokenizer, *,
         # Choose what to hide *before* building the relations, so the relations
         # can be built without them. See `relation_matrix`.
         chosen = (np.arange(n) if mask_all
-                  else np.flatnonzero(rng.random(n) < mask_rate))
-        if len(chosen) == 0 and n:          # always ask at least one question
+                  else choose_hidden(g, n, rng, mask_rate=mask_rate,
+                                     mode=mask_mode,
+                                     answer=episodes[b].answer))
+        # "Always ask at least one question" is right when the draw was random
+        # and came up empty. It is **wrong** in ``answer`` mode, where an empty
+        # draw means this episode's answer is nowhere in its graph: substituting
+        # a random node there would make "there is nothing to ask" look exactly
+        # like a question, which is the failure
+        # `notes/lessons/2026-08-14-no-information-is-not-negative-evidence.md`
+        # is about. Such an episode contributes no targets and is unscored.
+        if len(chosen) == 0 and n and not mask_mode.startswith("answer"):
             chosen = rng.integers(0, n, size=1)
         rel[b, :n, :n] = torch.from_numpy(relation_matrix(g, n, hidden=chosen))
         sel = torch.from_numpy(np.asarray(chosen, dtype=np.int64))
@@ -353,6 +525,9 @@ def collate_graph(episodes: Sequence[Episode], tok: SymbolTokenizer, *,
                     tgt_src[b, i] = j
                     break
 
+        at = (answer_nodes(g, n, episodes[b].answer)
+              if mask_mode in ("answer", "answer_one") else [])
+        answer_at.append(at[:1] if mask_mode == "answer_one" else at)
         tokens[b, sel] = tok.mask_id
         types[b, sel] = TYPE_TO_ID["mask"]
         n_masked += len(chosen)
@@ -362,6 +537,7 @@ def collate_graph(episodes: Sequence[Episode], tok: SymbolTokenizer, *,
         causal=False, rel=rel, target_tokens=tgt_tok, target_types=tgt_typ,
         target_source=tgt_src, label_group=lab_grp,
         meta={"task": "node", "n_masked": n_masked,
+              "mask_mode": mask_mode, "answer_nodes": answer_at,
               "lesson_ids": [ep.lesson_id for ep in episodes],
               # The prompt, and deliberately not the answer. Audited before it
               # was added: `shortcuts.node_text_leak` finds the prompt names the

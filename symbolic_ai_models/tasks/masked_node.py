@@ -37,7 +37,8 @@ from typing import Sequence
 import numpy as np
 import torch
 
-from symbolic_ai_core.data.batch import IGNORE, collate_graph
+from symbolic_ai_core.data.batch import (IGNORE, answer_nodes, choose_hidden,
+                                         collate_graph)
 from symbolic_ai_core.data.curriculum import Episode
 from symbolic_ai_core.data.graph import STRUCTURAL, TYPE_TO_ID
 from symbolic_ai_core.data.tokenizer import SymbolTokenizer
@@ -103,10 +104,48 @@ def _copy_counts(batch) -> dict[str, float]:
             "copy_censored": float((has_source & ~scored).sum())}
 
 
+def _answer_node_counts(out: ModelOutput, batch) -> dict[str, float]:
+    """The label score restricted to the nodes that carry the episode's answer.
+
+    ``answer`` masking hides the answer node *and its subtree*, so a handful of
+    descendants are hidden too — 8 of 283 answer-bearing episodes have any. They
+    are hidden inputs, not the question, and folding them into the headline
+    would make the number quietly not the one being compared with `answer_acc`.
+    So they are excluded here and the two numbers are reported side by side.
+
+    ``ansnode_episodes`` counts the batch elements that had an answer node at
+    all; the rest contributed nothing and are **unscored rather than zero**.
+    """
+    positions = (batch.meta or {}).get("answer_nodes")
+    if not positions or batch.target_tokens is None:
+        return {}
+    keep = torch.zeros_like(batch.target_tokens, dtype=torch.bool)
+    covered = 0
+    for b, idx in enumerate(positions):
+        if idx:
+            covered += 1
+            keep[b, torch.tensor(idx, dtype=torch.long)] = True
+    if not bool(keep.any()):
+        return {"ansnode_episodes": float(covered),
+                "ansnode_seen": float(len(positions))}
+    targets = torch.where(keep, batch.target_tokens,
+                          torch.full_like(batch.target_tokens, IGNORE))
+    with torch.no_grad():
+        _, counts = score_block(out.symbol_logits.detach(), targets, "ansnode")
+    return {**counts, "ansnode_episodes": float(covered),
+            "ansnode_seen": float(len(positions))}
+
+
 class MaskedNode(Task):
     """Hide nodes; predict their type and their label."""
 
     name = "node"
+
+    #: Which nodes a draw hides — see :data:`symbolic_ai_core.data.batch.MASK_MODES`.
+    #: A subclass changes this and nothing else; the metrics, the floors and the
+    #: pointer bookkeeping are all shared, which is what makes the regimes
+    #: comparable rather than merely adjacent.
+    mask_mode = "scatter"
 
     def __init__(self, mask_rate: float = 0.15, type_weight: float = 0.5,
                  max_nodes: int = 256, seed: int = 0,
@@ -132,7 +171,8 @@ class MaskedNode(Task):
 
     def collate(self, episodes: Sequence[Episode], tok: SymbolTokenizer):
         return collate_graph(episodes, tok, max_nodes=self.max_nodes,
-                             mask_rate=self.mask_rate, rng=self.rng)
+                             mask_rate=self.mask_rate, rng=self.rng,
+                             mask_mode=self.mask_mode)
 
     def compute(self, out: ModelOutput, batch) -> TaskOutput:
         label_loss, label_counts = score_block(
@@ -146,6 +186,7 @@ class MaskedNode(Task):
                           counts={**label_counts, **type_counts,
                                   **_copy_counts(batch),
                                   **_pointer_counts(out, batch),
+                                  **_answer_node_counts(out, batch),
                                   **readout_counts})
 
     def summarize(self, totals: Totals) -> dict[str, float]:
@@ -168,6 +209,12 @@ class MaskedNode(Task):
         if totals.get("copy_n"):
             out["copy_acc"] = totals.get("copy_correct", 0.0) / totals["copy_n"]
             out["copy_scored_n"] = totals["copy_n"]
+
+        if totals.get("ansnode_n"):
+            out.update(ratio(totals, "ansnode"))
+            seen = totals.get("ansnode_seen", 0.0)
+            out["ansnode_coverage"] = (totals.get("ansnode_episodes", 0.0) / seen
+                                       if seen else float("nan"))
 
         reachable = totals.get("copy_reachable", 0.0)
         out["copy_ceiling"] = reachable / scored if scored else float("nan")
@@ -211,14 +258,16 @@ class MaskedNode(Task):
         rng = np.random.default_rng(4)
         for _ in range(4):
             for ep in train:
-                for ctx, label, type_ in self._nodes(ep, tok, rng):
+                for ctx, label, type_, _is_ans in self._nodes(ep, tok, rng):
                     type_rule.observe(ctx, type_)
                     if label is not None:
                         label_rule.observe(ctx, label)
 
         type_hits = type_n = label_hits = label_n = 0
+        ans_hits = ans_n = 0
         eval_types: collections.Counter[str] = collections.Counter()
         eval_labels: collections.Counter[int] = collections.Counter()
+        eval_answers: collections.Counter[int] = collections.Counter()
         # Averaged over several draws for the same reason it is fitted over
         # several: one 15% sample of an evaluation set is a few hundred nodes,
         # and the floor is the fixed point every lift in the repo is measured
@@ -226,14 +275,19 @@ class MaskedNode(Task):
         scoring = np.random.default_rng(12345)
         for _ in range(8):
             for ep in episodes:
-                for ctx, label, type_ in self._nodes(ep, tok, scoring):
+                for ctx, label, type_, is_ans in self._nodes(ep, tok, scoring):
                     type_hits += type_rule.predict(ctx) == type_
                     type_n += 1
                     eval_types[type_] += 1
                     if label is not None:
-                        label_hits += label_rule.predict(ctx) == label
+                        hit = label_rule.predict(ctx) == label
+                        label_hits += hit
                         label_n += 1
                         eval_labels[label] += 1
+                        if is_ans:
+                            ans_hits += hit
+                            ans_n += 1
+                            eval_answers[label] += 1
 
         copy_acc = self._copy_floor(episodes, train, tok)
 
@@ -255,6 +309,15 @@ class MaskedNode(Task):
         out.update({"rsymbol_acc": out["label_acc"],
                     "rsymbol_bits": out["label_bits"],
                     "rsymbol_n": out["label_n"], "rnode_acc": copy_acc})
+        # Emitted only in `answer` mode, and therefore absent from every `node`
+        # summary this repo has ever written. It is the same lookup, the same
+        # draws and the same ladder, restricted to the positions that carry the
+        # answer -- the floor for the one number that is comparable with
+        # `answer_acc`.
+        if ans_n:
+            _, ans_bits = empirical_floor(dict(eval_answers))
+            out.update({"ansnode_acc": ans_hits / ans_n,
+                        "ansnode_bits": ans_bits, "ansnode_n": float(ans_n)})
         return out
 
     def _copy_floor(self, episodes: Sequence[Episode],
@@ -309,9 +372,7 @@ class MaskedNode(Task):
         n = min(len(g), self.max_nodes)
         if not n:
             return
-        hidden = set(np.flatnonzero(rng.random(n) < self.mask_rate).tolist())
-        if not hidden:
-            hidden = {int(rng.integers(0, n))}
+        hidden = self._hidden(ep, n, rng)
         labels = list(g.labels[:n])
         for i in sorted(hidden):
             if not labels[i] or g.types[i] in STRUCTURAL:
@@ -324,9 +385,42 @@ class MaskedNode(Task):
                            if j not in hidden and labels[j] == labels[i]), None)
             yield ctx, i, source, labels
 
+    def _hidden(self, ep: Episode, n: int, rng: np.random.Generator) -> set[int]:
+        """The nodes this draw hides, by the *same* rule the collator uses.
+
+        The floor exists to say what a structure-only lookup gets given what a
+        model is given, so it has to be fitted and scored under the model's
+        masking regime rather than a copy of it. It goes through
+        :func:`~symbolic_ai_core.data.batch.choose_hidden` for that reason: two
+        implementations of one regime is exactly the shape of drift that a floor
+        — the one number nothing else is checked against — cannot survive.
+
+        The "ask at least one question" fallback is scatter's, and is not
+        applied in ``answer`` mode: an episode whose answer is nowhere in its
+        graph is unscored, in the floor as in the batch.
+        """
+        chosen = choose_hidden(ep.graph, n, rng, mask_rate=self.mask_rate,
+                               mode=self.mask_mode, answer=ep.answer)
+        if len(chosen) == 0 and not self.mask_mode.startswith("answer"):
+            return {int(rng.integers(0, n))}
+        return set(int(i) for i in chosen)
+
+    def _answer_positions(self, ep: Episode, n: int) -> set[int]:
+        """Positions whose label *is* the answer — empty outside answer modes."""
+        if not self.mask_mode.startswith("answer"):
+            return set()
+        at = answer_nodes(ep.graph, n, ep.answer)
+        return set(at[:1] if self.mask_mode == "answer_one" else at)
+
     def _nodes(self, ep: Episode, tok: SymbolTokenizer,
                rng: np.random.Generator | None = None):
-        """``(context, label id or None, type)`` for the nodes this episode hides.
+        """``(context, label id or None, type, is the answer)`` for what is hidden.
+
+        The fourth field is ``False`` everywhere except in ``answer`` mode,
+        where it marks the positions that carry the episode's answer as opposed
+        to its descendants — so the floor can be restricted to the same
+        positions the score is, in one pass, rather than by a second and
+        drifting copy of this method.
 
         The context is what a model can *actually* read, which is a stronger
         requirement than it sounds and was got wrong here for a long time. The
@@ -352,9 +446,8 @@ class MaskedNode(Task):
         n = min(len(g), self.max_nodes)
         if not n:
             return
-        hidden = set(np.flatnonzero(rng.random(n) < self.mask_rate).tolist())
-        if not hidden:
-            hidden = {int(rng.integers(0, n))}
+        hidden = self._hidden(ep, n, rng)
+        answers = self._answer_positions(ep, n)
 
         children: dict[int, list[int]] = {}
         for k in range(n):
@@ -392,7 +485,7 @@ class MaskedNode(Task):
             )
             label = (tok.label_id(g.labels[i])
                      if self._scorable(g.labels[i], g.types[i], tok) else None)
-            yield ctx, label, g.types[i]
+            yield ctx, label, g.types[i], i in answers
 
     @staticmethod
     def _scorable(label: str, type_: str, tok: SymbolTokenizer) -> bool:

@@ -48,6 +48,31 @@ COLUMNS = (
     ("lm", "site_lift", "site lift", "{:.3f}"),
 )
 
+#: The infilling variants print the same graph columns under their own task
+#: name, so one table can hold a `node` row and a `nodeans` row without either
+#: being read as the other. `copy_ceiling` is in here and not above because it
+#: is the number that moves *mechanically* with the mask rate — masking removes
+#: the visible same-label nodes a pointer needs — and a pointer column quoted
+#: without it is quoting the harness.
+COLUMNS = COLUMNS + tuple(
+    (task, key, f"{short} {label}", fmt)
+    for task, short in (("nodesub", "sub"), ("nodeans", "ans"),
+                        ("nodeans1", "an1"))
+    for key, label, fmt in (
+        ("label_acc", "acc", "{:.3f}"),
+        ("label_lift", "lift", "{:.3f}"),
+        ("type_lift", "typ", "{:.3f}"),
+        ("copy_acc", "cpy", "{:.3f}"),
+        ("copy_ceiling", "ceil", "{:.3f}"),
+    )
+) + tuple(
+    (task, key, f"{short} {label}", fmt)
+    for task, short in (("nodeans", "ansnd"), ("nodeans1", "an1nd"))
+    for key, label, fmt in (("ansnode_acc", "acc", "{:.3f}"),
+                            ("ansnode_lift", "lift", "{:.3f}"),
+                            ("ansnode_coverage", "cov", "{:.2f}"))
+)
+
 
 def load_summaries(paths: Iterable[str | Path]) -> list[dict[str, Any]]:
     """Read ``summary.json`` from each run directory, skipping unfinished ones."""

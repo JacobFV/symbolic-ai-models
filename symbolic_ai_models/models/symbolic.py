@@ -120,6 +120,17 @@ class RuleBasedModel(Model):
         self.context_prior: dict[tuple, tuple[int, float]] = {}
         #: Post-hoc temperature on the graph output. 1.0 is no change.
         self.temperature = 1.0
+        #: The masking regime this model **fits** under. Read off the graph task
+        #: in :meth:`fit`; 0.15 / scatter until then, which is what every
+        #: published run used and what the literal it replaced said.
+        #:
+        #: It exists because `training_views` promises "the mask rate is the one
+        #: it will actually face" and, while the rate was a literal here, that
+        #: was only true at 0.15. A mask-rate curve read off models fitted at
+        #: 0.15 measures transfer to an unseen regime, not infilling at that
+        #: rate, and the two would have been reported as one number.
+        self.fit_mask_rate = 0.15
+        self.fit_mask_mode = "scatter"
         self._fitting_temperature = False
         # Registered as buffers so a fitted model saves and reloads like any
         # other, through the same `torch.save(state_dict())` path.
@@ -144,6 +155,7 @@ class RuleBasedModel(Model):
         model that trained as long as its neighbours.
         """
         self.tok = ctx.tok
+        self._adopt_masking(ctx)
         # The parser is fitted first and on the same episodes, so a reasoner
         # that consults it during `learn` sees the parser it will see at
         # evaluation rather than an unfitted one.
@@ -154,6 +166,40 @@ class RuleBasedModel(Model):
         self.learn(ctx.episodes, ctx.tok)
         self._fitted = True
         self._fit_temperature(ctx.episodes, ctx.tok)
+
+    def _adopt_masking(self, ctx: FitContext) -> None:
+        """Fit under the masking regime this run will be scored under.
+
+        The trainer already hands over its tasks, so the rate and the mode are
+        there to be read and were simply not being read: every masked view a
+        model fitted on was drawn at a hard-coded 0.15, whatever the run asked
+        for. At 0.15 this changes nothing at all, which is why no published
+        number moves.
+
+        The graph task wins if there is one; a text-only run keeps the default.
+
+        ``extra.fit_mask_mode`` / ``extra.fit_mask_rate`` override it, and exist
+        for one control. Under ``answer`` masking an episode yields about 1.2
+        hidden nodes where scattered masking at 0.15 yields about 10, so a model
+        fitted in the matched regime sees roughly **eight times less
+        supervision** — and this repo has already published one null that was an
+        undertrained budget wearing an architecture's name. Fitting under
+        scatter and scoring under `answer` separates "cannot answer" from "was
+        not shown enough to learn to".
+        """
+        forced_mode = self.cfg.get("fit_mask_mode", "")
+        forced_rate = self.cfg.get("fit_mask_rate", 0.0)
+        if forced_mode or forced_rate:
+            self.fit_mask_mode = str(forced_mode or self.fit_mask_mode)
+            self.fit_mask_rate = float(forced_rate or self.fit_mask_rate)
+            return
+        for name, task in (ctx.tasks or {}).items():
+            rate = getattr(task, "mask_rate", None)
+            if rate is None:
+                continue
+            self.fit_mask_rate = float(rate)
+            self.fit_mask_mode = str(getattr(task, "mask_mode", "scatter"))
+            return
 
     def _fit_temperature(self, episodes: Sequence[Episode],
                          tok: SymbolTokenizer) -> None:
@@ -213,7 +259,9 @@ class RuleBasedModel(Model):
         if not episodes:
             return None
         return collate_graph(episodes, tok, max_nodes=self.cfg.max_nodes,
-                             mask_rate=0.15, rng=np.random.default_rng(41))
+                             mask_rate=self.fit_mask_rate,
+                             mask_mode=self.fit_mask_mode,
+                             rng=np.random.default_rng(41))
 
     def fit_on(self, episodes: Sequence[Episode], tok: SymbolTokenizer) -> None:
         """Fit straight from episodes, for callers with nothing else to say."""
@@ -233,6 +281,10 @@ class RuleBasedModel(Model):
                 "_text_parser": self.text_parser,
                 "_context_prior": self.context_prior,
                 "_temperature": self.temperature,
+                # The regime it was fitted under, saved for the same reason the
+                # temperature is: a parameter that shaped every number and is
+                # written down nowhere turns a later discrepancy into a bisect.
+                "_fit_masking": (self.fit_mask_rate, self.fit_mask_mode),
                 **{name: getattr(self, name, None) for name in self.LEARNED}}
 
     def load_symbolic_state(self, state: Mapping[str, Any],
@@ -251,6 +303,13 @@ class RuleBasedModel(Model):
                 self.context_prior = value or {}
             elif name == "_temperature":
                 self.temperature = float(value or 1.0)
+            elif name == "_fit_masking":
+                # Absent from every checkpoint written before the infilling
+                # ladder, and those were all fitted at 0.15 / scatter, which is
+                # what the attribute already holds.
+                if value:
+                    self.fit_mask_rate = float(value[0])
+                    self.fit_mask_mode = str(value[1])
             else:
                 setattr(self, name, value)
 
@@ -339,9 +398,9 @@ class RuleBasedModel(Model):
             self.context_prior[key] = (symbol, min(max(purity, 0.0), 0.9))
 
     def training_views(self, episodes: Sequence[Episode], tok: SymbolTokenizer, *,
-                       mask_rate: float = 0.15, max_nodes: int = 256,
-                       repeats: int = 4, seed: int = 0, with_index: bool = False
-                       ) -> Iterable[tuple]:
+                       mask_rate: float | None = None, max_nodes: int = 256,
+                       repeats: int = 4, seed: int = 0, with_index: bool = False,
+                       mask_mode: str | None = None) -> Iterable[tuple]:
         """Masked views of the training graphs, with the answers alongside.
 
         A model that fits its context statistics on *whole* graphs and is then
@@ -356,8 +415,18 @@ class RuleBasedModel(Model):
         ``repeats`` passes re-mask the same episodes so that most nodes get to
         be a target at some point without any of them ever being visible while
         it is.
+
+        "The one it will actually face" was a hard-coded 0.15 until the
+        infilling ladder needed other rates, at which point the sentence was
+        true only of the runs that had been done. The default is now
+        :attr:`fit_mask_rate`, read off the run's own task; no caller in the
+        repo passes either keyword, so at 0.15 nothing moves.
         """
         from symbolic_ai_core.data.batch import collate_graph
+        if mask_rate is None:
+            mask_rate = self.fit_mask_rate
+        if mask_mode is None:
+            mask_mode = self.fit_mask_mode
         rng = np.random.default_rng(seed)
         for _ in range(max(repeats, 1)):
             for start in range(0, len(episodes), 32):
@@ -365,7 +434,8 @@ class RuleBasedModel(Model):
                 if not chunk:
                     continue
                 batch = collate_graph(chunk, tok, max_nodes=max_nodes,
-                                      mask_rate=mask_rate, rng=rng)
+                                      mask_rate=mask_rate, rng=rng,
+                                      mask_mode=mask_mode)
                 for b in range(len(chunk)):
                     view = self._view(batch, b)
                     targets = {

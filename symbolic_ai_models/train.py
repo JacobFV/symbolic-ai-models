@@ -34,7 +34,7 @@ from symbolic_ai_core.floors import lift
 
 from .models import Model, ModelConfig, RuleBasedModel, build
 from .models.base import FitContext, autocast
-from .tasks import Task, Totals, make_task
+from .tasks import GRAPH_TASKS, Task, Totals, make_task
 
 __all__ = ["TrainConfig", "train", "evaluate_model", "load_run", "make_model",
            "batches", "load_data", "build_tokenizer", "language_packs"]
@@ -357,8 +357,18 @@ def train(cfg: TrainConfig, *, progress=None) -> dict[str, Any]:
         checkpoint["symbolic_state"] = model.symbolic_state()
     torch.save(checkpoint, out / "model.pt")
     extra: dict[str, Any] = {}
-    if "node" in tasks:
-        extra["renaming"] = _renaming_check(model, eval_eps, tok, cfg)
+    graph_task = next((t for n, t in tasks.items() if n in GRAPH_TASKS), None)
+    if graph_task is not None:
+        extra["renaming"] = _renaming_check(model, eval_eps, tok, cfg, graph_task)
+        # The masking regime, recorded next to the numbers it moved. `mask_rate`
+        # is already in `config`; `mask_mode` is not derivable from it, and the
+        # rate the *model fitted under* was a hard-coded 0.15 until this ladder.
+        extra["masking"] = {
+            "mask_mode": graph_task.mask_mode,
+            "mask_rate": float(graph_task.mask_rate),
+            "fit_mask_rate": float(getattr(model, "fit_mask_rate", float("nan"))),
+            "fit_mask_mode": str(getattr(model, "fit_mask_mode", "")),
+        }
     if hasattr(model, "abstention_rate"):
         extra["abstention_rate"] = float(model.abstention_rate)
     if hasattr(model, "render"):
@@ -394,7 +404,7 @@ def train(cfg: TrainConfig, *, progress=None) -> dict[str, Any]:
 
 
 def _renaming_check(model, eval_eps: Sequence[Episode], tok: SymbolTokenizer,
-                    cfg: TrainConfig) -> dict[str, float]:
+                    cfg: TrainConfig, task=None) -> dict[str, float]:
     """Score the fitted model again with every symbol permuted.
 
     A model that answers from structure keeps its accuracy when `alice` becomes
@@ -415,7 +425,8 @@ def _renaming_check(model, eval_eps: Sequence[Episode], tok: SymbolTokenizer,
     renaming = build_renaming(eval_eps, tok)
     if not len(renaming):
         return {}
-    kw = {"max_nodes": cfg.max_nodes, "mask_rate": cfg.mask_rate}
+    kw = {"max_nodes": cfg.max_nodes, "mask_rate": cfg.mask_rate,
+          "mask_mode": getattr(task, "mask_mode", "scatter")}
     plain = label_accuracy(model, eval_eps, tok, **kw)
     renamed = label_accuracy(model, rename_episodes(eval_eps, renaming), tok, **kw)
     return {"label_acc": plain, "renamed_label_acc": renamed,

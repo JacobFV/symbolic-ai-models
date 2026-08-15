@@ -103,7 +103,7 @@ def rename_episodes(episodes: Sequence[Episode],
 
 def label_accuracy(model, episodes: Sequence[Episode], tok: SymbolTokenizer, *,
                    max_nodes: int = 96, mask_rate: float = 0.15,
-                   seed: int = 20_250_811) -> float:
+                   seed: int = 20_250_811, mask_mode: str = "scatter") -> float:
     """Masked-node label accuracy, on a fixed mask so two runs are comparable.
 
     The mask rate is the one evaluation uses, not ``mask_all``. Masking every
@@ -115,7 +115,10 @@ def label_accuracy(model, episodes: Sequence[Episode], tok: SymbolTokenizer, *,
 
     The seed is fixed and the episode order is unchanged, so the original and
     renamed runs hide the same positions and the two accuracies differ only by
-    the renaming.
+    the renaming. That still holds under ``mask_mode="answer"``, where the
+    positions are chosen by matching the answer string rather than by the
+    generator: ``rename_episodes`` substitutes into ``answer`` as well as into
+    the graph, so the same nodes are selected on both sides.
     """
     import numpy as np
     import torch
@@ -123,7 +126,7 @@ def label_accuracy(model, episodes: Sequence[Episode], tok: SymbolTokenizer, *,
     from symbolic_ai_core.data.batch import collate_graph
 
     batch = collate_graph(episodes, tok, max_nodes=max_nodes,
-                          mask_rate=mask_rate,
+                          mask_rate=mask_rate, mask_mode=mask_mode,
                           rng=np.random.default_rng(seed))
     was_training = model.training
     model.eval()
