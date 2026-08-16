@@ -68,7 +68,27 @@
         "17",
         "18",
         "19",
-        "20"
+        "20",
+        "appeal",
+        "assault",
+        "coerce",
+        "consult",
+        "cooperate-diplomatically",
+        "cooperate-materially",
+        "demand",
+        "disapprove",
+        "exhibit-force",
+        "fight",
+        "intend-cooperation",
+        "investigate",
+        "mass-violence",
+        "protest",
+        "provide-aid",
+        "reduce-relations",
+        "reject",
+        "state-publicly",
+        "threaten",
+        "yield"
       ],
       "awarded": [
         "awarded"
@@ -104,7 +124,7 @@
       "lobbied": [
         "lobbied"
       ],
-      "note": "Relations whose instances are HAPPENINGS rather than standing facts. v3 rejected these outright and that was wrong: it threw away 48M rows because the schema had one table, which is a schema limitation dressed as a principle. They are ingested and tagged instead. The distinction is real and belongs in CLOSURE -- no transitive or inverse rule may traverse an eventive relation -- not in ingestion. Consumers filter on this group; nothing is discarded to protect them.",
+      "note": "Relations whose instances are HAPPENINGS rather than standing facts. v3 rejected these outright and that was wrong: it threw away 48M rows because the schema had one table, which is a schema limitation dressed as a principle. They are ingested and tagged instead. The distinction is real and belongs in CLOSURE -- no transitive or inverse rule may traverse an eventive relation -- not in ingestion. Consumers filter on this group; nothing is discarded to protect them. CAMEO ships in TWO notations -- numeric 01-20 and named glosses (appeal, assault, fight, consult...) -- and v4 mapped only the numeric half, dropping 30.4M rows. The rejection note had said 'the same vocabulary in two notations' and the mapping did not honour its own sentence. Both halves map to `acted-on`.",
       "traded": [
         "bought",
         "sold",
@@ -502,7 +522,7 @@
   "revised": "2026-08-15",
   "revised_v4": "2026-08-15",
   "revision_note": "v3. Three changes, in decreasing order of how much they matter.\n(1) DIRECTION IS PART OF THE RELATION. v2's `part-of` pooled `BFO:0000050` (part of) with `BFO:0000051` (has part) and `contains` -- inverses on one canonical. Measured on `graph` alone that is 95,844 `part-of` rows against 52,871 `contains` rows, and a transitive closure over the pooled relation derives facts that are false. v2 kept the direction for kinship (`parent-of` / `child-of`) and destroyed it for meronymy; v3 splits out `has-part` and adds the inverses `preceded-by`, `owns`/`owned-by`, `has-capital`/`capital-of`.\n(2) A CANONICAL RELATION IS A PROPERTY OF AN ENTITY OR AN ORDERED PAIR. Wikidata's own vocabulary was 31.5% unmapped in v2 (sampled) -- including `subclass-of`, which is is-a. Those are mapped. Dated occurrences are not: see `rejected_relations.dated_occurrences`.\n(3) The property block is untouched apart from two ConceptNet relations with double-digit row counts, so `kg_derivable`'s determined-attribute definition is identical across v2 and v3 and the two measurements are comparable. Whether `has-part` should itself count as a determined attribute is a real question and it is asked separately, because changing the mapping and the definition in one step would make the result unattributable.",
-  "schema_version": 4,
+  "schema_version": 5,
   "scope": {
     "priority_order": [
       "cskg + graph -- the property and taxonomy relations, which are what derivability needs",

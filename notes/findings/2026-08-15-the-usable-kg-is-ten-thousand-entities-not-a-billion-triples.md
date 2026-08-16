@@ -139,6 +139,56 @@ Also noted by the agent that found this: `_words()`'s docstring in
 `symbolic_ai_data/generators/` is in exactly one of its three tables. That is
 **false as written** — `semantics.THINGS` and `ontology.VERB_ISA` are in none.
 
+## The full corpus, and the number is 610x more sensitive to a definition than to scale
+
+Re-measured on the complete normalised graph — **1,115,841,226 triples**, 5.2x
+what the section above used:
+
+| | v2, 216 M | v5, 1.116 B | change |
+|---|---:|---:|---:|
+| anchorable | 119,125,858 | 119,510,066 | +384,208 |
+| with a determined attribute | 78,642 | 75,656 | −2,986 |
+| **usable** | 15,977 | 15,495 | −482 |
+| single-valued | 9,849 | **9,368** | **−481** |
+
+**899 million additional edges moved the usable population by −481.** The sign is
+negative because `has-part` became its own canonical in schema v3 — split out
+when the `part-of` inverse-pooling bug was fixed — and is not in the determiner
+set, so a few entities lost their only determiner to a *definition* change.
+
+Adding it back, which the previous agent wired as an explicit arm precisely so
+the two causes stay attributable:
+
+| | v5 | v5 + `has-part` |
+|---|---:|---:|
+| with a determined attribute | 75,656 | **1,012,883** |
+| usable | 15,495 | **944,007** |
+| single-valued | 9,368 | **302,792** |
+
+**+293,424 from one line of definition, against −481 from 899 million edges.**
+The usable population is roughly **610x more sensitive to what counts as a
+determiner than to a five-fold increase in corpus size.** That is the finding;
+the 9,849 was never a property of the corpus alone and should not have been
+quoted as one.
+
+**And the narrow definition is the right one, for a reason worth having rather
+than the accident it started as.** `has-part` here is 4.39 M edges from Wikidata,
+and the majority original kind is **`contains-admin`** — administrative
+containment. Two checks settle it:
+
+* *It is instance-level, not kind-level.* Knowing something is a country does not
+  determine which regions it contains. A determiner must be "what follows from
+  being **this kind**"; `France contains-admin Île-de-France` is a fact about one
+  entity, and nothing about the kind implies it.
+* *Its entities are lexically unreachable.* Sampled subjects and objects —
+  `Q205104`, `Q2088824` — **appear in no node table at all**, so they carry no
+  label. They cannot join to a curriculum whose vocabulary is words, whatever
+  the definition says.
+
+So the exclusion stands, `9,368` is the number for kind-level derivability, and
+the word-level join is unaffected either way because these entities have no
+labels to join on.
+
 ## What would still refute it
 
 - **Single-valued is the wrong criterion.** An entity whose relation has several
