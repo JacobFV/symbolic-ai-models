@@ -139,6 +139,9 @@
    "acc_derived": 0.5132075471698113,
    "acc_derived_copyable": 0.4963820549927641,
    "acc_derived_not_copyable": 0.5315457413249212,
+   "bits_derived_not_copyable": 5.663085363264716,
+   "bits_derived_copyable": 5.946524086978432,
+   "bits_rest_not_copyable": 8.945757169710614,
    "rest_n": 29638.0,
    "acc_rest_copyable": 0.4187027597117244,
    "acc_rest_not_copyable": 0.2375308249144857
@@ -229,6 +232,9 @@
    "acc_derived": 0.9909433962264151,
    "acc_derived_copyable": 0.9927641099855282,
    "acc_derived_not_copyable": 0.9889589905362776,
+   "bits_derived_not_copyable": 2.3631452154661954,
+   "bits_derived_copyable": 2.369771702762278,
+   "bits_rest_not_copyable": 8.717022435855357,
    "rest_n": 29638.0,
    "acc_rest_copyable": 0.46135817659811335,
    "acc_rest_not_copyable": 0.2765889746241349
@@ -244,6 +250,9 @@
    "acc_derived": 0.0,
    "acc_derived_copyable": 0.0,
    "acc_derived_not_copyable": 0.0,
+   "bits_derived_not_copyable": 10.165905705761833,
+   "bits_derived_copyable": 10.165539315053937,
+   "bits_rest_not_copyable": 10.54028610534158,
    "rest_n": 29638.0,
    "acc_rest_copyable": 0.3466924474131365,
    "acc_rest_not_copyable": 0.06618407445708377

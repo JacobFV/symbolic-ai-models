@@ -83,6 +83,32 @@ how it was found does not.
 0.4407), on bits, on `acc | rest, not copyable`, and on type (0.8637 — which is
 `frontier-001`'s number, the one `frontier-009` was separately built to recover).
 
+**And the arm had only ever been measured in accuracy.** A rule fitted to noise
+here emits one of six values and is right about 1/6, which is what chance also
+reads as — so the void condition could never have fired. `derived_split.py` now
+prints **bits** on the derived bucket, and the abstention baseline is
+`frontier-nomap` at **10.16 bits in both arms**:
+
+| | treatment acc | treatment bits | control acc | control bits |
+|---|---:|---:|---:|---:|
+| `frontier-008` | **0.989** | **2.363** | 0.143 | 9.281 |
+| `frontier-001` | 0.532 | 5.663 | 0.072 | 9.710 |
+| `frontier-nomap` | 0.000 | 10.166 | 0.000 | 10.161 |
+
+In the control the model is **better than abstaining** (9.281 against 10.161), so
+"confidently wrong" overstates it — it is mildly informative and useless at
+argmax, which is a different thing and is what the column was added to
+distinguish.
+
+**The gate cannot tell the arms apart.** On the fills where the label rule fires,
+its argmax is right **87/87** in the treatment and **0.205** in the control, and
+the gate it is given is **0.330** against **0.318**. `MassCalibrator` keys on the
+rule's pooled score — the carrying rule is a 399-entry table scoring ~0.66 over
+the whole curriculum while being right 1.000 on this sub-population — so **an
+average cannot see a sub-population**, for the third time in one day and now on
+the gate. Roughly **1.6–2.3 bits are recoverable here by calibration alone**,
+with no change to what the model believes.
+
 **And it is not about table size.** The pair-count curve, each rung against its
 own control and its own blind marginal — `-kN` widens the *pool* the episode's
 six kinds are drawn from, the per-episode map stays six wide, the correspondence

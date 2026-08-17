@@ -50,6 +50,8 @@ from pathlib import Path
 
 os.environ.setdefault("OMP_NUM_THREADS", "4")
 
+import math
+
 import numpy as np
 import torch
 
@@ -321,7 +323,20 @@ def split(path: str, ev_pairs, train_pairs, draws: int = DRAWS) -> dict:
     task = make_task(TASK_OF[mode], mask_rate=cfg.mask_rate,
                      max_nodes=cfg.max_nodes, seed=cfg.seed)
     model.eval()
-    cell = {a: {b: [0, 0] for b in (True, False)} for a in (True, False)}
+    # `[hits, n, summed bits]`. The bits column exists because `agent-refuter`
+    # showed that **accuracy cannot see this arm's failure mode**: a rule fitted
+    # to noise here emits one of six values and is right about 1/6, which is
+    # exactly what chance reads as, so the pre-registered void condition ("the
+    # control rises with the treatment") could never have fired. Measured, the
+    # control's model fires on 623 of 623 fills through five map rules each right
+    # at ~1/7 — confidently wrong, and indistinguishable from abstention in the
+    # accuracy column. Cross-entropy separates them: a model that declines lands
+    # on the back-off, a model that is confidently wrong lands far above it.
+    #
+    # Every row this script has ever printed, for thirty models, has been an
+    # accuracy row. `notes/lessons/2026-08-13-a-ranking-is-a-property-of-a-metric.md`
+    # is the standing reason that is not enough.
+    cell = {a: {b: [0, 0, 0.0] for b in (True, False)} for a in (True, False)}
     for d in range(draws):
         task.rng = np.random.default_rng(12345 + d)
         for idx, batch in _batched(ev_pairs, task, tok, cfg.batch_size):
@@ -336,9 +351,13 @@ def split(path: str, ev_pairs, train_pairs, draws: int = DRAWS) -> dict:
                         anchor_seen[b, vi] = batch.target_types[b, ki] == IGNORE
             derived = derived & anchor_seen
             with torch.no_grad():
-                pred = model(batch).symbol_logits.argmax(-1)
+                logits = model(batch).symbol_logits
+                pred = logits.argmax(-1)
+                logp = torch.log_softmax(logits.float(), dim=-1)
             scored = batch.target_tokens != IGNORE
             correct = (pred == batch.target_tokens) & scored
+            safe = batch.target_tokens.clamp_min(0)
+            bits = -logp.gather(-1, safe.unsqueeze(-1)).squeeze(-1) / math.log(2)
             copyable = batch.target_source != IGNORE
             for a in (True, False):
                 for c in (True, False):
@@ -346,6 +365,7 @@ def split(path: str, ev_pairs, train_pairs, draws: int = DRAWS) -> dict:
                         & (copyable if c else ~copyable)
                     cell[a][c][1] += int(sel.sum())
                     cell[a][c][0] += int((correct & sel).sum())
+                    cell[a][c][2] += float(bits[sel].sum())
     div = lambda a, b: a / b if b else float("nan")
     dn = cell[True][True][1] + cell[True][False][1]
     return {
@@ -357,6 +377,9 @@ def split(path: str, ev_pairs, train_pairs, draws: int = DRAWS) -> dict:
         "acc_derived": div(cell[True][True][0] + cell[True][False][0], dn),
         "acc_derived_copyable": div(cell[True][True][0], cell[True][True][1]),
         "acc_derived_not_copyable": div(cell[True][False][0], cell[True][False][1]),
+        "bits_derived_not_copyable": div(cell[True][False][2], cell[True][False][1]),
+        "bits_derived_copyable": div(cell[True][True][2], cell[True][True][1]),
+        "bits_rest_not_copyable": div(cell[False][False][2], cell[False][False][1]),
         "rest_n": float(cell[False][True][1] + cell[False][False][1]),
         "acc_rest_copyable": div(cell[False][True][0], cell[False][True][1]),
         "acc_rest_not_copyable": div(cell[False][False][0], cell[False][False][1]),
@@ -398,7 +421,8 @@ def main(paths: list[str]) -> int:
     floors = derivation_floor(train_pairs, ev_pairs, tok0, task)
     print()
     head = (f"{'model':<22}{'n':>7}{'cp share':>9}{'acc|der':>9}"
-            f"{'acc|der,cp':>12}{'acc|der,not':>13}{'acc|rest,not':>14}")
+            f"{'acc|der,cp':>12}{'acc|der,not':>13}{'acc|rest,not':>14}"
+            f"{'bits|der,not':>14}")
     print(head)
     print("-" * len(head))
     rows = []
@@ -412,7 +436,8 @@ def main(paths: list[str]) -> int:
               f"{r['derived_copyable_share']:>9.3f}{r['acc_derived']:>9.3f}"
               f"{r['acc_derived_copyable']:>12.3f}"
               f"{r['acc_derived_not_copyable']:>13.3f}"
-              f"{r['acc_rest_not_copyable']:>14.3f}")
+              f"{r['acc_rest_not_copyable']:>14.3f}"
+              f"{r['bits_derived_not_copyable']:>14.3f}")
     print("-" * len(head))
     print(f"{'DERIVATION FLOOR':<22}{floors['dfloor_n']:>7.0f}"
           f"{'':>9}{floors['dfloor_all']:>9.3f}"
