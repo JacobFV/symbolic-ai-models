@@ -457,6 +457,44 @@ class CoreferModel(RuleBasedModel):
         return "\n".join(lines)
 
 
+@register("corefer-nopoint",
+          doc="corefer with the pointed-at type dropped from the type key: the ablation "
+              "that prices its +0.612 type lift.")
+class CoreferNoPointModel(CoreferModel):
+    """Is `corefer`'s type head the ladder, or the one conjunct nothing else has?
+
+    `corefer-001` is the only rule-based model with a large positive type lift
+    (**+0.612**, `type_acc` 0.9458) and, as
+    ``notes/findings/2026-08-17-type-bits-was-never-compared-and-it-inverts-the-type-ranking.md``
+    found, it is also **first of forty-four on `type_bits`** at 0.3479 — where the
+    induced rule sets I built all day sit near 0.93.
+
+    Its type key is a backed-off conjunctive ladder over
+    ``(ptype, slot, depth, arity, sibling type, pointed type)``, most specific
+    first, backing off until a key has support. **The type floor is a
+    content-blind backed-off lookup of exactly that shape and it reaches
+    0.8601.** So the ladder without its last conjunct is approximately the floor,
+    and the whole of `corefer`'s advantage may be the one term nothing else in
+    the registry has: the type of the node its coreference pointer selected.
+
+    This drops that conjunct and changes nothing else — same pointer, same
+    ladder, same support threshold, same confidence formula.
+
+    **Predicted before running:** `type_acc` falls from 0.9458 to **≈0.86**, the
+    floor, and `type_lift` from +0.612 to **≈0.0**; `type_bits` rises from 0.3479
+    toward the 0.9 region the ladder-only models occupy. **Every label number is
+    bit-identical** — the label pointer does not read `pointed`, and that is the
+    control saying the row is the conjunct and nothing else.
+
+    Refuted if `type_acc` holds above 0.92: then the ladder is doing the work,
+    `corefer`'s advantage is its back-off structure rather than its pointer, and
+    the fix for the induced type heads is a ladder rather than a pointer.
+    """
+
+    def _type_vote(self, view: GraphView, i: int, pointed: str | None) -> Votes:
+        return super()._type_vote(view, i, None)
+
+
 @register("corefer-mass",
           doc="corefer with the gate fitted by held-out likelihood instead of a hand formula.")
 class CoreferMassModel(CoreferModel):
