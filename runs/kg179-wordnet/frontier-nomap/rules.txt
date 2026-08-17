@@ -1,0 +1,30 @@
+label: 300 rules  const=165, copy=135, map=0
+type: 502 rules  const=330, copy=172, map=0
+  round 0 [label]: 361 guards, 40 kept, 71242/84271 fills still wrong
+  round 1 [label]: 2227 guards, 209 kept, 62946/84271 fills still wrong
+  round 2 [label]: 5484 guards, 492 kept, 61655/84271 fills still wrong
+  round 0 [type]: 361 guards, 361 kept, 17556/84271 fills still wrong
+  round 1 [type]: 943 guards, 943 kept, 7596/84271 fills still wrong
+  round 2 [type]: 1183 guards, 1183 kept, 5098/84271 fills still wrong
+top label hypotheses:
+  [ptype='str', nsib=0] -> copy:parent  p=1.000 n=218 dl=2
+  [depth=5, nsib=2, kids=True] -> copy:sib@1  p=0.995 n=189 dl=3
+  [ptype='list', nsib=3, kids=True] -> copy:sib@1  p=0.971 n=2336 dl=3
+  [depth=3, nsib=3, kids=True] -> copy:sib@1  p=0.965 n=2508 dl=3
+  [phead=5830, slot=2] -> const  p=1.000 n=72 dl=4
+  [phead=5869, slot=0] -> const  p=1.000 n=67 dl=4
+  [phead=5860, slot=2] -> const  p=1.000 n=64 dl=4
+  [phead=5830, slot=1] -> const  p=1.000 n=63 dl=4
+  [depth=6, kids=True] -> copy:sib@2  p=0.979 n=145 dl=2
+  [phead=5745, depth=6, kids=True] -> copy:psib@1  p=1.000 n=48 dl=3
+  [ptype='field', phead=1956] -> const  p=1.000 n=46 dl=4
+  [phead=5858, kids=True] -> const  p=1.000 n=43 dl=4
+  [phead=5753, slot=1, kids=True] -> const  p=1.000 n=40 dl=5
+  [phead=5753, slot=3, kids=True] -> const  p=1.000 n=39 dl=5
+  [phead=6261] -> const  p=1.000 n=37 dl=3
+  [phead=5830, slot=3, nsib=3] -> const  p=1.000 n=37 dl=5
+  [phead=5830, slot=3, nsib=4] -> const  p=1.000 n=36 dl=5
+  [phead=5830, slot=4] -> const  p=1.000 n=35 dl=4
+  [ptype='list', slot=2, kids=True] -> copy:sib@1  p=0.913 n=2041 dl=3
+  [phead=5903, slot=1] -> const  p=1.000 n=34 dl=4
+surviving map rules: 0
