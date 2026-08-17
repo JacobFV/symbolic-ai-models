@@ -29,6 +29,81 @@ so the answers are exact and unannotated.
 Nineteen models, two families. Rule-based ones are the subject; six neural ones
 exist as a control and are off by default.
 
+## The derivability channel is taken, and it costs the vocabulary
+
+**Status: provisional, 2026-08-16 — measured, controlled, mechanism traced, and
+not yet challenged by anyone who did not write it.** The section below it says
+nothing takes the channel; that was true of twenty models and is no longer true.
+Both sections stand: the old one is still the correct reading of those twenty.
+
+`frontier-001` adopts the loop from *Hypothesis Frontier* (arXiv:2608.10843,
+Batzoglou, 2026-08-11) — propose formulas, score them with an **exact
+verifier**, aim the next round at the residual errors, prefer the shortest
+formula of a given verified precision. The LLM is replaced by enumeration over a
+guard lattice, so the verifier is the only thing deciding what survives.
+
+**The one change that matters is a hypothesis *form*, not a search.** Every
+rule-based model here concludes a **copy** (some node's label) or a **constant**.
+`ilp-001` is a genuine FOIL search and induces the relational chain, but its
+clause head still binds to another node's label. The derive arm plants
+`label(X) = m(label(Y))` for a finite corpus-wide `m`, which is neither — so no
+amount of search finds it, and `ilp` scoring exactly 0.000 beside a search that
+works is the evidence that the failure was **expressive, not procedural**.
+
+`acc | derived, not copyable`, 1,325 fills, 704 eval episodes, 8 draws:
+
+| | `derive:wordnet` | control `-perm` | `-shuffled` |
+|---|---:|---:|---:|
+| **`frontier-001`** | **0.532** | **0.072** | **0.532** |
+| `frontier-nomap` — same search, no map form | 0.000 | 0.000 | — |
+| four models scoring the shared back-off | 0.155 | 0.178 | 0.155 |
+| the other fifteen | 0.000 | 0.000 | 0.000 |
+| derivation floor (a lookup) | 1.000 | 0.167 | 1.000 |
+
+`treatment − control` is **+0.460**; every other model in the table is at or
+below zero on that difference. **The rule was read, not inferred:** the
+hypothesis answering the bucket is `[slot=1, nsib=4] -> map:sib@2`, and its
+entries at the six planted kinds are `shoe→lace, body→abdomen, ship→bay,
+garment→arm, building→annex, auto→buffer` — **all six recovered verbatim**.
+Where it fires it is right **61 of 61**; the 45% it does not cover, it declines.
+In the control that rule fails verification and **is absent from the fitted
+model**. In `-shuffled` the same guard survives with the same support and table
+size, its six entries are the scrambled graph's values, and they agree with real
+WordNet **zero** times out of six — which shows, rather than asserts, that this
+instrument reads *derivability* and never *meaning*.
+
+**The price is measured, by a control in the model's own hypothesis class.**
+`frontier-nomap` is the identical search with the `map` form removed:
+
+| | `frontier-001` | `frontier-nomap` |
+|---|---:|---:|
+| `label_acc`, base curriculum | **0.4042** — first of 24 | 0.2954 |
+| `label_bits` | 7.433 — **eleventh** of 24 | 8.541 |
+| renaming drop | **−0.372** | **−0.066** |
+| `type_acc` | 0.863335 | 0.863335 |
+
+So the map form buys **+0.109 accuracy and 1.11 bits and costs 0.306 of
+equivariance** — and the derived slot is 0.20% of positions, so almost all of
+that cost is the map firing where no derivation was required. 356 of 444 label
+rules are symbol-keyed maps: offered a table over symbol identities and a
+structural copy, a cross-fitted verifier prefers the table nearly everywhere,
+because on this curriculum it verifies better.
+
+**Read the two rankings together, because they disagree by ten places.**
+`frontier-001` is first of twenty-four on `label_acc` — +0.047 over the previous
+best, a quarter of the whole field's spread — and eleventh on `label_bits`, and
+it is the second least equivariant model ever measured here, behind
+`ensemble-001`. It votes for one symbol, so being unsure and being wrong are the
+same observation to it, which accuracy cannot see and bits is made of.
+
+**What a refuter should attack first.** On the *copyable* half of the derived
+bucket `frontier-001` goes 0.496 → 0.078 between the arms, where every pointer
+holds its score (`corefer` 0.410 → 0.399). The pre-registration said that half
+could not separate the arms; it separates by 0.418. The model replaces an
+available copy with a derivation whenever the derivation verifies better in
+training, which is rational under that distribution and brittle under the one
+condition designed to break it.
+
 ## Derivability: a channel 0.833 wide, provably open, and nothing takes it
 
 The semantic-constraint line's second attempt, and the one whose control can
