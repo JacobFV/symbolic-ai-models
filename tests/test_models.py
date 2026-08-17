@@ -549,7 +549,8 @@ def test_a_knob_added_for_one_model_does_not_change_another(cfg):
     # acquiring a pinned type head has to be added here on purpose. It has caught
     # three descendants so far, which is the test working rather than the test
     # being brittle.
-    pinned = {"frontier-009", "frontier-010", "frontier-perkey"}
+    pinned = {"frontier-009", "frontier-010", "frontier-perkey",
+              "frontier-typemass"}
     for name in model_names():
         if not name.startswith("frontier"):
             continue

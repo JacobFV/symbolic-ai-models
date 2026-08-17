@@ -499,6 +499,24 @@ question is "which node do I corefer with", not "which of 8,192 symbols is this"
 The best model reaches 0.357 accuracy against a **0.722 copy ceiling**. More than
 half the reachable signal is untouched by every model here.
 
+**`type_bits` had never been compared, and it inverts the type ranking.** The
+same sentence that produced `a-ranking-is-a-property-of-a-metric` for the label
+head is true of the type head: both columns have been in every `summary.json`
+from the start and only accuracy was ever quoted. Ranked over 44 rows,
+`gru-001` is **31st on type accuracy and 4th on type bits**, `tpr` 33rd and 6th,
+`transformer` 35th and 10th — the neural models are calibrated and inaccurate.
+The rule-based lines are the mirror: `frontier-010` is **7th on accuracy and
+24th on bits**, accurate and overconfident. Only `corefer-001` (0.9458 / 0.3479)
+and `rgt-001` (0.9154 / 0.3576) are top on both, and they are exactly the two
+models recorded below as the only ones with a positive type lift.
+
+Every type gate here is a hand formula. Fitting frontier's by likelihood
+(`frontier-typemass`) buys **0.110 bits**, 1.0441 → 0.9342, moving it 24th → 14th
+with `type_acc` unchanged and every label number bit-identical. `corefer` is at
+0.3479, so calibration closed a tenth of a bit and **the remaining 0.59 is a
+different order of thing** — a question about the type head's hypothesis
+language, not its confidence.
+
 **Node type is very nearly determined by tree shape.** A content-blind
 backed-off lookup reaches 0.860. That is the floor now, and on it only two of
 nineteen models are positive: `corefer` (+0.612) and `rgt` (+0.395, a network).

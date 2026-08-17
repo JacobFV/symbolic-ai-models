@@ -1166,9 +1166,20 @@ class FrontierModel(RuleBasedModel):
                 tpred = trule.resolve(tvals)
                 if tpred is not None:
                     type_vote = ({int(tpred): 1.0},
-                                 min(0.15 + 0.8 * trule.score, 0.95))
+                                 self._type_gate(trule.score))
             out[i] = (label_vote, type_vote)
         return out
+
+    def _type_gate(self, score: float) -> float:
+        """Confidence for the type head, from its rule's bound. The line a variant swaps.
+
+        A hand formula, and until `type_bits` was compared nobody had reason to
+        doubt it — the column is in every summary and had never been ranked. It
+        turns out to rank the registry very differently from `type_acc`:
+        `gru-001` is 31st on accuracy and **4th** on bits, and this family is
+        accurate and overconfident, 7th on accuracy and 23rd on bits.
+        """
+        return min(0.15 + 0.8 * score, 0.95)
 
     # ---- reporting ----------------------------------------------------
     def n_symbolic_parameters(self) -> int:
@@ -1406,7 +1417,7 @@ class FrontierSoftModel(FrontierBothModel):
                 tpred = trule.resolve(tvals)
                 if tpred is not None:
                     type_vote = ({int(tpred): 1.0},
-                                 min(0.15 + 0.8 * trule.score, 0.95))
+                                 self._type_gate(trule.score))
             out[i] = (label_vote, type_vote)
         return out
 
@@ -1793,6 +1804,85 @@ class FrontierPerKeyModel(FrontierTypeAtomsModel):
     def __init__(self, cfg: ModelConfig) -> None:
         super().__init__(cfg)
         self.per_key_gate = bool(cfg.get("per_key_gate", True))
+
+
+@register("frontier-typemass",
+          doc="frontier-010 with the TYPE gate fitted by likelihood instead of a hand formula.")
+class FrontierTypeMassModel(FrontierTypeAtomsModel):
+    """The gate question, asked of the head nobody was measuring.
+
+    `type_bits` has been in every ``summary.json`` since the beginning and had
+    **never been compared**. Ranked, it inverts against `type_acc` as sharply as
+    the label columns do: `gru-001` is 31st on accuracy and **4th** on bits,
+    `tpr-001` 33rd and 6th, `transformer-001` 35th and 10th — the neural models
+    are calibrated and inaccurate. This family is the mirror: `frontier-010` is
+    **7th** on type accuracy and **23rd** on type bits. Accurate and
+    overconfident.
+
+    The mechanism is the one three label-head measurements already established
+    ([[2026-08-17-the-half-bit-is-the-argmax-fit-not-the-hand-formula]]): the
+    type gate is a **hand formula**, ``min(0.15 + 0.8·score, 0.95)``, and its
+    input here is a Wilson *lower bound on precision* rather than a purity —
+    which is not the same quantity `corefer`'s version of the formula receives,
+    and `corefer` is 1st on both columns.
+
+    **Predicted before running:**
+
+    1. ``type_bits`` improves from `frontier-010`'s **1.0441**, to below
+       **0.95**. The narrowed claim says a hand formula leaves ~0.16 where an
+       argmax fit leaves ~0.55; this formula is fed a quantity it was not
+       designed for, so the gain should sit nearer the larger end.
+    2. ``type_acc`` moves by less than **0.01**. A gate cannot reorder a
+       single-symbol vote, but it can move the boundary between the vote and the
+       type back-off, and for types that back-off is a bare marginal.
+    3. **Every label number is bit-identical** to `frontier-010` — 0.4414,
+       7.141. The label head is untouched, and this is the control that says the
+       row is readable.
+
+    Refuted if type bits do not improve, which would mean the formula was already
+    right for this input and the overconfidence is somewhere else — most likely
+    in the rules rather than the gate.
+    """
+
+    LEARNED = FrontierTypeAtomsModel.LEARNED + ("type_gate_map",)
+
+    def __init__(self, cfg: ModelConfig) -> None:
+        super().__init__(cfg)
+        self.type_gate_map = MassCalibrator()
+
+    def learn(self, episodes: Sequence[Episode], tok: SymbolTokenizer) -> None:
+        super().learn(episodes, tok)
+        self._fit_type_gate(episodes, tok)
+
+    def _fit_type_gate(self, episodes: Sequence[Episode],
+                       tok: SymbolTokenizer) -> None:
+        scores: list[float] = []
+        votes: list[float] = []
+        backoff: list[float] = []
+        for view, targets in self.training_views(
+                episodes, tok, repeats=1, seed=7, max_nodes=self.cfg.max_nodes):
+            for node, (_label, type_id) in targets.items():
+                if type_id is None or type_id < 0:
+                    continue
+                atoms = (_type_guard_atoms(view, node) if self.type_atoms
+                         else _guard_atoms(view, node))
+                tvals = _path_types(view, node)
+                rule = self._fire(self.type_rules, atoms, tvals)
+                if rule is None:
+                    continue
+                pred = rule.resolve(tvals)
+                if pred is None:
+                    continue
+                scores.append(rule.score)
+                votes.append(1.0 if int(pred) == int(type_id) else 0.0)
+                backoff.append(self.type_backoff_prob(int(type_id)))
+        if scores:
+            self.type_gate_map = MassCalibrator().fit(scores, votes, backoff)
+
+    def _type_gate(self, score: float) -> float:
+        if not self.type_gate_map.fitted:
+            return super()._type_gate(score)
+        return float(self.type_gate_map(score))
 
 
 @register("frontier-nomap",

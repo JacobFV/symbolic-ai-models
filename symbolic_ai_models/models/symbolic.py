@@ -450,6 +450,22 @@ class RuleBasedModel(Model):
                     yield ((view, targets, start + b) if with_index
                            else (view, targets))
 
+    def type_backoff_prob(self, type_id: int) -> float:
+        """The probability the shared back-off puts on ``type_id``.
+
+        The type analogue of :meth:`backoff_prob`, and deliberately simpler:
+        ``symbol_backoff`` gets a structural ``context_prior`` and
+        ``type_backoff`` does not, which is a documented asymmetry
+        (``notes/lessons/2026-08-13-the-harness-moves-more-than-the-models.md``)
+        and not something this helper should quietly repair.
+
+        A fitting-time helper with no caller on the prediction path, added
+        because a model calibrating its *type* gate needs the two mixture
+        components to be probabilities of the same event — the same requirement
+        :meth:`backoff_prob` exists for on the symbol side.
+        """
+        return float(self.type_backoff[type_id].exp())
+
     # ---- what the back-off already knows -------------------------------
     def backoff_prob(self, view: GraphView, node: int, symbol: int) -> float:
         """The probability the shared back-off puts on ``symbol`` at ``node``.
