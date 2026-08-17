@@ -379,6 +379,34 @@ def test_rule_based_survives_a_non_cpu_buffer(name, fixtures, cfg):
     assert torch.isfinite(out.symbol_logits).all()
 
 
+@pytest.mark.parametrize("name", RULE_BASED)
+def test_a_model_survives_module_to(name, fixtures, cfg):
+    """`model.to(device)` must work, which means not shadowing `nn.Module._apply`.
+
+    The test above changes a buffer's dtype directly and therefore never calls
+    `nn.Module.to`, which is how this got through. `frontier-001` defined a
+    helper called `_apply` — a perfectly ordinary private name — and
+    `nn.Module.to` dispatches through `nn.Module._apply` to walk a module's
+    tensors. Training, evaluation and three full sweeps ran green and wrote
+    their summaries; the model was simply **impossible to load back**, because
+    `load_run` calls `.to(device)` and got the subclass's method with the wrong
+    signature.
+
+    That is the shape
+    `notes/lessons/2026-08-13-a-guard-is-the-only-thing-that-catches-a-silent-property.md`
+    is about: nothing was wrong with any number, and nothing in the suite was
+    looking at whether a fitted model could be reopened. Parametrised over every
+    rule-based model rather than over the one that broke, because the next
+    collision will be a different private name on a different model.
+    """
+    model = make(name, fixtures, cfg)
+    moved = model.to(torch.device("cpu"))
+    assert moved is model
+    episodes, tok = fixtures
+    out = model(collate_text(episodes[:2], tok))
+    assert torch.isfinite(out.symbol_logits).all()
+
+
 def test_a_model_with_a_pointer_is_scored_on_copying(fixtures, cfg):
     """`evidence` states a binding; models without a pointer stay unscored.
 

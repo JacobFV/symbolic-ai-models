@@ -397,10 +397,28 @@ def main(paths: list[str]) -> int:
           "is the same lookup with the sibling term dropped -- it must sit at "
           "1/6 in *both* arms, or they differ in the marginal and not only in "
           "the conditional.")
+    # Merge rather than overwrite. The published weights under `runs/` are
+    # untracked, so a later agent adding *one* model to an arm can only rescore
+    # that one -- and writing the file from scratch would then delete nineteen
+    # published rows that cannot be recomputed. Rows are keyed by model name, so
+    # rerunning a model replaces its own row and nothing else.
     out = Path(paths[0]).parent / "derived_split.json"
-    out.write_text(json.dumps({"curriculum": arm, "lessons": lessons,
-                               "floors": floors, "rows": rows}, indent=1))
-    print(f"\nwritten to {out}")
+    merged = {r["model"]: r for r in rows}
+    if out.exists():
+        prior = json.loads(out.read_text())
+        assert prior["curriculum"] == arm, (
+            f"{out} holds {prior['curriculum']}, this run is {arm}")
+        for key, was in prior["floors"].items():
+            now = floors.get(key)
+            assert now is not None and abs(now - was) < 1e-9, (
+                f"floor {key} moved {was} -> {now}; the population is not the "
+                "one the published rows were measured on, so they must not be "
+                "merged with these")
+        merged = {r["model"]: r for r in prior["rows"]} | merged
+    out.write_text(json.dumps(
+        {"curriculum": arm, "lessons": lessons, "floors": floors,
+         "rows": [merged[k] for k in sorted(merged)]}, indent=1))
+    print(f"\nwritten to {out} ({len(merged)} rows)")
     return 0
 
 
