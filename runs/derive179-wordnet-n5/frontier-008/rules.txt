@@ -1,0 +1,42 @@
+label: 604 rules  const=74, copy=159, map=371
+type: 255 rules  const=122, copy=133, map=0
+  round 0 [label]: 507 guards, 689 kept, 14728/21705 fills still wrong
+  round 1 [label]: 2843 guards, 4209 kept, 13926/21705 fills still wrong
+  round 2 [label]: 6982 guards, 10224 kept, 13770/21705 fills still wrong
+  round 0 [type]: 507 guards, 557 kept, 4754/21705 fills still wrong
+  round 1 [type]: 1528 guards, 1774 kept, 3432/21705 fills still wrong
+  round 2 [type]: 3175 guards, 3257 kept, 2788/21705 fills still wrong
+top label hypotheses:
+  [ptype='list', nsib=3, kids=True] -> map:sib@3  p=0.990 n=503 dl=159
+  [slot=2, depth=3, nsib=3] -> map:sib@3  p=1.000 n=145 dl=135
+  [ptype='list', nsib=3, kids=True] -> map:sib@1  p=0.981 n=534 dl=165
+  [depth=3, nsib=3, kids=True] -> map:sib@3  p=0.981 n=540 dl=168
+  [depth=3, nsib=3, kids=True] -> map:sib@0  p=0.981 n=571 dl=175
+  [ptype='list', nsib=3, kids=True] -> map:sib@0  p=0.981 n=525 dl=168
+  [ptype='list', nsib=3, kids=True] -> map:sib@2  p=0.981 n=513 dl=168
+  [depth=3, nsib=3, kids=True] -> map:sib@1  p=0.977 n=571 dl=168
+  [ptype='list', slot=0, kids=True] -> map:sib@3  p=0.983 n=241 dl=209
+  [depth=3, nsib=3, kids=True] -> map:sib@2  p=0.971 n=593 dl=177
+  [slot=2, depth=3, nsib=2] -> map:sib@0  p=1.000 n=75 dl=88
+  [slot=3, depth=3, nsib=3] -> map:sib@2  p=0.983 n=176 dl=149
+  [slot=0, depth=3, nsib=3] -> map:sib@3  p=0.986 n=142 dl=141
+  [ptype='list', nsib=3, kids=True] -> copy:sib@0  p=0.964 n=619 dl=3
+  [slot=0, depth=3, kids=True] -> map:sib@3  p=0.974 n=269 dl=221
+  [slot=2, depth=3, kids=True] -> map:sib@3  p=0.971 n=278 dl=220
+  [ptype='list', nsib=3, kids=True] -> copy:sib@1  p=0.962 n=624 dl=3
+  [slot=2, depth=3, nsib=3] -> map:sib@0  p=0.980 n=151 dl=134
+  [ptype='list', slot=0, kids=True] -> map:sib@1  p=0.964 n=443 dl=273
+  [slot=2, depth=3, kids=True] -> map:sib@1  p=0.965 n=367 dl=256
+surviving map rules: 371
+  [ptype='list', nsib=3, kids=True] -> map:sib@3  p=0.990 n=503 dl=159
+      |m|=96  schema->schema, thesis->thesis, algorithm->algorithm, at->at, profile->profile, attempt->attempt, task->task, claim->claim
+  [slot=2, depth=3, nsib=3] -> map:sib@3  p=1.000 n=145 dl=135
+      |m|=100  schema->schema, thesis->thesis, algorithm->algorithm, attempt->attempt, task->task, claim->claim, praised->watched, grouping->grouping
+  [ptype='list', nsib=3, kids=True] -> map:sib@1  p=0.981 n=534 dl=165
+      |m|=101  schema->schema, thesis->thesis, profile->profile, at->at, attempt->attempt, task->task, claim->claim, grouping->grouping
+  [depth=3, nsib=3, kids=True] -> map:sib@3  p=0.981 n=540 dl=168
+      |m|=102  schema->schema, thesis->thesis, algorithm->algorithm, profile->profile, attempt->attempt, task->task, claim->claim, grouping->grouping
+  [depth=3, nsib=3, kids=True] -> map:sib@0  p=0.981 n=571 dl=175
+      |m|=103  schema->schema, thesis->thesis, algorithm->algorithm, profile->profile, task->task, claim->claim, grouping->grouping, obj->obj
+  [ptype='list', nsib=3, kids=True] -> map:sib@0  p=0.981 n=525 dl=168
+      |m|=99  schema->schema, thesis->thesis, algorithm->algorithm, profile->profile, at->at, task->task, claim->claim, grouping->grouping

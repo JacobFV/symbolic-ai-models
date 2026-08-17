@@ -98,9 +98,18 @@ predictions were *too pessimistic*: k=24 was called at 0.4–0.8 and came in at
 per key rather than per rule, so a table's rare keys degrade individually instead
 of sinking the rule that owns them.
 
-It is a **data** curve, not a capacity curve — the fall from 0.896 to 0.641
-tracks instances-per-pair, and whether k=60 recovers at `n_train = 40` is the
-direct test and is unrun.
+**It is two variables, and the one-variable version was mine and is refuted.**
+Raising `n_train` recovers the wide pools: k60 goes 0.641 → **0.910** at 40 seeds
+and **0.962** at 80, so the model is not capped near twenty-four pairs and the
+headline does not need hedging to "a six-pair correspondence". But holding
+instances-per-pair fixed at ~7.7 and varying only the pool gives **1.000 / 0.956
+/ 0.896** for pools 6 / 12 / 24 — monotone in width at identical supervision. I
+published "instances-per-pair predicts the score and pool width does not" from
+three consistent points; the fourth, chosen because it was the one that could
+embarrass the claim, killed it. Pool width costs 0.104 at thin supervision and
+0.006 at thick. A mechanism is available and untested: at pool 6 every episode
+draws all six kinds, so the map is *complete in every episode*, and completeness
+rather than width may be the operative variable.
 
 **Named weakness:** `min_precision = 0.2` was chosen after seeing that 0.5
 excluded the rule. It was not searched over the derived bucket and no value was

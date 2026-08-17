@@ -1,0 +1,42 @@
+label: 1304 rules  const=390, copy=225, map=689
+type: 888 rules  const=576, copy=312, map=0
+  round 0 [label]: 666 guards, 1665 kept, 211631/333525 fills still wrong
+  round 1 [label]: 3456 guards, 9773 kept, 192833/333525 fills still wrong
+  round 2 [label]: 8965 guards, 23652 kept, 187283/333525 fills still wrong
+  round 0 [type]: 666 guards, 1170 kept, 69253/333525 fills still wrong
+  round 1 [type]: 1714 guards, 3083 kept, 25878/333525 fills still wrong
+  round 2 [type]: 2322 guards, 4492 kept, 16627/333525 fills still wrong
+top label hypotheses:
+  [ptype='str', nsib=0] -> map:parent  p=1.000 n=851 dl=187
+  [slot=2, depth=4, kids=True] -> map:sib@3  p=1.000 n=728 dl=13
+  [depth=5, nsib=2, kids=True] -> map:sib@0  p=1.000 n=774 dl=39
+  [depth=5, nsib=2, kids=True] -> map:sib@1  p=1.000 n=814 dl=46
+  [depth=5, nsib=3, kids=True] -> map:sib@1  p=1.000 n=806 dl=60
+  [depth=5, nsib=3, kids=True] -> map:sib@2  p=1.000 n=783 dl=67
+  [ptype='str', nsib=0] -> copy:parent  p=0.999 n=973 dl=2
+  [slot=1, depth=4, kids=True] -> map:sib@3  p=1.000 n=674 dl=13
+  [phead=5770] -> map:sib@0  p=1.000 n=590 dl=45
+  [depth=6, kids=True] -> map:sib@2  p=1.000 n=529 dl=9
+  [ptype='pred', slot=2, kids=True] -> map:sib@3  p=1.000 n=519 dl=11
+  [depth=5, nsib=2, kids=True] -> map:sib@2  p=0.999 n=778 dl=47
+  [ptype='pred', slot=1, kids=True] -> map:sib@3  p=1.000 n=490 dl=11
+  [ptype='list', depth=6, kids=True] -> copy:sib@1  p=1.000 n=432 dl=3
+  [ptype='list', depth=6, kids=True] -> copy:sib@0  p=1.000 n=410 dl=3
+  [depth=6, kids=True] -> map:sib@3  p=1.000 n=410 dl=9
+  [phead=5746, kids=True] -> map:sib@0  p=1.000 n=441 dl=10
+  [depth=5, nsib=3, kids=True] -> map:sib@0  p=0.998 n=807 dl=66
+  [phead=5831, slot=2] -> const  p=1.000 n=331 dl=4
+  [phead=5813] -> map:sib@0  p=1.000 n=338 dl=25
+surviving map rules: 689
+  [ptype='str', nsib=0] -> map:parent  p=1.000 n=851 dl=187
+      |m|=134  0->0, 1->1, 0010->0010, 11->11, 111->111, 10->10, 0011->0011, 0000->0000
+  [slot=2, depth=4, kids=True] -> map:sib@3  p=1.000 n=728 dl=13
+      |m|=5  set->set, payoff_if_success->success_percent, time->value, payoff->success_percent, task->start
+  [depth=5, nsib=2, kids=True] -> map:sib@0  p=1.000 n=774 dl=39
+      |m|=28  at->at, kd->times, lv->times, domain->R, headquarters->headquarters, pl->times, give->give, step->step
+  [depth=5, nsib=2, kids=True] -> map:sib@1  p=1.000 n=814 dl=46
+      |m|=31  at->at, kd->times, sr->times, lv->times, zv->times, headquarters->headquarters, give->give, step->step
+  [depth=5, nsib=3, kids=True] -> map:sib@1  p=1.000 n=806 dl=60
+      |m|=44  at->at, bits->bits, P->R, give->give, word->word, method->method, lemma->lemma, ex->ex
+  [depth=5, nsib=3, kids=True] -> map:sib@2  p=1.000 n=783 dl=67
+      |m|=52  at->at, bits->bits, R->domain, P->R, Q->domain, give->give, word->word, method->method

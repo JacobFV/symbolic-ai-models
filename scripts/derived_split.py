@@ -364,6 +364,16 @@ def split(path: str, ev_pairs, train_pairs, draws: int = DRAWS) -> dict:
 
 
 def main(paths: list[str]) -> int:
+    # `--n-train N` follows the run's own training budget. The derivation floor
+    # is fitted on `N_TRAIN` seeds so that "the lookup sees exactly the evidence
+    # the models did" stays true; a run swept at 40 and floored at 20 would be
+    # comparing a model against a floor built from a different corpus. Defaults
+    # to 20, so every published row is unaffected.
+    global N_TRAIN
+    if "--n-train" in paths:
+        i = paths.index("--n-train")
+        N_TRAIN = int(paths[i + 1])
+        paths = paths[:i] + paths[i + 2:]
     paths = [p for p in sorted(paths) if (Path(p) / "summary.json").exists()]
     if not paths:
         print("no finished runs given")
