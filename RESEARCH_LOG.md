@@ -522,6 +522,31 @@ backed-off lookup reaches 0.860. That is the floor now, and on it only two of
 nineteen models are positive: `corefer` (+0.612) and `rgt` (+0.395, a network).
 Every other model that looked good at type was reproducing a lookup table.
 
+**And `corefer`'s +0.612 is one conjunct.** Its type key is a backed-off ladder
+over `(ptype, slot, depth, arity, sibling type, pointed type)`, and the floor is
+a lookup of exactly that shape minus the last term. `corefer-nopoint` drops it
+and changes nothing else:
+
+| | type acc | type bits | type lift | label acc / bits |
+|---|---:|---:|---:|---|
+| `corefer-001` | 0.9458 | **0.3479** | **+0.612** | 0.357157 / 6.9547 |
+| `corefer-nopoint` | **0.8514** | 0.8300 | **−0.065** | 0.357157 / 6.9547 |
+
+Minus that one term it is *below* the floor, and every label number is
+bit-identical — the label pointer never reads it. So one of this repo's two
+positive type results is the single feature **"what kind of node did my
+coreference pointer land on"**, and the induced type heads need a *pointer*, not
+a better rule language: every other atom in that ladder is already among
+`frontier-010`'s eight. Priced here at **+0.095 accuracy and 0.48 bits**. Stated
+against overclaiming: that term is the output of a fitted pointer, so it is where
+the *pointer's* value is cashed for the type head rather than a cheap feature.
+
+A second, separable observation: `corefer-nopoint` is *less accurate* than
+`frontier-typemass` (0.8514 vs 0.8666) and *better calibrated* (0.830 vs 0.934).
+A back-off ladder and a rank-ordered rule list at comparable accuracy do not give
+comparable bits — the ladder retreats to a general key with honest support, the
+rule list fires its top match and lives with that rule's average.
+
 **Capacity spent on symbol identity is wasted.** `ilp` reaches +0.198 label lift
 with 74 counts; `ctw` reaches -0.040 with 819,990. The task re-randomises which
 symbol fills which slot every episode, so parameters attached to symbol identity
