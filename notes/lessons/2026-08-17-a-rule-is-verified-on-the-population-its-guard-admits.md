@@ -46,7 +46,29 @@ n = 2,300 under a Wilson bound, so a correct rule might exist and never get a
 turn. Also **false**: asking whether *any* rule in the model would have answered
 the missed fills gives **0.0000**. The correct rules do not exist to be blocked.
 
-**Candidate 3 — the guard language, and this one holds.** Over all 63 subsets of
+**Candidate 3 — the guard language. Written here as holding, and it does not.**
+Corrected within the day by
+[[2026-08-17-an-average-cannot-see-a-sub-population]] and left standing so the
+sequence is visible. The argument below is that a rule perfect on a rare
+sub-population cannot verify because its guard admits too much else. Measured on
+`[phead='obj', slot=1]`, which covers 80% of the derived slot, `map:sib@2` is
+**1.000 on the derived members** and 0.179 on the rest — **0.625 overall**,
+comfortably above the 0.5 threshold. It would have verified. Purity was not what
+killed it.
+
+Instrumenting the fit found what did: for that guard a resolver *is* chosen and
+it is **`const` at score 0.993**, and `_verify` keeps **one resolver per guard**,
+so the map is discarded for being 0.625 on average against a constant that is
+0.993. The mechanism below is therefore right in its general form — a rule is
+ranked by its average over the population its guard admits, and an average
+cannot see a sub-population — and wrong about which stage of the search enforces
+it. It is the *resolver* choice, not the guard's purity.
+
+Fixing that (`frontier-003`, best rule per *form* per guard) did not move the
+derived bucket either. Four candidates, three variants, zero fills. The honest
+state is that what limits that bucket is still unidentified.
+
+**The original candidate-3 argument, as written:** Over all 63 subsets of
 the six guard atoms, the best guard covering at least half the derived fills is
 `[phead='obj', slot=1]`, at **purity 0.531** and recall 0.799 — 147 derived
 fills and **130 non-derived ones**. There is no guard that names the derived

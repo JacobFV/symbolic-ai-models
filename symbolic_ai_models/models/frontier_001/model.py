@@ -410,6 +410,19 @@ class FrontierModel(RuleBasedModel):
         #: the rule's own path answers 100% of it with the guard removed. See
         #: ``notes/findings/2026-08-17-the-scope-is-in-the-path-and-the-guard-costs-045.md``.
         self.propose_support = int(cfg.get("propose_support", 0)) or self.min_support
+        #: How many resolver forms may survive per guard. One — the best by rank
+        #: — is what every published `frontier-001` number was fitted under, so
+        #: this changes nothing until it is raised.
+        #:
+        #: It exists because one-per-guard silently discards a resolver that is
+        #: *perfect on a sub-population* whenever another is better overall. On
+        #: the guard `[phead='obj', slot=1]`, which covers 80% of the derived
+        #: slot, `map:sib@2` is **1.000** on the derived members and 0.179 on the
+        #: rest — 0.625 overall — and `const` scores 0.993, so the map is thrown
+        #: away and the derivation with it. A rule is ranked by its average over
+        #: the population its guard admits, and an average cannot see a
+        #: sub-population.
+        self.keep_per_guard = int(cfg.get("keep_per_guard", 1))
         #: Cap on the rule set, applied after the reachability filter in
         #: :meth:`_useful`, so it bounds the rules that answer something
         #: rather than the rules that sort first.
@@ -592,7 +605,10 @@ class FrontierModel(RuleBasedModel):
         # passes below. In the later rounds the residual is small, so this is
         # what keeps the wide end of the lattice from costing a full sweep.
         take = np.flatnonzero(cand[gid])
-        best: dict[int, _Rule] = {}
+        # ``{group: {form: best rule of that form}}``. Keyed by form, not by
+        # group alone, so that :attr:`keep_per_guard` can decide how many
+        # survive — see ``FrontierBothModel``.
+        best: dict[int, dict[str, _Rule]] = collections.defaultdict(dict)
 
         if "copy" in forms:
             for p in range(len(PATHS)):
@@ -610,7 +626,11 @@ class FrontierModel(RuleBasedModel):
                                                    n_groups)
                 self._offer(best, guards, cand, c, f, "map", p, dl, tables, floor)
 
-        return int(cand.sum()), list(best.values())
+        out: list[_Rule] = []
+        for per_form in best.values():
+            ranked = sorted(per_form.values(), key=lambda r: r.rank)
+            out.extend(ranked[:self.keep_per_guard])
+        return int(cand.sum()), out
 
     def _cross_fit(self, gid: np.ndarray, fv: np.ndarray, av: np.ndarray,
                    take: np.ndarray, key: np.ndarray | None, n_groups: int):
@@ -666,9 +686,9 @@ class FrontierModel(RuleBasedModel):
                          float(scores[g]), int(fired[g]), cost + len(guards[g]))
             if tables is not None:
                 rule.fold_table = [dict(tables[g][0]), dict(tables[g][1])]
-            current = best.get(g)
+            current = best[g].get(form)
             if current is None or rule.rank < current.rank:
-                best[g] = rule
+                best[g][form] = rule
 
     # -- what the frontier still gets wrong ------------------------------
     def _match(self, rule: _Rule, codes: np.ndarray,
@@ -951,6 +971,38 @@ class FrontierRareModel(FrontierModel):
     def __init__(self, cfg: ModelConfig) -> None:
         super().__init__(cfg)
         self.propose_support = int(cfg.get("propose_support", 2))
+
+
+@register("frontier-003",
+          doc="frontier keeping the best rule of each resolver form per guard, not one overall.")
+class FrontierBothModel(FrontierModel):
+    """One number different again: how many resolvers survive per guard.
+
+    ``frontier-001`` keeps the single best resolver for each guard. That is what
+    discards the derivation. On ``[phead='obj', slot=1]`` — the guard covering
+    80% of the derived slot — the chosen resolver is ``const`` at score 0.993,
+    and ``map:sib@2``, which is **1.000 on the derived members** and 0.179 on the
+    rest, is thrown away for being 0.625 on average.
+
+    A rule is ranked by its average over the population its guard admits, and an
+    **average cannot see a sub-population**. Keeping one rule per *form* rather
+    than one per guard lets both survive and lets the ordering decide which
+    fires, which is a decision the ordering can make per fill and the average
+    cannot.
+
+    **Predicted before running:** ``acc | derived, not copyable`` rises above
+    ``frontier-001``'s 0.532 in ``derive:wordnet``; the control stays at the
+    blind marginal; the pooled table moves by less than ~0.003, because the
+    derived slot is 0.20% of positions. Refuted if the bucket does not move,
+    which would mean the discarded map was not what was missing and the cause is
+    somewhere I have not looked — this is the fourth candidate, and the first
+    three were the proposal gate, the rank ordering and the guard language, each
+    built and each refuted.
+    """
+
+    def __init__(self, cfg: ModelConfig) -> None:
+        super().__init__(cfg)
+        self.keep_per_guard = int(cfg.get("keep_per_guard", 3))
 
 
 @register("frontier-nomap",
