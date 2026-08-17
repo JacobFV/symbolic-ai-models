@@ -202,6 +202,13 @@ def run_one(cand: Candidate, *, config: Path, out_root: Path, eval_seed0: int,
 SPACES: dict[str, dict[str, list[Any]]] = {
     "frontier-001": {
         "min_support": [6, 12, 24, 48],
+        # Separate from `min_support` on purpose: this is the *proposal* gate,
+        # and an absolute count there is what stops rare structure from ever
+        # earning its own guard. The Wilson bound still decides what survives,
+        # so lowering this should raise recall on rare phenomena without
+        # admitting noise -- that is the prediction the loop is being asked to
+        # check on the development split.
+        "propose_support": [2, 3, 4, 6],
         "min_precision": [0.3, 0.5, 0.7],
         "max_rules": [400, 2000, 6000],
         "frontier_repeats": [2, 3, 5],

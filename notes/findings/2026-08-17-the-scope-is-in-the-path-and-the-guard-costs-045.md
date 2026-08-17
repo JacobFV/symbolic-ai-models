@@ -62,6 +62,30 @@ Stated generally, because it is not about this rule:
 That is a hazard with no guard on it yet, and it applies to every threshold in
 this repo that counts occurrences rather than shares.
 
+## Correction, same day: the cause named below is wrong
+
+The section above says the derived slot "cannot clear the threshold in any
+round, so it is never proposed". That was the obvious mechanism and it is
+**false**, measured by the variant built to test it. `frontier-002` drops the
+proposal gate from 12 to 2 while leaving verification at 12: 8,786 guards
+proposed in round 2 against `frontier-001`'s 5,316, and `acc | derived, not
+copyable` **identical to six decimals at 0.531546**. Ordering was then tested
+and also cleared — no rule in either model would have answered the missed fills
+(0.0000 "blocked by ordering").
+
+The cause that survives is the **guard language**: over all 63 subsets of the
+six atoms, the best guard covering at least half the derived fills is
+`[phead='obj', slot=1]` at purity **0.531**, holding 147 derived fills and 130
+non-derived ones. A rule is verified on the population its guard admits, so a
+rule perfect on the derived slot scores ~0.53 there and loses. Derivedness is a
+property of the generator, not of the tree, and no combination of tree-shaped
+atoms names it.
+
+The generalisation, and it is the reusable half, is
+[[2026-08-17-a-rule-is-verified-on-the-population-its-guard-admits]]. The
+paragraph below is kept as written because the prediction it made is the one
+that was refuted, and removing it would hide that.
+
 ## What to run next, and what not to conclude
 
 The prediction that follows: the derived-bucket score should **rise** as

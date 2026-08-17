@@ -389,6 +389,27 @@ class FrontierModel(RuleBasedModel):
         #: against a back-off right a seventh of the time, and the mixture
         #: weight — not this threshold — is what prices that.
         self.min_precision = float(cfg.get("min_precision", 0.5))
+        #: How much residual support a guard needs before it is *proposed*.
+        #: Defaults to :attr:`min_support`, which is what every published
+        #: `frontier-001` number was fitted under, so this knob changes nothing
+        #: until it is set.
+        #:
+        #: It is separate from :attr:`min_support` because those two thresholds
+        #: are answering different questions and sharing one number gates the
+        #: wrong one. Verification asks "is this rule reliable", and the Wilson
+        #: bound in :func:`_lcb` already prices small samples there. *Proposal*
+        #: asks only "is this guard worth evaluating" — and an absolute count
+        #: there means **rare structure cannot earn its own hypothesis**, because
+        #: a guard specific to a phenomenon occupying 0.2% of the fills cannot
+        #: clear a count fixed for a corpus of 86,805. The search does not fail
+        #: to find it; the search is not permitted to consider it.
+        #:
+        #: Measured cost of that on the derivability arm: the derived slot is
+        #: ~170 fills, no guard specific to it is ever proposed, the derivation
+        #: is absorbed into `[slot=1, nsib=4]`, and 45% of the bucket abstains —
+        #: the rule's own path answers 100% of it with the guard removed. See
+        #: ``notes/findings/2026-08-17-the-scope-is-in-the-path-and-the-guard-costs-045.md``.
+        self.propose_support = int(cfg.get("propose_support", 0)) or self.min_support
         #: Cap on the rule set, applied after the reachability filter in
         #: :meth:`_useful`, so it bounds the rules that answer something
         #: rather than the rules that sort first.
@@ -557,7 +578,7 @@ class FrontierModel(RuleBasedModel):
             gid[i] = g
         n_groups = len(index)
         support = np.bincount(gid[residual], minlength=n_groups)
-        cand = support >= self.min_support
+        cand = support >= self.propose_support
         guards = {g: tuple(zip(keys, vals)) for vals, g in index.items()}
         for g in np.flatnonzero(cand):
             if guards[int(g)] in seen:
@@ -894,6 +915,42 @@ class FrontierModel(RuleBasedModel):
                 for k, v in list(r.table.items())[:8])
             lines.append(f"  {r!r}\n      |m|={len(r.table)}  {shown}")
         return "\n".join(lines)
+
+
+@register("frontier-002",
+          doc="frontier with the proposal gate separated from the verification gate.")
+class FrontierRareModel(FrontierModel):
+    """One number different from ``frontier-001``: what it takes to *propose*.
+
+    ``frontier-001`` uses one threshold for two questions. Verification asks "is
+    this rule reliable", and :func:`_lcb` already prices a small sample there.
+    Proposal asks only "is this guard worth evaluating", and an absolute count
+    there means a guard specific to a phenomenon occupying 0.2% of the fills
+    cannot clear a number fixed for a corpus of 86,805 — so **the search is not
+    permitted to consider it**, which is a different failure from not finding it.
+
+    Measured consequence on ``frontier-001``: no guard specific to the derived
+    slot is ever proposed, the derivation is absorbed into ``[slot=1, nsib=4]``,
+    that guard misses 45% of the derived positions, and they abstain. Strip the
+    guard off its own winning rule and the same path and table answer **100%**
+    of the bucket.
+
+    So this variant drops the proposal gate to 2 and leaves the verification
+    gate at 12. **Predicted before running:** ``acc | derived, not copyable``
+    rises above ``frontier-001``'s 0.532 in ``derive:wordnet``, stays at the
+    blind marginal in ``derive:wordnet-perm``, and the pooled table barely moves
+    — the derived slot is 0.20% of positions, so a pooled change of more than
+    ~0.003 would mean something other than the derivation moved. Refuted if the
+    derived bucket does not rise, which would say the guard was never what was
+    limiting recall.
+
+    Registered beside ``frontier-001`` rather than editing it, so one sweep
+    prints both rows against the same floors.
+    """
+
+    def __init__(self, cfg: ModelConfig) -> None:
+        super().__init__(cfg)
+        self.propose_support = int(cfg.get("propose_support", 2))
 
 
 @register("frontier-nomap",
