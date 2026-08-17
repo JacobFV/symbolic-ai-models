@@ -1590,6 +1590,14 @@ class FrontierSoftModel(FrontierBothModel):
         #: How many matching rules may vote. Bounded because prediction walks
         #: the rule list per hidden node.
         self.max_voters = int(cfg.get("max_voters", 24))
+        #: Multiplier on the mass a ``map``-form rule contributes. ``map`` is
+        #: the memorising form — it reads a symbol and looks its answer up in a
+        #: table fitted at training time — so under a renaming its table is
+        #: stale, where ``copy`` carries whatever symbol is there now. This
+        #: exists to test *why* flattening the vote helps equivariance: the
+        #: claim is that a flat vote helps by demoting ``map``, and if so,
+        #: demoting ``map`` directly should do it at less cost to accuracy.
+        self.map_vote_weight = float(cfg.get("map_vote_weight", 1.0))
 
     def _mass(self, atoms: tuple, vals: tuple) -> dict[int, float]:
         mass: dict[int, float] = collections.defaultdict(float)
@@ -1603,7 +1611,10 @@ class FrontierSoftModel(FrontierBothModel):
             if pred is None:
                 continue
             seen += 1
-            mass[int(pred)] += max(rule.confidence(vals), 0.0) ** self.sharpness
+            w = max(rule.confidence(vals), 0.0) ** self.sharpness
+            if rule.form == "map":
+                w *= self.map_vote_weight
+            mass[int(pred)] += w
         return dict(mass)
 
     def _fit_gate(self, episodes: Sequence[Episode],

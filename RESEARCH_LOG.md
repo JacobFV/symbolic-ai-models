@@ -533,6 +533,28 @@ A knob inert in one column and a strong lever in another is
 model ranking. The old reading was not wrong; it was complete only for the column
 it reported and was written as though it were general.
 
+**The mechanism behind it holds, and the prediction from the mechanism does
+not.** The story was that flattening helps by demoting `map`, the memorising form
+whose table is stale under a renaming. `map_vote_weight` (a multiplier on `map`'s
+vote mass; 1.0 inert) confirms it — 0.25 moves renamed 0.2601 → 0.2976, +0.0375
+of the 0.049, from a knob that touches nothing else. But the prediction was that
+it would buy that **more cheaply**, and matched on renamed the two knobs are one
+curve: 0.2754 costs acc 0.4286 via sharpness and 0.4288 via `map` weight, and at
+~0.297 demoting `map` is 0.006 *worse*. Equivariance is bought with accuracy at a
+fixed exchange rate and it does not matter which of two structurally unrelated
+levers you pull. A mechanism can be the right account of *what* a knob does and
+say nothing about *how efficiently* it does it: the frontier belongs to the
+hypothesis mixture, not to the knob.
+
+Two nulls fell out, both useful. Pushing sharpness below 0.5 **saturates** —
+0.25/0.125/0.0 give renamed 0.3055/0.3055/0.3070 for 0.016 more accuracy, so
+`frontier-pointflat` already holds 99.3% of what a uniform vote would, and the
+knob is closed rather than licensing another descendant. And `map_vote_weight=0`
+ranks **7th of 16 on the equivariant objective while being the worst row present
+on bits (8.431 against ~6.4)**: silencing `map` makes nodes abstain to the
+structural prior, so the renaming drop collapses to 0.0168 because there is
+barely a prediction left to lose. Rank on one number and that gets promoted.
+
 That is the **third** head to return the same diagnosis. The label head's
 derivability null was expressive, not procedural; the type head needed a pointer
 rather than a fourth column; and the copy head reaches 74% of what its paths

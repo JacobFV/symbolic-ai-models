@@ -235,6 +235,16 @@ SPACES: dict[str, dict[str, list[Any]]] = {
         "abs_floor": [0.0, 0.02, 0.10],
         "keep_paths": [2, 6, 12],
     },
+    # Re-run of the sharpness curve, on a vote set that is diverse for the first
+    # time: `frontier-soft` proposed a single symbol on 52.7% of fills and had a
+    # median top-share of 1.0000, where `frontier-pointsoft` is at 28.9% and
+    # 0.789 and fires on every fill. The earlier curve was flat across a
+    # sixteen-fold range and that reading was taken on the undiverse model.
+    "frontier-pointsoft": {
+        "vote_sharpness": [0.0, 0.125, 0.25, 0.5, 1.0, 2.0, 4.0, 8.0],
+        "map_vote_weight": [0.0, 0.25, 0.5, 1.0],
+        "max_voters": [8, 24, 64],
+    },
     "frontier-003": {
         "rank_tolerance": [0.0, 0.02, 0.05, 0.10, 0.20],
         "keep_per_guard": [1, 2, 3],
