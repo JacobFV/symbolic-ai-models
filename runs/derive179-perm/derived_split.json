@@ -189,6 +189,36 @@
    "acc_rest_not_copyable": 0.20679233277658474
   },
   {
+   "model": "frontier-006",
+   "curriculum": "derive:wordnet-perm",
+   "draws": 8,
+   "published": 0.41180966940569463,
+   "reproduced": 0.41180966940569463,
+   "derived_n": 1325.0,
+   "derived_copyable_share": 0.5298113207547169,
+   "acc_derived": 0.08226415094339623,
+   "acc_derived_copyable": 0.08404558404558404,
+   "acc_derived_not_copyable": 0.08025682182985554,
+   "rest_n": 29638.0,
+   "acc_rest_copyable": 0.3985350131848813,
+   "acc_rest_not_copyable": 0.22031336991966913
+  },
+  {
+   "model": "frontier-007",
+   "curriculum": "derive:wordnet-perm",
+   "draws": 8,
+   "published": 0.4360787311293713,
+   "reproduced": 0.4360787311293713,
+   "derived_n": 1325.0,
+   "derived_copyable_share": 0.5298113207547169,
+   "acc_derived": 0.15471698113207547,
+   "acc_derived_copyable": 0.16524216524216523,
+   "acc_derived_not_copyable": 0.14285714285714285,
+   "rest_n": 29638.0,
+   "acc_rest_copyable": 0.42783474948725464,
+   "acc_rest_not_copyable": 0.2398791060208383
+  },
+  {
    "model": "frontier-nomap",
    "curriculum": "derive:wordnet-perm",
    "draws": 8,
@@ -217,6 +247,21 @@
    "rest_n": 29638.0,
    "acc_rest_copyable": 0.3977732200410196,
    "acc_rest_not_copyable": 0.2017815954823829
+  },
+  {
+   "model": "frontier-vote",
+   "curriculum": "derive:wordnet-perm",
+   "draws": 8,
+   "published": 0.40359258551500093,
+   "reproduced": 0.40359258551500093,
+   "derived_n": 1325.0,
+   "derived_copyable_share": 0.5298113207547169,
+   "acc_derived": 0.06415094339622641,
+   "acc_derived_copyable": 0.06552706552706553,
+   "acc_derived_not_copyable": 0.06260032102728733,
+   "rest_n": 29638.0,
+   "acc_rest_copyable": 0.3858775271022561,
+   "acc_rest_not_copyable": 0.20528115803706354
   },
   {
    "model": "gparse-003",

@@ -29,6 +29,60 @@ so the answers are exact and unannotated.
 Nineteen models, two families. Rule-based ones are the subject; six neural ones
 exist as a control and are off by default.
 
+## The channel is walked: 0.989 against a 1.000 lookup floor, control at chance
+
+**Status: provisional, 2026-08-17 — measured, controlled, mechanism logged, not
+yet challenged by anyone who did not write it.** The section below records the
+same channel half-taken at 0.532; both stand, and this supersedes its number.
+
+`acc | derived, not copyable`, 1,325 fills, 704 eval episodes, 8 draws:
+
+| | `derive:wordnet` | control `-perm` | `-shuffled` |
+|---|---:|---:|---:|
+| **`frontier-007`** | **0.9890** | **0.1429** | **0.9890** |
+| `frontier-001`…`-006`, seven variants | 0.5315 | 0.0722 | 0.5315 |
+| the twenty published models | ≤ 0.155 | ≤ 0.178 | ≤ 0.155 |
+| derivation floor — a lookup, *told* the premise | 1.0000 | 0.1669 | 1.0000 |
+| blind marginal | 0.1672 | **0.1433** | 0.1672 |
+
+`treatment − control` is **+0.846** on a channel measured 0.833 wide, and the
+control lands on **0.1429** against its own blind marginal of **0.1433** —
+chance, to three decimals. `-shuffled` ties the treatment to four decimals, the
+isomorphism prediction every published model also satisfies. A lookup *handed*
+the premise gets 1.000; this chooses its own and gets 0.989.
+
+Pooled, on `runs/full179`: `label_acc` **0.4376**, the highest in the repo,
++0.081 over `frontier-001` and **6.3× its renamed accuracy** (0.2188 vs 0.0345).
+Still ~eleventh on bits and still 0.22 down under renaming where `corefer` is
+0.003 down, so this is not a reasoning result.
+
+**It took a conjunction of three, which is why seven candidates were nulls.**
+Seven single-factor variants left the bucket at **0.531546**, identical to six
+decimals across very different rule sets. Three of them are components of one
+cause: `propose_support=2` (a size-2 guard gets exactly one round to be
+proposed), `keep_by_path` (`map:sib@0` otherwise wins a within-form competition
+against the `map:sib@2` the fills need), and `min_precision=0.2` (at a *broad*
+guard every resolver is diluted below a floor calibrated for narrow ones).
+**Single-factor ablation cannot find a conjunctive cause** — it reports every
+component as a null, and the record then reads as seven refutations of seven
+ideas.
+
+The third component was found by **logging every resolver `_offer` sees at the
+one guard the abstaining fills need**, not by guessing an eighth stage: for the
+label head there, nothing clears 0.5 (best `map:parent` 0.201, `copy:sib@0`
+0.118), so the guard yields no rule and the fills fall through to
+`[slot=1] -> map:sib@3`, which cannot resolve for a two-sibling object. A
+*specialisation* does keep a map at 0.912. **One global precision floor cannot
+serve both ends of a guard lattice** — generous at a narrow guard, prohibitive
+at a broad one, and the phenomena living at broad guards are exactly the ones no
+narrow guard names.
+
+**Named weakness:** `min_precision = 0.2` was chosen after seeing that 0.5
+excluded the rule. It was not searched over the derived bucket and no value was
+selected by that number, but it was *informed* by it, which is weaker than a
+value settled on the development split. The clean version is a per-guard floor
+and is not built.
+
 ## The derivability channel is taken, and it costs the vocabulary
 
 **Status: provisional, 2026-08-16 — measured, controlled, mechanism traced, and

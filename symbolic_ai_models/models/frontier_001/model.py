@@ -1279,6 +1279,96 @@ class FrontierPathModel(FrontierSoftModel):
         self.keep_by_path = bool(cfg.get("keep_by_path", True))
 
 
+@register("frontier-006",
+          doc="the conjunction: a lower proposal gate AND one rule per (form, path).")
+class FrontierConjunctionModel(FrontierBothModel):
+    """Two fixes that are each necessary and neither sufficient, applied together.
+
+    Six candidates were tested one at a time and all six were nulls. Two of them
+    turn out to be halves of one cause, and single-factor ablation cannot find a
+    conjunctive cause — it reports both halves as nulls, which is exactly what
+    happened.
+
+    The guard the derived ``nsib=2`` fills need is the **two-atom**
+    ``[slot=1, nsib=2]``. Every kept rule with those two atoms carries a third
+    that excludes them — ``ptype='list'``, ``depth=3``, ``depth=5``,
+    ``kids=True``, ``phead='<unk>'`` — while the fills are
+    ``ptype='pred', phead='obj', depth=4, kids=False``. So two things have to be
+    true at once and neither alone does anything:
+
+    * the two-atom guard has to be **proposed**. Guard size decides the round
+      (:attr:`ROUNDS` is ``((0,1), (2,), (3,))``), so a size-2 guard gets exactly
+      one chance, in round one, against the residual left by round zero. If its
+      residual support misses the bar there it is never reconsidered.
+      ``frontier-002`` lowered that gate alone: null.
+    * ``map:sib@2`` has to **survive under it**. ``map:sib@0`` scores higher on
+      that guard's whole population, and one-rule-per-form discards the other
+      path. ``frontier-005`` fixed that alone: null, and worse.
+
+    Decision-list readout deliberately, not the vote: the vote costs 0.089 on
+    this bucket on its own (0.532 -> 0.443, measured), so mixing it in would
+    confound the conjunction with a known-harmful third change.
+
+    **Predicted before running:** ``acc | derived, not copyable`` rises above
+    0.531546 — the number six previous candidates left untouched to six decimals.
+    Refuted if it stays there, which would mean the two-atom guard is absent for
+    a third reason again and the honest answer is still "unknown".
+
+    A risk worth stating: with a decision list, ``map:sib@0`` outranks
+    ``map:sib@2`` and fires first, so the ``nsib=2`` fills may go from abstaining
+    to being *confidently wrong*, which would show as the bucket falling rather
+    than rising. That is a real possible outcome of this design and not a
+    surprise if it happens.
+    """
+
+    def __init__(self, cfg: ModelConfig) -> None:
+        super().__init__(cfg)
+        self.keep_by_path = bool(cfg.get("keep_by_path", True))
+        self.propose_support = int(cfg.get("propose_support", 2))
+
+
+@register("frontier-007",
+          doc="the conjunction, with the precision floor lowered so a general guard can keep a rule.")
+class FrontierFloorModel(FrontierConjunctionModel):
+    """Eighth candidate, and the first located by logging the search itself.
+
+    Instrumenting every resolver ``_offer`` sees at ``[slot=1, nsib=2]`` — the
+    guard the abstaining derived fills need — settles it. For the **label** head
+    not one resolver clears ``min_precision = 0.5``: the best are
+    ``map:parent`` at 0.201 and ``copy:sib@0`` at 0.118. So the guard produces no
+    label rule at all, ``_useful`` and ``_prune`` then remove what little is
+    left, and the fills fall through to ``[slot=1] -> map:sib@3``, which cannot
+    resolve for a two-sibling object and abstains.
+
+    (The six high-precision resolvers an earlier trace showed surviving at this
+    guard were the **type** head's. ``_offer`` runs for both heads and the trace
+    did not separate them — worth recording, because that conflation is what
+    made a scratch recomputation look like it contradicted the model when it
+    agreed with it exactly.)
+
+    A *specialisation* of the guard does keep a map — ``[ptype='list', slot=1,
+    nsib=2] -> map:sib@0`` at 0.912 — because narrowing the population
+    concentrates the relation. The derived fills are ``ptype='pred'``, and no
+    specialisation covering them survived. **One global precision floor cannot
+    serve both ends of the lattice**: it is generous at a narrow guard and
+    prohibitive at a broad one, and the phenomena that live at broad guards are
+    exactly the ones no narrow guard names.
+
+    **Predicted before running:** with the floor at 0.2 a label rule survives at
+    ``[slot=1, nsib=2]`` and ``acc | derived, not copyable`` rises above the
+    0.531546 that seven candidates left untouched. The control must stay near the
+    blind marginal; if the treatment rises *and the control rises with it*, the
+    floor is admitting noise rather than the relation and the result is void.
+    Refuted if the bucket does not move, in which case the honest answer after
+    eight candidates is that I should stop guessing and characterise the
+    population instead.
+    """
+
+    def __init__(self, cfg: ModelConfig) -> None:
+        super().__init__(cfg)
+        self.min_precision = float(cfg.get("min_precision", 0.2))
+
+
 @register("frontier-nomap",
           doc="frontier with the map form removed: the control in its own hypothesis class.")
 class FrontierNoMapModel(FrontierModel):

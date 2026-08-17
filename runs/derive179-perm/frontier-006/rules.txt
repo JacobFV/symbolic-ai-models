@@ -1,0 +1,42 @@
+label: 782 rules  const=108, copy=128, map=546
+type: 594 rules  const=360, copy=234, map=0
+  round 0 [label]: 577 guards, 166 kept, 60784/86805 fills still wrong
+  round 1 [label]: 3707 guards, 1355 kept, 54562/86805 fills still wrong
+  round 2 [label]: 8688 guards, 3974 kept, 53295/86805 fills still wrong
+  round 0 [type]: 577 guards, 2087 kept, 18322/86805 fills still wrong
+  round 1 [type]: 1877 guards, 7148 kept, 8685/86805 fills still wrong
+  round 2 [type]: 3111 guards, 10062 kept, 5999/86805 fills still wrong
+top label hypotheses:
+  [ptype='str', nsib=0] -> copy:parent  p=1.000 n=265 dl=2
+  [depth=5, nsib=3, kids=True] -> map:sib@2  p=1.000 n=217 dl=23
+  [depth=5, nsib=3, kids=True] -> map:sib@0  p=1.000 n=217 dl=25
+  [depth=5, nsib=3, kids=True] -> map:sib@1  p=1.000 n=211 dl=25
+  [depth=5, nsib=3, kids=True] -> map:sib@3  p=1.000 n=215 dl=27
+  [depth=5, nsib=2, kids=True] -> map:sib@2  p=1.000 n=201 dl=18
+  [depth=5, nsib=2, kids=True] -> map:sib@1  p=1.000 n=180 dl=19
+  [depth=5, nsib=2, kids=True] -> map:sib@0  p=1.000 n=181 dl=20
+  [slot=2, depth=4, kids=True] -> map:sib@3  p=1.000 n=169 dl=13
+  [depth=5, nsib=3, kids=True] -> copy:sib@2  p=0.996 n=246 dl=3
+  [slot=1, depth=4, kids=True] -> map:sib@3  p=1.000 n=162 dl=13
+  [depth=5, nsib=3, kids=True] -> copy:sib@1  p=0.996 n=230 dl=3
+  [ptype='list', nsib=3, kids=True] -> map:sib@2  p=0.981 n=2389 dl=221
+  [phead=5770] -> map:sib@0  p=1.000 n=136 dl=43
+  [ptype='list', nsib=3, kids=True] -> map:sib@3  p=0.979 n=2317 dl=216
+  [ptype='list', nsib=3, kids=True] -> map:sib@0  p=0.979 n=2337 dl=217
+  [depth=3, nsib=3, kids=True] -> map:sib@3  p=0.978 n=2452 dl=213
+  [ptype='pred', slot=2, kids=True] -> map:sib@3  p=1.000 n=119 dl=11
+  [depth=6, kids=True] -> map:sib@2  p=1.000 n=116 dl=7
+  [ptype='pred', slot=1, kids=True] -> map:sib@3  p=1.000 n=112 dl=11
+surviving map rules: 546
+  [depth=5, nsib=3, kids=True] -> map:sib@2  p=1.000 n=217 dl=23
+      |m|=16  at->at, bits->bits, R->domain, give->give, word->word, obj->obj, ex->ex, means->means
+  [depth=5, nsib=3, kids=True] -> map:sib@0  p=1.000 n=217 dl=25
+      |m|=18  at->at, bits->bits, give->give, word->word, candidate->candidate, variant->variant, expands_to->expands_to, ex->ex
+  [depth=5, nsib=3, kids=True] -> map:sib@1  p=1.000 n=211 dl=25
+      |m|=18  at->at, bits->bits, P->domain, give->give, word->word, variant->variant, expands_to->expands_to, obj->obj
+  [depth=5, nsib=3, kids=True] -> map:sib@3  p=1.000 n=215 dl=27
+      |m|=20  at->at, bits->bits, R->domain, give->give, word->word, candidate->candidate, variant->variant, expands_to->expands_to
+  [depth=5, nsib=2, kids=True] -> map:sib@2  p=1.000 n=201 dl=18
+      |m|=9  at->at, headquarters->headquarters, give->give, step->step, word->word, gets->gets, fact->fact, mul->add
+  [depth=5, nsib=2, kids=True] -> map:sib@1  p=1.000 n=180 dl=19
+      |m|=10  at->at, headquarters->headquarters, give->give, step->step, word->word, gets->gets, fact->fact, holds->holds
