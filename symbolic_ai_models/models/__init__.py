@@ -59,6 +59,7 @@ from . import synthex_002, synthex_003, vsa_002, vsa_perm_002  # noqa: F401
 from . import vsa_spec_004  # noqa: F401
 from . import metta_005  # noqa: F401
 from . import frontier_001  # noqa: F401
+from . import cart_001  # noqa: F401
 
 #: The neural half is **not registered by default**. It is not the subject of
 #: this repo — the symbolic models are — and it is the only thing here that
