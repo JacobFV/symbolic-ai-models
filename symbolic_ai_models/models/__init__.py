@@ -12,6 +12,11 @@
     synth  ilp          search over programs and over clauses
     ruleinduce  brill    rule induction, by partition and by correction
     evidence  analogy    retrieval, by concept and by structure
+    softreason           a soft immediate-consequence operator run to a
+                         fixpoint, whose native output is a distribution over
+                         conclusions rather than an answer plus a scalar
+                         (``softreason-onehop`` applies the operator once, which
+                         is the control that charges the closure for its effect)
 
     omegaclaw_flat  omegaclaw_ctx  omegaclaw_rank
         one shared reaching-and-committing skeleton
@@ -58,6 +63,7 @@ from . import omegaclaw_pure_002, omegaclaw_split_002  # noqa: F401
 from . import synthex_002, synthex_003, vsa_002, vsa_perm_002  # noqa: F401
 from . import vsa_spec_004  # noqa: F401
 from . import metta_005  # noqa: F401
+from . import softreason_001  # noqa: F401
 
 #: The neural half is **not registered by default**. It is not the subject of
 #: this repo — the symbolic models are — and it is the only thing here that
