@@ -70,6 +70,27 @@ hands the rest to a unigram."* Here it is the mirror image — a model that know
 the answer **exactly** keeps a third of the mass and hands two thirds to the
 back-off.
 
+## Corrected the same day: this reading is wrong
+
+[[2026-08-17-the-two-bits-are-identifiability-not-calibration]] tested the fix
+and refuted the diagnosis. **The model does not "know the answer exactly".** The
+rule carrying the derived bucket fires on the six kind keys **589** times in
+training and only **24.3%** of those are derived fills; on the rest the answer is
+something else, and the rule is right **0.348** overall. Its ~0.33 gate is the
+honest average, not mass thrown away.
+
+Being right 87/87 on the derived bucket is a property of *the bucket*, not
+knowledge the model has about it — and nothing it can see at prediction time
+identifies a derived fill: the rule is 0.66, the best guard is 0.531 pure, the
+entry is 0.243 derived. The 2.363 bits is **correct calibration under genuine
+uncertainty**.
+
+The section below is left as written because the prediction it motivated is the
+one that was refuted, and because the mirror-image reading it gives of
+`a-ranking-is-a-property-of-a-metric` is the wrong way round: accuracy here is
+**flattering**, scoring the model only where its rule happens to be right, while
+bits scores it everywhere the rule fires.
+
 ## What is available
 
 At mean gate 0.330 with a perfect argmax, the bits floor from calibration alone

@@ -258,6 +258,24 @@
    "acc_rest_not_copyable": 0.06593493995068798
   },
   {
+   "model": "frontier-perkey",
+   "curriculum": "derive:wordnet-perm",
+   "draws": 8,
+   "published": 0.4364609210777757,
+   "reproduced": 0.4364609210777757,
+   "derived_n": 1325.0,
+   "derived_copyable_share": 0.5298113207547169,
+   "acc_derived": 0.15471698113207547,
+   "acc_derived_copyable": 0.16524216524216523,
+   "acc_derived_not_copyable": 0.14285714285714285,
+   "bits_derived_not_copyable": 9.288908900265518,
+   "bits_derived_copyable": 9.167252249867149,
+   "bits_rest_not_copyable": 9.01575207404966,
+   "rest_n": 29638.0,
+   "acc_rest_copyable": 0.42783474948725464,
+   "acc_rest_not_copyable": 0.24043585460908296
+  },
+  {
    "model": "frontier-soft",
    "curriculum": "derive:wordnet-perm",
    "draws": 8,

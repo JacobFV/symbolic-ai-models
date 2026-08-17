@@ -544,7 +544,12 @@ def test_a_knob_added_for_one_model_does_not_change_another(cfg):
     # Models that deliberately pin the type head. `frontier-010` inherits the
     # pin from `-009`; the set is written out rather than derived so that a new
     # model acquiring a pinned type head has to be added here on purpose.
-    pinned = {"frontier-009", "frontier-010"}
+    # Models that deliberately pin the type head, including by inheritance. The
+    # set is written out rather than derived because that is the point: a model
+    # acquiring a pinned type head has to be added here on purpose. It has caught
+    # three descendants so far, which is the test working rather than the test
+    # being brittle.
+    pinned = {"frontier-009", "frontier-010", "frontier-perkey"}
     for name in model_names():
         if not name.startswith("frontier"):
             continue

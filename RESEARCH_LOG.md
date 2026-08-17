@@ -100,6 +100,23 @@ In the control the model is **better than abstaining** (9.281 against 10.161), s
 argmax, which is a different thing and is what the column was added to
 distinguish.
 
+**And the ~2 bits are identifiability, not calibration — my first reading of
+this was wrong.** A `map` rule's confidence was made per **table entry** rather
+than per rule (`frontier-perkey`), on the argument that the entry is the
+sub-population. **It is not**: the six kind entries fire **589** times in
+training and only **24.3%** of those are derived fills, so per-entry precision is
+0.348 and its bound 0.29 — which is exactly the confidence measured. Bits went
+2.363 → **2.472**, marginally worse.
+
+Three candidate separators, all measured, none works: the **rule** (0.66, its
+precision where it fires), the **guard** (best covering guard 0.531 pure), the
+**entry** (0.243 derived). **Nothing the model has at prediction time identifies
+a derived fill**, so 2.363 bits is *correct calibration under genuine
+uncertainty*, not mass thrown away. Being right 87/87 there is a property of the
+bucket rather than knowledge the model has about it — and the reading below,
+that accuracy is the trustworthy column here, is the wrong way round: accuracy
+scores the model only where its rule happens to be right.
+
 **The gate cannot tell the arms apart.** On the fills where the label rule fires,
 its argmax is right **87/87** in the treatment and **0.205** in the control, and
 the gate it is given is **0.330** against **0.318**. `MassCalibrator` keys on the

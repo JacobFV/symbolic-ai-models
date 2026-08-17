@@ -325,7 +325,7 @@ class _Rule:
     """
 
     __slots__ = ("guard", "form", "path", "table", "const", "precision",
-                 "score", "support", "dl", "fold_table", "tol")
+                 "score", "support", "dl", "fold_table", "tol", "key_score")
 
     def __init__(self, guard: tuple, form: str, path: int, precision: float,
                  score: float, support: int, dl: int, tol: float = 0.0) -> None:
@@ -349,6 +349,13 @@ class _Rule:
         #: Width below which two verified precisions are not treated as
         #: different. 0.0 reproduces the published ranking exactly.
         self.tol = tol
+        #: ``{table key: cross-fitted lower bound on this ENTRY's precision}``,
+        #: empty unless the model asks for it. A ``map`` rule is a table and its
+        #: entries are not equally reliable — the carrying rule on the derive arm
+        #: is right 1.000 on its six deterministic entries and ~0.6 on the rest of
+        #: its 399 — so the entry that fired is the sub-population, and it is the
+        #: one thing the model has at prediction time that separates them.
+        self.key_score: dict[int, float] = {}
 
     @property
     def rank(self) -> tuple:
@@ -385,6 +392,22 @@ class _Rule:
 
     def matches(self, atoms: tuple) -> bool:
         return all(atoms[k] == v for k, v in self.guard)
+
+    def confidence(self, path_vals: tuple[int, ...]) -> float:
+        """What this rule should be believed at *here*, not on average.
+
+        Falls back to :attr:`score` — the rule's own bound — whenever there is no
+        per-entry estimate, which is every rule in every model that does not ask
+        for one, so this is a no-op by default.
+        """
+        # `getattr`, not `self.key_score`: a `__slots__` object unpickled from a
+        # checkpoint written before this slot existed does not have it. Same
+        # trap as `tol`, and the same fix — see
+        # `notes/lessons/2026-08-16-a-private-name-on-a-torch-module-is-not-private.md`.
+        keys = getattr(self, "key_score", None)
+        if not keys or self.form != "map":
+            return self.score
+        return keys.get(path_vals[self.path], self.score)
 
     def resolve(self, path_vals: tuple[int, ...]) -> int | None:
         if self.form == "const":
@@ -539,6 +562,13 @@ class FrontierModel(RuleBasedModel):
         #: atoms) rather than :data:`GUARD_KEYS` (six). Off by default, so every
         #: published model is untouched.
         self.type_atoms = bool(cfg.get("type_atoms", False))
+        #: Whether a ``map`` rule's confidence comes from the **entry** that
+        #: fired rather than from the rule's average over its whole table. Off by
+        #: default, so every published model is untouched.
+        self.per_key_gate = bool(cfg.get("per_key_gate", False))
+        #: How often an entry must have fired out of fold before it gets its own
+        #: bound. Below this it falls back to the rule's score.
+        self.key_min_count = int(cfg.get("key_min_count", 4))
         #: Cap on the rule set, applied after the reachability filter in
         #: :meth:`_useful`, so it bounds the rules that answer something
         #: rather than the rules that sort first.
@@ -693,6 +723,8 @@ class FrontierModel(RuleBasedModel):
 
         for rule in kept:
             self._refit(rule, codes, code_of, pv, av)
+            if self.per_key_gate:
+                self._fit_key_scores(rule, codes, code_of, pv, av, fv)
         # Pruning goes after the refit because domination between two ``map``
         # rules is a question about their deployed tables.
         kept = self._prune(kept)
@@ -1036,6 +1068,42 @@ class FrontierModel(RuleBasedModel):
         else:
             rule.table = table
 
+    def _fit_key_scores(self, rule: _Rule, codes: np.ndarray,
+                        code_of: list[dict], pv: np.ndarray, av: np.ndarray,
+                        fv: np.ndarray) -> None:
+        """A Wilson bound per table entry, each fold scored by the other's table.
+
+        Same cross-fit as the rule's own score and for the same reason: an entry
+        estimated on the fills it was built from is a lookup of them. The bound
+        rather than the point estimate matters more here than anywhere else,
+        because a 399-entry table over ~2,300 firing fills averages six samples
+        an entry.
+        """
+        if rule.form != "map":
+            return
+        mask = self._match(rule, codes, code_of)
+        if mask is None:
+            return
+        hit: dict[int, list[int]] = collections.defaultdict(lambda: [0, 0])
+        for i in np.flatnonzero(mask):
+            k = int(pv[i, rule.path])
+            if k == MISSING:
+                continue
+            pred = rule.fold_table[1 - int(fv[i])].get(k)
+            if pred is None:
+                continue
+            row = hit[k]
+            row[1] += 1
+            row[0] += pred == int(av[i])
+        if not hit:
+            return
+        keys = np.fromiter(hit, dtype=np.int64, count=len(hit))
+        correct = np.array([hit[int(k)][0] for k in keys], dtype=float)
+        fired = np.array([hit[int(k)][1] for k in keys], dtype=float)
+        bound = _lcb(correct, fired)
+        rule.key_score = {int(k): float(b) for k, b, f in zip(keys, bound, fired)
+                          if f >= self.key_min_count}
+
     # ---- the gate -----------------------------------------------------
     def _fit_gate(self, episodes: Sequence[Episode],
                   tok: SymbolTokenizer) -> None:
@@ -1059,7 +1127,7 @@ class FrontierModel(RuleBasedModel):
                 rule = self._fire(self.rules, _guard_atoms(view, node), vals)
                 if rule is None:
                     continue
-                scores.append(rule.score)
+                scores.append(rule.confidence(vals))
                 votes.append(1.0 if rule.resolve(vals) == int(label_id) else 0.0)
                 backoff.append(self.backoff_prob(view, node, int(label_id)))
         if scores:
@@ -1082,8 +1150,8 @@ class FrontierModel(RuleBasedModel):
             label_vote: Votes = ABSTAIN
             rule = self._fire(self.rules, atoms, vals)
             if rule is not None:
-                gate = (float(self.gate_map(rule.score))
-                        if self.gate_map.fitted else rule.score)
+                conf = rule.confidence(vals)
+                gate = float(self.gate_map(conf)) if self.gate_map.fitted else conf
                 pred = rule.resolve(vals)
                 if pred is not None and gate > 0.0:
                     label_vote = ({int(pred): 1.0}, gate)
@@ -1295,7 +1363,7 @@ class FrontierSoftModel(FrontierBothModel):
             if pred is None:
                 continue
             seen += 1
-            mass[int(pred)] += max(rule.score, 0.0) ** self.sharpness
+            mass[int(pred)] += max(rule.confidence(vals), 0.0) ** self.sharpness
         return dict(mass)
 
     def _fit_gate(self, episodes: Sequence[Episode],
@@ -1680,6 +1748,51 @@ class FrontierFloorOnlyModel(FrontierModel):
     def __init__(self, cfg: ModelConfig) -> None:
         super().__init__(cfg)
         self.relative_floor = bool(cfg.get("relative_floor", True))
+
+
+@register("frontier-perkey",
+          doc="frontier-010 whose map rules are believed per table entry, not per rule.")
+class FrontierPerKeyModel(FrontierTypeAtomsModel):
+    """A table's entries are not equally reliable, and the gate averaged them.
+
+    Named descriptively rather than by number, following ``frontier-nomap``,
+    ``frontier-soft`` and ``agent-refuter``'s ``frontier-floor``: an ablation
+    should say what it changes.
+
+    Measured motivation, in
+    [[2026-08-17-the-gate-cannot-tell-the-treatment-from-the-control]]: the rule
+    carrying the derived bucket has an argmax right **87/87** in the treatment and
+    **0.205** in the control, and the gate gives both **~0.32**. The two shapes I
+    would have reached for first are ruled out by measurement rather than taste —
+    a per-*rule* gate returns the same ~0.66 because ``score`` already is the
+    rule's precision where it fires, and a per-*guard* gate is keyed on something
+    that does not separate the populations, since the best guard covering the
+    derived fills is 0.531 pure (``scripts/guard_ceiling.py``).
+
+    What does separate them is the **table entry**. Six of the carrying rule's
+    399 entries are the planted correspondence and are deterministic; the rest are
+    whatever the corpus supported. So confidence comes from the entry, bounded by
+    the same cross-fit and the same Wilson bound the rule's own score uses —
+    which matters more here than anywhere, because 399 entries over ~2,300 firing
+    fills averages six samples each.
+
+    Fourth appearance in one day of *an average cannot see a sub-population*:
+    resolver choice, precision floor, gate, and now table entry.
+
+    **Predicted before running**, in
+    ``notes/decisions/2026-08-17-a-map-rules-confidence-belongs-to-the-entry-that-fired.md``:
+    ``bits | derived, not copyable`` falls below **1.0** from 2.363; the control
+    stays **≥ 9.0**; accuracy does not move to three decimals in either arm; and
+    pooled ``label_bits`` improves by less than the bucket does.
+
+    The load-bearing prediction is the **control**. A per-entry gate that also
+    sharpens ``derive:wordnet-perm`` is fitting noise one entry at a time, and the
+    whole thing is void.
+    """
+
+    def __init__(self, cfg: ModelConfig) -> None:
+        super().__init__(cfg)
+        self.per_key_gate = bool(cfg.get("per_key_gate", True))
 
 
 @register("frontier-nomap",
