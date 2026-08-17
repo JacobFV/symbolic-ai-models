@@ -499,6 +499,40 @@ along.
 The remaining loss is now **weighting**: on 24.1% of reachable fills the truth is
 in the vote set and is outvoted.
 
+**And the knob for that was already measured, as "flat".** `vote_sharpness` was
+swept once on `frontier-soft` and recorded as inert: bits spanning 6.959–6.984
+over a sixteen-fold range. It *is* still inert on bits with the pointer
+underneath (6.392–6.448) — but the **renamed** column, which that sweep did not
+rank by, spans **0.049** where on `frontier-soft` it spanned **0.0008**, sixty
+times less. The knob did not change; the vote set did. `frontier-soft`'s median
+top-share is 1.0000 and it fires on 2,287 of 3,497 fills; `frontier-pointsoft`'s
+is 0.7894 and it fires on all 3,497 — there is disagreement to reweight for the
+first time, and it is specifically between renaming-invariant `copy` votes and
+memorising `map` ones.
+
+`frontier-pointflat` (sharpness 0.5, settled on the development split, three
+numbers pre-registered and all held on eval: renamed 0.318 vs ≈0.30, acc 0.411 vs
+≈0.41, bits 6.500 vs ≈6.45):
+
+| model | acc | bits | renamed | **ren `acc\|cp`** | % of 0.520 ceiling |
+|---|---:|---:|---:|---:|---:|
+| `frontier-typepoint` | 0.4414 | 7.141 | 0.221 | 0.306 | 59% |
+| `frontier-point` | 0.4460 | 7.092 | 0.248 | 0.340 | 65% |
+| `frontier-pointsoft` | 0.4372 | 6.457 | 0.267 | 0.371 | 71% |
+| **`frontier-pointflat`** | 0.4110 | 6.500 | **0.318** | **0.434** | **83%** |
+| `corefer-001` | 0.3572 | 6.955 | 0.350 | 0.492 | 95% |
+
+65% → 83% of ceiling in two changes, neither touching what the model can
+*represent*; the gap to `corefer` is 0.058, from 0.186 when the pointer was
+added. It is not free — accuracy falls 0.026 and bits rise 0.043 — so this is the
+accuracy/equivariance trade again, now steerable by a continuous knob instead of
+by adding or removing a rule form.
+
+A knob inert in one column and a strong lever in another is
+*a-ranking-is-a-property-of-a-metric* applied to a **parameter** rather than to a
+model ranking. The old reading was not wrong; it was complete only for the column
+it reported and was written as though it were general.
+
 That is the **third** head to return the same diagnosis. The label head's
 derivability null was expressive, not procedural; the type head needed a pointer
 rather than a fourth column; and the copy head reaches 74% of what its paths

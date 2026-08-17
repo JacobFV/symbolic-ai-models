@@ -2289,6 +2289,48 @@ class FrontierPointSoftModel(FrontierSoftModel, FrontierPointModel):
     """
 
 
+@register("frontier-pointflat",
+          doc="frontier-pointsoft with a flat vote: the knob that is inert on bits and a lever on equivariance.")
+class FrontierPointFlatModel(FrontierPointSoftModel):
+    """``vote_sharpness = 0.5``, settled on the development split.
+
+    The sharpness curve was measured once before, on `frontier-soft`, and read as
+    **flat**: bits spanned 6.959–6.984 across a sixteen-fold range. That reading
+    was taken in the column the run was ranked by, and it is still true here —
+    bits span 6.392–6.448. What nobody looked at is what the same knob does to
+    **equivariance**:
+
+    ==========  ======  ======  ==========
+    sharpness   acc     bits    renamed
+    8.0         0.4476  6.407   0.2559
+    4.0         0.4376  6.392   0.2601
+    1.0         0.4187  6.429   0.2962
+    **0.5**     0.4085  6.448   **0.3048**
+    ==========  ======  ======  ==========
+
+    On `frontier-soft` that column spanned **0.0008**; here it spans **0.049**,
+    sixty times more. The knob did not change — the **vote set** did. With the
+    pointer, single-symbol votes fall 52.7% → 28.9% and the median top-share
+    1.0000 → 0.789, so for the first time there is disagreement to reweight, and
+    flattening lets the renaming-invariant `copy` votes outweigh the memorising
+    `map` ones.
+
+    A knob inert in one column and a strong lever in another is
+    ``notes/lessons/2026-08-13-a-ranking-is-a-property-of-a-metric.md`` applied to
+    a *parameter* rather than to a model ranking, which is a use of that lesson
+    the repo has not had before.
+
+    **Predicted on evaluation seeds**, from the development split: renamed ≈
+    **0.30**, `label_acc` ≈ 0.41, `label_bits` ≈ 6.45. That would be the best
+    equivariant score in the family by a wide margin — the previous best is
+    `frontier-pointsoft`'s 0.267 — and still short of `corefer-001`'s 0.3499.
+    """
+
+    def __init__(self, cfg: ModelConfig) -> None:
+        super().__init__(cfg)
+        self.sharpness = float(cfg.get("vote_sharpness", 0.5))
+
+
 @register("frontier-nomap",
           doc="frontier with the map form removed: the control in its own hypothesis class.")
 class FrontierNoMapModel(FrontierModel):
