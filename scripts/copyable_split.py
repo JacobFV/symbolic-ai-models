@@ -47,11 +47,33 @@ TASK_OF = {"scatter": "node", "subtree": "nodesub",
 
 
 def split(path: str, batch_size: int = 16,
-          floors: dict | None = None) -> dict[str, float]:
+          floors: dict | None = None, renamed: bool = False) -> dict[str, float]:
+    """The copyable split, optionally on renamed episodes.
+
+    ``renamed`` crosses two instruments this repo has always run separately.
+    The renaming check is **pooled** — it reports one accuracy over every fill —
+    and the copyable split is run only on the *original* episodes. So the
+    question "is the non-copyable score vocabulary?" has never been asked
+    directly, although the repo's central claim implies its answer: naming a
+    symbol that no visible node carries requires storing symbol identities
+    across episodes, so a renaming should take that bucket to zero and leave the
+    copyable one alone.
+
+    ``frontier`` reaches **0.277** on ``acc | not copyable``, on a bucket
+    `RESEARCH_LOG.md` describes as scoring 0.000 for a pointer even with an
+    oracle. Whether that is reasoning or vocabulary is exactly what this crossing
+    measures, and neither instrument answers it alone.
+    """
     model, tok, cfg = load_run(path, device="cpu")
     summary = json.loads((Path(path) / "summary.json").read_text())
     mode = (summary.get("masking") or {}).get("mask_mode", "scatter")
     train, ev = load_data(cfg)
+    if renamed:
+        from symbolic_ai_core.invariance import build_renaming, rename_episodes
+        # Fitted on the original episodes, scored on permuted ones — the same
+        # contract `_renaming_check` uses, and the reason it is a test of
+        # equivariance rather than of relearning.
+        ev = rename_episodes(ev, build_renaming(ev, tok))
 
     if floors is not None and "floor_copyable" not in floors:
         task = make_task(TASK_OF[mode], mask_rate=cfg.mask_rate,
@@ -62,9 +84,16 @@ def split(path: str, batch_size: int = 16,
         published = next(
             (v.get("label_floor") for v in (summary.get("final") or {}).values()
              if isinstance(v, dict) and "label_floor" in v), None)
-        if published is not None:
+        if published is not None and not renamed:
             assert abs(floors["floor_pooled"] - published) < 1e-12, (
                 f"split floor {floors['floor_pooled']} != published {published}")
+        elif published is not None:
+            # Under renaming the floor is *supposed* to move, and how far is a
+            # result: it is a memorising lookup over symbol identities, so a
+            # permutation should take it to nothing. Measured 0.1432 -> 0.0022,
+            # which is the equivariant floor every renamed row below is read
+            # against.
+            floors["floor_pooled_original"] = published
 
     # The *same* draw the run itself scored, not another sample from the same
     # regime: `evaluate_model` resets the task's rng to 12345 and walks the
@@ -117,6 +146,8 @@ def split(path: str, batch_size: int = 16,
 
 
 def main(paths: list[str]) -> int:
+    renamed = "--renamed" in paths
+    paths = [q for q in paths if q != "--renamed"]
     head = (f"{'model':<22}{'mode':<9}{'rate':>5}{'n':>7}{'copyable':>10}"
             f"{'acc | copyable':>16}{'acc | not':>11}{'acc all':>9}{'gap':>8}")
     print(head)
@@ -126,11 +157,15 @@ def main(paths: list[str]) -> int:
     for p in paths:
         if not (Path(p) / "summary.json").exists():
             continue
-        r = split(p, floors=floors)
+        r = split(p, floors=floors, renamed=renamed)
         # The run scored this model on this draw; if the pooled number here is
         # not that number, this is measuring something else.
-        assert abs(r["acc_all"] - r["published"]) < 1e-9, (
-            f"{r['model']}: pooled {r['acc_all']} != published {r['published']}")
+        # Only on the original episodes: under `--renamed` the pooled number is
+        # supposed to differ, and that difference is the measurement.
+        if not renamed:
+            assert abs(r["acc_all"] - r["published"]) < 1e-9, (
+                f"{r['model']}: pooled {r['acc_all']} != published "
+                f"{r['published']}")
         per_type_of = r["per_type"]
         gap = r["acc_copyable"] - r["acc_not_copyable"]
         print(f"{r['model']:<22}{r['mode']:<9}{r['mask_rate']:>5.2f}"

@@ -415,6 +415,32 @@ of twelve pooled and **eleventh** where nothing can be copied; `grammar-001` is
 eighth and **first**. A ranking is a property of its metric — and now also of its
 sub-population, and this repo has only ever published the pooled one.
 
+**Crossed with the renaming test at last, and the non-copyable gain is entirely
+vocabulary.** The two instruments had always been run apart — renaming pooled,
+the copyable split on original episodes only — so `frontier`'s 0.325 on the
+non-copyable bucket had never been challenged directly:
+
+| model | `acc\|cp` | `acc\|not` | renamed `acc\|cp` | renamed `acc\|not` |
+|---|---:|---:|---:|---:|
+| `frontier-floortype` | 0.495 | **0.325** | **0.055** | **0.003** |
+| `frontier-typepoint` | 0.490 | 0.314 | **0.306** | **0.003** |
+| `frontier-nomap` | 0.381 | 0.073 | 0.317 | 0.000 |
+| `corefer-001` | 0.494 | 0.003 | 0.492 | 0.000 |
+| floor | 0.158 | 0.106 | **0.002** | **0.003** |
+
+Every model lands at 0.000–0.003 on the renamed non-copyable bucket, which is the
+renamed floor; the floor itself goes 0.1432 → 0.0022 pooled. The theorem stated
+above is now measured rather than argued.
+
+**And the equivariance difference between the `frontier` variants is entirely in
+the *copyable* bucket**, which was not predicted. The two differ only in
+`keep_by_path`/`keep_per_guard`; their renamed non-copyable halves are identical
+at 0.003 and the whole 0.174 gap is renamed `acc | copyable`, 0.055 against
+0.306. So keeping more than one rule per guard buys no reasoning that survives
+renaming — it buys back the model's ability to **point**, which the map head
+otherwise crowds out. Not "equivariance for accuracy" but *how much of the copy
+head survives having a map head bolted on*.
+
 **The plain reading: these models do coreference. Where there is no coreferent to
 find, they are worse than a table.** "The best model reaches 0.357" should be
 read as "reaches 0.494 at finding a symbol already on screen, and 0.003 at
