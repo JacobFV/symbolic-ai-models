@@ -226,6 +226,15 @@ SPACES: dict[str, dict[str, list[Any]]] = {
         "vote_sharpness": [0.5, 1.0, 2.0, 4.0, 8.0],
         "max_voters": [8, 24, 64],
     },
+    # The per-guard floor's own knobs. The finding that introduced it says
+    # `floor_margin=1.0` was argued rather than measured, and that settling it
+    # belongs on the development split rather than on the derived bucket, which
+    # is an evaluation-seed measurement.
+    "frontier-008": {
+        "floor_margin": [0.5, 1.0, 1.5, 2.0],
+        "abs_floor": [0.0, 0.02, 0.10],
+        "keep_paths": [2, 6, 12],
+    },
     "frontier-003": {
         "rank_tolerance": [0.0, 0.02, 0.05, 0.10, 0.20],
         "keep_per_guard": [1, 2, 3],

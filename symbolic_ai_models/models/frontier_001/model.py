@@ -469,6 +469,15 @@ class FrontierModel(RuleBasedModel):
         self.keep_by_path = bool(cfg.get("keep_by_path", False))
         #: How many (form, path) rules survive per guard when it is on.
         self.keep_paths = int(cfg.get("keep_paths", 6))
+        #: Whether the precision a rule must clear is the **guard's own** modal
+        #: rate rather than one constant for the whole lattice. Off by default;
+        #: every published number used the constant.
+        self.relative_floor = bool(cfg.get("relative_floor", False))
+        #: How much a rule must beat that modal rate by. 1.0 is "strictly
+        #: better", which is the least tunable value available.
+        self.floor_margin = float(cfg.get("floor_margin", 1.0))
+        #: The floor `const` is held to, since it cannot beat itself.
+        self.abs_floor = float(cfg.get("abs_floor", 0.02))
         #: Cap on the rule set, applied after the reachability filter in
         #: :meth:`_useful`, so it bounds the rules that answer something
         #: rather than the rules that sort first.
@@ -659,21 +668,33 @@ class FrontierModel(RuleBasedModel):
         by_path: dict[int, dict[tuple, _Rule]] | None = (
             {} if self.keep_by_path else None)
 
+        # `const` first, because its cross-fitted precision *is* the per-guard
+        # floor when `relative_floor` is on: "answer every fill under this guard
+        # with its commonest label" is the do-nothing baseline for that guard,
+        # and a rule that cannot beat it has not earned a place. `const` itself
+        # is measured against a small absolute floor, since it cannot be asked
+        # to beat itself.
+        bar = floor
+        if "const" in forms:
+            c, f, dl, tables = self._cross_fit(gid, fv, av, take, None, n_groups)
+            if self.relative_floor:
+                with np.errstate(invalid="ignore", divide="ignore"):
+                    modal = np.where(f > 0, c / np.maximum(f, 1), 0.0)
+                bar = np.maximum(modal * self.floor_margin, self.abs_floor)
+            self._offer(best, guards, cand, c, f, "const", 0, dl, tables,
+                        self.abs_floor if self.relative_floor else floor, by_path)
+
         if "copy" in forms:
             for p in range(len(PATHS)):
                 f = np.bincount(gid, weights=fires[:, p], minlength=n_groups)
                 c = np.bincount(gid, weights=copy_ok[:, p], minlength=n_groups)
-                self._offer(best, guards, cand, c, f, "copy", p, 0, None, floor, by_path)
-
-        if "const" in forms:
-            c, f, dl, tables = self._cross_fit(gid, fv, av, take, None, n_groups)
-            self._offer(best, guards, cand, c, f, "const", 0, dl, tables, floor, by_path)
+                self._offer(best, guards, cand, c, f, "copy", p, 0, None, bar, by_path)
 
         if "map" in forms:
             for p in MAP_PATHS:
                 c, f, dl, tables = self._cross_fit(gid, fv, av, take, pv[:, p],
                                                    n_groups)
-                self._offer(best, guards, cand, c, f, "map", p, dl, tables, floor, by_path)
+                self._offer(best, guards, cand, c, f, "map", p, dl, tables, bar, by_path)
 
         out: list[_Rule] = []
         for per_form in best.values():
@@ -728,14 +749,15 @@ class FrontierModel(RuleBasedModel):
 
     def _offer(self, best: dict[int, _Rule], guards: dict[int, tuple],
                cand: np.ndarray, correct: np.ndarray, fired: np.ndarray,
-               form: str, path: int, dl, tables, floor: float,
+               form: str, path: int, dl, tables, floor,
                by_path: dict[int, dict[tuple, _Rule]] | None = None) -> None:
         """Keep this resolver for each candidate guard it beats the current one on."""
         scores = _lcb(correct, fired)
         for g in np.flatnonzero(cand & (fired >= self.min_support)):
             g = int(g)
             precision = correct[g] / fired[g]
-            if precision < floor:
+            bar = float(floor[g]) if isinstance(floor, np.ndarray) else floor
+            if precision < bar:
                 continue
             cost = int(dl[g]) if isinstance(dl, np.ndarray) else int(dl)
             rule = _Rule(guards[g], form, path, float(precision),
@@ -1367,6 +1389,44 @@ class FrontierFloorModel(FrontierConjunctionModel):
     def __init__(self, cfg: ModelConfig) -> None:
         super().__init__(cfg)
         self.min_precision = float(cfg.get("min_precision", 0.2))
+
+
+@register("frontier-008",
+          doc="frontier-006 with a per-guard precision floor instead of a global constant.")
+class FrontierRelativeModel(FrontierConjunctionModel):
+    """The floor is the guard's own modal rate, so no constant has to be chosen.
+
+    ``frontier-007`` walks the derivability channel at 0.989 with
+    ``min_precision = 0.2`` — a number picked *after* logging that 0.5 excluded
+    the rule the derived fills need. Nothing was selected by the derived-bucket
+    score, but the choice was informed by an evaluation-seed measurement, and the
+    mechanism that made it necessary says a constant is the wrong shape:
+
+        One global precision floor cannot serve both ends of a guard lattice. It
+        is generous at a narrow guard and prohibitive at a broad one.
+
+    So here a rule must beat **the population its own guard admits** — the
+    out-of-fold precision of ``const``, which is "answer every fill under this
+    guard with its commonest label". That is the do-nothing baseline *for that
+    guard*, and it is the same discipline this repo applies to models: a score is
+    meaningless without a floor measured on the same population.
+
+    It behaves at both ends by construction. At a narrow guard where ``const`` is
+    0.99 almost nothing is admitted, which is right. At ``[slot=1, nsib=2]``,
+    where ``const`` measured **0.0394**, a resolver at 0.2 is five times the
+    baseline and is admitted — where a constant 0.5 threw it away.
+
+    Pre-registered in
+    ``notes/decisions/2026-08-17-a-floor-a-rule-must-beat-is-the-guards-own-modal-rate.md``.
+    The live risk is the opposite of the old one: a relative floor is *more*
+    permissive at broad guards, so the control is the number that matters. If
+    ``derive:wordnet-perm`` rises above 0.25 the floor is admitting rules that fit
+    noise and nothing else here is readable.
+    """
+
+    def __init__(self, cfg: ModelConfig) -> None:
+        super().__init__(cfg)
+        self.relative_floor = bool(cfg.get("relative_floor", True))
 
 
 @register("frontier-nomap",

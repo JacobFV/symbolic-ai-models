@@ -219,6 +219,21 @@
    "acc_rest_not_copyable": 0.2398791060208383
   },
   {
+   "model": "frontier-008",
+   "curriculum": "derive:wordnet-perm",
+   "draws": 8,
+   "published": 0.4358876361551691,
+   "reproduced": 0.4358876361551691,
+   "derived_n": 1325.0,
+   "derived_copyable_share": 0.5298113207547169,
+   "acc_derived": 0.15471698113207547,
+   "acc_derived_copyable": 0.16524216524216523,
+   "acc_derived_not_copyable": 0.14285714285714285,
+   "rest_n": 29638.0,
+   "acc_rest_copyable": 0.42771755054204513,
+   "acc_rest_not_copyable": 0.23924282191998728
+  },
+  {
    "model": "frontier-nomap",
    "curriculum": "derive:wordnet-perm",
    "draws": 8,
