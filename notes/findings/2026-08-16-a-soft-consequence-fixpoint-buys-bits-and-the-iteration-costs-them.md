@@ -5,6 +5,14 @@ status: provisional
 prereg: notes/decisions/2026-08-16-softreason-preregistration.md
 ---
 
+> **Corrected 2026-08-17 by the control this note named against itself — see
+> [[2026-08-17-two-thirds-of-softreasons-headline-is-the-gate-and-the-same-gate-pays-twice]].**
+> `softreason-argmax` was run. Of the **0.804 bits** over `corefer-001` that this
+> note attributes to the distribution readout, **0.532 (66%) is the mass-fitted
+> gate** and only **0.272 is the readout**. The gate method was already published
+> on `ptrgen` at 0.58 bits, so two thirds of the headline is a restatement on a
+> new model. What the readout is worth is 0.27, not 0.80.
+
 # The distribution output buys 0.80 bits over the best pointer; the fixpoint iteration then gives 0.17 of them back
 
 Scouting arm. One sweep, `configs/full179.toml`, `--tasks node`, the same floors

@@ -96,7 +96,7 @@ import collections
 import math
 from typing import Sequence
 
-from symbolic_ai_core.calibration import MassCalibrator
+from symbolic_ai_core.calibration import MassCalibrator, ScoreCalibrator
 from symbolic_ai_core.data.curriculum import Episode
 from symbolic_ai_core.data.tokenizer import SymbolTokenizer
 from ..base import ModelConfig
@@ -259,7 +259,12 @@ class SoftReasonModel(RuleBasedModel):
                 scores.append(max(mass.values()) / total)
                 votes.append(float(mass.get(int(label_id), 0.0)) / total)
                 backoff.append(self.backoff_prob(view, node, int(label_id)))
-        self.gate_map = MassCalibrator().fit(scores, votes, backoff)
+        self.gate_map = self._fit_gate_map(scores, votes, backoff)
+
+    def _fit_gate_map(self, scores: list[float], votes: list[float],
+                      backoff: list[float]):
+        """The one method ``softreason-argmax`` overrides. See that class."""
+        return MassCalibrator().fit(scores, votes, backoff)
 
     def _fit_types(self, episodes: Sequence[Episode],
                    tok: SymbolTokenizer) -> None:
@@ -429,6 +434,52 @@ class SoftReasonModel(RuleBasedModel):
               "emitting the conclusion distribution itself.")
 class SoftReason001(SoftReasonModel):
     """The model described in this module's docstring."""
+
+
+@register("softreason-argmax",
+          doc="softreason with the gate fitted as an argmax accuracy: the control that "
+              "separates the distribution from the calibrator.")
+class SoftReasonArgmax(SoftReasonModel):
+    """One method different, and it is the control this line has been missing.
+
+    ``notes/findings/2026-08-16-a-soft-consequence-fixpoint-buys-bits-and-the-iteration-costs-them.md``
+    reports ``softreason-onehop`` at **6.148 bits**, second of twenty-six, and
+    reads that as the *distribution readout* paying — SoftReason's transferable
+    part. The agent that built it named the gap against itself: the comparison
+    with ``corefer-001`` moves **two things at once**, the output being a
+    distribution and the gate being fitted by held-out likelihood rather than as
+    an argmax accuracy, and it called that "the single most important missing
+    control". It was never run.
+
+    This runs it. Everything is identical — the same closure, the same
+    conclusion mass emitted whole, the same rules, the same type head — except
+    that ``c`` is fitted by :class:`ScoreCalibrator`, which answers "how often is
+    the top vote right?", instead of :class:`MassCalibrator`, which answers "how
+    much of the mixture's mass has this score earned?". That is exactly the
+    ``ptrgen-001`` / ``ptrgen-argmax`` contrast, where one method was worth
+    **+0.017 label lift and 0.58 bits**.
+
+    **Predicted before running.** If the *distribution* is carrying the result,
+    bits stay near 6.15 and this row is uninteresting. If the *calibrator* is,
+    bits fall toward the 6.7–7.0 region where the argmax-gated models sit, and
+    the finding's headline needs rewriting to "a mass-fitted gate is worth ~0.8
+    bits and the closure is worth little" — which would also make it a
+    restatement of `ptrgen`'s result rather than a new one. Accuracy should move
+    little either way: a gate scales every vote equally and cannot reorder them.
+
+    Refuted as a *control* only if accuracy moves materially, which would mean
+    something other than the gate changed.
+    """
+
+    def _fit_gate_map(self, scores: list[float], votes: list[float],
+                      backoff: list[float]):
+        # `votes[i]` is the mass the closure put on the gold symbol; the top vote
+        # was right exactly when that mass is the largest, which for a
+        # normalised table is `votes[i] == scores[i]`. Comparing floats that were
+        # produced by the same division is safe here and is what the argmax
+        # question actually asks.
+        correct = [v >= s - 1e-12 for v, s in zip(votes, scores)]
+        return ScoreCalibrator().fit(scores, correct)
 
 
 @register("softreason-onehop",

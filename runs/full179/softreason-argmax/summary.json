@@ -1,0 +1,121 @@
+{
+  "config": {
+    "model": "softreason-argmax",
+    "tasks": [
+      "node"
+    ],
+    "task_weights": {
+      "node": 1.0
+    },
+    "data": null,
+    "lessons": "all",
+    "n_train": 20,
+    "n_eval": 4,
+    "eval_seed0": 1000000,
+    "language": "english",
+    "languages": "",
+    "curriculum": "base",
+    "max_len": 320,
+    "max_nodes": 128,
+    "mask_rate": 0.15,
+    "type_weight": 0.5,
+    "vocab_size": 8192,
+    "label_vocab_fraction": 0.3,
+    "d_model": 96,
+    "n_layers": 3,
+    "n_heads": 4,
+    "d_ff": 256,
+    "dropout": 0.1,
+    "extra": {},
+    "steps": 2000,
+    "batch_size": 16,
+    "lr": 0.0003,
+    "min_lr_ratio": 0.1,
+    "warmup": 100,
+    "weight_decay": 0.01,
+    "grad_clip": 1.0,
+    "eval_every": 250,
+    "log_every": 50,
+    "seed": 0,
+    "resume": false,
+    "device": "cpu",
+    "amp": true,
+    "out": "runs/full179/softreason-argmax"
+  },
+  "model_config": {
+    "vocab_size": 8192,
+    "d_model": 96,
+    "n_layers": 3,
+    "n_heads": 4,
+    "d_ff": 256,
+    "dropout": 0.1,
+    "max_len": 328,
+    "max_nodes": 128,
+    "extra": {}
+  },
+  "model": "softreason-argmax",
+  "family": "rule-based",
+  "steps": 0,
+  "parameters": 3832,
+  "n_train": 3580,
+  "n_eval": 716,
+  "vocab_size": 8192,
+  "floors": {
+    "node": {
+      "type_acc": 0.8601454659210886,
+      "type_bits": 2.3292035662165547,
+      "type_n": 51146.0,
+      "label_acc": 0.14321518927482088,
+      "label_bits": 9.369476110181317,
+      "label_n": 42293.0,
+      "copy_acc": 0.26580813816452037,
+      "rsymbol_acc": 0.14321518927482088,
+      "rsymbol_bits": 9.369476110181317,
+      "rsymbol_n": 42293.0,
+      "rnode_acc": 0.26580813816452037
+    }
+  },
+  "temperature": 0.9,
+  "final": {
+    "node": {
+      "label_acc": 0.2581693101471431,
+      "label_bits": 6.679856560386291,
+      "label_n": 5233.0,
+      "type_acc": 0.848203026481715,
+      "type_bits": 0.8495685450571969,
+      "type_n": 6344.0,
+      "label_coverage": 0.824873896595208,
+      "copy_ceiling": 0.721574622587426,
+      "copy_censored": 450.0,
+      "rsymbol_acc": 0.2581693101471431,
+      "rsymbol_bits": 6.679856560386291,
+      "rsymbol_n": 5233.0,
+      "label_floor": 0.14321518927482088,
+      "label_lift": 0.1341691862803048,
+      "type_floor": 0.8601454659210886,
+      "type_lift": -0.08539186461152048,
+      "rsymbol_floor": 0.14321518927482088,
+      "rsymbol_lift": 0.1341691862803048,
+      "label_floor_bits": 9.369476110181317,
+      "label_bits_lift": 0.2870618931268054,
+      "type_floor_bits": 2.3292035662165547,
+      "type_bits_lift": 0.6352536303054032,
+      "rsymbol_floor_bits": 9.369476110181317,
+      "rsymbol_bits_lift": 0.2870618931268054
+    }
+  },
+  "seconds": 24.58696436882019,
+  "device": "cpu",
+  "renaming": {
+    "label_acc": 0.2508474588394165,
+    "renamed_label_acc": 0.23747645318508148,
+    "drop": 0.013371005654335022,
+    "symbols": 2105.0
+  },
+  "masking": {
+    "mask_mode": "scatter",
+    "mask_rate": 0.15,
+    "fit_mask_rate": 0.15,
+    "fit_mask_mode": "scatter"
+  }
+}
