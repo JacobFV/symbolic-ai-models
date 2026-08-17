@@ -550,7 +550,7 @@ def test_a_knob_added_for_one_model_does_not_change_another(cfg):
     # three descendants so far, which is the test working rather than the test
     # being brittle.
     pinned = {"frontier-009", "frontier-010", "frontier-perkey",
-              "frontier-typemass"}
+              "frontier-typemass", "frontier-typepoint"}
     for name in model_names():
         if not name.startswith("frontier"):
             continue

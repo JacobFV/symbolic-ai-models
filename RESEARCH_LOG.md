@@ -541,6 +541,18 @@ a better rule language: every other atom in that ladder is already among
 against overclaiming: that term is the output of a fitted pointer, so it is where
 the *pointer's* value is cashed for the type head rather than a cheap feature.
 
+**And the conjunct does not transfer.** `frontier-typepoint` adds the ninth atom
+to a model that already has the other eight — the type of whatever visible node
+carries the symbol its own *label* head predicts, a **derived** pointer worth
+0.4936 alone against `corefer`'s fitted one. `type_acc` moves **0.8666 →
+0.8686**, +0.002 where `corefer` gets +0.095, with every label number
+bit-identical. So the value is in the **pointer**, and the conjunct is only where
+it enters: *the type head's ceiling is set by the quality of the pointer behind
+its pointed-type term*. Four variants have now given `frontier`'s type head its
+own knobs, atoms, gate and a pointer conjunct, moving it 0.8633 → 0.8686 and
+1.0316 → 0.9070 — it needs a coreference model, not another column, and building
+one inside it would be building `corefer` inside it.
+
 A second, separable observation: `corefer-nopoint` is *less accurate* than
 `frontier-typemass` (0.8514 vs 0.8666) and *better calibrated* (0.830 vs 0.934).
 A back-off ladder and a rank-ordered rule list at comparable accuracy do not give

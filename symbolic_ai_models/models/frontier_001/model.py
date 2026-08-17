@@ -186,6 +186,18 @@ GUARD_KEYS = ("ptype", "phead", "slot", "depth", "nsib", "kids")
 #: reaches. What `corefer` has that this did not is the richer structural key.
 TYPE_GUARD_KEYS = GUARD_KEYS + ("arity", "sibtype")
 
+#: The type head's atoms plus the one `corefer-001` has that nothing else does:
+#: the **type of the node this model's own label rule points at**. `corefer`'s
+#: pointer is a fitted coreference model; this one is derived — whatever visible
+#: node carries the symbol the label head predicts is the coreferent under this
+#: model's own hypothesis, which costs nothing extra to compute and is a strictly
+#: weaker signal.
+#:
+#: `corefer-nopoint` prices that conjunct at **+0.095 accuracy and 0.48 bits** on
+#: a model that is otherwise at the floor, so it is worth finding out whether the
+#: term transfers or whether it needs `corefer`'s specific pointer.
+TYPE_POINT_KEYS = TYPE_GUARD_KEYS + ("pointed",)
+
 #: Structural paths a resolver may read a visible neighbour through. Siblings
 #: are addressed **by slot**, not by position: the slot is what the generator
 #: binds an argument to, and a positional index moves when a sibling is masked.
@@ -251,6 +263,21 @@ def _guard_atoms(view: GraphView, i: int) -> tuple:
         min(len(view.siblings(i)), 4),
         bool(view.children(i)),
     )
+
+
+def _pointed_type(view: GraphView, i: int, label: int | None) -> int:
+    """The type of a visible node carrying ``label``, or :data:`MISSING`.
+
+    ``label`` is what this model's *label* head predicts at ``i``, so the node
+    found is the coreferent under the model's own hypothesis. Lowest index wins,
+    deterministically; the target itself is hidden and so can never be it.
+    """
+    if label is None:
+        return MISSING
+    for j in range(len(view)):
+        if view.labels[j] == label and view.types[j]:
+            return int(TYPE_TO_ID.get(view.types[j], MISSING))
+    return MISSING
 
 
 def _type_guard_atoms(view: GraphView, i: int) -> tuple:
@@ -441,7 +468,10 @@ class _Rule:
         return self.form == "copy" or set(other.table) <= set(self.table)
 
     def __repr__(self) -> str:
-        guard = ", ".join(f"{TYPE_GUARD_KEYS[k]}={v!r}" for k, v in self.guard) or "*"
+        # `TYPE_POINT_KEYS` is the superset of every atom set in use, and index
+        # `k` names the same atom in all of them, so a rule from any head renders
+        # without carrying its own key names.
+        guard = ", ".join(f"{TYPE_POINT_KEYS[k]}={v!r}" for k, v in self.guard) or "*"
         if self.form == "const":
             body = "const"
         else:
@@ -566,6 +596,9 @@ class FrontierModel(RuleBasedModel):
         #: fired rather than from the rule's average over its whole table. Off by
         #: default, so every published model is untouched.
         self.per_key_gate = bool(cfg.get("per_key_gate", False))
+        #: Whether the type head gets a ninth atom: the type of the node the
+        #: label head's own prediction points at. Off by default.
+        self.type_pointer = bool(cfg.get("type_pointer", False))
         #: How often an entry must have fired out of fold before it gets its own
         #: bound. Below this it falls back to the rule's score.
         self.key_min_count = int(cfg.get("key_min_count", 4))
@@ -640,6 +673,18 @@ class FrontierModel(RuleBasedModel):
             # `notes/lessons/2026-08-14-a-guard-applied-only-to-the-arm-that-lost.md`
             # is the shape this was: eight variants tuned on one head, and the
             # other head's column never read.
+            if self.type_pointer:
+                # A second pass, because the pointed conjunct needs the LABEL
+                # rules and those do not exist during the first.
+                # `training_views` is a pure function of (episodes, seed,
+                # repeats), so this sees the same views and the same targets in
+                # the same order — and it applies the *same* filter as the first
+                # pass, so the result is index-aligned with `atoms` and `keep`,
+                # `types`, `ans_type` and `fold` all stay valid. Filtering it
+                # differently was the first thing written here and would have
+                # paired each fill's atoms with another fill's answer.
+                tatoms = self._collect_pointed(episodes, tok)
+                assert len(tatoms) == len(atoms), (len(tatoms), len(atoms))
             saved = (self.rank_tolerance, self.keep_per_guard,
                      self.keep_by_path, self.relative_floor)
             (self.rank_tolerance, self.keep_per_guard,
@@ -647,12 +692,14 @@ class FrontierModel(RuleBasedModel):
                 self.type_head_settings or saved)
             try:
                 self.type_rules = self._induce(
-                    [(tatoms if self.type_atoms else atoms)[n] for n in keep],
+                    [(tatoms if (self.type_atoms or self.type_pointer)
+                      else atoms)[n] for n in keep],
                     [types[n] for n in keep],
                     [ans_type[n] for n in keep], [fold[n] for n in keep],
                     head="type", forms=("const", "copy"), min_precision=0.0,
-                    n_keys=len(TYPE_GUARD_KEYS) if self.type_atoms
-                    else len(GUARD_KEYS))
+                    n_keys=(len(TYPE_POINT_KEYS) if self.type_pointer
+                            else len(TYPE_GUARD_KEYS) if self.type_atoms
+                            else len(GUARD_KEYS)))
             finally:
                 (self.rank_tolerance, self.keep_per_guard,
                  self.keep_by_path, self.relative_floor) = saved
@@ -1159,7 +1206,7 @@ class FrontierModel(RuleBasedModel):
             # the label head's is the mistake this repo has paid for four times,
             # most expensively as -1.96 type lift on three models at once.
             tvals = _path_types(view, i)
-            tatoms = _type_guard_atoms(view, i) if self.type_atoms else atoms
+            tatoms = self._type_atoms_at(view, i, atoms, vals)
             trule = self._fire(self.type_rules, tatoms, tvals)
             type_vote: Votes = ABSTAIN
             if trule is not None:
@@ -1180,6 +1227,38 @@ class FrontierModel(RuleBasedModel):
         accurate and overconfident, 7th on accuracy and 23rd on bits.
         """
         return min(0.15 + 0.8 * score, 0.95)
+
+    def _type_atoms_at(self, view: GraphView, i: int, atoms: tuple,
+                       vals: tuple) -> tuple:
+        """The guard atoms the type head is keyed on at prediction time."""
+        if not (self.type_atoms or self.type_pointer):
+            return atoms
+        got = _type_guard_atoms(view, i)
+        if not self.type_pointer:
+            return got
+        rule = self._fire(self.rules, atoms, vals)
+        pred = rule.resolve(vals) if rule is not None else None
+        return got + (_pointed_type(view, i, pred),)
+
+    def _collect_pointed(self, episodes: Sequence[Episode],
+                         tok: SymbolTokenizer) -> list[tuple]:
+        """Type atoms including the pointed conjunct, for every scorable fill.
+
+        Ordered and **filtered** exactly as the first pass, because
+        ``training_views`` is a pure function of ``(episodes, seed, repeats)``
+        and the target dict is iterated the same way. The alignment is asserted
+        by the caller rather than assumed.
+        """
+        out: list[tuple] = []
+        for view, targets in self.training_views(
+                episodes, tok, repeats=self.repeats, seed=11,
+                max_nodes=self.cfg.max_nodes):
+            for i, (label_id, type_id) in targets.items():
+                if label_id is None or label_id < 0 or label_id == tok.unk_id:
+                    continue
+                out.append(self._type_atoms_at(
+                    view, i, _guard_atoms(view, i), _path_labels(view, i)))
+        return out
 
     # ---- reporting ----------------------------------------------------
     def n_symbolic_parameters(self) -> int:
@@ -1402,7 +1481,8 @@ class FrontierSoftModel(FrontierBothModel):
         out: dict[int, tuple[Votes, Votes]] = {}
         for i in view.hidden:
             atoms = _guard_atoms(view, i)
-            mass = self._mass(atoms, _path_labels(view, i))
+            vals = _path_labels(view, i)
+            mass = self._mass(atoms, vals)
             total = sum(mass.values())
             label_vote: Votes = ABSTAIN
             if total > 0.0 and self.gate_map.fitted:
@@ -1410,7 +1490,7 @@ class FrontierSoftModel(FrontierBothModel):
                 if gate > 0.0:
                     label_vote = ({k: v / total for k, v in mass.items()}, gate)
             tvals = _path_types(view, i)
-            tatoms = _type_guard_atoms(view, i) if self.type_atoms else atoms
+            tatoms = self._type_atoms_at(view, i, atoms, vals)
             trule = self._fire(self.type_rules, tatoms, tvals)
             type_vote: Votes = ABSTAIN
             if trule is not None:
@@ -1864,8 +1944,9 @@ class FrontierTypeMassModel(FrontierTypeAtomsModel):
             for node, (_label, type_id) in targets.items():
                 if type_id is None or type_id < 0:
                     continue
-                atoms = (_type_guard_atoms(view, node) if self.type_atoms
-                         else _guard_atoms(view, node))
+                atoms = self._type_atoms_at(
+                     view, node, _guard_atoms(view, node),
+                     _path_labels(view, node))
                 tvals = _path_types(view, node)
                 rule = self._fire(self.type_rules, atoms, tvals)
                 if rule is None:
@@ -1883,6 +1964,42 @@ class FrontierTypeMassModel(FrontierTypeAtomsModel):
         if not self.type_gate_map.fitted:
             return super()._type_gate(score)
         return float(self.type_gate_map(score))
+
+
+@register("frontier-typepoint",
+          doc="frontier-typemass with a ninth type atom: the type its own label rule points at.")
+class FrontierTypePointModel(FrontierTypeMassModel):
+    """Does `corefer`'s winning conjunct transfer, or does it need `corefer`'s pointer?
+
+    `corefer-nopoint` priced the pointed-at-type conjunct at **+0.095 accuracy
+    and 0.48 bits** — the whole of `corefer-001`'s +0.612 type lift, on a model
+    that is otherwise *below* the 0.8601 floor. Every other atom in its ladder is
+    already among `frontier-010`'s eight. This adds the ninth.
+
+    The pointer is **derived, not fitted**: whatever visible node carries the
+    symbol this model's own *label* head predicts is the coreferent under its own
+    hypothesis. That is strictly weaker than `corefer`'s fitted coreference model
+    — measured earlier at **0.4936** type accuracy alone, on the 62% of fills
+    where such a node exists — so this is a test of whether the *conjunct*
+    transfers or whether the value was in the pointer all along.
+
+    It costs a second collection pass: the conjunct needs the label rules and
+    those do not exist while the first pass runs.
+
+    **Predicted before running:** `type_acc` rises above `frontier-typemass`'s
+    **0.8666**, into **0.88–0.92** — short of `corefer`'s 0.9458, because the
+    pointer is worse; `type_bits` improves on 0.9342; and **every label number is
+    bit-identical** (0.4414 / 7.141), which is the control saying the row is the
+    ninth atom and nothing else.
+
+    Refuted if type does not move: the conjunct does not transfer, `corefer`'s
+    advantage is its *fitted pointer* rather than the feature, and the induced
+    type heads need a coreference model rather than an extra column.
+    """
+
+    def __init__(self, cfg: ModelConfig) -> None:
+        super().__init__(cfg)
+        self.type_pointer = bool(cfg.get("type_pointer", True))
 
 
 @register("frontier-nomap",
