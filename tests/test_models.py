@@ -495,3 +495,28 @@ def test_selecting_models_by_bare_name_yields_versioned_run_names():
 def base_name_has_version(name: str) -> bool:
     from symbolic_ai_models.models.registry import base_name
     return base_name(name) != name
+
+
+def test_a_rule_reloads_when_the_class_has_grown_a_slot():
+    """A `__slots__` object unpickled from an older checkpoint lacks new slots.
+
+    `_Rule` gained `tol` when the tolerance band was added. Every fitted model
+    under `runs/` predates it, and `_Rule.rank` read `self.tol` directly — so
+    ranking a reloaded rule raised `AttributeError`. Fitting and scoring were
+    unaffected; only *reopening a published model* broke, which is the same
+    shape as the `nn.Module._apply` collision above and just as invisible to a
+    sweep.
+
+    Simulated by deleting the slot, which is exactly what unpickling an older
+    checkpoint produces.
+    """
+    from symbolic_ai_models.models.frontier_001.model import _Rule
+
+    rule = _Rule(guard=(), form="copy", path=0, precision=0.9, score=0.8,
+                 support=10, dl=0, tol=0.05)
+    assert rule.rank[0] == -int(0.8 / 0.05)
+    del rule.tol
+    assert not hasattr(rule, "tol")
+    assert rule.rank == (-round(0.8, 3), 0, -10, 0), (
+        "a rule from a checkpoint written before `tol` existed must still rank, "
+        "and must rank the way it did when it was fitted")

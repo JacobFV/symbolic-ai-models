@@ -329,8 +329,16 @@ class _Rule:
         # is worse than one that declines, and worse again than a copy that
         # would have been right -- but rank is precision-first, so a map ahead
         # of a copy by 0.004 of held-out precision takes every fill they share.
-        q = (-round(self.score, 3) if self.tol <= 0.0
-             else -math.floor(self.score / self.tol))
+        # `getattr`, not `self.tol`: a `__slots__` class unpickled from a
+        # checkpoint written before a slot existed simply does not have it, and
+        # every run under `runs/` predates this one. Reading it directly raised
+        # `AttributeError` from `rank` on reload — training and scoring were
+        # fine, and only reopening a published model broke, which is the same
+        # shape as the `nn.Module._apply` collision. Any slot added here in
+        # future needs the same treatment.
+        tol = getattr(self, "tol", 0.0)
+        q = (-round(self.score, 3) if tol <= 0.0
+             else -math.floor(self.score / tol))
         return (q, self.dl, -self.support, len(self.guard))
 
     def matches(self, atoms: tuple) -> bool:
@@ -456,6 +464,11 @@ class FrontierModel(RuleBasedModel):
         #: that emits a distribution, those are the only rules that can produce
         #: any spread at all.
         self.reachability_filter = bool(cfg.get("reachability_filter", True))
+        #: Whether a guard may keep more than one rule of the *same* form
+        #: reading *different* paths. Off by default.
+        self.keep_by_path = bool(cfg.get("keep_by_path", False))
+        #: How many (form, path) rules survive per guard when it is on.
+        self.keep_paths = int(cfg.get("keep_paths", 6))
         #: Cap on the rule set, applied after the reachability filter in
         #: :meth:`_useful`, so it bounds the rules that answer something
         #: rather than the rules that sort first.
@@ -643,27 +656,35 @@ class FrontierModel(RuleBasedModel):
         # group alone, so that :attr:`keep_per_guard` can decide how many
         # survive — see ``FrontierBothModel``.
         best: dict[int, dict[str, _Rule]] = collections.defaultdict(dict)
+        by_path: dict[int, dict[tuple, _Rule]] | None = (
+            {} if self.keep_by_path else None)
 
         if "copy" in forms:
             for p in range(len(PATHS)):
                 f = np.bincount(gid, weights=fires[:, p], minlength=n_groups)
                 c = np.bincount(gid, weights=copy_ok[:, p], minlength=n_groups)
-                self._offer(best, guards, cand, c, f, "copy", p, 0, None, floor)
+                self._offer(best, guards, cand, c, f, "copy", p, 0, None, floor, by_path)
 
         if "const" in forms:
             c, f, dl, tables = self._cross_fit(gid, fv, av, take, None, n_groups)
-            self._offer(best, guards, cand, c, f, "const", 0, dl, tables, floor)
+            self._offer(best, guards, cand, c, f, "const", 0, dl, tables, floor, by_path)
 
         if "map" in forms:
             for p in MAP_PATHS:
                 c, f, dl, tables = self._cross_fit(gid, fv, av, take, pv[:, p],
                                                    n_groups)
-                self._offer(best, guards, cand, c, f, "map", p, dl, tables, floor)
+                self._offer(best, guards, cand, c, f, "map", p, dl, tables, floor, by_path)
 
         out: list[_Rule] = []
         for per_form in best.values():
             ranked = sorted(per_form.values(), key=lambda r: r.rank)
             out.extend(ranked[:self.keep_per_guard])
+        if by_path is not None:
+            keep = {id(r) for r in out}
+            for per in by_path.values():
+                ranked = sorted(per.values(), key=lambda r: r.rank)
+                out.extend(r for r in ranked[:self.keep_paths]
+                           if id(r) not in keep)
         return int(cand.sum()), out
 
     def _cross_fit(self, gid: np.ndarray, fv: np.ndarray, av: np.ndarray,
@@ -707,7 +728,8 @@ class FrontierModel(RuleBasedModel):
 
     def _offer(self, best: dict[int, _Rule], guards: dict[int, tuple],
                cand: np.ndarray, correct: np.ndarray, fired: np.ndarray,
-               form: str, path: int, dl, tables, floor: float) -> None:
+               form: str, path: int, dl, tables, floor: float,
+               by_path: dict[int, dict[tuple, _Rule]] | None = None) -> None:
         """Keep this resolver for each candidate guard it beats the current one on."""
         scores = _lcb(correct, fired)
         for g in np.flatnonzero(cand & (fired >= self.min_support)):
@@ -721,6 +743,16 @@ class FrontierModel(RuleBasedModel):
                          self.rank_tolerance)
             if tables is not None:
                 rule.fold_table = [dict(tables[g][0]), dict(tables[g][1])]
+            if by_path is not None:
+                # Keyed by (form, path), so two `map` rules reading *different*
+                # neighbours both survive under one guard. Keeping one per form
+                # is not enough: at `[slot=1, nsib=2]` every surviving rule is
+                # `map:sib@0`, and the derived fills need `map:sib@2`, which
+                # loses a competition *within* the map form.
+                by_path.setdefault(g, {})
+                cur = by_path[g].get((form, path))
+                if cur is None or rule.rank < cur.rank:
+                    by_path[g][(form, path)] = rule
             current = best[g].get(form)
             if current is None or rule.rank < current.rank:
                 best[g][form] = rule
@@ -1205,6 +1237,46 @@ class FrontierVoteModel(FrontierSoftModel):
     def __init__(self, cfg: ModelConfig) -> None:
         super().__init__(cfg)
         self.reachability_filter = bool(cfg.get("reachability_filter", False))
+
+
+@register("frontier-005",
+          doc="frontier-soft keeping one rule per (form, path) per guard, not per form.")
+class FrontierPathModel(FrontierSoftModel):
+    """The sixth candidate, and the first with the evidence gathered *first*.
+
+    ``notes/lessons/2026-08-17-i-keep-blaming-a-pipeline-stage-for-a-property-of-the-objective.md``
+    says: before disabling a stage, show that what it removes differs from what
+    it keeps. Done, and this is what it showed.
+
+    The derived fills ``frontier-001`` misses differ from the ones it answers in
+    **exactly one guard atom** — ``nsib=2`` against ``nsib=4``, with ptype, slot,
+    depth and kids identical. So the derived slot comes in two object layouts and
+    the model has a rule for one of them. At ``[slot=1, nsib=2]`` it holds five
+    rules and **every one is** ``map:sib@0``; what those fills need is
+    ``map:sib@2``, which the empty-guard test showed answers **100%** of the
+    bucket.
+
+    ``keep_per_guard`` does not reach this, and that is why ``frontier-003`` was
+    a null on the bucket: it keeps one rule per *form*, and ``map:sib@0`` and
+    ``map:sib@2`` are the same form. The competition that discards the right
+    resolver happens **inside** the map form, between two paths.
+
+    So: keep one rule per ``(form, path)``. And on the **soft** readout rather
+    than the decision list, deliberately — ``map:sib@0`` scores 0.883 and would
+    fire first, so under first-match-wins the extra rule never gets a turn. Only
+    a vote lets the right answer compete with the wrong one.
+
+    **Predicted before running:** ``acc | derived, not copyable`` rises above the
+    0.531546 that five previous candidates left untouched — this is the first
+    variant built after locating the discarded rule rather than guessing at a
+    stage. Refuted if it stays at 0.531546, which would mean the extra rule is
+    kept and still outvoted, and the readout weighting is the next thing to look
+    at rather than the rule set.
+    """
+
+    def __init__(self, cfg: ModelConfig) -> None:
+        super().__init__(cfg)
+        self.keep_by_path = bool(cfg.get("keep_by_path", True))
 
 
 @register("frontier-nomap",
