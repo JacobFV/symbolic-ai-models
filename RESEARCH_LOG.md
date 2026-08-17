@@ -111,6 +111,19 @@ embarrass the claim, killed it. Pool width costs 0.104 at thin supervision and
 draws all six kinds, so the map is *complete in every episode*, and completeness
 rather than width may be the operative variable.
 
+**And I broke the type head for eight variants without noticing.** Every knob
+after `frontier-001` was tuned on `label_acc` and `_induce` reads its knobs off
+the *model* rather than the *head*, so each went to the type head too — a column
+that was not in the table I was reading. `type_acc` went 0.8633 → 0.8607 →
+0.8491 → 0.8539, turning a **+0.023 lift into −0.045**, below a floor only two of
+nineteen models had ever cleared. `frontier-009` induces the type head under its
+own settings: label numbers identical to `frontier-008` (0.4414, 7.141) and
+**type lift +0.036**, better than `frontier-001`'s. See
+`notes/lessons/2026-08-17-a-default-computed-in-init-captures-the-base-classs-values.md`,
+which also records the worse bug the fix introduced for ten minutes — a default
+computed in the base `__init__` captured the base values, silently moving
+`frontier-008`'s published `type_acc` with nothing in its own definition changed.
+
 **Named weakness:** `min_precision = 0.2` was chosen after seeing that 0.5
 excluded the rule. It was not searched over the derived bucket and no value was
 selected by that number, but it was *informed* by it, which is weaker than a

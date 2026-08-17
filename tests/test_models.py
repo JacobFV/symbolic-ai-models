@@ -520,3 +520,38 @@ def test_a_rule_reloads_when_the_class_has_grown_a_slot():
     assert rule.rank == (-round(0.8, 3), 0, -10, 0), (
         "a rule from a checkpoint written before `tol` existed must still rank, "
         "and must rank the way it did when it was fitted")
+
+
+def test_a_knob_added_for_one_model_does_not_change_another(cfg):
+    """A default computed in `__init__` from other attributes captures the BASE ones.
+
+    `type_head_settings` was first written as
+    `cfg.get(...) or (self.rank_tolerance, self.keep_per_guard, ...)`, which looks
+    like a faithful no-op default. It is not: a subclass sets its knobs *after*
+    `super().__init__()`, so the tuple captures the base-class values, and every
+    subclass silently got the pinned type head. Measured cost before it was
+    caught: `frontier-008`'s published `type_acc` moved 0.8539 -> 0.8654 without
+    anything in its own definition changing, which is the silent redefinition
+    `CLAUDE.md` forbids.
+
+    So the invariant is pinned directly: the field stays `None` unless a model
+    deliberately sets it, and it is resolved at fit time where the values are
+    final. `frontier-009` is the one model that pins it, and it must.
+    """
+    from symbolic_ai_models.models import build
+    from symbolic_ai_models.models.registry import model_names
+
+    pinned = {"frontier-009"}
+    for name in model_names():
+        if not name.startswith("frontier"):
+            continue
+        model = build(name, cfg)
+        got = model.type_head_settings
+        if name in pinned:
+            assert got is not None, f"{name} must pin its type head"
+            assert got == (0.0, 1, False, False), got
+        else:
+            assert got is None, (
+                f"{name} resolved `type_head_settings` at construction to {got}. "
+                "It must stay None so the type head follows the label head's "
+                "actual settings, read at fit time after subclass overrides.")
