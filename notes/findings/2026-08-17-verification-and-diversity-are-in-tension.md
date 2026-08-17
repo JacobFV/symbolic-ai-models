@@ -101,16 +101,37 @@ set does not contain.
 
 That is the same shape as `ensemble-001`, from the other side: that ensemble paid
 1.14 bits and the only diversity available was "one member memorises the
-vocabulary". Here the diversity is not available at all, because the selection
-procedure removed it.
+vocabulary". Here the diversity is not available at all — and the next section
+shows it was never *produced* rather than removed, which is a stronger statement
+than this paragraph originally made.
 
-## What this predicts, and what would refute it
+## The prediction was run, refuted, and the refutation strengthens the claim
 
-If the diagnosis is right, `frontier-soft`'s bits should improve when rules are
-kept *because they disagree* rather than only because they verify — an explicit
-diversity term in the ranking, which nothing here has. If a diversity term does
-**not** move bits, the diagnosis is wrong and the 6.15 gap is about what
-`softreason`'s closure computes rather than about how many conclusions it holds.
+The cheapest version of "keep rules because they disagree" is a deletion:
+`_useful` drops rules that never get a turn, and a rule never gets a turn exactly
+when a higher-ranked one already answers its fills — so the filter looked like it
+was removing the alternatives. `frontier-vote` turns it off.
+
+| | rules | single-symbol | mean top-share | median | bits | acc |
+|---|---:|---:|---:|---:|---:|---:|
+| `frontier-soft` | 552 | 0.5265 | 0.8078 | 1.0000 | 7.061 | 0.3986 |
+| `frontier-vote` | **824** | 0.5189 | 0.8032 | **1.0000** | **7.075** | 0.3992 |
+
+**272 rules restored and essentially nothing moved** — the single-symbol share
+falls by 0.008, the median top-share stays at exactly 1.0000, and bits get
+slightly *worse*. Refuted.
+
+And the refutation makes the claim above **stronger, not weaker**. The rules the
+filter discards are unreachable precisely *because they say the same thing as the
+rule that outranks them*, so restoring them cannot add disagreement. The
+diversity is not being removed by a stage — **it was never produced.** That is a
+property of the verification objective and there is no stage to switch off.
+
+So the open question is unchanged in substance and sharper in form: producing a
+verified rule set with genuine internal disagreement needs the *objective* to
+reward disagreement, not a filter to stop suppressing it. Nothing here does that,
+and the failure mode of trying to fix it stage by stage is now written down in
+[[2026-08-17-i-keep-blaming-a-pipeline-stage-for-a-property-of-the-objective]].
 
 **Caveat on the whole table.** `frontier-soft` is better than `frontier-003` on
 bits and renamed and worse on accuracy, so which is "best" is a choice of metric,

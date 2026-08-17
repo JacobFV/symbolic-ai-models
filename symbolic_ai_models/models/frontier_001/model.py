@@ -445,6 +445,17 @@ class FrontierModel(RuleBasedModel):
         #: renaming-invariant ``copy`` over a symbol-keyed ``map`` — gets to
         #: decide. 0.0 is the published ranking and changes nothing.
         self.rank_tolerance = float(cfg.get("rank_tolerance", 0.0))
+        #: Whether rules that never get a turn are dropped before the cap.
+        #: On by default and that is right for a **decision list**, where such a
+        #: rule is dead code occupying a slot.
+        #:
+        #: It is wrong for a *soft* readout, and the reason is the point of
+        #: ``frontier-vote``: a rule is unreachable exactly when a higher-ranked
+        #: rule already answers its fills, so the filter removes precisely the
+        #: rules that would have offered a **competing conclusion**. For a model
+        #: that emits a distribution, those are the only rules that can produce
+        #: any spread at all.
+        self.reachability_filter = bool(cfg.get("reachability_filter", True))
         #: Cap on the rule set, applied after the reachability filter in
         #: :meth:`_useful`, so it bounds the rules that answer something
         #: rather than the rules that sort first.
@@ -550,7 +561,8 @@ class FrontierModel(RuleBasedModel):
             # backwards: a later round is supposed to be able to add nothing,
             # never to subtract. Ranking cannot see this, because rank is a
             # property of one rule and coverage is a property of the set.
-            kept = self._useful(kept, codes, code_of, pv, av, fv)
+            if self.reachability_filter:
+                kept = self._useful(kept, codes, code_of, pv, av, fv)
             del kept[self.max_rules:]
             residual = self._residual(kept, codes, code_of, pv, av, fv)
             self.search_log.append({
@@ -1161,6 +1173,38 @@ class FrontierSoftModel(FrontierBothModel):
                                  min(0.15 + 0.8 * trule.score, 0.95))
             out[i] = (label_vote, type_vote)
         return out
+
+
+@register("frontier-vote",
+          doc="frontier-soft keeping the rules a decision list would discard as unreachable.")
+class FrontierVoteModel(FrontierSoftModel):
+    """The diversity term, in the one place the search was destroying it.
+
+    [[2026-08-17-verification-and-diversity-are-in-tension]] measured that on
+    **52.7%** of fills every rule that fires proposes the same symbol, median
+    top-share 1.0000 — so ``frontier-soft``'s distribution readout has nothing to
+    spread mass over, and its ``vote_sharpness`` curve is flat across a
+    sixteen-fold range because of it.
+
+    The note ended with the prediction that keeping rules *because they disagree*
+    should move bits. This is the cheapest version of that, and it is a deletion
+    rather than an addition: :meth:`_useful` drops rules that never get a turn,
+    and a rule never gets a turn exactly when a higher-ranked rule already
+    answers its fills — which is to say, the filter removes the alternatives. It
+    is the correct filter for a decision list and the wrong one for a vote.
+
+    **Predicted before running:** the share of fills whose voting rules propose a
+    single symbol falls well below 0.527, and ``label_bits`` improves on
+    ``frontier-soft``'s 7.061. Refuted if bits do not move — which would say the
+    diagnosis is wrong and the gap to ``softreason-onehop``'s 6.148 is about what
+    a closure *computes* rather than how many conclusions it holds. Accuracy is
+    expected to move little: the rules being restored rank below the ones that
+    were already deciding, so they can only outvote them in aggregate.
+    """
+
+    def __init__(self, cfg: ModelConfig) -> None:
+        super().__init__(cfg)
+        self.reachability_filter = bool(cfg.get("reachability_filter", False))
 
 
 @register("frontier-nomap",
