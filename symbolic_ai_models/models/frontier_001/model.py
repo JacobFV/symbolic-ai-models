@@ -157,6 +157,20 @@ __all__ = ["FrontierModel", "GUARD_KEYS", "PATHS", "MAP_PATHS"]
 #: the target's, and is ``None`` when the parent is itself masked.
 GUARD_KEYS = ("ptype", "phead", "slot", "depth", "nsib", "kids")
 
+#: The type head's atoms: the same six, plus the two `corefer-001`'s type ladder
+#: conjoins and this one lacked — the node's own **arity** and its commonest
+#: **sibling type**. A strict superset, so index `k` names the same atom in both
+#: and a rule's repr needs no extra state.
+#:
+#: Why these two and not others: `corefer` is the only rule-based model that
+#: clears the 0.8601 type floor by more than a rounding error (+0.612), and its
+#: key is `(ptype, slot, depth, arity, sibling type, pointed type)`. Measured
+#: before building — the pointer is *not* where its advantage comes from: the
+#: **oracle** coreferent's type predicts the truth only 0.560 of the time and
+#: unions with this model to 0.888, below what a label->type route already
+#: reaches. What `corefer` has that this did not is the richer structural key.
+TYPE_GUARD_KEYS = GUARD_KEYS + ("arity", "sibtype")
+
 #: Structural paths a resolver may read a visible neighbour through. Siblings
 #: are addressed **by slot**, not by position: the slot is what the generator
 #: binds an argument to, and a positional index moves when a sibling is masked.
@@ -222,6 +236,19 @@ def _guard_atoms(view: GraphView, i: int) -> tuple:
         min(len(view.siblings(i)), 4),
         bool(view.children(i)),
     )
+
+
+def _type_guard_atoms(view: GraphView, i: int) -> tuple:
+    """:func:`_guard_atoms` plus arity and the commonest sibling type.
+
+    Both are symbol-free and both are things ``corefer-001``'s type ladder
+    conjoins. ``kids`` is already a *boolean* arity, so the integer version is
+    the refinement rather than a new fact; the sibling type is genuinely new and
+    is the one atom here that reads a neighbour.
+    """
+    sibs = [view.types[j] for j in view.siblings(i) if view.types[j]]
+    sib = collections.Counter(sibs).most_common(1)[0][0] if sibs else None
+    return _guard_atoms(view, i) + (min(len(view.children(i)), 4), sib)
 
 
 def _path_node(view: GraphView, i: int, path: tuple) -> int:
@@ -376,7 +403,7 @@ class _Rule:
         return self.form == "copy" or set(other.table) <= set(self.table)
 
     def __repr__(self) -> str:
-        guard = ", ".join(f"{GUARD_KEYS[k]}={v!r}" for k, v in self.guard) or "*"
+        guard = ", ".join(f"{TYPE_GUARD_KEYS[k]}={v!r}" for k, v in self.guard) or "*"
         if self.form == "const":
             body = "const"
         else:
@@ -493,6 +520,10 @@ class FrontierModel(RuleBasedModel):
         #: Resolved at fit time in :meth:`learn` instead, where the values are
         #: final.
         self.type_head_settings = cfg.get("type_head_settings", None)
+        #: Whether the type head induces over :data:`TYPE_GUARD_KEYS` (eight
+        #: atoms) rather than :data:`GUARD_KEYS` (six). Off by default, so every
+        #: published model is untouched.
+        self.type_atoms = bool(cfg.get("type_atoms", False))
         #: Cap on the rule set, applied after the reachability filter in
         #: :meth:`_useful`, so it bounds the rules that answer something
         #: rather than the rules that sort first.
@@ -515,6 +546,7 @@ class FrontierModel(RuleBasedModel):
     # ---- fitting ------------------------------------------------------
     def learn(self, episodes: Sequence[Episode], tok: SymbolTokenizer) -> None:
         atoms: list[tuple] = []
+        tatoms: list[tuple] = []
         labs: list[tuple[int, ...]] = []
         types: list[tuple[int, ...]] = []
         ans_lab: list[int] = []
@@ -528,6 +560,7 @@ class FrontierModel(RuleBasedModel):
                 if label_id is None or label_id < 0 or label_id == tok.unk_id:
                     continue
                 atoms.append(_guard_atoms(view, i))
+                tatoms.append(_type_guard_atoms(view, i))
                 labs.append(_path_labels(view, i))
                 types.append(_path_types(view, i))
                 ans_lab.append(int(label_id))
@@ -569,9 +602,12 @@ class FrontierModel(RuleBasedModel):
                 self.type_head_settings or saved)
             try:
                 self.type_rules = self._induce(
-                    [atoms[n] for n in keep], [types[n] for n in keep],
+                    [(tatoms if self.type_atoms else atoms)[n] for n in keep],
+                    [types[n] for n in keep],
                     [ans_type[n] for n in keep], [fold[n] for n in keep],
-                    head="type", forms=("const", "copy"), min_precision=0.0)
+                    head="type", forms=("const", "copy"), min_precision=0.0,
+                    n_keys=len(TYPE_GUARD_KEYS) if self.type_atoms
+                    else len(GUARD_KEYS))
             finally:
                 (self.rank_tolerance, self.keep_per_guard,
                  self.keep_by_path, self.relative_floor) = saved
@@ -581,7 +617,8 @@ class FrontierModel(RuleBasedModel):
     def _induce(self, atoms: Sequence[tuple], path_vals: Sequence[tuple],
                 ans: Sequence[int], fold: Sequence[int], *, head: str,
                 forms: tuple[str, ...] = ("const", "copy", "map"),
-                min_precision: float | None = None) -> list[_Rule]:
+                min_precision: float | None = None,
+                n_keys: int = len(GUARD_KEYS)) -> list[_Rule]:
         # The type head answers over eight types, not 8,192 symbols, so a rule
         # right 40% of the time there is real evidence where the same number on
         # the label head is noise. Sharing one threshold made the type head
@@ -598,7 +635,7 @@ class FrontierModel(RuleBasedModel):
         # over 100k fills is a handful of vectorised comparisons rather than a
         # Python loop per rule. The raw values are kept on the rule itself,
         # because prediction sees raw atoms and never this coding.
-        codes, code_of = self._encode(atoms)
+        codes, code_of = self._encode(atoms, n_keys)
 
         kept: list[_Rule] = []
         residual = np.arange(n)
@@ -610,7 +647,9 @@ class FrontierModel(RuleBasedModel):
             fresh: list[_Rule] = []
             proposed = 0
             for size in sizes:
-                for keys in itertools.combinations(range(len(GUARD_KEYS)), size):
+                if size > n_keys:
+                    continue
+                for keys in itertools.combinations(range(n_keys), size):
                     got = self._sweep(keys, atoms, pv, av, fv, fires, copy_ok,
                                       residual, seen, forms, floor)
                     proposed += got[0]
@@ -647,9 +686,10 @@ class FrontierModel(RuleBasedModel):
         return kept
 
     @staticmethod
-    def _encode(atoms: Sequence[tuple]) -> tuple[np.ndarray, list[dict]]:
+    def _encode(atoms: Sequence[tuple],
+                n_keys: int = len(GUARD_KEYS)) -> tuple[np.ndarray, list[dict]]:
         """Guard atoms as integer columns, plus the value -> code maps."""
-        n, k = len(atoms), len(GUARD_KEYS)
+        n, k = len(atoms), n_keys
         codes = np.zeros((k, n), dtype=np.int64)
         code_of: list[dict] = [dict() for _ in range(k)]
         for j in range(k):
@@ -1022,7 +1062,8 @@ class FrontierModel(RuleBasedModel):
             # the label head's is the mistake this repo has paid for four times,
             # most expensively as -1.96 type lift on three models at once.
             tvals = _path_types(view, i)
-            trule = self._fire(self.type_rules, atoms, tvals)
+            tatoms = _type_guard_atoms(view, i) if self.type_atoms else atoms
+            trule = self._fire(self.type_rules, tatoms, tvals)
             type_vote: Votes = ABSTAIN
             if trule is not None:
                 tpred = trule.resolve(tvals)
@@ -1261,7 +1302,8 @@ class FrontierSoftModel(FrontierBothModel):
                 if gate > 0.0:
                     label_vote = ({k: v / total for k, v in mass.items()}, gate)
             tvals = _path_types(view, i)
-            trule = self._fire(self.type_rules, atoms, tvals)
+            tatoms = _type_guard_atoms(view, i) if self.type_atoms else atoms
+            trule = self._fire(self.type_rules, tatoms, tvals)
             type_vote: Votes = ABSTAIN
             if trule is not None:
                 tpred = trule.resolve(tvals)
@@ -1513,7 +1555,46 @@ class FrontierTwoHeadModel(FrontierRelativeModel):
 
     def __init__(self, cfg: ModelConfig) -> None:
         super().__init__(cfg)
+        self.type_head_settings = cfg.get("type_head_settings", None)
         self.type_head_settings = cfg.get("type_head_settings", None) or (0.0, 1, False, False)
+
+
+@register("frontier-010",
+          doc="frontier-009 with the type head induced over its own eight atoms.")
+class FrontierTypeAtomsModel(FrontierTwoHeadModel):
+    """Give the type head the two atoms `corefer-001` has and this one lacked.
+
+    `frontier-009` stopped the label head's *knobs* reaching the type head and
+    recovered its lift to +0.036. It left the type head with the label head's
+    **atoms**, which is the other half of the same mistake: the six guard atoms
+    were chosen for predicting symbols.
+
+    `corefer-001` is the only rule-based model that clears the 0.8601 type floor
+    by more than a rounding error (+0.612), and its key is
+    ``(ptype, slot, depth, arity, sibling type, pointed type)``. Measured before
+    building, and it rules out the obvious explanation: **the pointer is not
+    where its advantage comes from.** The *oracle* coreferent — a visible node
+    carrying the true label — predicts the type only **0.560** of the time and
+    unions with this model to 0.888, which is below what a plain label→type
+    lookup already reaches (0.897 union). What `corefer` has and this did not is
+    the richer structural key.
+
+    So the type head induces over :data:`TYPE_GUARD_KEYS`: the same six plus the
+    node's own **arity** and its commonest **sibling type**. A strict superset,
+    so the label head is untouched by construction.
+
+    **Predicted before running:** ``type_acc`` rises above `frontier-009`'s
+    0.8652 and its lift above +0.036, toward but not to `corefer`'s 0.9458 —
+    which also has the pointed-at type as a seventh conjunct. Label numbers
+    identical to `frontier-008`/`-009` (0.4414, 7.141), because nothing in the
+    label head moved. Refuted if the label numbers shift at all, or if type does
+    not move — the latter would say the atoms were not what `corefer` had either,
+    and the search for its advantage should start again.
+    """
+
+    def __init__(self, cfg: ModelConfig) -> None:
+        super().__init__(cfg)
+        self.type_atoms = bool(cfg.get("type_atoms", True))
 
 
 @register("frontier-nomap",

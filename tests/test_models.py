@@ -541,7 +541,10 @@ def test_a_knob_added_for_one_model_does_not_change_another(cfg):
     from symbolic_ai_models.models import build
     from symbolic_ai_models.models.registry import model_names
 
-    pinned = {"frontier-009"}
+    # Models that deliberately pin the type head. `frontier-010` inherits the
+    # pin from `-009`; the set is written out rather than derived so that a new
+    # model acquiring a pinned type head has to be added here on purpose.
+    pinned = {"frontier-009", "frontier-010"}
     for name in model_names():
         if not name.startswith("frontier"):
             continue
