@@ -1,0 +1,42 @@
+label: 512 rules  const=118, copy=80, map=314
+type: 345 rules  const=188, copy=157, map=0
+  round 0 [label]: 370 guards, 123 kept, 64731/86898 fills still wrong
+  round 1 [label]: 2265 guards, 652 kept, 58501/86898 fills still wrong
+  round 2 [label]: 5428 guards, 1609 kept, 56271/86898 fills still wrong
+  round 0 [type]: 370 guards, 740 kept, 20347/86898 fills still wrong
+  round 1 [type]: 1241 guards, 2481 kept, 17654/86898 fills still wrong
+  round 2 [type]: 2824 guards, 5645 kept, 16862/86898 fills still wrong
+top label hypotheses:
+  [phead=280] -> copy:parent  p=1.000 n=28 dl=1
+  [phead=738] -> copy:parent  p=1.000 n=24 dl=1
+  [phead=6267] -> copy:sib@1  p=1.000 n=16 dl=1
+  [depth=3, kids=True] -> copy:sib@0  p=0.824 n=10986 dl=2
+  [ptype='list', kids=True] -> copy:sib@0  p=0.819 n=10179 dl=2
+  [depth=3, nsib=3] -> copy:sib@1  p=0.850 n=3045 dl=2
+  [ptype='str', nsib=0] -> copy:parent  p=1.000 n=255 dl=2
+  [depth=6, kids=True] -> copy:sib@2  p=0.965 n=143 dl=2
+  [phead=5861, kids=True] -> copy:sib@1  p=1.000 n=24 dl=2
+  [slot=2, depth=3, kids=True] -> copy:prev  p=0.881 n=2573 dl=3
+  [slot=7, depth=3, kids=False] -> copy:prev  p=0.830 n=2526 dl=3
+  [slot=0, depth=3, kids=True] -> copy:sib@1  p=0.886 n=2519 dl=3
+  [ptype='list', nsib=3, kids=True] -> copy:sib@2  p=0.976 n=2486 dl=3
+  [ptype='list', slot=0, kids=True] -> copy:sib@1  p=0.894 n=2467 dl=3
+  [ptype='list', slot=2, kids=True] -> copy:prev  p=0.887 n=2412 dl=3
+  [ptype='list', slot=7, kids=False] -> copy:sib@1  p=0.823 n=2236 dl=3
+  [slot=3, depth=3, kids=True] -> copy:prev  p=0.905 n=2012 dl=3
+  [ptype='list', slot=3, kids=True] -> copy:prev  p=0.898 n=1867 dl=3
+  [ptype='list', slot=3, depth=3] -> copy:sib@1  p=0.820 n=1690 dl=3
+  [ptype='mask', depth=3, kids=True] -> copy:sib@1  p=0.831 n=1651 dl=3
+surviving map rules: 314
+  [phead=6016] -> map:sib@0  p=1.000 n=18 dl=3
+      |m|=1  X->Y
+  [phead=5822, slot=1] -> map:sib@2  p=1.000 n=31 dl=4
+      |m|=1  e3->e2
+  [phead=5937, slot=1] -> map:sib@2  p=1.000 n=27 dl=4
+      |m|=1  <unk>->head
+  [phead=5861, slot=1] -> map:sib@3  p=1.000 n=25 dl=4
+      |m|=1  winner_pays->tie_to
+  [phead=5822, slot=0] -> map:sib@2  p=1.000 n=17 dl=4
+      |m|=1  e3->e1
+  [phead=5917, depth=5] -> map:sib@0  p=1.000 n=17 dl=4
+      |m|=1  x->implies

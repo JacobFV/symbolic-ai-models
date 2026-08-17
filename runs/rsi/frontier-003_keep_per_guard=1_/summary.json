@@ -1,0 +1,125 @@
+{
+  "config": {
+    "model": "frontier-003",
+    "tasks": [
+      "node"
+    ],
+    "task_weights": {
+      "node": 1.0
+    },
+    "data": null,
+    "lessons": "all",
+    "n_train": 20,
+    "n_eval": 4,
+    "eval_seed0": 500000,
+    "language": "english",
+    "languages": "",
+    "curriculum": "base",
+    "max_len": 320,
+    "max_nodes": 128,
+    "mask_rate": 0.15,
+    "type_weight": 0.5,
+    "vocab_size": 8192,
+    "label_vocab_fraction": 0.3,
+    "d_model": 96,
+    "n_layers": 3,
+    "n_heads": 4,
+    "d_ff": 256,
+    "dropout": 0.1,
+    "extra": {
+      "keep_per_guard": 1
+    },
+    "steps": 2000,
+    "batch_size": 16,
+    "lr": 0.0003,
+    "min_lr_ratio": 0.1,
+    "warmup": 100,
+    "weight_decay": 0.01,
+    "grad_clip": 1.0,
+    "eval_every": 250,
+    "log_every": 50,
+    "seed": 0,
+    "resume": false,
+    "device": "cpu",
+    "amp": true,
+    "out": "/home/brandonin/Documents/symbolic-ai-models/runs/rsi/frontier-003_keep_per_guard=1_"
+  },
+  "model_config": {
+    "vocab_size": 8192,
+    "d_model": 96,
+    "n_layers": 3,
+    "n_heads": 4,
+    "d_ff": 256,
+    "dropout": 0.1,
+    "max_len": 328,
+    "max_nodes": 128,
+    "extra": {
+      "keep_per_guard": 1
+    }
+  },
+  "model": "frontier-003",
+  "family": "rule-based",
+  "steps": 0,
+  "parameters": 79450,
+  "n_train": 3580,
+  "n_eval": 716,
+  "vocab_size": 8192,
+  "floors": {
+    "node": {
+      "type_acc": 0.8629199016815575,
+      "type_bits": 2.3240699140957304,
+      "type_n": 51262.0,
+      "label_acc": 0.1424216442793179,
+      "label_bits": 9.353242370636956,
+      "label_n": 41988.0,
+      "copy_acc": 0.2638989942221271,
+      "rsymbol_acc": 0.1424216442793179,
+      "rsymbol_bits": 9.353242370636956,
+      "rsymbol_n": 41988.0,
+      "rnode_acc": 0.2638989942221271
+    }
+  },
+  "temperature": 1.1,
+  "final": {
+    "node": {
+      "label_acc": 0.40642939150401836,
+      "label_bits": 7.354985476513584,
+      "label_n": 5226.0,
+      "type_acc": 0.8573446327683616,
+      "type_bits": 1.0526349871085305,
+      "type_n": 6372.0,
+      "label_coverage": 0.82015065913371,
+      "copy_ceiling": 0.7091465748182166,
+      "copy_censored": 504.0,
+      "rsymbol_acc": 0.40642939150401836,
+      "rsymbol_bits": 7.354985476513584,
+      "rsymbol_n": 5226.0,
+      "label_floor": 0.1424216442793179,
+      "label_lift": 0.3078526241521529,
+      "type_floor": 0.8629199016815575,
+      "type_lift": -0.04067161449099898,
+      "rsymbol_floor": 0.1424216442793179,
+      "rsymbol_lift": 0.3078526241521529,
+      "label_floor_bits": 9.353242370636956,
+      "label_bits_lift": 0.21364322819181794,
+      "type_floor_bits": 2.3240699140957304,
+      "type_bits_lift": 0.5470725812832963,
+      "rsymbol_floor_bits": 9.353242370636956,
+      "rsymbol_bits_lift": 0.21364322819181794
+    }
+  },
+  "seconds": 46.664040327072144,
+  "device": "cpu",
+  "renaming": {
+    "label_acc": 0.4029907286167145,
+    "renamed_label_acc": 0.03198939934372902,
+    "drop": 0.37100132927298546,
+    "symbols": 2076.0
+  },
+  "masking": {
+    "mask_mode": "scatter",
+    "mask_rate": 0.15,
+    "fit_mask_rate": 0.15,
+    "fit_mask_mode": "scatter"
+  }
+}

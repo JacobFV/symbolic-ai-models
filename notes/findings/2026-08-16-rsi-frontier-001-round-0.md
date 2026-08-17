@@ -19,6 +19,10 @@ frontier-001[frontier_repeats=2]               0.3986      7.462   0.0322  0.364
 frontier-001                                   0.4064      7.355   0.0320  0.3710   0.8573
 frontier-001[min_support=12]                   0.4064      7.355   0.0320  0.3710   0.8573
 frontier-001[min_support=24]                   0.4005      7.427   0.0320  0.3651   0.8514
+frontier-001[propose_support=2]                0.4080      7.339   0.0320  0.3733   0.8591
+frontier-001[propose_support=3]                0.4078      7.341   0.0320  0.3731   0.8589
+frontier-001[propose_support=4]                0.4076      7.342   0.0320  0.3731   0.8588
+frontier-001[propose_support=6]                0.4070      7.344   0.0320  0.3718   0.8580
 frontier-001[min_precision=0.5]                0.4064      7.355   0.0320  0.3710   0.8573
 frontier-001[max_rules=400]                    0.4045      7.377   0.0320  0.3695   0.8404
 frontier-001[max_rules=2000]                   0.4064      7.355   0.0320  0.3710   0.8573
@@ -42,6 +46,10 @@ ranked by `equivariant`. `renamed` is accuracy after permuting every symbol with
 - **`frontier-001`** — the registered defaults, as the baseline every other row is read against
 - **`frontier-001[min_support=12]`** — one knob moved: min_support=12. A coordinate sweep says which knobs move anything at all before any pair of them is tried together.
 - **`frontier-001[min_support=24]`** — one knob moved: min_support=24. A coordinate sweep says which knobs move anything at all before any pair of them is tried together.
+- **`frontier-001[propose_support=2]`** — one knob moved: propose_support=2. A coordinate sweep says which knobs move anything at all before any pair of them is tried together.
+- **`frontier-001[propose_support=3]`** — one knob moved: propose_support=3. A coordinate sweep says which knobs move anything at all before any pair of them is tried together.
+- **`frontier-001[propose_support=4]`** — one knob moved: propose_support=4. A coordinate sweep says which knobs move anything at all before any pair of them is tried together.
+- **`frontier-001[propose_support=6]`** — one knob moved: propose_support=6. A coordinate sweep says which knobs move anything at all before any pair of them is tried together.
 - **`frontier-001[min_precision=0.5]`** — one knob moved: min_precision=0.5. A coordinate sweep says which knobs move anything at all before any pair of them is tried together.
 - **`frontier-001[max_rules=400]`** — one knob moved: max_rules=400. A coordinate sweep says which knobs move anything at all before any pair of them is tried together.
 - **`frontier-001[max_rules=2000]`** — one knob moved: max_rules=2000. A coordinate sweep says which knobs move anything at all before any pair of them is tried together.

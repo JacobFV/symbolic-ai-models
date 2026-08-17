@@ -215,6 +215,22 @@ SPACES: dict[str, dict[str, list[Any]]] = {
         "resolver_forms": [["const", "copy", "map"], ["const", "copy"],
                            ["copy", "map"]],
     },
+    # The two knobs that came out of the guard/resolver investigation. Both
+    # trade plain accuracy for the accuracy that survives a symbol permutation,
+    # which is what the default `equivariant` objective is defined on, so this
+    # is the space the loop is actually useful over.
+    # `vote_sharpness` interpolates the readout between a full conclusion mass
+    # (low) and `frontier-003`'s decision list (high), so this is the curve that
+    # says how much of the bits gap is the readout.
+    "frontier-soft": {
+        "vote_sharpness": [0.5, 1.0, 2.0, 4.0, 8.0],
+        "max_voters": [8, 24, 64],
+    },
+    "frontier-003": {
+        "rank_tolerance": [0.0, 0.02, 0.05, 0.10, 0.20],
+        "keep_per_guard": [1, 2, 3],
+        "min_precision": [0.3, 0.5, 0.7],
+    },
 }
 
 

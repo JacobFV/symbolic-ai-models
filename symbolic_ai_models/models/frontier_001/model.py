@@ -283,10 +283,10 @@ class _Rule:
     """
 
     __slots__ = ("guard", "form", "path", "table", "const", "precision",
-                 "score", "support", "dl", "fold_table")
+                 "score", "support", "dl", "fold_table", "tol")
 
     def __init__(self, guard: tuple, form: str, path: int, precision: float,
-                 score: float, support: int, dl: int) -> None:
+                 score: float, support: int, dl: int, tol: float = 0.0) -> None:
         self.guard = guard
         self.form = form
         self.path = path
@@ -304,6 +304,9 @@ class _Rule:
         #: driving the next round is computed out of fold like everything else;
         #: :attr:`table` is the deployed one, fitted on both.
         self.fold_table: list[dict[int, int]] = [{}, {}]
+        #: Width below which two verified precisions are not treated as
+        #: different. 0.0 reproduces the published ranking exactly.
+        self.tol = tol
 
     @property
     def rank(self) -> tuple:
@@ -314,7 +317,21 @@ class _Rule:
         between a one-atom guard and a three-atom one is how a model ends up
         carrying rules it cannot justify.
         """
-        return (-round(self.score, 3), self.dl, -self.support, len(self.guard))
+        # Coarser rounding is the whole of the tolerance band: two scores
+        # inside one bucket tie, and the next key -- description length -- then
+        # decides. A `copy` has dl 0 and a `map` has one entry per table key, so
+        # a tie resolves toward the renaming-invariant resolver.
+        #
+        # It exists because of what `frontier-001` does under a symbol
+        # permutation: 1,031 of its map rules still fire, because the
+        # permutation lands a symbol on another symbol that IS in the table, and
+        # **9.4% of those firings are right**. A rule that is confidently wrong
+        # is worse than one that declines, and worse again than a copy that
+        # would have been right -- but rank is precision-first, so a map ahead
+        # of a copy by 0.004 of held-out precision takes every fill they share.
+        q = (-round(self.score, 3) if self.tol <= 0.0
+             else -math.floor(self.score / self.tol))
+        return (q, self.dl, -self.support, len(self.guard))
 
     def matches(self, atoms: tuple) -> bool:
         return all(atoms[k] == v for k, v in self.guard)
@@ -423,6 +440,11 @@ class FrontierModel(RuleBasedModel):
         #: the population its guard admits, and an average cannot see a
         #: sub-population.
         self.keep_per_guard = int(cfg.get("keep_per_guard", 1))
+        #: Width of the band inside which two verified precisions count as
+        #: equal, so that the description-length tie-break — which prefers a
+        #: renaming-invariant ``copy`` over a symbol-keyed ``map`` — gets to
+        #: decide. 0.0 is the published ranking and changes nothing.
+        self.rank_tolerance = float(cfg.get("rank_tolerance", 0.0))
         #: Cap on the rule set, applied after the reachability filter in
         #: :meth:`_useful`, so it bounds the rules that answer something
         #: rather than the rules that sort first.
@@ -683,7 +705,8 @@ class FrontierModel(RuleBasedModel):
                 continue
             cost = int(dl[g]) if isinstance(dl, np.ndarray) else int(dl)
             rule = _Rule(guards[g], form, path, float(precision),
-                         float(scores[g]), int(fired[g]), cost + len(guards[g]))
+                         float(scores[g]), int(fired[g]), cost + len(guards[g]),
+                         self.rank_tolerance)
             if tables is not None:
                 rule.fold_table = [dict(tables[g][0]), dict(tables[g][1])]
             current = best[g].get(form)
@@ -1003,6 +1026,141 @@ class FrontierBothModel(FrontierModel):
     def __init__(self, cfg: ModelConfig) -> None:
         super().__init__(cfg)
         self.keep_per_guard = int(cfg.get("keep_per_guard", 3))
+
+
+@register("frontier-004",
+          doc="frontier-003 plus a tolerance band that resolves near-ties toward the copy.")
+class FrontierTolerantModel(FrontierBothModel):
+    """Treat precisions within a band as equal and let brevity break the tie.
+
+    Rank is precision-first, so a ``map`` ahead of a ``copy`` by a few
+    thousandths of held-out precision takes every fill the two share. That is
+    the right call on the training distribution and the wrong one under a symbol
+    permutation, where the map's table keys are stale: measured on
+    ``frontier-001``, 1,031 map rules still fire after a renaming — the
+    permutation lands symbols on other symbols the table happens to hold — and
+    **9.4% of those firings are correct**.
+
+    A band makes near-ties resolve on description length instead, and a ``copy``
+    has none. It is the same idea as
+    ``notes/lessons/2026-08-14-record-the-curve-not-the-argmax.md``: a difference
+    inside the noise of a held-out estimate is not a difference, and letting it
+    choose is how a model ends up carrying rules it cannot justify.
+
+    **Predicted before running:** ``renamed`` rises above ``frontier-003``'s
+    0.2149 and plain ``label_acc`` falls — this trades exactly the quantity the
+    band is defined on. Refuted if plain accuracy is unchanged *and* renamed does
+    not move, which would mean no near-ties between forms exist and the band is
+    inert. A large drop in plain accuracy for no renamed gain refutes it the
+    other way.
+    """
+
+    def __init__(self, cfg: ModelConfig) -> None:
+        super().__init__(cfg)
+        self.rank_tolerance = float(cfg.get("rank_tolerance", 0.05))
+
+
+@register("frontier-soft",
+          doc="frontier-003's rules read as a conclusion mass instead of a decision list.")
+class FrontierSoftModel(FrontierBothModel):
+    """Every matching rule votes, weighted by what it verified at.
+
+    The two live findings of the last two days, put together. `SoftReason`'s
+    transferable part turned out to be **emitting the closure as a distribution**
+    rather than the fixpoint it was named for — ``softreason-onehop`` is second
+    of twenty-six on ``label_bits`` for that one change. `frontier-003`'s is that
+    keeping the renaming-invariant rules alongside the memorising ones is worth
+    6.2x the equivariance for 0.0002 of accuracy.
+
+    `frontier-001` is eleventh of twenty-four on bits precisely because it is a
+    decision list: the highest-ranked matching rule fires, its whole vote lands
+    on one symbol, and when it is wrong the mass on the truth is whatever the
+    back-off had. Being unsure between two candidates and being wrong are the
+    same observation to it. So here the rule set is read as a **weighted
+    conclusion set** instead — every matching rule that resolves contributes
+    ``score ** sharpness`` to its own prediction, and the gate is fitted on how
+    peaked the result is.
+
+    Nothing about the induction changes. Same guards, same cross-fit, same
+    lattice, same rules — only the readout, which is what makes the comparison
+    against ``frontier-003`` a measurement of the readout and of nothing else.
+
+    **Predicted before running:** ``label_bits`` improves substantially against
+    ``frontier-003``'s 7.445, because that number is made of exactly the
+    behaviour this removes. ``label_acc`` moves little and in either direction —
+    weighting cannot reorder a single rule's vote, it can only reorder which rule
+    wins a contested fill. Refuted if bits do not improve, which would say the
+    decision list was not what was costing them.
+    """
+
+    def __init__(self, cfg: ModelConfig) -> None:
+        super().__init__(cfg)
+        #: Exponent on each rule's verified score. Higher is closer to
+        #: winner-takes-all, so this knob interpolates back toward
+        #: ``frontier-003``'s decision list and makes the readout comparison a
+        #: curve rather than two points.
+        self.sharpness = float(cfg.get("vote_sharpness", 4.0))
+        #: How many matching rules may vote. Bounded because prediction walks
+        #: the rule list per hidden node.
+        self.max_voters = int(cfg.get("max_voters", 24))
+
+    def _mass(self, atoms: tuple, vals: tuple) -> dict[int, float]:
+        mass: dict[int, float] = collections.defaultdict(float)
+        seen = 0
+        for rule in self.rules:
+            if seen >= self.max_voters:
+                break
+            if not rule.matches(atoms):
+                continue
+            pred = rule.resolve(vals)
+            if pred is None:
+                continue
+            seen += 1
+            mass[int(pred)] += max(rule.score, 0.0) ** self.sharpness
+        return dict(mass)
+
+    def _fit_gate(self, episodes: Sequence[Episode],
+                  tok: SymbolTokenizer) -> None:
+        """Fitted on how peaked the mass is, which is what it is now claiming."""
+        scores: list[float] = []
+        votes: list[float] = []
+        backoff: list[float] = []
+        for view, targets in self.training_views(
+                episodes, tok, repeats=1, seed=7, max_nodes=self.cfg.max_nodes):
+            for node, (label_id, _) in targets.items():
+                if label_id is None or label_id < 0:
+                    continue
+                mass = self._mass(_guard_atoms(view, node), _path_labels(view, node))
+                total = sum(mass.values())
+                if total <= 0.0:
+                    continue
+                scores.append(max(mass.values()) / total)
+                votes.append(mass.get(int(label_id), 0.0) / total)
+                backoff.append(self.backoff_prob(view, node, int(label_id)))
+        if scores:
+            self.gate_map = MassCalibrator().fit(scores, votes, backoff)
+
+    def node_votes(self, view: GraphView) -> dict[int, tuple[Votes, Votes]]:
+        out: dict[int, tuple[Votes, Votes]] = {}
+        for i in view.hidden:
+            atoms = _guard_atoms(view, i)
+            mass = self._mass(atoms, _path_labels(view, i))
+            total = sum(mass.values())
+            label_vote: Votes = ABSTAIN
+            if total > 0.0 and self.gate_map.fitted:
+                gate = float(self.gate_map(max(mass.values()) / total))
+                if gate > 0.0:
+                    label_vote = ({k: v / total for k, v in mass.items()}, gate)
+            tvals = _path_types(view, i)
+            trule = self._fire(self.type_rules, atoms, tvals)
+            type_vote: Votes = ABSTAIN
+            if trule is not None:
+                tpred = trule.resolve(tvals)
+                if tpred is not None:
+                    type_vote = ({int(tpred): 1.0},
+                                 min(0.15 + 0.8 * trule.score, 0.95))
+            out[i] = (label_vote, type_vote)
+        return out
 
 
 @register("frontier-nomap",

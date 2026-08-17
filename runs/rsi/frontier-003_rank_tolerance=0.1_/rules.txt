@@ -1,0 +1,42 @@
+label: 534 rules  const=110, copy=74, map=350
+type: 508 rules  const=278, copy=230, map=0
+  round 0 [label]: 370 guards, 123 kept, 63929/86898 fills still wrong
+  round 1 [label]: 2260 guards, 646 kept, 57370/86898 fills still wrong
+  round 2 [label]: 5372 guards, 1540 kept, 54760/86898 fills still wrong
+  round 0 [type]: 370 guards, 740 kept, 19111/86898 fills still wrong
+  round 1 [type]: 1123 guards, 2245 kept, 12660/86898 fills still wrong
+  round 2 [type]: 1967 guards, 3931 kept, 11461/86898 fills still wrong
+top label hypotheses:
+  [ptype='str', nsib=0] -> copy:parent  p=1.000 n=255 dl=2
+  [depth=6, kids=True] -> copy:sib@2  p=0.965 n=143 dl=2
+  [depth=3, nsib=3, kids=True] -> copy:sib@1  p=0.960 n=2647 dl=3
+  [ptype='list', nsib=3, kids=True] -> copy:sib@2  p=0.976 n=2486 dl=3
+  [ptype='list', slot=1, kids=True] -> copy:sib@2  p=0.915 n=2116 dl=3
+  [depth=5, nsib=2, kids=True] -> copy:sib@1  p=0.989 n=183 dl=3
+  [phead=5745, depth=6, kids=True] -> copy:psib@1  p=1.000 n=40 dl=3
+  [phead=6267] -> const  p=1.000 n=36 dl=3
+  [phead=5828, slot=2] -> const  p=1.000 n=90 dl=4
+  [phead=5828, slot=1] -> const  p=1.000 n=66 dl=4
+  [phead=5868, slot=0] -> const  p=1.000 n=61 dl=4
+  [phead=5861, kids=True] -> const  p=1.000 n=57 dl=4
+  [ptype='field', phead=1971] -> const  p=1.000 n=38 dl=4
+  [phead=5828, slot=4] -> const  p=1.000 n=37 dl=4
+  [phead=5822, slot=2] -> const  p=1.000 n=36 dl=4
+  [phead=5828, slot=3, nsib=3] -> const  p=1.000 n=37 dl=5
+  [ptype='record', slot=1, depth=4] -> map:sib@0  p=1.000 n=57 dl=7
+  [depth=8, kids=True] -> map:sib@1  p=1.000 n=52 dl=8
+  [phead=3600] -> map:sib@0  p=1.000 n=72 dl=9
+  [phead=5745, kids=True] -> map:sib@0  p=1.000 n=120 dl=10
+surviving map rules: 350
+  [ptype='record', slot=1, depth=4] -> map:sib@0  p=1.000 n=57 dl=7
+      |m|=2  curriculum->syllabus, dynamics->ontology
+  [depth=8, kids=True] -> map:sib@1  p=1.000 n=52 dl=8
+      |m|=3  pow->pow, mul->sub, sub->sub
+  [phead=3600] -> map:sib@0  p=1.000 n=72 dl=9
+      |m|=4  e1->set, e2->set, e3->set, e4->set
+  [phead=5745, kids=True] -> map:sib@0  p=1.000 n=120 dl=10
+      |m|=4  mul->mul, add->mul, div->mul, sub->mul
+  [ptype='pred', slot=2, kids=True] -> map:sib@3  p=1.000 n=138 dl=11
+      |m|=4  set->set, payoff_if_success->success_percent, time->value, payoff->success_percent
+  [ptype='pred', slot=1, kids=True] -> map:sib@3  p=1.000 n=128 dl=11
+      |m|=4  set->set, payoff_if_success->cost, time->weight, payoff->cost
