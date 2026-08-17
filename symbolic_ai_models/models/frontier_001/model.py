@@ -219,8 +219,84 @@ PATHS: tuple[tuple, ...] = (
 #: recorded here because a search space is a fitted parameter of the result.
 MAP_PATHS: tuple[int, ...] = (0, 3, 4, 5, 6)
 
+#: An eleventh path whose node is *chosen* rather than addressed. Every path in
+#: :data:`PATHS` is a fixed structural offset, and measured on renamed episodes
+#: the whole set reaches the answer on only **0.4124** of copyable fills while
+#: `corefer-001` scores **0.4920** — above the ceiling. So the gap is not search,
+#: and no reordering of fixed offsets can close it.
+#:
+#: Appending the pointer as a *path* rather than as a new resolver form is what
+#: makes it cheap: guards, the cross-fit, the ranking, the MDL tie-break and the
+#: per-key gate all apply to it unchanged, and ``copy:point`` is then exactly
+#: "copy whatever the pointer chose".
+POINT_PATH: tuple = ("point",)
+
+#: ``PATHS`` plus the chosen one, so index ``k`` names the same path whether or
+#: not a model has a pointer and a rule renders without carrying its own list.
+_ALL_PATHS: tuple = PATHS + (POINT_PATH,)
+
 #: A path that is hidden, absent, or a type that does not exist.
 MISSING = -1
+
+
+class _Pointer:
+    """`corefer`'s stage one and nothing else: naive Bayes over pairwise features.
+
+    Deliberately the weaker half of that model. `corefer` adds a prose feature
+    and a second reranking stage, and this has neither — the question here is
+    whether *ranging over every visible node* lifts the ceiling at all, not
+    whether this repo can rebuild `corefer` inside another model.
+
+    The features are its three near-independent ones, symbol-free: how the two
+    nodes are related, how far apart they are, and in which direction. Counting
+    the relation once rather than as four correlated booleans is
+    `corefer-001`'s own hard-won lesson and is copied deliberately.
+    """
+
+    __slots__ = ("weights", "prior")
+
+    def __init__(self) -> None:
+        self.weights: dict[tuple, float] = {}
+        self.prior = 0.0
+
+    @staticmethod
+    def features(view: GraphView, i: int, j: int) -> tuple:
+        pi, pj = view.parent[i], view.parent[j]
+        head_i = view.labels[pi] if pi >= 0 else None
+        head_j = view.labels[pj] if pj >= 0 else None
+        if head_i is not None and head_i == head_j and view.slot[i] == view.slot[j]:
+            rel = "same_head_same_slot"
+        elif pi >= 0 and pi == pj:
+            rel = "sibling"
+        elif head_i is not None and head_i == head_j:
+            rel = "same_head"
+        elif view.depth[i] == view.depth[j]:
+            rel = "same_depth"
+        else:
+            rel = "other"
+        delta = i - j
+        dist = min(int(math.log2(abs(delta))) if delta else 0, 6)
+        q = ((view.types[pi] if pi >= 0 and view.types[pi] else "ROOT"),
+             min(view.slot[i], 6))
+        return (("rel", rel), ("dist", dist), ("dir", delta > 0),
+                ("q_rel", (q, rel)), ("q_dist", (q, dist)))
+
+    def score(self, view: GraphView, i: int, j: int) -> float:
+        return self.prior + sum(self.weights.get(f, 0.0)
+                                for f in self.features(view, i, j))
+
+    def pick(self, view: GraphView, i: int) -> int:
+        """The visible node most likely to carry ``i``'s symbol, or -1."""
+        if not self.weights:
+            return -1
+        best, best_s = -1, -math.inf
+        for j in range(len(view)):
+            if j == i or view.labels[j] is None:
+                continue
+            s = self.score(view, i, j)
+            if s > best_s:
+                best, best_s = j, s
+        return best
 
 #: Normal deviate for the lower confidence bound a hypothesis is ranked by.
 Z = 1.96
@@ -475,7 +551,7 @@ class _Rule:
         if self.form == "const":
             body = "const"
         else:
-            path = PATHS[self.path]
+            path = _ALL_PATHS[self.path]
             body = f"{self.form}:{path[0]}" + (
                 f"@{path[1]}" if len(path) > 1 else "")
         return (f"[{guard}] -> {body}  p={self.precision:.3f} "
@@ -491,7 +567,7 @@ def _modal(counts: dict[Any, collections.Counter]) -> dict[Any, int]:
 class FrontierModel(RuleBasedModel):
     """Induce guarded rules, verify them out of fold, refine on the residual."""
 
-    LEARNED = ("rules", "type_rules", "gate_map", "search_log")
+    LEARNED = ("rules", "type_rules", "gate_map", "search_log", "pointer")
 
     #: Guard widths each round may propose. Round one is global and cheap; the
     #: later two are the frontier and only see fills the kept rules still get
@@ -599,6 +675,15 @@ class FrontierModel(RuleBasedModel):
         #: Whether the type head gets a ninth atom: the type of the node the
         #: label head's own prediction points at. Off by default.
         self.type_pointer = bool(cfg.get("type_pointer", False))
+        #: A fitted pairwise scorer, or ``None``. When set it contributes an
+        #: eleventh *path* -- the node it chooses -- so `copy:point` becomes "copy
+        #: whatever the pointer picked" and everything else applies unchanged.
+        #: ``None`` for every published model, which is why they are untouched.
+        self.pointer: _Pointer | None = None
+        #: Whether to fit one at all.
+        self.use_pointer = bool(cfg.get("use_pointer", False))
+        #: Cap on training pairs for the pointer, as `corefer-001` has.
+        self.max_pointer_pairs = int(cfg.get("max_pointer_pairs", 200_000))
         #: How often an entry must have fired out of fold before it gets its own
         #: bound. Below this it falls back to the rule's score.
         self.key_min_count = int(cfg.get("key_min_count", 4))
@@ -631,6 +716,8 @@ class FrontierModel(RuleBasedModel):
         ans_type: list[int] = []
         fold: list[int] = []
 
+        if self.use_pointer:
+            self._fit_pointer(episodes, tok)
         for view, targets, idx in self.training_views(
                 episodes, tok, repeats=self.repeats, seed=11, with_index=True,
                 max_nodes=self.cfg.max_nodes):
@@ -639,8 +726,8 @@ class FrontierModel(RuleBasedModel):
                     continue
                 atoms.append(_guard_atoms(view, i))
                 tatoms.append(_type_guard_atoms(view, i))
-                labs.append(_path_labels(view, i))
-                types.append(_path_types(view, i))
+                labs.append(self._labels_at(view, i))
+                types.append(self._types_at(view, i))
                 ans_lab.append(int(label_id))
                 ans_type.append(int(type_id) if type_id is not None else MISSING)
                 # Split by episode, never by fill: one episode reappears under
@@ -862,7 +949,7 @@ class FrontierModel(RuleBasedModel):
                         self.abs_floor if self.relative_floor else floor, by_path)
 
         if "copy" in forms:
-            for p in range(len(PATHS)):
+            for p in range(self.n_paths):
                 f = np.bincount(gid, weights=fires[:, p], minlength=n_groups)
                 c = np.bincount(gid, weights=copy_ok[:, p], minlength=n_groups)
                 self._offer(best, guards, cand, c, f, "copy", p, 0, None, bar, by_path)
@@ -1151,6 +1238,69 @@ class FrontierModel(RuleBasedModel):
         rule.key_score = {int(k): float(b) for k, b, f in zip(keys, bound, fired)
                           if f >= self.key_min_count}
 
+    # ---- the paths, extended by the pointer when there is one ----------
+    @property
+    def n_paths(self) -> int:
+        return len(PATHS) + (1 if self.pointer is not None else 0)
+
+    def _labels_at(self, view: GraphView, i: int) -> tuple[int, ...]:
+        """:func:`_path_labels`, plus the label at the node the pointer chose."""
+        vals = _path_labels(view, i)
+        if self.pointer is None:
+            return vals
+        j = self.pointer.pick(view, i)
+        lab = view.labels[j] if j >= 0 else None
+        return vals + (MISSING if lab is None else int(lab),)
+
+    def _types_at(self, view: GraphView, i: int) -> tuple[int, ...]:
+        vals = _path_types(view, i)
+        if self.pointer is None:
+            return vals
+        j = self.pointer.pick(view, i)
+        t = view.types[j] if j >= 0 else None
+        return vals + (MISSING if t is None else int(TYPE_TO_ID.get(t, MISSING)),)
+
+    def _fit_pointer(self, episodes: Sequence[Episode],
+                     tok: SymbolTokenizer) -> None:
+        """Count each pairwise feature under coreference and under its absence.
+
+        Fitted before the rules, because every rule's paths read through it.
+        Negatives are every other visible node of the same graph rather than a
+        sample: the candidate set at prediction *is* every visible node, so
+        training on a subsample would fit a different problem — `corefer-001`'s
+        note on the same point.
+        """
+        pos: collections.Counter = collections.Counter()
+        neg: collections.Counter = collections.Counter()
+        n_pos = n_neg = seen = 0
+        for view, targets in self.training_views(
+                episodes, tok, repeats=1, seed=11,
+                max_nodes=self.cfg.max_nodes):
+            for i, (label_id, _t) in targets.items():
+                if label_id is None or label_id < 0 or label_id == tok.unk_id:
+                    continue
+                for j in range(len(view)):
+                    if j == i or view.labels[j] is None:
+                        continue
+                    if seen >= self.max_pointer_pairs:
+                        break
+                    seen += 1
+                    same = view.labels[j] == label_id
+                    bucket = pos if same else neg
+                    for f in _Pointer.features(view, i, j):
+                        bucket[f] += 1
+                    n_pos += same
+                    n_neg += not same
+        if not n_pos or not n_neg:
+            return
+        p = _Pointer()
+        p.weights = {
+            k: math.log((pos[k] + 1.0) / (n_pos + 2.0))
+            - math.log((neg[k] + 1.0) / (n_neg + 2.0))
+            for k in set(pos) | set(neg)}
+        p.prior = math.log(n_pos / n_neg)
+        self.pointer = p
+
     # ---- the gate -----------------------------------------------------
     def _fit_gate(self, episodes: Sequence[Episode],
                   tok: SymbolTokenizer) -> None:
@@ -1170,7 +1320,7 @@ class FrontierModel(RuleBasedModel):
             for node, (label_id, _) in targets.items():
                 if label_id is None or label_id < 0:
                     continue
-                vals = _path_labels(view, node)
+                vals = self._labels_at(view, node)
                 rule = self._fire(self.rules, _guard_atoms(view, node), vals)
                 if rule is None:
                     continue
@@ -1193,7 +1343,7 @@ class FrontierModel(RuleBasedModel):
         out: dict[int, tuple[Votes, Votes]] = {}
         for i in view.hidden:
             atoms = _guard_atoms(view, i)
-            vals = _path_labels(view, i)
+            vals = self._labels_at(view, i)
             label_vote: Votes = ABSTAIN
             rule = self._fire(self.rules, atoms, vals)
             if rule is not None:
@@ -1205,7 +1355,7 @@ class FrontierModel(RuleBasedModel):
             # The type head gets its own rules and its own confidence. Sharing
             # the label head's is the mistake this repo has paid for four times,
             # most expensively as -1.96 type lift on three models at once.
-            tvals = _path_types(view, i)
+            tvals = self._types_at(view, i)
             tatoms = self._type_atoms_at(view, i, atoms, vals)
             trule = self._fire(self.type_rules, tatoms, tvals)
             type_vote: Votes = ABSTAIN
@@ -1257,7 +1407,7 @@ class FrontierModel(RuleBasedModel):
                 if label_id is None or label_id < 0 or label_id == tok.unk_id:
                     continue
                 out.append(self._type_atoms_at(
-                    view, i, _guard_atoms(view, i), _path_labels(view, i)))
+                    view, i, _guard_atoms(view, i), self._labels_at(view, i)))
         return out
 
     # ---- reporting ----------------------------------------------------
@@ -1467,7 +1617,7 @@ class FrontierSoftModel(FrontierBothModel):
             for node, (label_id, _) in targets.items():
                 if label_id is None or label_id < 0:
                     continue
-                mass = self._mass(_guard_atoms(view, node), _path_labels(view, node))
+                mass = self._mass(_guard_atoms(view, node), self._labels_at(view, node))
                 total = sum(mass.values())
                 if total <= 0.0:
                     continue
@@ -1481,7 +1631,7 @@ class FrontierSoftModel(FrontierBothModel):
         out: dict[int, tuple[Votes, Votes]] = {}
         for i in view.hidden:
             atoms = _guard_atoms(view, i)
-            vals = _path_labels(view, i)
+            vals = self._labels_at(view, i)
             mass = self._mass(atoms, vals)
             total = sum(mass.values())
             label_vote: Votes = ABSTAIN
@@ -1489,7 +1639,7 @@ class FrontierSoftModel(FrontierBothModel):
                 gate = float(self.gate_map(max(mass.values()) / total))
                 if gate > 0.0:
                     label_vote = ({k: v / total for k, v in mass.items()}, gate)
-            tvals = _path_types(view, i)
+            tvals = self._types_at(view, i)
             tatoms = self._type_atoms_at(view, i, atoms, vals)
             trule = self._fire(self.type_rules, tatoms, tvals)
             type_vote: Votes = ABSTAIN
@@ -1946,8 +2096,8 @@ class FrontierTypeMassModel(FrontierTypeAtomsModel):
                     continue
                 atoms = self._type_atoms_at(
                      view, node, _guard_atoms(view, node),
-                     _path_labels(view, node))
-                tvals = _path_types(view, node)
+                     self._labels_at(view, node))
+                tvals = self._types_at(view, node)
                 rule = self._fire(self.type_rules, atoms, tvals)
                 if rule is None:
                     continue
@@ -2056,6 +2206,49 @@ class FrontierFloorTypeModel(FrontierTypePointModel):
         self.keep_by_path = bool(cfg.get("keep_by_path", False))
         self.keep_per_guard = int(cfg.get("keep_per_guard", 1))
         self.propose_support = int(cfg.get("propose_support", 0)) or self.min_support
+
+
+@register("frontier-point",
+          doc="frontier-typepoint with an eleventh path: the node a fitted pointer chooses.")
+class FrontierPointModel(FrontierTypePointModel):
+    """The one change that can pass the measured ceiling.
+
+    [[2026-08-17-frontiers-paths-cap-at-0412-and-corefer-is-already-past-it]]
+    measured that frontier's ten **fixed** paths reach the answer on only
+    **0.4124** of copyable fills under renaming, while `corefer-001` scores
+    **0.4920** — *above* the ceiling. Frontier was already at 74% of its own
+    ceiling, so no better search over fixed offsets can close the gap; only a
+    path that ranges over every visible node can.
+
+    So the pointer is added as a **path**, not as a new resolver form. Guards,
+    the cross-fit, the ranking, the MDL tie-break and the per-key gate then all
+    apply to it unchanged, and ``copy:point`` is exactly "copy whatever the
+    pointer chose".
+
+    The pointer is `corefer`'s stage one and nothing more — naive Bayes over
+    relation, distance and direction — with **neither** its prose feature nor its
+    reranking stage. That is deliberate: the question is whether ranging over
+    every node lifts the ceiling, not whether `corefer` can be rebuilt here.
+
+    **Predicted before running:**
+
+    1. the reachable ceiling rises above **0.4124**, because the pointer's chosen
+       node is not confined to ten offsets;
+    2. `renamed acc | copyable` rises above `frontier-typepoint`'s **0.306**;
+    3. `label_acc` rises above 0.4414;
+    4. it does **not** reach `corefer`'s 0.4920 renamed-copyable, because
+       `corefer`'s stage one alone picks the right node about 44% of the time and
+       its reranker is what takes it further.
+
+    Refuted if the renamed copyable score does not move: then ranging over every
+    node is not the constraint either, the ceiling measurement was answering a
+    different question than it appeared to, and I should stop adding to this
+    model.
+    """
+
+    def __init__(self, cfg: ModelConfig) -> None:
+        super().__init__(cfg)
+        self.use_pointer = bool(cfg.get("use_pointer", True))
 
 
 @register("frontier-nomap",

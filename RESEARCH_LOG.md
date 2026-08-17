@@ -450,6 +450,31 @@ paths on only **0.4124** of copyable fills. `frontier-typepoint` gets 0.3060 —
 `prev` do essentially all the work (0.21–0.29 each, heavily overlapping);
 `gparent` and the three `psib@k` reach almost nothing.
 
+**And adding the pointer inverts the diagnosis.** `frontier-point` adds it as an
+eleventh *path* — so guards, cross-fit, ranking and gate all apply unchanged, and
+`copy:point` is "copy whatever the pointer chose". It is `corefer`'s stage one
+with neither its prose feature nor its reranker. All four predictions held:
+
+| | fixed paths | with the pointer |
+|---|---:|---:|
+| reachable ceiling, renamed copyable | 0.4124 | **0.5200** |
+| renamed `acc \| copyable` | 0.306 | **0.340** |
+| `label_acc` | 0.4414 | **0.4460** |
+| `type_lift` | +0.062 | **+0.112** |
+
+**The ceiling is now 0.5200 and `corefer` scores 0.4920**, so for the first time
+frontier's language can express what `corefer` achieves and **the remaining gap
+is selection, not representation** — the opposite of every previous round's
+conclusion. Efficiency fell 74% → 65% of ceiling, which is the honest cost:
+widening the language left headroom the search is not taking.
+
+Two things fell out. The pointer's own top-1 is right on **0.4449** of copyable
+fills, against the **44%** `corefer-001`'s docstring records for its stage one —
+two separately written naive-Bayes pointers over the same three feature families
+agreeing to a fifth of a percent. And the *type* head improved without being
+aimed at, +0.062 → +0.112, because the pointer extends the type paths too and the
+pointed-at type is the whole of `corefer`'s type advantage.
+
 That is the **third** head to return the same diagnosis. The label head's
 derivability null was expressive, not procedural; the type head needed a pointer
 rather than a fourth column; and the copy head reaches 74% of what its paths

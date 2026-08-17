@@ -551,7 +551,7 @@ def test_a_knob_added_for_one_model_does_not_change_another(cfg):
     # being brittle.
     pinned = {"frontier-009", "frontier-010", "frontier-perkey",
               "frontier-typemass", "frontier-typepoint",
-              "frontier-floortype"}
+              "frontier-floortype", "frontier-point"}
     for name in model_names():
         if not name.startswith("frontier"):
             continue
