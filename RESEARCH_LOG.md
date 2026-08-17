@@ -555,6 +555,35 @@ on bits (8.431 against ~6.4)**: silencing `map` makes nodes abstain to the
 structural prior, so the renaming drop collapses to 0.0168 because there is
 barely a prediction left to lose. Rank on one number and that gets promoted.
 
+**"A fixed exchange rate" was wrong, and the check that killed it also settled
+whether the arc was pushing a constraint or sliding along one.** Taking all 44
+models with both columns as points in (`label_acc`, `renamed_label_acc`), the
+Pareto front is five models. Of 17 families, **15 sit strictly under it** — so
+the trade is a **model property, not a task constraint**, and the pointer arc was
+pushing. But the rate along the front is not fixed at all:
+
+| step | Δrenamed | Δacc | rate |
+|---|---:|---:|---:|
+| `frontier-floortype` → `frontier-point` | +0.2007 | −0.0015 | **0.007** |
+| → `frontier-pointsoft` | +0.0196 | −0.0090 | 0.459 |
+| → `frontier-pointflat` | +0.0511 | −0.0262 | 0.513 |
+| → `corefer-mass` | +0.0324 | −0.0535 | **1.651** |
+
+**235x**, and the trade is convex: the first 0.20 of equivariance is free and
+only the last stretch is expensive. That is the same error as calling the
+sharpness curve "flat" — reporting the shape of a curve from the segment I
+happened to sample — made twice in one day. It also reframes the 0.058 gap to
+`corefer` I had been treating as the target: it is the most expensive region of
+the entire front, and closing it by tuning is the worst available use of effort.
+
+Four of the five front models are this week's chain, in order, so every step was
+a real Pareto improvement. **The caveat matters more than the result**: effort
+predicts front membership almost perfectly. `frontier` (n=20) and `corefer`
+(n=3) hold the whole front while eleven of the fifteen families under it have
+exactly **one** registered model. That is evidence twenty attempts beat one, not
+that the architecture is better. `omegaclaw_rank-001` is **0.0015** under the
+front from three variants and is now the strongest untouched lead in the repo.
+
 That is the **third** head to return the same diagnosis. The label head's
 derivability null was expressive, not procedural; the type head needed a pointer
 rather than a fourth column; and the copy head reaches 74% of what its paths
