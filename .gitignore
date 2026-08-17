@@ -56,6 +56,7 @@ __pycache__/
 !/runs/**/policy.txt
 !/runs/**/copyable_split.txt
 !/runs/**/derived_split.json
+!/runs/**/premise_selection.json
 
 # Knowledge-graph ingestion: keep the manifest, drop the corpus.
 #
