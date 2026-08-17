@@ -59,6 +59,31 @@ What this looks like in practice:
   to be wrong, and a scouting arm that is wrong sends the deep pass down the
   wrong hole, which costs far more than it saved.
 
+### Do not re-run to confirm. Build the next thing.
+
+Standing instruction from the user, 2026-08-17, said with some force: *"why do
+you constantly re-run everything? we don't care about being 'scientific', we
+care about making progress."* The rigour apparatus below was written after a
+run of confident wrong readings and it earned its place — but it has become the
+work rather than the guard on the work. Concretely, stop doing these:
+
+- **Re-running a sweep to confirm a number that is already on disk.** It is on
+  disk. Read it.
+- **The full 2,500-test suite before every commit.** Once per branch, at the
+  end. The subset rule below is the norm, not the exception.
+- **A refuter, a permutation control and a floor audit on a scouting number.**
+  Those belong on a headline going into `RESEARCH_LOG.md` and nowhere else.
+- **A written finding for every intermediate step.** One note when an arm
+  resolves, not one per measurement inside it.
+- **Census and audit passes that produce no new capability.** Counting what is
+  registered versus scored is not progress; building the next model is.
+
+The trade being made explicitly: we will publish some things that turn out
+wrong, and we will find out because the next experiment contradicts them, not
+because a control caught it in advance. That is the user's call and it is the
+right one at this stage — the repo has 51 scored models and a shortage of
+*directions*, not a shortage of decimal places.
+
 ## Automate the loop. Do not hand-drive it.
 
 The user's phrase is **"automate the RSI loop"** — propose, implement, evaluate,
