@@ -1,0 +1,42 @@
+{
+ "curriculum": "derive:wordnet-k24",
+ "lessons": [
+  "compositional_reference",
+  "counting_quantifier",
+  "definitions",
+  "general_language_agent",
+  "lexicon_induction",
+  "negation",
+  "quantification",
+  "set_operations",
+  "symbol_equivalence",
+  "symbol_grounding",
+  "symbolic_generalist"
+ ],
+ "floors": {
+  "dfloor_copyable": 1.0,
+  "dfloor_not_copyable": 1.0,
+  "dfloor_all": 1.0,
+  "blind_copyable": 0.03804347826086957,
+  "blind_not_copyable": 0.03940886699507389,
+  "blind_all": 0.038661710037174724,
+  "dfloor_n": 1345.0
+ },
+ "rows": [
+  {
+   "model": "frontier-008",
+   "curriculum": "derive:wordnet-k24",
+   "draws": 8,
+   "published": 0.4356719556490155,
+   "reproduced": 0.4356719556490155,
+   "derived_n": 1335.0,
+   "derived_copyable_share": 0.5258426966292135,
+   "acc_derived": 0.8756554307116104,
+   "acc_derived_copyable": 0.8575498575498576,
+   "acc_derived_not_copyable": 0.8957345971563981,
+   "rest_n": 29621.0,
+   "acc_rest_copyable": 0.4510907811400422,
+   "acc_rest_not_copyable": 0.26334632826796084
+  }
+ ]
+}

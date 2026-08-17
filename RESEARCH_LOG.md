@@ -77,6 +77,31 @@ serve both ends of a guard lattice** — generous at a narrow guard, prohibitive
 at a broad one, and the phenomena living at broad guards are exactly the ones no
 narrow guard names.
 
+**And it is not about table size.** The pair-count curve, each rung against its
+own control and its own blind marginal — `-kN` widens the *pool* the episode's
+six kinds are drawn from, the per-episode map stays six wide, the correspondence
+stays fixed corpus-wide:
+
+| k | instances per pair | treatment | control | blind | **lift** |
+|---:|---:|---:|---:|---:|---:|
+| 6 | ~30 | 0.989 | 0.143 | 0.167 | **0.846** |
+| 12 | ~15 | **1.000** | 0.092 | 0.115 | **0.908** |
+| 24 | ~7.7 | 0.896 | 0.072 | 0.039 | **0.824** |
+| 60 | ~3 | 0.641 | 0.027 | 0.016 | **0.614** |
+
+The derivation floor is 1.000 at every rung, so the ceiling does not move. **At
+k=60 the model holds sixty corpus-wide pairs, each seen about three times in
+training, and answers 64% of the bucket against a 1.6% blind marginal** — forty
+times chance. Six pairs was not doing the work. Two of the four pre-registered
+predictions were *too pessimistic*: k=24 was called at 0.4–0.8 and came in at
+0.896, and k=60 was predicted to collapse to chance and did not. The cross-fit is
+per key rather than per rule, so a table's rare keys degrade individually instead
+of sinking the rule that owns them.
+
+It is a **data** curve, not a capacity curve — the fall from 0.896 to 0.641
+tracks instances-per-pair, and whether k=60 recovers at `n_train = 40` is the
+direct test and is unrun.
+
 **Named weakness:** `min_precision = 0.2` was chosen after seeing that 0.5
 excluded the rule. It was not searched over the derived bucket and no value was
 selected by that number, but it was *informed* by it, which is weaker than a

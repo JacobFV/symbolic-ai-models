@@ -82,6 +82,26 @@ TASK_OF = {"scatter": "node", "subtree": "nodesub",
 ARMS = ("derive:wordnet", "derive:wordnet-perm", "derive:wordnet-shuffled")
 
 
+def arms_for(curriculum: str) -> tuple[str, ...]:
+    """The family a curriculum belongs to, for `carrying_lessons` and the match.
+
+    The population has to be intersected across an arm's **own** treatment and
+    control, never across families. The `-kN` rungs widen the pool the episode's
+    six kinds are drawn from, so they draw different kinds and different scenes
+    from the base arm — intersecting a `k24` run against `derive:wordnet` would
+    hold a population neither of them is scored on, which is the exact failure
+    `matched_episodes` exists to prevent, one level up.
+    """
+    base = curriculum
+    for suffix in ("-perm", "-shuffled"):
+        if base.endswith(suffix):
+            base = base[: -len(suffix)]
+            break
+    if base == "derive:wordnet":
+        return ARMS
+    return (base, f"{base}-perm")
+
+
 def _positions(g, derived) -> list[tuple[int, int]]:
     """``(value position, kind position)`` for each derived fill in this graph.
 
@@ -350,13 +370,14 @@ def main(paths: list[str]) -> int:
         return 1
     _m, tok0, cfg0 = load_run(paths[0], device="cpu")
     arm = cfg0.curriculum
-    lessons = carrying_lessons(ARMS, max_nodes=cfg0.max_nodes)
+    family = arms_for(arm)
+    lessons = carrying_lessons(family, max_nodes=cfg0.max_nodes)
     print(f"curriculum {arm}")
     print(f"lessons carrying a derived slot in any arm: {len(lessons)} of 179 "
           f"-- {', '.join(lessons)}")
-    ev_pairs = matched_episodes(arm, ARMS, lessons, n=N_EVAL, seed0=1_000_000,
+    ev_pairs = matched_episodes(arm, family, lessons, n=N_EVAL, seed0=1_000_000,
                                 max_nodes=cfg0.max_nodes)
-    train_pairs = matched_episodes(arm, ARMS, lessons, n=N_TRAIN, seed0=0,
+    train_pairs = matched_episodes(arm, family, lessons, n=N_TRAIN, seed0=0,
                                    max_nodes=cfg0.max_nodes)
     print(f"evaluation episodes {len(ev_pairs)} (seeds {1_000_000}..), "
           f"derived positions {sum(len(p) for _e, p in ev_pairs)}; "

@@ -176,7 +176,12 @@ def resolve_lessons(spec: str | Sequence[str] | None) -> list[str]:
 CURRICULA: tuple[str, ...] = ("base", "kg:wordnet", "kg:wordnet-shuffled",
                               "kg:wordnet-flat",
                               "derive:wordnet", "derive:wordnet-perm",
-                              "derive:wordnet-shuffled")
+                              "derive:wordnet-shuffled",
+                              # the pair-count curve: the pool the episode's six
+                              # kinds are drawn from, not the width of its map
+                              "derive:wordnet-k12", "derive:wordnet-k12-perm",
+                              "derive:wordnet-k24", "derive:wordnet-k24-perm",
+                              "derive:wordnet-k60", "derive:wordnet-k60-perm")
 
 
 def curriculum_ids() -> list[str]:
@@ -214,18 +219,57 @@ def _derive_factory(name: str):
     words as well as in the map — and a control that moves the vocabulary is not
     controlling the correspondence, it is confounding it.
     """
+    import hashlib
+    import random
+
     from symbolic_ai_kg import load as load_kg
-    from symbolic_ai_kg.derive import DeriveBinder, anchor_map
+    from symbolic_ai_kg.derive import DERIVE_WIDTH, DeriveBinder, anchor_map
 
     permute = name.endswith("-perm")
     graph_name = name[:-len("-perm")] if permute else name
-    kinds, _ = anchor_map(load_kg("wordnet"))
+    # `-kN` widens the **pool** the episode's six kinds are drawn from, never the
+    # per-episode map. That distinction is the whole experiment and it is also
+    # what keeps it runnable: `DeriveBinder.vocabulary` applies the map only when
+    # the slot asks for exactly as many words as it holds, and the scene
+    # vocabularies are six words each, so a six-wide map per episode is the only
+    # thing that binds. Widening the map itself derives nothing at all — see
+    # `_check_derive_width`.
+    pool = DERIVE_WIDTH
+    if "-k" in graph_name:
+        graph_name, _, digits = graph_name.rpartition("-k")
+        pool = int(digits)
+    kinds, _ = anchor_map(load_kg("wordnet"), width=pool)
     kg = load_kg(graph_name)
-    kinds, values = anchor_map(kg, kinds=kinds)
-    _check_derive_width(kinds)
-    return lambda lesson_id, seed: DeriveBinder(
-        kinds=kinds, values=values, lesson_id=lesson_id, seed=seed,
-        permute=permute, graph=name)
+    kinds, values = anchor_map(kg, kinds=kinds, width=pool)
+    _check_derive_width(kinds[:DERIVE_WIDTH])
+    if pool == DERIVE_WIDTH:
+        return lambda lesson_id, seed: DeriveBinder(
+            kinds=kinds, values=values, lesson_id=lesson_id, seed=seed,
+            permute=permute, graph=name)
+
+    def make(lesson_id: str, seed: int) -> DeriveBinder:
+        """Six of the pool's pairs, chosen by address, correspondence intact.
+
+        The kind -> value assignment is the pool's and is fixed corpus-wide;
+        restricting it to a subset cannot change it. So what varies with the pool
+        size is only **how often each pair is seen**, which is the quantity the
+        curve is about: at pool 6 each pair appears in every carrying episode, at
+        pool 60 in a tenth of them.
+
+        Deterministic in ``(name, lesson_id, seed)`` like everything else here —
+        an episode has to be a pure function of its address or the fingerprint
+        stops meaning anything.
+        """
+        h = hashlib.blake2b(f"{name}|pool|{lesson_id}|{seed}".encode(),
+                            digest_size=8)
+        r = random.Random(int.from_bytes(h.digest(), "big"))
+        idx = sorted(r.sample(range(len(kinds)), DERIVE_WIDTH))
+        return DeriveBinder(
+            kinds=tuple(kinds[i] for i in idx),
+            values=tuple(values[i] for i in idx),
+            lesson_id=lesson_id, seed=seed, permute=permute, graph=name)
+
+    return make
 
 
 def _check_derive_width(kinds: Sequence[str]) -> None:
