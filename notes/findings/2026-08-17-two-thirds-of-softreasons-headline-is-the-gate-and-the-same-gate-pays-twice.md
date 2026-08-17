@@ -65,10 +65,15 @@ method is worth **0.58 and 0.53 bits** on them. That is a fact about the
 point: the list of shared parts that move more than the architectures now has the
 gate's *fitting method* on it, priced at about half a bit wherever it is applied.
 
-**It predicts something checkable**: any rule-based model in this registry whose
-gate is a hand formula or an argmax accuracy has roughly half a bit sitting on
-the table. `corefer-001` uses `0.15 + 0.8·top`. That is the next run, and it is
-one method call.
+**It predicted something checkable**, and the check narrowed it — see
+[[2026-08-17-the-half-bit-is-the-argmax-fit-not-the-hand-formula]].
+`corefer-mass` gains only **0.161 bits** (6.9547 → 6.7933), not 0.35–0.55. So the
+pattern is **not** "a mass-fitted gate is worth half a bit wherever it is
+applied"; it is **"fitting the gate as an argmax accuracy costs about half a
+bit"**. `corefer` never made that mistake — its hand formula is not an accuracy
+estimate but is roughly linear in the pointer's top share, already much closer to
+a mixture weight, and only 0.16 was left to take. The generalisation above was
+wrong in its **scope**, not its sign, and one more point was enough to see it.
 
 ## Where my own prediction failed
 

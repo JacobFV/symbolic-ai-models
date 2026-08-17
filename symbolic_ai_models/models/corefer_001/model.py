@@ -32,9 +32,10 @@ from symbolic_ai_core.data.graph import TYPE_TO_ID
 from symbolic_ai_core.data.tokenizer import SymbolTokenizer
 from ..base import ModelConfig
 from ..registry import register
+from symbolic_ai_core.calibration import MassCalibrator
 from ..symbolic import ABSTAIN, GraphView, RuleBasedModel, Votes
 
-__all__ = ["CoreferModel"]
+__all__ = ["CoreferModel", "CoreferMassModel"]
 
 #: Laplace smoothing, so a feature never seen on one side does not produce an
 #: infinite log-ratio the moment it appears.
@@ -382,8 +383,19 @@ class CoreferModel(RuleBasedModel):
             total = sum(weights.values())
             top = max(weights.values()) / total
             out[i] = ({j: w for j, w in weights.items() if w / total > 0.01},
-                      min(0.15 + 0.8 * top, 0.9))
+                      self._label_gate(top))
         return out
+
+    def _label_gate(self, top: float) -> float:
+        """Confidence from the pointer's top share. The one line a variant swaps.
+
+        A hand formula, written before either calibrator in
+        :mod:`symbolic_ai_core.calibration` existed. Extracted rather than
+        rewritten: this model is published and heavily cited, so ``corefer-mass``
+        overrides it and this stays exactly what every published number was
+        measured under.
+        """
+        return min(0.15 + 0.8 * top, 0.9)
 
     def node_votes(self, view: GraphView) -> dict[int, tuple[Votes, Votes]]:
         """Both heads read the pointer: copy whatever it points at.
@@ -443,3 +455,103 @@ class CoreferModel(RuleBasedModel):
         lines = [f"prior log-odds {self.prior:+.3f}", "top evidence:"]
         lines += [f"  {str(k):<40} {v:+.3f}" for k, v in rows]
         return "\n".join(lines)
+
+
+@register("corefer-mass",
+          doc="corefer with the gate fitted by held-out likelihood instead of a hand formula.")
+class CoreferMassModel(CoreferModel):
+    """One method different: the gate is fitted rather than written down.
+
+    The third point on a line with two.
+    ``notes/findings/2026-08-17-two-thirds-of-softreasons-headline-is-the-gate-and-the-same-gate-pays-twice.md``
+    measured the same method change at **0.58 bits** on ``ptrgen`` and **0.53**
+    on ``softreason`` — a gated pointer over node pairs and a soft consequence
+    operator, architectures with nothing in common. Two points is a coincidence
+    until it is three, and this model is the sharpest third available: its gate is
+    neither calibrator but a **hand formula**, ``min(0.15 + 0.8·top, 0.9)``,
+    written before either existed.
+
+    Pre-registered in
+    ``notes/decisions/2026-08-17-the-third-point-on-the-half-bit-line.md``:
+    ``label_bits`` lands in **6.40–6.60** against 6.952; ``label_acc`` moves by
+    less than 0.02, because ``ptrgen`` is also a pointer and moved 0.015 where
+    the mass-spreading ``softreason`` moved 0.061; ``type_acc`` is **unchanged**
+    at 0.9458, which is the control saying only the gate moved; and the renaming
+    drop stays ≈ −0.003, because a gate cannot add vocabulary dependence.
+
+    The type head is untouched by construction — it has its own estimator and its
+    own confidence, and this overrides only the *label* pointer's.
+    """
+
+    LEARNED = CoreferModel.LEARNED + ("gate_map",)
+
+    def __init__(self, cfg: ModelConfig) -> None:
+        super().__init__(cfg)
+        self.gate_map = MassCalibrator()
+        #: While set, :meth:`_label_gate` reports the pointer's raw top share
+        #: instead of a confidence, so the fitting pass sees exactly the number
+        #: prediction will hand it.
+        self._raw_gate = False
+
+    def learn(self, episodes: Sequence[Episode], tok: SymbolTokenizer) -> None:
+        super().learn(episodes, tok)
+        cut = int(len(episodes) * 0.8)
+        self._fit_gate(episodes[cut:] or episodes, tok)
+
+    def _fit_gate(self, episodes: Sequence[Episode],
+                  tok: SymbolTokenizer) -> None:
+        """Fit ``c`` on episodes the pointer was not fitted from.
+
+        Same split and same reasoning as ``ptrgen-001``: a pointer scored on its
+        own training episodes looks sharper than it is, and the gate would then
+        be handed that sharpness as mass to act on.
+        """
+        scores: list[float] = []
+        votes: list[float] = []
+        backoff: list[float] = []
+        self._raw_gate = True
+        try:
+            self._collect_gate(episodes, tok, scores, votes, backoff)
+        finally:
+            self._raw_gate = False
+        if scores:
+            self.gate_map = MassCalibrator().fit(scores, votes, backoff)
+
+    def _collect_gate(self, episodes, tok, scores, votes, backoff) -> None:
+        """With ``_raw_gate`` set, ``source_votes`` reports the top share itself."""
+        for view, targets in self.training_views(episodes, tok, repeats=1, seed=7,
+                                                 max_nodes=self.cfg.max_nodes):
+            pointers = self.source_votes(view)
+            for node, (label_id, _) in targets.items():
+                if label_id is None or label_id < 0:
+                    continue
+                vote = pointers.get(node)
+                if not vote:
+                    continue
+                weights, raw = vote
+                total = sum(weights.values())
+                if total <= 0.0:
+                    continue
+                labels: dict[int, float] = collections.defaultdict(float)
+                for j, w in weights.items():
+                    lab = view.labels[j]
+                    if lab is not None:
+                        labels[int(lab)] += w / total
+                if not labels:
+                    continue
+                # `raw` is the pointer's top-*node* share, which is the number
+                # `_label_gate` is handed at prediction. Fitting on the top-*label*
+                # mass instead — the first thing written here — calibrates one
+                # quantity and applies the result to another, and the two differ
+                # whenever several candidate nodes carry the same symbol, which on
+                # a coreference task is most of the time.
+                scores.append(raw)
+                votes.append(labels.get(int(label_id), 0.0))
+                backoff.append(self.backoff_prob(view, node, int(label_id)))
+
+    def _label_gate(self, top: float) -> float:
+        if self._raw_gate:
+            return top
+        if not self.gate_map.fitted:
+            return super()._label_gate(top)
+        return float(self.gate_map(top))
