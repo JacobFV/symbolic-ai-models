@@ -74,6 +74,33 @@ arms by hand.
 When you find yourself about to run a fifth sweep by typing a fifth command,
 that is the signal to put it in the loop instead.
 
+## Edit files with the Edit tool, not with `str.replace` in a heredoc
+
+Learned three times in one day, at a cost of hours:
+
+- `frontier-009` was silently turned into an unregistered hybrid because the base
+  class's assignment was a **prefix** of the subclass's, and `str.replace` hit
+  both. Its `type_acc` moved 0.8652 → 0.8540 and the model under test read as a
+  failed experiment.
+- The `corefer` gate patch tripped the same prefix trap —
+  `self.gate_map = MassCalibrator()` inside
+  `self.gate_map = MassCalibrator().fit(...)`.
+- `_type_atoms_at` was written into **both** `node_votes` implementations, one of
+  which had no `vals` in scope. 36 tests failed.
+
+`str.replace` replaces **every** occurrence and tells you nothing. The Edit tool
+requires the match to be unique and fails loudly when it is not, which is the
+property that was missing all three times. **Use it.**
+
+When a heredoc really is the right shape — several coordinated edits, or
+generated text — then `assert s.count(old) == 1` before every single one. That
+assert caught the second of the three and cost one line.
+
+And the guard that catches what neither does, because two of the three were
+invisible to the suite: **after touching anything shared, re-run one unchanged
+model and diff its row.** See
+`notes/lessons/2026-08-17-a-default-computed-in-init-captures-the-base-classs-values.md`.
+
 ## Delegation: what may be handed off, and to what
 
 Parallel agents are how this repo gets through a wide front, and two of them have

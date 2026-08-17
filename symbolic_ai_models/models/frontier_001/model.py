@@ -2002,6 +2002,62 @@ class FrontierTypePointModel(FrontierTypeMassModel):
         self.type_pointer = bool(cfg.get("type_pointer", True))
 
 
+@register("frontier-floortype",
+          doc="frontier-floor's label head with the repaired type head; NOT the best model.")
+class FrontierFloorTypeModel(FrontierTypePointModel):
+    """The two lines that survived their own ablations — and the name I had to take back.
+
+    Registered as ``frontier-best`` until its numbers came in. It is best on
+    ``label_acc`` and ``label_bits`` and **worst in the family on the one metric
+    the RSI loop ranks by**: renamed accuracy **0.0469**, against
+    ``frontier-typepoint``'s 0.2207. Renamed before publishing, because a name
+    that asserts a ranking is a claim, and this one is false on two of four
+    columns.
+
+    Two independent threads ended today with a *simpler* configuration winning,
+    and nothing was carrying both.
+
+    **On the label side**, ``agent-refuter``'s single-factor ablation — the one I
+    never ran on the winning model — found the per-guard precision floor is a
+    single sufficient cause for the derivability result: ``frontier-floor``
+    reaches 0.9748 on the derived bucket with **nothing** else changed, where
+    ``keep_by_path`` adds 0.0142 and ``propose_support`` is *exactly inert*. And
+    it beats ``frontier-008`` on pooled accuracy, bits, ``acc | rest, not
+    copyable`` and type.
+
+    **On the type side**, four variants established that the head wants its own
+    settings (``frontier-009``), its own atoms (``-010``), a fitted gate
+    (``-typemass``) and the pointed conjunct (``-typepoint``) — reaching 0.8686 /
+    0.9070 from 0.8633 / 1.0316.
+
+    Every one of my type variants was built on ``frontier-008``, whose two extra
+    label knobs the refutation then showed to be worth +0.014 and nothing. So
+    this strips the label side back to floor-only and keeps the type side.
+
+    **Predicted before running:** ``label_acc`` and ``label_bits`` match
+    ``frontier-floor``'s **0.4493** and its bits, because the label head is
+    exactly its configuration; ``type_acc`` and ``type_bits`` match
+    ``frontier-typepoint``'s **0.8686 / 0.9070** or better, because the type head
+    is exactly that one and its atoms do not depend on which label rules exist —
+    except through the pointed conjunct, which reads the label head's prediction
+    and so *may* differ.
+
+    That last clause is the interesting one, and it fired: ``type_bits`` came in
+    at **0.9361** against ``frontier-typepoint``'s 0.9074, on an identical type
+    configuration. **The pointed conjunct couples the heads** — it reads the
+    label head's prediction, so a different label head is a different pointer is
+    a different type head. "The label head is untouched" was the control every
+    earlier type variant leaned on; with ``type_pointer`` on, the *reverse* no
+    longer holds.
+    """
+
+    def __init__(self, cfg: ModelConfig) -> None:
+        super().__init__(cfg)
+        self.keep_by_path = bool(cfg.get("keep_by_path", False))
+        self.keep_per_guard = int(cfg.get("keep_per_guard", 1))
+        self.propose_support = int(cfg.get("propose_support", 0)) or self.min_support
+
+
 @register("frontier-nomap",
           doc="frontier with the map form removed: the control in its own hypothesis class.")
 class FrontierNoMapModel(FrontierModel):

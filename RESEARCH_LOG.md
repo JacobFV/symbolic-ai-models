@@ -83,6 +83,31 @@ how it was found does not.
 0.4407), on bits, on `acc | rest, not copyable`, and on type (0.8637 — which is
 `frontier-001`'s number, the one `frontier-009` was separately built to recover).
 
+**On four columns. Nobody checked the fifth, and it is the one that matters
+most.** `frontier-floor`'s renamed accuracy is **0.0469**, a drop of −0.406 —
+**the least equivariant model in the family**, worse even than `frontier-001`'s
+−0.372. Composing it with the repaired type head (`frontier-floortype`,
+registered under that name after `frontier-best` turned out to be a false claim)
+inherits it exactly. Against `frontier-typepoint`, which differs *only* in
+`keep_by_path` and `keep_per_guard`:
+
+| | cost | buy |
+|---|---:|---:|
+| `label_acc` | −0.0063 | |
+| `label_bits` | −0.059 | |
+| **renamed accuracy** | | **+0.174** |
+
+the same trade `frontier-003` found from the other direction. **There is no
+single best frontier model**: `frontier-floor`/`-floortype` for accuracy and
+bits, `frontier-typepoint` for equivariance.
+
+**And the pointed conjunct couples the heads.** `type_bits` came in at 0.9361
+against `frontier-typepoint`'s 0.9074 on an *identical* type configuration —
+because that conjunct reads the label head's prediction. "Every label number is
+bit-identical" remains a valid control for a type change; the reverse is now
+false, and any type comparison across different label heads is confounded unless
+`type_pointer` is off.
+
 **And the arm had only ever been measured in accuracy.** A rule fitted to noise
 here emits one of six values and is right about 1/6, which is what chance also
 reads as — so the void condition could never have fired. `derived_split.py` now
