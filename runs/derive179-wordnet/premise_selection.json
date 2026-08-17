@@ -34,6 +34,38 @@
   "self_siblings_mean_candidates": 2.761338289962825,
   "self_siblings_n": 1345.0,
   "self_siblings_n_not_copyable": 622.0,
+  "self_siblings_by_k": {
+   "2": [
+    31,
+    31,
+    31
+   ],
+   "3": [
+    121,
+    121,
+    121
+   ],
+   "4": [
+    216,
+    216,
+    216
+   ],
+   "5": [
+    173,
+    173,
+    173
+   ],
+   "6": [
+    66,
+    66,
+    66
+   ],
+   "7": [
+    15,
+    15,
+    15
+   ]
+  },
   "self_graph_copyable": 0.3775933609958506,
   "self_graph_not_copyable": 0.2861736334405145,
   "self_graph_all": 0.3353159851301115,
@@ -41,7 +73,79 @@
   "self_graph_picked_a_kind_label": 0.9985130111524163,
   "self_graph_mean_candidates": 23.623791821561337,
   "self_graph_n": 1345.0,
-  "self_graph_n_not_copyable": 622.0
+  "self_graph_n_not_copyable": 622.0,
+  "self_graph_by_k": {
+   "2": [
+    31,
+    11,
+    11
+   ],
+   "3": [
+    121,
+    36,
+    36
+   ],
+   "4": [
+    216,
+    57,
+    62
+   ],
+   "5": [
+    173,
+    45,
+    49
+   ],
+   "6": [
+    66,
+    17,
+    18
+   ],
+   "7": [
+    15,
+    1,
+    2
+   ]
+  },
+  "self_graph_fit_siblings_copyable": 0.41632088520055327,
+  "self_graph_fit_siblings_not_copyable": 0.3086816720257235,
+  "self_graph_fit_siblings_all": 0.36654275092936806,
+  "self_graph_fit_siblings_picked_kind": 0.25799256505576207,
+  "self_graph_fit_siblings_picked_a_kind_label": 1.0,
+  "self_graph_fit_siblings_mean_candidates": 23.623791821561337,
+  "self_graph_fit_siblings_n": 1345.0,
+  "self_graph_fit_siblings_n_not_copyable": 622.0,
+  "self_graph_fit_siblings_by_k": {
+   "2": [
+    31,
+    16,
+    16
+   ],
+   "3": [
+    121,
+    43,
+    44
+   ],
+   "4": [
+    216,
+    63,
+    70
+   ],
+   "5": [
+    173,
+    41,
+    43
+   ],
+   "6": [
+    66,
+    15,
+    15
+   ],
+   "7": [
+    15,
+    4,
+    4
+   ]
+  }
  },
  "graph_alpha_sensitivity": {
   "0.5": 0.2845659163987138,

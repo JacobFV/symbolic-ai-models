@@ -99,3 +99,66 @@ def test_the_object_id_is_a_candidate_and_is_not_the_kind():
     cands = P._candidates(g, len(g), 3, "siblings", set())
     assert 2 in cands and g.labels[2] == "o0"
     assert 4 in cands and g.labels[4] == "building"
+
+
+class _Ep:
+    def __init__(self, graph):
+        self.graph = graph
+
+
+def _two_object_episode(kind_a, val_a, kind_b, val_b):
+    """One episode holding two `obj` predicates, so scopes can disagree.
+
+    Nodes: 0 root, then (obj, id, value, kind) twice.
+    """
+    return _G(
+        labels=["r", "obj", "o0", val_a, kind_a, "obj", "o1", val_b, kind_b],
+        types=["root", "pred", "ident", "ident", "ident",
+               "pred", "ident", "ident", "ident"],
+        parent=[-1, 0, 1, 1, 1, 0, 5, 5, 5])
+
+
+def test_the_fitting_scope_decides_whether_the_table_is_the_bijection():
+    """Fitting over the whole episode dilutes a deterministic map to the marginal.
+
+    This is the confound that made the published middle rung unreadable, and it
+    is invisible in every artefact the run produces: the number comes out at
+    0.286, looks like "premise selection is hard", and is really "the selector's
+    table cannot express the relation it is choosing among". Measured on the
+    real corpus the six kind labels came out at purity 0.29-0.37 where the
+    bijection gives 1.000.
+
+    So the two scopes are pinned apart here. `siblings` must recover the map
+    exactly; `graph` must not, because it credits every label in the episode
+    with every derived value in it. Neither is a bug -- what was a bug was
+    varying both the fitting pool and the candidate set in one row and
+    attributing the difference to the candidate set. See
+    `notes/findings/2026-08-17-the-binding-story-was-right-for-the-wrong-reason.md`.
+    """
+    # two objects, two different kinds, each with its own derived value
+    pairs = [(_Ep(_two_object_episode("ship", "bay", "shoe", "lace")),
+              [(3, 4), (7, 8)])]
+
+    sib, _ = P.fit_selector(pairs, "siblings")
+    assert dict(sib["ship"]) == {"bay": 1}, sib["ship"]
+    assert dict(sib["shoe"]) == {"lace": 1}, sib["shoe"]
+
+    graph, _ = P.fit_selector(pairs, "graph")
+    # `ship` now also carries the *other* object's value, which is the dilution
+    assert set(graph["ship"]) == {"bay", "lace"}, graph["ship"]
+    assert max(graph["ship"].values()) / sum(graph["ship"].values()) == 0.5
+
+
+def test_a_fit_read_pair_is_named_for_both_scopes():
+    """A row keyed by its read scope alone cannot say which table produced it.
+
+    Both `graph` rungs read the whole episode; they differ only in what they
+    were fitted over, and the published one was 0.286 while the isolated one is
+    0.309. If the emitted keys collided, the second would silently overwrite the
+    first and the correction would be invisible.
+    """
+    assert P.pair_name("graph", "graph") == "graph"
+    assert P.pair_name("siblings", "siblings") == "siblings"
+    assert P.pair_name("siblings", "graph") == "graph_fit_siblings"
+    names = [P.pair_name(f, r) for f, r in P.PAIRS]
+    assert len(names) == len(set(names)), names

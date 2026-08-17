@@ -60,7 +60,24 @@ from symbolic_ai_models.train import (TrainConfig, build_tokenizer, load_data)
 #: is the faithful version of CoTu's problem: every visible node in the episode.
 #: Reporting only the first would be the flattering half; see the
 #: pre-registration.
+#: ``(fit scope, read scope)``. The first two rungs are the published ones and
+#: keep their names. The third is the isolation: it holds the *representation*
+#: fixed at object scope -- where the kind->value map is the bijection it really
+#: is, purity 1.000 -- and varies only the candidate set at inference.
+#:
+#: The third exists because the second turned out to change two things at once.
+#: ``fit_selector(scope="graph")`` credits every visible label in an episode
+#: with that episode's derived value, so ``ship``'s counter accumulates every
+#: *other* object's value too and its purity comes out at 0.326 rather than
+#: 1.000. The published 0.286 is therefore not "premise selection is hard", it
+#: is a selector whose table cannot express the relation it is choosing among.
+#: See ``notes/decisions/2026-08-17-scene-size-is-the-denominator-or-the-binding-story-is-wrong.md``.
 SCOPES = ("siblings", "graph")
+PAIRS = (("siblings", "siblings"), ("graph", "graph"), ("siblings", "graph"))
+
+
+def pair_name(fit: str, read: str) -> str:
+    return read if fit == read else f"{read}_fit_{fit}"
 
 #: Dirichlet prior strengths the whole-graph row is re-scored at. A selector's
 #: floor that moves with its own smoothing constant is a statement about the
@@ -139,8 +156,8 @@ def _score(counter, n_values: int, alpha: float = 1.0) -> float:
 
 
 def self_selected_floor(train_pairs, ev_pairs, tok, task, scope: str,
-                        draws: int = DRAWS, alpha: float = 1.0
-                        ) -> dict[str, float]:
+                        draws: int = DRAWS, alpha: float = 1.0,
+                        fit_scope: str | None = None) -> dict[str, float]:
     """The same lookup as ``derivation_floor``, choosing its own premise.
 
     Every filter is ``derivation_floor``'s, unchanged and in the same order, so
@@ -150,7 +167,9 @@ def self_selected_floor(train_pairs, ev_pairs, tok, task, scope: str,
     dropping the guard would score a different -- easier or harder, but
     different -- population.
     """
-    table, values = fit_selector(train_pairs, scope)
+    fit_scope = scope if fit_scope is None else fit_scope
+    scope_key = pair_name(fit_scope, scope)
+    table, values = fit_selector(train_pairs, fit_scope)
     n_values = max(len(values), 1)
     # The blind fallback, identical to derivation_floor's: the commonest derived
     # value in training, used when the chosen candidate carries no evidence.
@@ -171,6 +190,12 @@ def self_selected_floor(train_pairs, ev_pairs, tok, task, scope: str,
     picked_kind = {True: 0, False: 0}
     picked_a_kind_label = 0
     n_cand = 0
+    # Per scene size, on the not-copyable half only -- that is where the ladder
+    # is read. `k` is how many *visible* nodes carry a kind label, i.e. how many
+    # premises of the right sort the selector is choosing between. If the 23.3%
+    # is a uniform wrong-object pick, these are 1/k; see
+    # `notes/decisions/2026-08-17-scene-size-is-the-denominator-or-the-binding-story-is-wrong.md`.
+    by_k: dict[int, list[int]] = collections.defaultdict(lambda: [0, 0, 0])
     for d in range(draws):
         rng = np.random.default_rng(12345 + d)
         for ep, pos in ev_pairs:
@@ -200,21 +225,33 @@ def self_selected_floor(train_pairs, ev_pairs, tok, task, scope: str,
                 picked_kind[copyable] += best_j == ki
                 picked_a_kind_label += (best_j is not None
                                         and g.labels[best_j] in kind_labels)
+                if not copyable:
+                    k = sum(1 for j in range(nn) if j not in hidden
+                            and g.labels[j] in kind_labels)
+                    row = by_k[k]
+                    row[0] += 1
+                    row[1] += best_j == ki
+                    row[2] += pred == g.labels[vi]
     total = n[True] + n[False]
     div = lambda a, b: a / b if b else float("nan")
     return {
-        f"self_{scope}_copyable": div(hit[True], n[True]),
-        f"self_{scope}_not_copyable": div(hit[False], n[False]),
-        f"self_{scope}_all": div(hit[True] + hit[False], total),
-        f"self_{scope}_picked_kind": div(picked_kind[True] + picked_kind[False],
+        f"self_{scope_key}_copyable": div(hit[True], n[True]),
+        f"self_{scope_key}_not_copyable": div(hit[False], n[False]),
+        f"self_{scope_key}_all": div(hit[True] + hit[False], total),
+        f"self_{scope_key}_picked_kind": div(picked_kind[True] + picked_kind[False],
                                          total),
         # right *sort* of premise, whatever object it was about
-        f"self_{scope}_picked_a_kind_label": div(picked_a_kind_label, total),
-        f"self_{scope}_mean_candidates": div(n_cand, total),
-        f"self_{scope}_n": float(total),
+        f"self_{scope_key}_picked_a_kind_label": div(picked_a_kind_label, total),
+        f"self_{scope_key}_mean_candidates": div(n_cand, total),
+        f"self_{scope_key}_n": float(total),
         # the headline is read on the not-copyable half, so its own n is the one
         # any interval on it has to use -- `dfloor_n` is the pooled count.
-        f"self_{scope}_n_not_copyable": float(n[False]),
+        f"self_{scope_key}_n_not_copyable": float(n[False]),
+        # `{k: [n, picked the right object, answered correctly]}`, not-copyable
+        # only. Emitted as a curve rather than an argmax or a mean, because a
+        # mean over `k` cannot tell "1/k" from "flat, and the mixture of scene
+        # sizes happens to average there".
+        f"self_{scope_key}_by_k": {str(k): v for k, v in sorted(by_k.items())},
     }
 
 
@@ -264,8 +301,9 @@ def run(arm_dir: Path) -> dict:
     floors = derivation_floor(train_pairs, ev_pairs, tok, task)
     note = check_reconstruction(arm_dir, floors)
     out = dict(floors)
-    for scope in SCOPES:
-        out |= self_selected_floor(train_pairs, ev_pairs, tok, task, scope)
+    for fit, read in PAIRS:
+        out |= self_selected_floor(train_pairs, ev_pairs, tok, task, read,
+                                   fit_scope=fit)
     sens = {str(a): self_selected_floor(train_pairs, ev_pairs, tok, task,
                                         "graph", alpha=a)["self_graph_not_copyable"]
             for a in ALPHAS}
@@ -295,7 +333,7 @@ def main(paths: list[str]) -> int:
               f"{f['dfloor_all']:>9.3f}{f['dfloor_copyable']:>9.3f}"
               f"{f['dfloor_not_copyable']:>12.3f}{1.0:>12.3f}{1.0:>12.3f}"
               f"{1:>8.1f}")
-        for scope in SCOPES:
+        for scope in [pair_name(f, r) for f, r in PAIRS]:
             print(f"  {'self-selected (' + scope + ')':<34}"
                   f"{f[f'self_{scope}_n']:>7.0f}{f[f'self_{scope}_all']:>9.3f}"
                   f"{f[f'self_{scope}_copyable']:>9.3f}"
