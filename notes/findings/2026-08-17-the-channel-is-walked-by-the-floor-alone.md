@@ -23,7 +23,7 @@ evaluation-seed number.** The derived bucket only exists at seeds ≥ 1,000,000,
 and "do not tune against evaluation" is the rule this is nearest to breaking.
 Nothing here selects a value: the ablations set already-registered knobs to
 already-registered values (`propose_support` to its `frontier-001` default 12,
-`keep_by_path` to its `frontier-001` default `False`), and `frontier-009` takes
+`keep_by_path` to its `frontier-001` default `False`), and `frontier-floor` takes
 `relative_floor` at the default `frontier-008` already ships. No threshold was
 searched and none was chosen by a derived-bucket score. What was read off
 evaluation is an **attribution** — which of three already-shipped changes caused
@@ -184,6 +184,15 @@ six values" — and none of the conditional. In the treatment they buy 7.7. That
 is the separation the arm is really measuring, and it is much sharper than the
 accuracy pair.
 
+This does not contradict
+[[2026-08-17-the-map-form-carries-the-kg-gap-and-the-per-guard-floor-does-not]],
+which asked the neighbouring question on the `kg:` null arms and found the
+per-guard floor indistinguishable from the global one there. Both land in the
+same place from opposite directions: the floor is *not* the source of a
+noise-driven gap, **and** the accuracy control that was supposed to police it
+never had the power to. The kg arms say the weakness is untriggered; this says
+the instrument that was watching for it is the wrong instrument.
+
 The floor also earns its keep, and here is the concrete case
 `an-average-cannot-see-a-sub-population` asked for: 199 of the 950 label rules
 have held-out precision below 0.5, and **290 of the 627 correct answers** come
@@ -237,7 +246,7 @@ And the floor-only model is *better everywhere else*, same curriculum and seeds:
 | `frontier-008` | **0.989** | 0.143 | 0.277 | 0.4407 | 7.137 | 0.8536 |
 
 Its control is *further* below chance than `frontier-008`'s — treatment −
-control is **+0.864** against +0.846. Registered as `frontier-009` beside the
+control is **+0.864** against +0.846. Registered as `frontier-floor` beside the
 others, after the fact and labelled as such in its docstring; its swept
 `summary.json` is **identical field for field** to the `--extra
 {"relative_floor": true}` run these numbers came from, which is what says the

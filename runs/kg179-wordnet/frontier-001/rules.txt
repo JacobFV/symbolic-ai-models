@@ -1,0 +1,42 @@
+label: 446 rules  const=78, copy=9, map=359
+type: 502 rules  const=330, copy=172, map=0
+  round 0 [label]: 361 guards, 79 kept, 63538/84271 fills still wrong
+  round 1 [label]: 2201 guards, 434 kept, 54891/84271 fills still wrong
+  round 2 [label]: 5295 guards, 1032 kept, 53016/84271 fills still wrong
+  round 0 [type]: 361 guards, 361 kept, 17556/84271 fills still wrong
+  round 1 [type]: 943 guards, 943 kept, 7596/84271 fills still wrong
+  round 2 [type]: 1183 guards, 1183 kept, 5098/84271 fills still wrong
+top label hypotheses:
+  [ptype='str', nsib=0] -> copy:parent  p=1.000 n=218 dl=2
+  [depth=5, nsib=2, kids=True] -> map:sib@1  p=1.000 n=184 dl=18
+  [ptype='list', nsib=3, kids=True] -> map:sib@3  p=0.985 n=2313 dl=210
+  [slot=2, depth=4, kids=True] -> map:sib@3  p=1.000 n=158 dl=13
+  [phead=5772] -> map:sib@0  p=1.000 n=156 dl=45
+  [depth=3, nsib=3, kids=True] -> map:sib@3  p=0.982 n=2434 dl=206
+  [slot=1, depth=4, kids=True] -> map:sib@3  p=1.000 n=151 dl=13
+  [depth=6, kids=True] -> map:sib@2  p=1.000 n=142 dl=7
+  [phead=5745, kids=True] -> map:sib@0  p=1.000 n=115 dl=10
+  [ptype='pred', slot=1, kids=True] -> map:sib@3  p=1.000 n=112 dl=11
+  [slot=3, depth=3, nsib=3] -> map:sib@2  p=0.979 n=868 dl=244
+  [ptype='pred', slot=2, kids=True] -> map:sib@3  p=1.000 n=101 dl=11
+  [slot=1, depth=3, nsib=3] -> map:sib@0  p=0.972 n=832 dl=238
+  [slot=0, depth=5, kids=True] -> map:sib@2  p=0.985 n=200 dl=50
+  [slot=2, depth=3, nsib=3] -> map:sib@3  p=0.971 n=884 dl=245
+  [ptype='list', slot=0, kids=True] -> map:sib@1  p=0.958 n=2376 dl=456
+  [phead=5830, slot=2] -> const  p=1.000 n=72 dl=4
+  [phead=4057] -> map:sib@0  p=1.000 n=72 dl=9
+  [slot=0, depth=3, kids=True] -> map:sib@1  p=0.957 n=2375 dl=463
+  [slot=0, depth=3, nsib=3] -> map:sib@2  p=0.962 n=876 dl=250
+surviving map rules: 359
+  [depth=5, nsib=2, kids=True] -> map:sib@1  p=1.000 n=184 dl=18
+      |m|=9  at->at, headquarters->headquarters, give->give, step->step, word->word, gets->gets, holds->holds, dv->times
+  [ptype='list', nsib=3, kids=True] -> map:sib@3  p=0.985 n=2313 dl=210
+      |m|=114  schema->schema, thesis->thesis, algorithm->algorithm, at->at, profile->profile, attacks->attacks, attempt->attempt, task->task
+  [slot=2, depth=4, kids=True] -> map:sib@3  p=1.000 n=158 dl=13
+      |m|=5  set->set, payoff_if_success->success_percent, time->value, payoff->success_percent, task->start
+  [phead=5772] -> map:sib@0  p=1.000 n=156 dl=45
+      |m|=22  pull->manipulate, manipulate->action, apple->food, carol->person, dave->person, gem->money, push->manipulate, sell->transfer
+  [depth=3, nsib=3, kids=True] -> map:sib@3  p=0.982 n=2434 dl=206
+      |m|=113  schema->schema, thesis->thesis, algorithm->algorithm, profile->profile, attacks->attacks, attempt->attempt, task->task, claim->claim
+  [slot=1, depth=4, kids=True] -> map:sib@3  p=1.000 n=151 dl=13
+      |m|=5  set->set, payoff_if_success->cost, time->weight, payoff->cost, task->ontology

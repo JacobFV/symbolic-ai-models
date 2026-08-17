@@ -22,7 +22,7 @@ related: [2026-08-17-a-floor-a-rule-must-beat-is-the-guards-own-modal-rate,
 > ingredients this model inherits from `frontier-006` are not needed and cost:
 > `frontier-001` with **only** `relative_floor` scores 0.975 / **0.111** and beats
 > this row on pooled accuracy, bits, type and `acc | rest, not copyable`.
-> Registered as `frontier-009`.
+> Registered as `frontier-floor`.
 
 Pre-registered in
 [[2026-08-17-a-floor-a-rule-must-beat-is-the-guards-own-modal-rate]] before the
@@ -78,6 +78,15 @@ close the other two it named — six planted pairs is still a small map, and the
 lookup floor still scores 1.000, so the ceiling was never in doubt.
 
 ## What would still make this hollow
+
+**Tested on a provable null, 2026-08-17, and not triggered — see
+[[2026-08-17-the-map-form-carries-the-kg-gap-and-the-per-guard-floor-does-not]].**
+On the `kg:` arms, which are isomorphic by construction so anything found between
+them is noise, `frontier-003` carries the *global* floor at the same level and
+shows a gap of the same order (+0.012 against `-008`'s +0.018, level 0.285 against
+0.326). The per-guard floor is not distinguishable from the global one there. A
+null from a control is weaker than a failure, so this weakness is **untriggered,
+not disproved**, and the paragraph below stands.
 
 **The floor is `const`'s precision, and `const` is one of the resolvers being
 floored.** So a guard where `const` happens to be weak is a guard where

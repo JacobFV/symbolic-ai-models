@@ -492,6 +492,21 @@ class FrontierModel(RuleBasedModel):
         self.floor_margin = float(cfg.get("floor_margin", 1.0))
         #: The floor `const` is held to, since it cannot beat itself.
         self.abs_floor = float(cfg.get("abs_floor", 0.02))
+        #: ``(rank_tolerance, keep_per_guard, keep_by_path, relative_floor)`` the
+        #: type head is induced under, or ``None`` for "whatever the label head
+        #: uses" — which is what every model up to ``frontier-008`` does and what
+        #: cost that head 0.068 of lift. ``frontier-009`` pins it instead.
+        #:
+        #: It stays ``None`` rather than being filled in with the current values
+        #: here, and that is not tidiness. Subclasses set their knobs *after*
+        #: ``super().__init__``, so capturing them at this point captures the
+        #: **base** defaults — which silently gave ``frontier-008`` the pinned
+        #: type head and moved its published ``type_acc`` from 0.8539 to 0.865.
+        #: A published model must not change behaviour because a knob was added
+        #: for a different one; see ``CLAUDE.md`` on editing a model in place.
+        #: Resolved at fit time in :meth:`learn` instead, where the values are
+        #: final.
+        self.type_head_settings = cfg.get("type_head_settings", None)
         #: Cap on the rule set, applied after the reachability filter in
         #: :meth:`_useful`, so it bounds the rules that answer something
         #: rather than the rules that sort first.
@@ -542,10 +557,38 @@ class FrontierModel(RuleBasedModel):
                                   forms=self.forms)
         keep = [n for n, a in enumerate(ans_type) if a != MISSING]
         if keep:
-            self.type_rules = self._induce(
-                [atoms[n] for n in keep], [types[n] for n in keep],
-                [ans_type[n] for n in keep], [fold[n] for n in keep],
-                head="type", forms=("const", "copy"), min_precision=0.0)
+            # The type head is induced under the *base* settings, whatever the
+            # label head is doing. Every knob added after `frontier-001` was
+            # aimed at the label head, and each was silently applied to this one
+            # too: measured, `type_acc` went 0.8633 -> 0.8607 with
+            # `keep_per_guard`, 0.8491 with the tolerance band, and settled at
+            # 0.8539 — turning a **+0.023 lift into −0.045**, below a floor only
+            # two of nineteen models had ever cleared.
+            #
+            # None of those knobs has an argument for this head. `map` is not in
+            # its resolver set, so `keep_by_path` has nothing to keep; a
+            # tolerance band resolves near-ties toward the renaming-invariant
+            # `copy`, which is a label-head concern because types are not
+            # symbols; and a floor that asks a rule to beat the guard's own modal
+            # answer is close to unmeetable where the modal answer is already
+            # right 86% of the time.
+            #
+            # `notes/lessons/2026-08-14-a-guard-applied-only-to-the-arm-that-lost.md`
+            # is the shape this was: eight variants tuned on one head, and the
+            # other head's column never read.
+            saved = (self.rank_tolerance, self.keep_per_guard,
+                     self.keep_by_path, self.relative_floor)
+            (self.rank_tolerance, self.keep_per_guard,
+             self.keep_by_path, self.relative_floor) = (
+                self.type_head_settings or saved)
+            try:
+                self.type_rules = self._induce(
+                    [atoms[n] for n in keep], [types[n] for n in keep],
+                    [ans_type[n] for n in keep], [fold[n] for n in keep],
+                    head="type", forms=("const", "copy"), min_precision=0.0)
+            finally:
+                (self.rank_tolerance, self.keep_per_guard,
+                 self.keep_by_path, self.relative_floor) = saved
         self._fit_gate(episodes, tok)
 
     # -- the frontier loop ----------------------------------------------
@@ -1458,14 +1501,63 @@ class FrontierRelativeModel(FrontierConjunctionModel):
 
 
 @register("frontier-009",
+          doc="frontier-008 with the type head induced under the base settings, not the label head's.")
+class FrontierTwoHeadModel(FrontierRelativeModel):
+    """Stop the label head's knobs from being applied to a head nobody was reading.
+
+    Eight variants were tuned on ``label_acc`` and every knob went to **both**
+    heads, because ``_induce`` reads them off the model rather than off the head.
+    The type column was never in the table I was reading. It went:
+
+    ==============  =========  ==========
+    model           type acc   type lift
+    ==============  =========  ==========
+    frontier-001     0.8633      **+0.023**
+    frontier-003     0.8607      +0.004
+    frontier-004     0.8491      **−0.079**
+    frontier-006/7/8 0.8539      −0.045
+    ==============  =========  ==========
+
+    A floor of 0.8601 that only ``corefer-001`` (+0.612) and ``rgt-001`` (+0.395)
+    had ever cleared, and I took a positive lift negative while improving
+    something else. That is
+    ``notes/lessons/2026-08-14-a-guard-applied-only-to-the-arm-that-lost.md``
+    exactly: the guard gets applied where it costs nothing.
+
+    None of the knobs has an argument for this head. ``map`` is not in its
+    resolver set, so ``keep_by_path`` has nothing to keep. A tolerance band
+    resolves near-ties toward the renaming-invariant ``copy``, which matters
+    because labels are symbols and types are not. And a floor asking a rule to
+    beat its guard's modal answer is close to unmeetable where the modal answer
+    is already right 86% of the time — which is precisely why the *label* head
+    needed it and this one does not.
+
+    **Predicted before running:** ``type_acc`` returns to ``frontier-001``'s
+    0.8633 (+0.023 lift), and every label number is unchanged — 0.4414 pooled and
+    0.989 on the derived bucket — because nothing about the label head moved.
+    Refuted if the label numbers shift at all, which would mean the two heads
+    were coupled through something other than these four knobs.
+    """
+
+    def __init__(self, cfg: ModelConfig) -> None:
+        super().__init__(cfg)
+        self.type_head_settings = cfg.get("type_head_settings", None) or (0.0, 1, False, False)
+
+
+@register("frontier-floor",
           doc="frontier-001 with only the per-guard floor changed: the ablation that isolates the cause.")
 class FrontierFloorOnlyModel(FrontierModel):
     """``frontier-001`` plus the relative floor, and **nothing else**.
 
     Registered by ``agent-refuter`` after the fact rather than pre-registered,
     and this docstring says so because the honesty rule does not have an
-    exception for a variant that turned out well. It exists because
-    ``frontier-008`` bundles three changes and its finding
+    exception for a variant that turned out well. Named for what it changes
+    rather than by number, because a number was already taken by a different
+    model on ``master`` while this branch was running — which is its own small
+    argument for descriptive names on ablation controls, as ``frontier-nomap``
+    and ``frontier-soft`` already are.
+
+    It exists because ``frontier-008`` bundles three changes and its finding
     (``notes/findings/2026-08-17-the-channel-is-walked-and-it-took-a-conjunction-of-three.md``)
     reports them as a conjunction that single-factor ablation could not have
     found. The single-factor ablation was never run on the winning model. Run,
@@ -1482,15 +1574,20 @@ class FrontierFloorOnlyModel(FrontierModel):
     ``propose_support=2`` is **inert** — the bucket is identical to six decimals
     with it on and off — because the rule that carries the extra 290 fills is at
     the *one-atom* guard ``[slot=1]``, which is proposed in round zero whatever
-    the gate is. ``keep_by_path`` is worth **+0.0142** once the floor is lowered
-    and ``-0.2177`` on its own (``frontier-005``). The floor is a single
+    the gate is. ``keep_by_path`` is worth **+0.0142** once the floor is lowered,
+    exactly **zero** before it (``frontier-006`` lands on ``frontier-001``'s
+    0.5315 to six decimals), and **−0.129** on the soft readout
+    (``frontier-soft`` 0.4432 → ``frontier-005`` 0.3139). The floor is a single
     sufficient cause.
 
     It is also the better model on every pooled number, measured on the same
     curriculum and seeds: 0.4493 label accuracy against ``frontier-008``'s
     0.4407, 7.066 bits against 7.137, 0.8637 type against 0.8536, and 0.299
     against 0.277 on ``acc | rest, not copyable``. So the two extra ingredients
-    do not merely fail to be necessary, they cost.
+    do not merely fail to be necessary, they cost. Its 0.8637 type accuracy is
+    also ``frontier-001``'s, which is the number ``frontier-009`` was built to
+    recover — reached here by not applying the label head's knobs to a head that
+    never needed a lowered floor, rather than by separating the settings.
 
     The control is honest and is the reason this is reported at all:
     ``derive:wordnet-perm`` scores **0.111**, below that arm's blind marginal of

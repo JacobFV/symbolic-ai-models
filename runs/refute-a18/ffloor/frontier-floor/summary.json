@@ -1,6 +1,6 @@
 {
   "config": {
-    "model": "frontier-009",
+    "model": "frontier-floor",
     "tasks": [
       "lm",
       "node"
@@ -42,7 +42,7 @@
     "resume": false,
     "device": "cpu",
     "amp": true,
-    "out": "runs/refute-a18/f009/frontier-009"
+    "out": "runs/refute-a18/ffloor/frontier-floor"
   },
   "model_config": {
     "vocab_size": 8192,
@@ -55,7 +55,7 @@
     "max_nodes": 128,
     "extra": {}
   },
-  "model": "frontier-009",
+  "model": "frontier-floor",
   "family": "rule-based",
   "steps": 0,
   "parameters": 116373,
@@ -133,7 +133,7 @@
       "rsymbol_bits_lift": 0.24605308228409506
     }
   },
-  "seconds": 56.51455855369568,
+  "seconds": 49.053008794784546,
   "device": "cpu",
   "renaming": {
     "label_acc": 0.4506591260433197,
