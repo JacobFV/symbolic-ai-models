@@ -1,0 +1,57 @@
+{
+ "curriculum": "derive:wordnet",
+ "lessons": [
+  "compositional_reference",
+  "counting_quantifier",
+  "definitions",
+  "general_language_agent",
+  "lexicon_induction",
+  "negation",
+  "quantification",
+  "set_operations",
+  "symbol_equivalence",
+  "symbol_grounding",
+  "symbolic_generalist"
+ ],
+ "floors": {
+  "dfloor_copyable": 1.0,
+  "dfloor_not_copyable": 1.0,
+  "dfloor_all": 1.0,
+  "blind_copyable": 0.18672199170124482,
+  "blind_not_copyable": 0.16720257234726688,
+  "blind_all": 0.17769516728624535,
+  "dfloor_n": 1345.0
+ },
+ "rows": [
+  {
+   "model": "frontier-008",
+   "curriculum": "derive:wordnet",
+   "draws": 8,
+   "published": 0.44066501051022355,
+   "reproduced": 0.44066501051022355,
+   "derived_n": 1325.0,
+   "derived_copyable_share": 0.5215094339622641,
+   "acc_derived": 0.9909433962264151,
+   "acc_derived_copyable": 0.9927641099855282,
+   "acc_derived_not_copyable": 0.9889589905362776,
+   "rest_n": 29638.0,
+   "acc_rest_copyable": 0.46135817659811335,
+   "acc_rest_not_copyable": 0.2765889746241349
+  },
+  {
+   "model": "frontier-nomap",
+   "curriculum": "derive:wordnet",
+   "draws": 8,
+   "published": 0.3005923944200268,
+   "reproduced": 0.3005923944200268,
+   "derived_n": 1325.0,
+   "derived_copyable_share": 0.5215094339622641,
+   "acc_derived": 0.0,
+   "acc_derived_copyable": 0.0,
+   "acc_derived_not_copyable": 0.0,
+   "rest_n": 29638.0,
+   "acc_rest_copyable": 0.3466924474131365,
+   "acc_rest_not_copyable": 0.06618407445708377
+  }
+ ]
+}

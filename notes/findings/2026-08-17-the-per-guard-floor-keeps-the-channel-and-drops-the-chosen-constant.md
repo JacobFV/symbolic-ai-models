@@ -9,6 +9,21 @@ related: [2026-08-17-a-floor-a-rule-must-beat-is-the-guards-own-modal-rate,
 
 # All four predictions held, and the hand-chosen threshold is gone
 
+> **Traced 2026-08-17 by `agent-refuter` — see
+> [[2026-08-17-the-channel-is-walked-by-the-floor-alone]].** All four numbers
+> reproduce from a clean refit; the `summary.json` is equal to this one field for
+> field. Two things need amending. (1) **Prediction 2 could not have failed.** A
+> rule fitted to noise on this bucket still emits one of the six values and is
+> right ~1/6, which is what "the blind marginal" also reads — so the control
+> lands near 0.14 whether or not the floor admits noise, and measurement says it
+> *does*: in `-perm` the model fires on 623 of 623 fills through five map rules
+> each right at ~1/7. The quantity that separates them is bits (2.36 treatment,
+> 9.28 control, 10.09 for its own silenced back-off), not accuracy. (2) The two
+> ingredients this model inherits from `frontier-006` are not needed and cost:
+> `frontier-001` with **only** `relative_floor` scores 0.975 / **0.111** and beats
+> this row on pooled accuracy, bits, type and `acc | rest, not copyable`.
+> Registered as `frontier-009`.
+
 Pre-registered in
 [[2026-08-17-a-floor-a-rule-must-beat-is-the-guards-own-modal-rate]] before the
 run. `frontier-008` replaces `min_precision = 0.2` — a constant I picked after
