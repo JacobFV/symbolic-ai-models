@@ -441,6 +441,23 @@ renaming — it buys back the model's ability to **point**, which the map head
 otherwise crowds out. Not "equivariance for accuracy" but *how much of the copy
 head survives having a map head bolted on*.
 
+**And frontier's pointing has a hard ceiling that `corefer` is already past.** On
+renamed episodes, the answer is reachable by **any** of frontier's ten fixed
+paths on only **0.4124** of copyable fills. `frontier-typepoint` gets 0.3060 —
+**74% of its own ceiling** — and `corefer` gets **0.4920**, *above* it. So the
+0.186 gap is not search: better selection over the same paths can buy at most
+0.106, and the rest needs paths frontier does not have. Four sibling slots and
+`prev` do essentially all the work (0.21–0.29 each, heavily overlapping);
+`gparent` and the three `psib@k` reach almost nothing.
+
+That is the **third** head to return the same diagnosis. The label head's
+derivability null was expressive, not procedural; the type head needed a pointer
+rather than a fourth column; and the copy head reaches 74% of what its paths
+allow while the paths allow 41% of what a pointer would. **The hypothesis
+language is the constraint, and twice over the missing piece is specifically the
+ability to point at an arbitrary node** — which is what `corefer` is and nothing
+else.
+
 **The plain reading: these models do coreference. Where there is no coreferent to
 find, they are worse than a table.** "The best model reaches 0.357" should be
 read as "reaches 0.494 at finding a symbol already on screen, and 0.003 at
