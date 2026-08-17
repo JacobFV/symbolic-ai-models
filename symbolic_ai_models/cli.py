@@ -53,6 +53,10 @@ def _add_train_flags(p: argparse.ArgumentParser) -> None:
     p.add_argument("--lessons", help="all | core170 | tag:X | cap:X | a,b,c")
     p.add_argument("--n-train", dest="n_train", type=int)
     p.add_argument("--n-eval", dest="n_eval", type=int)
+    p.add_argument("--eval-seed0", dest="eval_seed0", type=int,
+                   help="first seed the scored episodes are drawn from "
+                        "(default 1,000,000 = evaluation). Lower it for a "
+                        "development split; see scripts/rsi_loop.py")
     p.add_argument("--language")
     p.add_argument("--languages",
                    help="comma-separated packs; renders the same seeds in each "

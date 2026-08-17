@@ -126,6 +126,46 @@ def test_a_run_reloads_and_produces_the_same_numbers(finished_run, episodes):
     assert torch.allclose(first, second), "eval mode should be deterministic"
 
 
+def test_the_development_split_cannot_overlap_the_training_seeds(tmp_path):
+    """`eval_seed0` buys a dev split, and must not buy a memorisation score.
+
+    `scripts/rsi_loop.py` ranks candidates on a config whose scored seeds start
+    at 500,000 rather than at a million, because `CLAUDE.md` forbids settling a
+    design choice against evaluation and until that field existed there was no
+    way to obey the rule while scoring anything. The field is therefore load
+    bearing in a new way: set it *below* `n_train` and the scored episodes are
+    episodes the model was fitted on, and every number downstream is a
+    memorisation score wearing the run's name.
+
+    Nothing else in the suite would notice — the run would finish, write a
+    summary, and report a very good accuracy.
+    """
+    base = dict(model="ngram-001", tasks=("node",), lessons="counting_quantifier",
+                n_train=20, n_eval=2, max_nodes=48, device="cpu",
+                out=str(tmp_path / "overlap"))
+    with pytest.raises(ValueError, match="overlaps the training seeds"):
+        train(TrainConfig.from_dict({**base, "eval_seed0": 5}))
+
+
+def test_eval_seed0_defaults_to_the_evaluation_range(tmp_path):
+    """A config that says nothing gets evaluation seeds, as it always did.
+
+    The default is what every published number in this repo was measured under,
+    so it is pinned rather than assumed: a field added for a development split
+    must not have quietly moved the split for runs that never asked.
+    """
+    assert TrainConfig().eval_seed0 == 1_000_000
+    train_eps, eval_eps = load_data(TrainConfig.from_dict(
+        dict(lessons="counting_quantifier", n_train=3, n_eval=2, max_nodes=48)))
+    dev_eps = load_data(TrainConfig.from_dict(
+        dict(lessons="counting_quantifier", n_train=3, n_eval=2, max_nodes=48,
+             eval_seed0=500_000)))[1]
+    assert [e.text for e in eval_eps] != [e.text for e in dev_eps], (
+        "the development split drew the same episodes as evaluation; it is not "
+        "a separate split and ranking on it would be tuning against evaluation")
+    assert [e.text for e in dev_eps] != [e.text for e in train_eps[:len(dev_eps)]]
+
+
 def test_single_task_runs_do_not_require_the_other(tmp_path):
     """A model trained only on graphs must not need the text task to exist."""
     summary = train(small_config(tmp_path / "node_only", tasks=("node",),

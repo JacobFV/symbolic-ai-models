@@ -23,6 +23,57 @@ history), and a genuine fork in the *research direction* where the evidence does
 not pick a side — say which way you lean and why, then proceed on your own
 recommendation unless told otherwise.
 
+## Breadth first. Build all of them, then follow the one that moves.
+
+Standing instruction from the user, 2026-08-16, after a session that got this
+exactly backwards: **given N candidate directions, build N cheap arms and get a
+number on each, then pick the live one and go deep.** Do not take candidate 1,
+polish it to publication standard, and report back having never touched 2, 3 and
+4. That is the failure mode to avoid, and it is expensive in the way that
+matters — it spends the session's wall clock on certainty about something that
+was already mostly known instead of on finding out which direction is real.
+
+The session that prompted this: four papers came in, one was built to a full
+finding with controls, refuters and a merged write-up, and the other three got
+three-paragraph notes. The one built was the one whose experiment the repo had
+*already set up*. So the whole session bought a confirmation, and the three
+directions nobody had a number for stayed at zero.
+
+What this looks like in practice:
+
+- **Fan out before you go deep.** Each candidate gets the smallest thing that
+  produces a comparable number — a registered model, a sweep row, one arm. Hours
+  each, not a session each. Run them in parallel, in their own worktrees.
+- **Rank on the numbers, then commit to one.** The second pass is where controls,
+  refuters, floors and the write-up go, and it goes on the arm that earned it.
+- **A dead arm is a result and costs one note.** `notes/findings/` with the
+  number and the reason, `status: provisional`, move on.
+- **Verification is proportional to the claim.** A number that is going into
+  `RESEARCH_LOG.md` or a merged headline gets the full bar below — floor,
+  control, renaming, the refuter. A number that is deciding *which arm to chase
+  next* does not; it needs to be honest and reproducible, not bulletproof. Do not
+  spend an hour proving a scouting number to four decimals when its only job is
+  to be bigger or smaller than three other scouting numbers.
+- **Two rules do not relax, ever, at any depth:** say what you expect before the
+  number lands, and report what you actually found. Cheap and fast is not licence
+  to be wrong, and a scouting arm that is wrong sends the deep pass down the
+  wrong hole, which costs far more than it saved.
+
+## Automate the loop. Do not hand-drive it.
+
+The user's phrase is **"automate the RSI loop"** — propose, implement, evaluate,
+keep what wins, propose again, without a human turn between each step. Sitting in
+the loop hand-driving one model at a time is the thing being replaced.
+
+`scripts/rsi_loop.py` is the driver. It reads a candidate list, builds each arm
+in its own worktree, sweeps them against the same config and floors, ranks the
+rows, writes a `notes/findings/` entry per arm, and emits the next round's
+candidates from what survived. Extend the candidate generator rather than running
+arms by hand.
+
+When you find yourself about to run a fifth sweep by typing a fifth command,
+that is the signal to put it in the loop instead.
+
 ## Delegation: what may be handed off, and to what
 
 Parallel agents are how this repo gets through a wide front, and two of them have
@@ -85,7 +136,19 @@ What that means concretely, all of it learned here the expensive way:
   feature the model does — each of these overturned something. Reach for the
   measurement that could show the work is not doing what it claims.
 - **Do not tune against evaluation.** Seeds >= 1,000,000 are eval only. Form
-  and settle design choices on held-out *training* episodes.
+  and settle design choices on held-out *training* episodes. There is now a
+  **development split** to do that on — `configs/rsi_dev.toml`, scored seeds
+  from 500,000, runs landing in `runs/rsi/` — because until `eval_seed0` became
+  a field there was no way to obey this rule while scoring anything, so every
+  knob ever fitted by reading a sweep was fitted against evaluation without
+  anybody choosing to. `scripts/rsi_loop.py` refuses to rank on evaluation
+  seeds; `--final` is the one door, it takes an already-chosen candidate, and it
+  ranks nothing.
+- **Rank on the number a memoriser cannot buy.** Any search ranked on
+  `label_acc` walks into this repo's oldest trap, because accuracy here rewards
+  memorising the vocabulary. The loop's default objective is `equivariant` — the
+  accuracy that survives permuting every symbol — and it prints `acc`, `bits`,
+  `renamed` and `drop` side by side whatever it ranks by.
 - **The sweep is the authority.** Scratch scripts have contradicted
   `symbolic-ai-models sweep` twice, both times flattering the write-up. Use
   them to form hypotheses, never to report.

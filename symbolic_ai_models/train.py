@@ -54,6 +54,20 @@ class TrainConfig:
     lessons: str = "all"
     n_train: int = 32
     n_eval: int = 8
+    #: First seed the *scored* episodes are drawn from. A million by default,
+    #: because training seeds start at zero and the gap is what makes the split
+    #: a property of the seeds rather than of a file that could be regenerated
+    #: wrongly.
+    #:
+    #: It is a field so that a **development** split can exist. `CLAUDE.md` says
+    #: design choices are settled on held-out *training* episodes and that seeds
+    #: >= 1,000,000 are evaluation only — and until this was a knob there was no
+    #: way to obey that rule while scoring anything, so every knob this repo has
+    #: ever fitted by looking at a sweep was fitted against evaluation.
+    #: `scripts/rsi_loop.py` refuses to rank candidates on a config whose
+    #: `eval_seed0` is in the evaluation range, which is what turns the rule
+    #: from a convention into something that holds.
+    eval_seed0: int = 1_000_000
     language: str = "english"
     #: Several languages at once, comma-separated, overriding ``language``.
     #:
@@ -147,9 +161,12 @@ class TrainConfig:
 def load_data(cfg: TrainConfig) -> tuple[list[Episode], list[Episode]]:
     """Training and evaluation episodes, from a cache or generated live.
 
-    The two never overlap: evaluation seeds start at one million and training
-    seeds at zero, which is a property of the seeds themselves rather than of a
-    split file that could be regenerated wrongly.
+    The two never overlap: scored seeds start at ``cfg.eval_seed0`` — one
+    million by default — and training seeds at zero, which is a property of the
+    seeds themselves rather than of a split file that could be regenerated
+    wrongly. Lowering ``eval_seed0`` buys a *development* split for settling
+    design choices without touching evaluation; it must still clear
+    ``n_train``, which :func:`train` asserts.
     """
     if cfg.data:
         root = Path(cfg.data)
@@ -160,10 +177,10 @@ def load_data(cfg: TrainConfig) -> tuple[list[Episode], list[Episode]]:
         kw = dict(language=packs[0], max_nodes=cfg.max_nodes,
                   curriculum=cfg.curriculum)
         return (list(generate(lessons, n=cfg.n_train, seed0=0, **kw)),
-                list(generate(lessons, n=cfg.n_eval, seed0=1_000_000, **kw)))
+                list(generate(lessons, n=cfg.n_eval, seed0=cfg.eval_seed0, **kw)))
     return (_parallel_corpus(lessons, packs, n=cfg.n_train, seed0=0,
                              max_nodes=cfg.max_nodes, curriculum=cfg.curriculum),
-            _parallel_corpus(lessons, packs, n=cfg.n_eval, seed0=1_000_000,
+            _parallel_corpus(lessons, packs, n=cfg.n_eval, seed0=cfg.eval_seed0,
                              max_nodes=cfg.max_nodes, curriculum=cfg.curriculum))
 
 
@@ -300,6 +317,15 @@ def train(cfg: TrainConfig, *, progress=None) -> dict[str, Any]:
     ``steps`` gradient steps, a rule-based model is *fitted* once, in a single
     pass over the same training episodes.
     """
+    # The split is a property of the seeds, so it is worth one line to check
+    # that it actually is one. A development `eval_seed0` set below `n_train`
+    # would score the model on episodes it was fitted on, and every number
+    # downstream would be a memorisation score wearing the run's name.
+    if cfg.eval_seed0 < cfg.n_train:
+        raise ValueError(
+            f"eval_seed0={cfg.eval_seed0} overlaps the training seeds "
+            f"0..{cfg.n_train - 1}; the scored episodes would be episodes the "
+            "model was fitted on")
     torch.manual_seed(cfg.seed)
     random.seed(cfg.seed)
     np.random.seed(cfg.seed)

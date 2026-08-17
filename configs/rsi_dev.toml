@@ -1,0 +1,45 @@
+# The development split. `scripts/rsi_loop.py` ranks candidates on this and on
+# nothing else.
+#
+#   uv run python scripts/rsi_loop.py --rounds 3
+#
+# Identical to `configs/full179.toml` knob for knob **except `eval_seed0`**, and
+# that one difference is the point. `CLAUDE.md` says design choices are settled
+# on held-out training episodes and that seeds >= 1,000,000 are evaluation only.
+# Until `TrainConfig.eval_seed0` existed there was no way to obey that while
+# scoring anything, so every knob this repo ever fitted by reading a sweep was
+# fitted against evaluation — quietly, and without anybody choosing to.
+#
+# Scored seeds here start at 500,000: far above any plausible `n_train`, so
+# there is no overlap with fitting (`train` raises if there ever is), and half a
+# million below the evaluation range, so a development number can never be
+# mistaken for an evaluation one.
+#
+# **Numbers produced under this config are not comparable with `runs/full179`.**
+# They live in `runs/rsi/` for that reason. A candidate chosen here gets exactly
+# one evaluation run, through `--final`, and that is the number that may be
+# quoted anywhere.
+#
+# All 179 lessons, deliberately. A smaller lesson set would run faster and this
+# repo has inverted a result off a slice thirteen times
+# (`notes/lessons/2026-08-13-slices-have-inverted-results-eight-times.md`), so a
+# search ranked on a slice would optimise for the slice. The speed comes from
+# the models being fitted rather than trained — most rule-based rows here are
+# under a minute.
+
+tasks = "node"
+lessons = "all"
+n_train = 20
+n_eval = 4
+eval_seed0 = 500000
+
+vocab_size = 8192
+d_model = 96
+n_layers = 3
+n_heads = 4
+d_ff = 256
+dropout = 0.1
+max_len = 320
+max_nodes = 128
+batch_size = 16
+device = "cpu"
