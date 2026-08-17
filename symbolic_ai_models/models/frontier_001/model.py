@@ -24,10 +24,25 @@ the derived non-copyable bucket and five score 0.145-0.155.
 
 Reading ``runs/derive179-*/derived_split.json`` says something sharper: four of
 those five agree to **nine decimal places**, and every non-zero row is identical
-between the treatment and the ``-shuffled`` arm. That is the shared back-off
-wearing five models' names — see
-``notes/lessons/2026-08-14-a-score-can-be-the-back-off-wearing-the-models-name.md``.
-**Not one model produces a correct derived fill from its own machinery.**
+between the treatment and the ``-shuffled`` arm.
+
+This paragraph used to continue "that is the shared back-off wearing five
+models' names… **not one model produces a correct derived fill from its own
+machinery**", and ``agent-refuter`` measured it rather than believing it. It is
+**false**. Silencing ``node_votes`` — which leaves ``_forward_graph`` mixing at
+``c = 0``, the exact path
+``notes/lessons/2026-08-14-a-score-can-be-the-back-off-wearing-the-models-name.md``
+describes — takes ``brill-001`` and ``ngram-001`` from 98/634 to **0/634**. The
+shared back-off scores **zero** on this bucket for every rule-based model,
+because the answer sits on no visible node and neither the unigram nor
+``_node_context``'s prior ever proposes one of the six values. The four agree
+because four separately written modal-label baselines converge on the same table
+— ``brill``'s is "commonest label per (parent head, slot)" — which is a better
+illustration of that lesson's point than the shared fallback would have been,
+and a different diagnosis. What survives unchanged is the conclusion this
+paragraph exists for: **no model states the planted rule**, and 98/634 at the
+modal label is what not stating it looks like.
+
 
 The reason is syntactic. Every rule-based model here concludes either a **copy**
 — the label of a node reached by some structural path — or a **constant**.
@@ -986,7 +1001,21 @@ class FrontierModel(RuleBasedModel):
 
         Estimating and deploying a table on the same fills is the failure the
         cross-fit exists to stop. Refitting *after* the estimate is fixed is not
-        that: nothing about which hypotheses survived depends on this pass.
+        that: no ``precision`` or ``score`` moves here, so nothing a rule is
+        *ranked* or *admitted* by depends on this pass.
+
+        This docstring used to say "nothing about which hypotheses survived
+        depends on this pass", and that is **false** — :meth:`_prune` runs after
+        this and :meth:`_Rule.dominates` compares ``set(other.table) <=
+        set(self.table)``, which is the *deployed* table this method writes. So
+        the surviving rule *set* does depend on the refit. It is benign, and the
+        reason is worth stating rather than assuming: the tables are fitted on
+        training fills only, domination is a question about what will actually
+        fire at prediction time, and the pass can only ever *remove* a rule —
+        there is no route by which it raises a held-out precision. But "benign"
+        and "does not happen" are different claims and only the first one is
+        true. Found by ``agent-refuter``; see
+        ``notes/findings/2026-08-17-the-channel-is-walked-by-the-floor-alone.md``.
         """
         if rule.form == "copy":
             return
@@ -1595,6 +1624,62 @@ class FrontierTypeAtomsModel(FrontierTwoHeadModel):
     def __init__(self, cfg: ModelConfig) -> None:
         super().__init__(cfg)
         self.type_atoms = bool(cfg.get("type_atoms", True))
+
+
+@register("frontier-floor",
+          doc="frontier-001 with only the per-guard floor changed: the ablation that isolates the cause.")
+class FrontierFloorOnlyModel(FrontierModel):
+    """``frontier-001`` plus the relative floor, and **nothing else**.
+
+    Registered by ``agent-refuter`` after the fact rather than pre-registered,
+    and this docstring says so because the honesty rule does not have an
+    exception for a variant that turned out well. Named for what it changes
+    rather than by number, because a number was already taken by a different
+    model on ``master`` while this branch was running — which is its own small
+    argument for descriptive names on ablation controls, as ``frontier-nomap``
+    and ``frontier-soft`` already are.
+
+    It exists because ``frontier-008`` bundles three changes and its finding
+    (``notes/findings/2026-08-17-the-channel-is-walked-and-it-took-a-conjunction-of-three.md``)
+    reports them as a conjunction that single-factor ablation could not have
+    found. The single-factor ablation was never run on the winning model. Run,
+    it says the conjunction is not one:
+
+    | on ``derive:wordnet``, ``acc \\| derived, not copyable`` | |
+    |---|---:|
+    | ``frontier-001`` (floor 0.5) | 0.5315 |
+    | ``frontier-006`` = ``keep_by_path`` + ``propose_support=2``, floor 0.5 | 0.5315 |
+    | **this model** = floor only | **0.9748** |
+    | ``frontier-008`` = floor + both | 0.9890 |
+    | ``frontier-008`` with ``propose_support=12`` | 0.9890 |
+
+    ``propose_support=2`` is **inert** — the bucket is identical to six decimals
+    with it on and off — because the rule that carries the extra 290 fills is at
+    the *one-atom* guard ``[slot=1]``, which is proposed in round zero whatever
+    the gate is. ``keep_by_path`` is worth **+0.0142** once the floor is lowered,
+    exactly **zero** before it (``frontier-006`` lands on ``frontier-001``'s
+    0.5315 to six decimals), and **−0.129** on the soft readout
+    (``frontier-soft`` 0.4432 → ``frontier-005`` 0.3139). The floor is a single
+    sufficient cause.
+
+    It is also the better model on every pooled number, measured on the same
+    curriculum and seeds: 0.4493 label accuracy against ``frontier-008``'s
+    0.4407, 7.066 bits against 7.137, 0.8637 type against 0.8536, and 0.299
+    against 0.277 on ``acc | rest, not copyable``. So the two extra ingredients
+    do not merely fail to be necessary, they cost. Its 0.8637 type accuracy is
+    also ``frontier-001``'s, which is the number ``frontier-009`` was built to
+    recover — reached here by not applying the label head's knobs to a head that
+    never needed a lowered floor, rather than by separating the settings.
+
+    The control is honest and is the reason this is reported at all:
+    ``derive:wordnet-perm`` scores **0.111**, below that arm's blind marginal of
+    0.143 and 0.864 below the treatment — a wider separation than
+    ``frontier-008``'s 0.846.
+    """
+
+    def __init__(self, cfg: ModelConfig) -> None:
+        super().__init__(cfg)
+        self.relative_floor = bool(cfg.get("relative_floor", True))
 
 
 @register("frontier-nomap",

@@ -56,26 +56,32 @@ Pooled, on `runs/full179`: `label_acc` **0.4376**, the highest in the repo,
 Still ~eleventh on bits and still 0.22 down under renaming where `corefer` is
 0.003 down, so this is not a reasoning result.
 
-**It took a conjunction of three, which is why seven candidates were nulls.**
-Seven single-factor variants left the bucket at **0.531546**, identical to six
-decimals across very different rule sets. Three of them are components of one
-cause: `propose_support=2` (a size-2 guard gets exactly one round to be
-proposed), `keep_by_path` (`map:sib@0` otherwise wins a within-form competition
-against the `map:sib@2` the fills need), and `min_precision=0.2` (at a *broad*
-guard every resolver is diluted below a floor calibrated for narrow ones).
-**Single-factor ablation cannot find a conjunctive cause** — it reports every
-component as a null, and the record then reads as seven refutations of seven
-ideas.
+**The cause is the precision floor alone, and my "conjunction of three" was
+wrong.** I reported the result as needing three changes together, on the grounds
+that single-factor ablation had returned seven nulls. `agent-refuter` ran the
+single-factor ablation *on the winning model* — which I never did — and it is one
+sufficient cause:
 
-The third component was found by **logging every resolver `_offer` sees at the
-one guard the abstaining fills need**, not by guessing an eighth stage: for the
-label head there, nothing clears 0.5 (best `map:parent` 0.201, `copy:sib@0`
-0.118), so the guard yields no rule and the fills fall through to
-`[slot=1] -> map:sib@3`, which cannot resolve for a two-sibling object. A
-*specialisation* does keep a map at 0.912. **One global precision floor cannot
-serve both ends of a guard lattice** — generous at a narrow guard, prohibitive
-at a broad one, and the phenomena living at broad guards are exactly the ones no
-narrow guard names.
+| on `derive:wordnet`, `acc \| derived, not copyable` | |
+|---|---:|
+| `frontier-001` (floor 0.5) | 0.5315 |
+| `frontier-006` = `keep_by_path` + `propose_support=2`, floor 0.5 | 0.5315 |
+| **`frontier-floor`** = the floor and nothing else | **0.9748** |
+| `frontier-008` = floor + both | 0.9890 |
+| `frontier-008` with `propose_support=12` | 0.9890 |
+
+`propose_support` is **exactly inert**; `keep_by_path` is worth **+0.0142** and
+only *after* the floor. The guard my account named,
+`[slot=1, nsib=2] -> map:sib@2`, is **not in the fitted model** — the carrying
+rule sits at the one-atom guard `[slot=1]`. The seven nulls were seven variants
+that all left the floor at 0.5, and what they showed was that nothing *else*
+matters, not that the cause was conjunctive. **One global precision floor cannot
+serve both ends of a guard lattice** survives as the mechanism; the story about
+how it was found does not.
+
+`frontier-floor` also **beats** `frontier-008` on pooled accuracy (0.4493 vs
+0.4407), on bits, on `acc | rest, not copyable`, and on type (0.8637 — which is
+`frontier-001`'s number, the one `frontier-009` was separately built to recover).
 
 **And it is not about table size.** The pair-count curve, each rung against its
 own control and its own blind marginal — `-kN` widens the *pool* the episode's
