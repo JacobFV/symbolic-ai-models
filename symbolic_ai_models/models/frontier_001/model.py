@@ -2251,6 +2251,44 @@ class FrontierPointModel(FrontierTypePointModel):
         self.use_pointer = bool(cfg.get("use_pointer", True))
 
 
+@register("frontier-pointsoft",
+          doc="frontier-point read as a vote across matching rules instead of a decision list.")
+class FrontierPointSoftModel(FrontierSoftModel, FrontierPointModel):
+    """The measured loss is path *selection*, and a vote does not have to select.
+
+    Decomposing `frontier-point` on renamed copyable fills **where the answer is
+    reachable** (1,985 of them):
+
+    ======================================  =====
+    right                                   0.646
+    **fired on a path without the answer**  **0.290**
+    right path, resolver wrong              0.064
+    no rule fired                           **0.000**
+    ======================================  =====
+
+    It never abstains, and the resolver is almost never the problem. **Nearly all
+    of the loss is committing to one path when another matching rule reads the
+    one that holds the answer.** That is first-match-wins doing what it is
+    designed to do, on a language that now has eleven paths instead of ten.
+
+    A vote does not commit. `frontier-soft` already exists and was measured
+    *worse* on the derived bucket (0.532 → 0.443) precisely because it dilutes a
+    rule that is right; this asks whether the same mechanism *pays* on the
+    population where the failure is disagreement rather than dilution — and those
+    are different populations, which is why both rows are needed.
+
+    **Predicted before running:** renamed ``acc | copyable`` rises above
+    `frontier-point`'s **0.340** toward the 0.520 ceiling, and the
+    "fired on a path without the answer" share falls. **The derived bucket is
+    expected to get worse**, by roughly the 0.089 the soft readout cost before —
+    stated in advance so a fall there is not read as a surprise or hidden.
+
+    Refuted if renamed ``acc | copyable`` does not rise: then the losing paths are
+    not being outvoted, the disagreement is not there to exploit, and selection is
+    a harder problem than "commit too early".
+    """
+
+
 @register("frontier-nomap",
           doc="frontier with the map form removed: the control in its own hypothesis class.")
 class FrontierNoMapModel(FrontierModel):

@@ -475,6 +475,30 @@ agreeing to a fifth of a percent. And the *type* head improved without being
 aimed at, +0.062 → +0.112, because the pointer extends the type paths too and the
 pointed-at type is the whole of `corefer`'s type advantage.
 
+**And the selection loss was committing to a path.** Decomposing
+`frontier-point` on the 1,985 renamed copyable fills *where the answer is
+reachable*: right 0.6463, **fired on a path without the answer 0.2902**, resolver
+wrong 0.0635, **no rule fired 0.0000**. It never abstains and the resolver is
+almost never the problem — the loss is first-match-wins committing to one path
+when another matching rule reads the one that holds the answer. A vote does not
+commit, and `frontier-pointsoft` moves +0.044 into "right" and −0.049 out of
+"committed wrong", with the third category unmoved:
+
+| | acc | **bits** | type | renamed | ren `acc\|cp` |
+|---|---:|---:|---:|---:|---:|
+| `frontier-point` | 0.4460 | 7.092 | 0.876 | 0.248 | 0.340 |
+| **`frontier-pointsoft`** | 0.4372 | **6.457** | 0.876 | **0.267** | **0.371** |
+| `corefer-001` | 0.3572 | 6.955 | 0.946 | 0.350 | 0.492 |
+
+**6.457 is 7th of 46 on `label_bits`, and every model above it scores 0.169–0.319
+on accuracy where this scores 0.437** — the first row here that is strong on both
+columns at once. That was *not* what the experiment was for: it was aimed at
+renamed copyable accuracy, predicted +0.03, and got it; the 0.635 bits came
+along.
+
+The remaining loss is now **weighting**: on 24.1% of reachable fills the truth is
+in the vote set and is outvoted.
+
 That is the **third** head to return the same diagnosis. The label head's
 derivability null was expressive, not procedural; the type head needed a pointer
 rather than a fourth column; and the copy head reaches 74% of what its paths
