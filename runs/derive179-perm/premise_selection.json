@@ -1,0 +1,52 @@
+{
+ "arm": "derive:wordnet-perm",
+ "dir": "runs/derive179-perm",
+ "lessons": [
+  "compositional_reference",
+  "counting_quantifier",
+  "definitions",
+  "general_language_agent",
+  "lexicon_induction",
+  "negation",
+  "quantification",
+  "set_operations",
+  "symbol_equivalence",
+  "symbol_grounding",
+  "symbolic_generalist"
+ ],
+ "reconstruction": "reproduced 7 published floors exactly",
+ "draws": 8,
+ "n_eval": 64,
+ "n_train": 20,
+ "floors": {
+  "dfloor_copyable": 0.1702127659574468,
+  "dfloor_not_copyable": 0.16694772344013492,
+  "dfloor_all": 0.1687732342007435,
+  "blind_copyable": 0.1502659574468085,
+  "blind_not_copyable": 0.1433389544688027,
+  "blind_all": 0.14721189591078068,
+  "dfloor_n": 1345.0,
+  "self_siblings_copyable": 0.17287234042553193,
+  "self_siblings_not_copyable": 0.17706576728499157,
+  "self_siblings_all": 0.17472118959107807,
+  "self_siblings_picked_kind": 0.4312267657992565,
+  "self_siblings_picked_a_kind_label": 0.4312267657992565,
+  "self_siblings_mean_candidates": 2.761338289962825,
+  "self_siblings_n": 1345.0,
+  "self_siblings_n_not_copyable": 593.0,
+  "self_graph_copyable": 0.1449468085106383,
+  "self_graph_not_copyable": 0.1551433389544688,
+  "self_graph_all": 0.14944237918215614,
+  "self_graph_picked_kind": 0.0052044609665427505,
+  "self_graph_picked_a_kind_label": 0.035687732342007436,
+  "self_graph_mean_candidates": 23.623791821561337,
+  "self_graph_n": 1345.0,
+  "self_graph_n_not_copyable": 593.0
+ },
+ "graph_alpha_sensitivity": {
+  "0.5": 0.15682967959527824,
+  "1.0": 0.1551433389544688,
+  "10.0": 0.13827993254637436,
+  "100.0": 0.1433389544688027
+ }
+}
