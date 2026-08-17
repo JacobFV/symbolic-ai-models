@@ -300,3 +300,44 @@ def test_a_derive_episode_is_a_pure_function_of_its_address():
         a = [ep.to_dict() for ep in C.generate(SCENE, n=3, seed0=5, curriculum=arm)]
         b = [ep.to_dict() for ep in C.generate(SCENE, n=3, seed0=5, curriculum=arm)]
         assert a == b
+
+
+def test_a_derive_map_wider_than_the_slot_is_refused():
+    """A map the slots cannot take derives nothing, and must not register quietly.
+
+    `DeriveBinder.vocabulary` applies the map only when the slot asks for exactly
+    as many words as the map holds. The scene vocabularies are six words each, so
+    a wider map falls back at every slot and the arm derives nothing — while
+    producing artefacts identical to a real null. The parked k-curve asks for
+    exactly this widening, so without this guard the next person to run it would
+    read a flat curve as "the models cannot hold more than six pairs".
+    """
+    import pytest
+
+    from symbolic_ai_core.data.curriculum import _check_derive_width
+    from symbolic_ai_data.generators.base import SHAPES
+
+    _check_derive_width(tuple(f"k{i}" for i in range(len(list(SHAPES)))))
+    with pytest.raises(ValueError, match="cannot bind slots of width"):
+        _check_derive_width(tuple(f"k{i}" for i in range(12)))
+
+
+def test_the_binder_falls_back_when_the_map_is_too_wide():
+    """The behaviour the guard above exists for, pinned rather than argued."""
+    from symbolic_ai_data.generators.base import COLORS, SHAPES
+    from symbolic_ai_kg import load as load_kg
+    from symbolic_ai_kg.derive import KIND_SLOT, DeriveBinder, anchor_map
+
+    kg = load_kg("wordnet")
+    narrow_k, narrow_v = anchor_map(kg, width=len(list(SHAPES)))
+    wide_k, wide_v = anchor_map(kg, width=12)
+
+    ok = DeriveBinder(kinds=narrow_k, values=narrow_v, lesson_id="L", seed=0,
+                      graph="wordnet")
+    assert list(ok.vocabulary(KIND_SLOT, list(SHAPES))) == list(narrow_k)
+    assert not ok._fallback
+
+    wide = DeriveBinder(kinds=wide_k, values=wide_v, lesson_id="L", seed=0,
+                        graph="wordnet")
+    assert list(wide.vocabulary(KIND_SLOT, list(SHAPES))) == list(SHAPES)
+    assert wide._fallback, "the fallback must be counted, or the null is silent"

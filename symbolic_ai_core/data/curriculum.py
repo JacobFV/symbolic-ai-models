@@ -222,9 +222,48 @@ def _derive_factory(name: str):
     kinds, _ = anchor_map(load_kg("wordnet"))
     kg = load_kg(graph_name)
     kinds, values = anchor_map(kg, kinds=kinds)
+    _check_derive_width(kinds)
     return lambda lesson_id, seed: DeriveBinder(
         kinds=kinds, values=values, lesson_id=lesson_id, seed=seed,
         permute=permute, graph=name)
+
+
+def _check_derive_width(kinds: Sequence[str]) -> None:
+    """A ``derive:`` arm whose map is wider than the slot derives *nothing*.
+
+    ``DeriveBinder.vocabulary`` applies the map only when the slot asks for
+    exactly as many words as the map holds, and falls back to the curriculum's
+    own list otherwise. That fallback is deliberate — a value slot the map cannot
+    fill entirely is a slot on which the derivation does not hold, and a binder
+    that quietly half-filled one would be a treatment behaving like its baseline.
+
+    But the scene vocabularies are **six words each** and are imported by 57
+    lesson modules, so a map of any other width falls back at *every* slot and
+    the arm derives nothing at all. Measured: at width 12 and 24 the kind slot
+    returns the curriculum's list and the binder records a fallback.
+
+    That is a null by construction, and the artefacts it produces are identical
+    to a real null — the sweep runs, `derived_split.py` prints its table, and
+    nothing in either surfaces the fallback count. The parked k-curve in
+    ``notes/questions/2026-08-15-how-many-pairs-can-a-model-here-hold.md`` asks
+    for exactly this widening, so the next person to reach for it would have
+    measured a flat curve and concluded the models cannot hold more than six
+    pairs.
+
+    So it raises here instead, at registration, where the message can say what
+    the real change is: widening the pool means widening ``COLORS`` and
+    ``SHAPES``, which moves every scene in every lesson and therefore the
+    substrate of every published number.
+    """
+    from symbolic_ai_data.generators.base import COLORS, SHAPES
+    widths = {len(list(SHAPES)), len(list(COLORS))}
+    if len(kinds) not in widths:
+        raise ValueError(
+            f"a derive: map of {len(kinds)} pairs cannot bind slots of width "
+            f"{sorted(widths)}: DeriveBinder falls back to the curriculum's own "
+            f"list at every slot, so the arm would derive nothing and score its "
+            f"baseline. Widening the pool means widening COLORS/SHAPES in "
+            f"symbolic_ai_data, which changes every scene in every lesson.")
 
 
 def generate(lessons: Sequence[str], *, n: int, seed0: int = 0,
