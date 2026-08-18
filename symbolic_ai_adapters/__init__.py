@@ -20,8 +20,11 @@ rather than a place where information quietly appears:
 
 from __future__ import annotations
 
-from .openflights import (OPENFLIGHTS_CRS, AdapterResult, load_airports,
-                          load_routes, parse_body)
+from .openflights import (MERGED_IATA_NODES, OPENFLIGHTS_CRS, AdapterResult,
+                          OpenflightsIntegrityError, check_iata_merges,
+                          detect_merged_iata_nodes, load_airports, load_routes,
+                          parse_body)
 
 __all__ = ["AdapterResult", "load_airports", "load_routes", "parse_body",
-           "OPENFLIGHTS_CRS"]
+           "OPENFLIGHTS_CRS", "OpenflightsIntegrityError", "MERGED_IATA_NODES",
+           "detect_merged_iata_nodes", "check_iata_merges"]
