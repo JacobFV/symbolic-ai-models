@@ -213,6 +213,43 @@ denominators small once the *capability* numerators become non-zero — the VSA'
 only dense step is a projection that runs once at fit, and inference is
 elementwise operations over one vector.
 
+**6. There is no universal inference language, and the world is not a DAG.**
+Added 2026-08-18, and it reframes points 1–5 rather than sitting beside them.
+The substrate is a **typed world-program runtime**: an acyclic flow graph of
+typed operations over an *arbitrary-topology* world IR, with specialised kernels
+that each see a **projection** of that world in their own language — and every
+projection declares what it discarded.
+
+Why this is a design commitment and not plumbing:
+
+- The obvious question in symbolic AI is *which logic*. It is the wrong
+  question. Datalog is the right tool for relational closure over a cyclic
+  network; ASP for defaults, exceptions and world completion; SMT for arithmetic
+  with units; Lean for exact verification. **Logic is a computational
+  representation selected for the structure of the subproblem.**
+- The lossiness has to be *visible*, or a kernel answering about a fragment
+  returns something indistinguishable from an answer about the world. The
+  datalog projection discards a claim whose role is a `Quantity`, saying so and
+  why; SMT exists for exactly those claims. One world, two projections, disjoint
+  strengths, and neither is the world.
+- Kernels **propose**; fusion decides, property by property, and its default is
+  to keep the mixture. Last-writer-wins is indistinguishable from a correct
+  answer at the point where it is read, which is the failure this repo has the
+  longest history with.
+
+The first number from it: three kernels reach 1.000 on a generated
+flood-logistics task against a brute-force oracle that shares no code with them,
++0.560 over the strongest of seven floors, every single-kernel ablation strictly
+worse, at **$2.15 × 10⁻⁸ per solved episode above floor**. That is the first
+capability price this repo has produced and it prices *reasoning given a world*
+— no parser is in the ledger, which is the whole point of saying so.
+
+And the second number is the one that keeps this honest. A reader losing more
+than about **one claim in six** leaves that entire pipeline no better than a rule
+that ignores the road network. The cheap-symbolic-core argument survives only if
+a reader can hit ≥90% claim recall at a price that does not dominate; nothing
+measured here says it can, and this repo's best exact parse recovery is 0.016.
+
 ## What we keep being wrong about, and the guards
 
 The failures repeat, so the guards are structural rather than intentional:
