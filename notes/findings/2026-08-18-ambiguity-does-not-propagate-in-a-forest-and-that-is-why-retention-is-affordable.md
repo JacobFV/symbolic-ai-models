@@ -86,6 +86,44 @@ The full arc now runs on real bytes: 251 conflicts → retained by `fuse` →
 through a JSON round trip → read back as choices → 251 queries each returning
 two possible answers.
 
+## Correction, one day later: that was a median reported as a property
+
+The headline above is wrong in a specific and instructive way. **1.0x describes
+where those 251 conflicts happened to sit, not the graph.**
+
+Measuring `exposure` — how many answers change if a conflict lands on a given
+node — across every GLEIF relation:
+
+| relation | mean | p50 | p90 | p99 | **max** |
+|---|---|---|---|---|---|
+| `IS_DIRECTLY_CONSOLIDATED_BY` | 1.98 | 1 | 3 | 14 | **769** |
+| `IS_FUND-MANAGED_BY` | 1.94 | 1 | 1 | 15 | **1,259** |
+| `IS_SUBFUND_OF` | 1.89 | 1 | 2 | 17 | **3,848** |
+
+Four orders of magnitude **inside a single relation**. The graph has hubs — a
+manager with 1,258 funds, a fund family with 3,847 subfunds — and those are
+precisely the entities whose ownership is most worth arguing about.
+
+The 251 real conflicts sat at ordinary positions: median exposure 1, mean 1.21,
+max 18, against a random entity's median 1, mean 1.28, max 175. Total exposure
+**304 answers**.
+
+> **The same 251 conflicts, placed on the 251 highest-exposure nodes, would
+> contaminate 31,111 answers — 102x worse from an identical conflict count.**
+
+So "retention is cheap in this graph" is true of the conflicts that occurred and
+false as a statement about the graph. The correct rule is that **the cost of
+retaining a conflict is a property of the node it sits on**, spanning three
+orders of magnitude, and a flat `max_worlds` bound cannot express that.
+
+`exposure` and `rank_by_exposure` now make it visible *before* enumeration —
+`possible_answers` refusing an explosion is the right failure and a late one.
+
+A cycle bug surfaced while testing this: the walk counted the start node once in
+a `1 +` and again in the visited set, so a two-entity ownership loop reported an
+exposure of 3. Six such loops are real in this data. Seeding the visited set
+with the node fixes it, and the test that caught it was written before the code.
+
 ## What would refute it
 
 - One graph shape per measurement. Two points is a contrast, not a curve, and

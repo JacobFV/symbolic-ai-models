@@ -13,8 +13,9 @@ import pytest
 from symbolic_ai_core.runtime.ambiguity import (Alternatives,
                                                 AmbiguityExplosion,
                                                 PossibleAnswers,
-                                                alternatives_from,
-                                                possible_answers)
+                                                alternatives_from, exposure,
+                                                possible_answers,
+                                                rank_by_exposure)
 
 
 class TestAlternatives:
@@ -108,3 +109,48 @@ class TestReadingAFusionResult:
             claims = ("A", "B", "A")
         alts = alternatives_from([_G()], value=lambda c: c)
         assert list(alts.choices.values()) == [("A", "B")]
+
+
+class TestExposure:
+    """How much an unresolved conflict costs, before enumerating it."""
+
+    KIDS = {"hub": ["f0", "f1", "f2"], "f0": ["g0", "g1"]}
+
+    def test_a_leaf_conflict_costs_one_answer(self):
+        assert exposure("f2", self.KIDS) == 1
+
+    def test_a_hub_conflict_costs_everything_beneath_it(self):
+        assert exposure("hub", self.KIDS) == 6
+
+    def test_an_unknown_node_is_a_leaf(self):
+        assert exposure("nobody", self.KIDS) == 1
+
+    def test_a_cycle_terminates(self):
+        assert exposure("a", {"a": ["b"], "b": ["a"]}) == 2
+
+    def test_a_diamond_counts_each_node_once(self):
+        kids = {"a": ["b", "c"], "b": ["d"], "c": ["d"]}
+        assert exposure("a", kids) == 4
+
+    def test_ranking_puts_the_expensive_conflict_first(self):
+        """The point is to see an expensive conflict BEFORE enumeration.
+        `possible_answers` refuses an explosion, which is the right failure and
+        a late one."""
+        alts = Alternatives({("owns", ("f2",)): ("A", "B"),
+                             ("owns", ("hub",)): ("C", "D")})
+        ranked = rank_by_exposure(alts, self.KIDS, subject_of=lambda k: k[1][0])
+        assert ranked[0][0] == ("owns", ("hub",)) and ranked[0][1] == 6
+        assert ranked[-1][1] == 1
+
+    def test_ranking_is_deterministic_on_ties(self):
+        alts = Alternatives({("owns", ("f1",)): ("A", "B"),
+                             ("owns", ("f2",)): ("C", "D")})
+        a = rank_by_exposure(alts, self.KIDS, subject_of=lambda k: k[1][0])
+        b = rank_by_exposure(alts, self.KIDS, subject_of=lambda k: k[1][0])
+        assert a == b
+
+    def test_exposure_is_not_a_property_of_the_graph_but_of_the_node(self):
+        """The correction the last finding needed. The same graph gives 1 and
+        6 depending only on where the conflict lands, and on GLEIF the spread
+        is 1 to 3,848 inside a single relation."""
+        assert exposure("f2", self.KIDS) != exposure("hub", self.KIDS)

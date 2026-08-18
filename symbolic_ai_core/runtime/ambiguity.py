@@ -29,7 +29,8 @@ from dataclasses import dataclass, field
 from typing import Any, Callable, Hashable, Iterable, Mapping, Sequence
 
 __all__ = ["Alternatives", "PossibleAnswers", "AmbiguityExplosion",
-           "alternatives_from", "possible_answers"]
+           "alternatives_from", "possible_answers", "exposure",
+           "rank_by_exposure"]
 
 
 class AmbiguityExplosion(RuntimeError):
@@ -126,3 +127,62 @@ def possible_answers(compute: Callable[[Mapping[Hashable, Any]], Any],
         assignment = dict(zip(subjects, combo))
         grouped.setdefault(compute(assignment), []).append(assignment)
     return PossibleAnswers({k: tuple(v) for k, v in grouped.items()}, worlds=n)
+
+
+def exposure(node: Hashable, children: Mapping[Hashable, Sequence[Hashable]],
+             *, max_visit: int = 1_000_000) -> int:
+    """How many answers change if a conflict lands on ``node``.
+
+    The node itself plus everything reachable beneath it. One means the
+    disagreement is local and enumerating it costs nothing; a thousand means a
+    single unresolved conflict rewrites a thousand answers.
+
+    **This is the number the last finding got wrong by reporting a median as a
+    property.** Measured over GLEIF, exposure has median **1** and a maximum of
+    **3,848** within a single relation — four orders of magnitude — and the 251
+    real conflicts happened to sit at median positions. "Ambiguity does not
+    propagate in this graph" was true of those conflicts and false of the graph:
+    it has hubs, and a manager with 1,258 funds is exactly the entity whose
+    ownership is most worth arguing about.
+
+    So the cost of retaining a conflict is **not uniform**, and a flat bound on
+    worlds cannot express that. Rank by this first, and spend evidence on the
+    expensive ones.
+    """
+    # Seeded with the node itself, so a node reachable from itself is counted
+    # once. Ownership cycles are real in this data -- six of them -- and
+    # counting the start node twice would report an exposure of 3 for a
+    # two-entity loop.
+    seen: set[Hashable] = {node}
+    stack = list(children.get(node, ()))
+    while stack:
+        x = stack.pop()
+        if x in seen:
+            continue
+        seen.add(x)
+        if len(seen) > max_visit:                             # pragma: no cover
+            raise AmbiguityExplosion(
+                f"exposure of {node!r} exceeded {max_visit:,} nodes; the graph "
+                "is not a forest and this walk does not terminate usefully")
+        stack.extend(children.get(x, ()))
+    return len(seen)
+
+
+def rank_by_exposure(alternatives: Alternatives,
+                     children: Mapping[Hashable, Sequence[Hashable]],
+                     *, subject_of: Callable[[Hashable], Hashable]
+                     ) -> tuple[tuple[Hashable, int], ...]:
+    """Conflicts, most consequential first.
+
+    ``subject_of`` maps a choice key to the graph node it sits on, because the
+    key carries a predicate and a subject tuple and only the caller knows which
+    part indexes the graph.
+
+    The point is to make an expensive conflict visible **before** enumeration
+    rather than at it: `possible_answers` refuses an explosion, which is the
+    right failure and a late one.
+    """
+    return tuple(sorted(
+        ((key, exposure(subject_of(key), children))
+         for key in alternatives.choices),
+        key=lambda kv: (-kv[1], repr(kv[0]))))
