@@ -1,5 +1,5 @@
 ---
-title: The first arrow is cheap and bad — symbolic extraction from prose wins $/correct-fact by at least 1.77 million times and reaches F1 0.303, which is 42% of a ceiling the task itself imposes
+title: The first arrow is cheap and bad — symbolic extraction from prose wins $/correct-fact by at least 1.77 million times and reaches 53% of a ceiling the task itself imposes, after three attempts to do better bought +0.077
 date: 2026-08-18
 author: lead
 status: provisional
@@ -119,14 +119,48 @@ That is the honest state of the bet, and it is what the morning's finding
 predicted would be found: the advantage is real where structure is **already
 filed**, and this is the first measurement of what happens when it is not.
 
+## D. The floor was tested, and it barely moved
+
+The claim above that 0.303 is a floor was the obvious thing to attack, so it was
+attacked immediately — `scripts/first_arrow_ladder.py`, same split, same seed,
+same evaluation, with the v0 row required to reproduce 0.303 or the ladder is
+not measuring the same thing. It does.
+
+| rung | F1 unseen | **% of ceiling** | precision | recall |
+|---|---:|---:|---:|---:|
+| v0  component vote (the published floor) | 0.303 | 42.2% | 29.1% | 31.5% |
+| v1  + IDF weighting | 0.377 | 52.6% | 39.9% | 35.7% |
+| v2  + word-overlap fallback | 0.366 | 51.0% | 36.1% | 37.1% |
+| **v3  + specificity-first** | **0.379** | **52.9%** | **54.7%** | 29.1% |
+| *ceiling (memoriser on seen strings)* | *0.717* | *100%* | *72.8%* | *70.7%* |
+
+**Three principled improvements bought +0.077 and left 47% of the ceiling
+unreached.** The weakness is real, not an artefact of a lazy first attempt, and
+the headline stands rather than softening.
+
+Two things inside the ladder are worth more than its top line:
+
+**v2 made it worse, and the reason is one this repo already knows.** The
+word-overlap fallback fires exactly where component matching found nothing —
+where the extractor knows least — and its guesses cost more precision
+(39.9% → 36.1%) than the recall they bought. **Abstaining beats guessing**,
+which is the same shape as the largest harness effect in this repo's history,
+abstention falling back to the structural prior.
+
+**F1 is insensitive to the operating point and the frontier is the object.** v3
+moves precision 29.1% → 54.7% and recall 35.7% → 29.1% for a flat F1. For
+building a world that will be *reasoned over*, v3 is the rung to ship despite
+that: a world with fewer wrong facts is worth more than one with more facts, and
+this repo's stated engineering rule is fail-loudly rather than guess.
+
 ## What would refute it
 
-- **F1 0.303 is a FLOOR for symbolic extraction, not a ceiling.** The extractor
-  is a deliberately dumb dictionary with a min-count-2 component vote. String
-  similarity, hierarchical matching, or ROR's own reconciliation service would
-  all do better and none was tried. The correct reading is "a naive symbolic
-  extractor reaches 42% of the task ceiling", not "symbolic extraction reaches
-  42%".
+- **0.379 is still a floor, only a better-tested one.** ROR's own reconciliation
+  service, a learned matcher, or the full institution-name gazetteer would all do
+  better than a dictionary built from 3,500 works, and none was tried. The
+  correct reading is "symbolic string matching reaches 53% of the task ceiling",
+  and the honest open question is whether the residual 47% is reachable by
+  anything that is not a model.
 - **The anchor is agreement, not truth.** OpenAlex's resolution is itself an
   automated extractor. Every number in halves B and C is *agreement with
   OpenAlex*, and calling it accuracy would repeat the `airport_country`
@@ -145,7 +179,9 @@ filed**, and this is the first measurement of what happens when it is not.
 ```bash
 uv run python -u scripts/fetch_openalex_prose.py --works 5000   # ~90s, 16.3 MB
 uv run python -u scripts/first_arrow_prose.py                   # ~20s
+uv run python -u scripts/first_arrow_ladder.py                   # ~30s, section D
 ```
 
-`runs/first_arrow_prose.json`; prediction, design refinement and outcome in
-`notes/autonomy/predictions.jsonl` under `first-arrow-on-prose-openalex`.
+`runs/first_arrow_prose.json` and `runs/first_arrow_ladder.json`; predictions,
+design refinements and outcomes in `notes/autonomy/predictions.jsonl` under
+`first-arrow-on-prose-openalex` and `first-arrow-extractor-ladder`.
