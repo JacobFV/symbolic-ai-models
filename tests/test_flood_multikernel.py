@@ -377,13 +377,43 @@ def test_the_skipped_branch_carries_the_reason(cases):
         assert all(r.note for r in ctx.trace.runs if r.skipped)
 
 
-def test_routing_never_costs_more_than_it_saves(cases):
-    """The gate is arithmetic over facts already on the table. If it were not
-    cheaper than what it gates, routing would be a loss."""
-    base = sum(solve(c.world, ctx=Context())[2].trace.total_usd for c in cases)
-    routed = sum(solve(c.world, ctx=Context(), routed=True)[2].trace.total_usd
-                 for c in cases)
-    assert routed < base
+def test_routing_skips_real_work_when_the_gate_fires(cases):
+    """The gate is arithmetic over facts already on the table, so when it fires
+    the solvers do not run.
+
+    **Asserted structurally, not by timing.** The measured saving is ~4.5% over
+    24 cases, which machine contention inverts -- this was the third test I
+    wrote comparing two CPU measurements whose difference is near the noise, and
+    it failed in a full run while passing alone. What does not move is *which
+    nodes ran*.
+    """
+    fired = 0
+    for c in cases:
+        _, outs, ctx = solve(c.world, ctx=Context(), routed=True)
+        ran = {r.node for r in ctx.trace.runs if not r.skipped and not r.cached}
+        if outs["decision"].value["chosen"] == ["cheap"]:
+            fired += 1
+            assert "routes" not in ran and "loads" not in ran, (
+                "the gate took the cheap arm and the solvers ran anyway")
+        else:
+            assert "cheap" not in ran
+    assert fired > 0, "the gate never fired, so nothing was skipped"
+
+
+def test_the_gate_costs_less_than_the_solvers_it_gates(cases):
+    """The economic claim, on the one comparison that is far above the noise:
+    the router node against the ASP and SMT nodes it decides whether to run."""
+    gate = solver = 0.0
+    for c in cases:
+        _, outs, ctx = solve(c.world, ctx=Context(), routed=True)
+        if outs["decision"].value["chosen"] == ["cheap"]:
+            continue
+        by = {r.node: (r.cost_usd or 0.0) for r in ctx.trace.runs}
+        gate += by.get("gate", 0.0)
+        solver += by.get("routes", 0.0) + by.get("loads", 0.0)
+    assert solver > 10 * gate, (
+        f"the gate costs {gate:.3e} against {solver:.3e} of solver work it "
+        f"decides on; routing pays in proportion to what is downstream of it")
 
 
 def test_cheap_and_incapable_is_not_a_point_on_the_cost_curve(cases):
@@ -423,3 +453,23 @@ def test_cheap_and_incapable_is_not_a_point_on_the_cost_curve(cases):
     assert (cut_usd / max(cut_acc - floor, 1e-9)) > (full_usd / (full_acc - floor)), (
         "the cheaper arm won on $/solved-above-floor, which would make the "
         "north star reward incapability")
+
+
+def test_the_raw_gate_agrees_with_the_object_gate_exactly(cases):
+    """The optimisation must be a pure speed change.
+
+    `needs_the_solvers_raw` reads the serialised world; `needs_the_solvers`
+    rebuilds a WorldSnapshot. They must decide identically, or the 13.1% saving
+    is bought by deciding something else.
+    """
+    from symbolic_ai_core.world import Claim
+    from symbolic_ai_generators.flood.ops import needs_the_solvers
+    from symbolic_ai_generators.flood.routing import needs_the_solvers_raw
+    from symbolic_ai_kernels.flow_ops import world_artifact
+
+    for c in cases:
+        _, outs, _ = solve(c.world, ctx=Context())
+        raw = outs["reach"].value["claims"]
+        objects = [Claim.from_dict(x) for x in raw]
+        assert (needs_the_solvers(c.world, objects)[0]
+                == needs_the_solvers_raw(world_artifact(c.world).value, raw)[0]), c.seed

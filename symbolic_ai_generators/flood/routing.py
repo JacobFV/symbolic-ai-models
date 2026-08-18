@@ -14,7 +14,79 @@ from symbolic_ai_core.flow.router import register_policy
 from symbolic_ai_core.world import Claim
 from symbolic_ai_kernels.flow_ops import read_world
 
-__all__ = ["flood_escalate", "flood_learned"]
+__all__ = ["flood_escalate", "flood_learned", "needs_the_solvers_raw"]
+
+
+def needs_the_solvers_raw(world: Mapping[str, Any],
+                          reach: Sequence[Mapping[str, Any]]
+                          ) -> tuple[bool, str]:
+    """The escalation gates, read straight off the serialised world.
+
+    Identical in meaning to :func:`symbolic_ai_generators.flood.ops.needs_the_solvers`
+    and asserted equal to it by test. The difference is that it does **not**
+    rebuild a `WorldSnapshot`: measured, the gate was the third most expensive
+    node in the routed pipeline at 10.4% of its cost -- above datalog itself --
+    entirely because `WorldSnapshot.from_dict` reconstructs every Entity and
+    Claim so that two `if` statements can read six fields.
+
+    That is the routing principle biting its own implementation. A gate has to be
+    cheaper than what it gates, and this one was only 6.5x cheaper than the
+    solvers it decides on, which is most of why lossless routing saved 4.5%
+    rather than the double digits the skip rate implies.
+    """
+    depot = site = None
+    limits: dict[str, float] = {}
+    span: dict[str, tuple[str, str]] = {}
+    mass: dict[str, float] = {}
+    cap: dict[str, float] = {}
+    demand = None
+    for c in world.get("claims", ()):
+        pred, roles = c.get("predicate"), c.get("roles") or {}
+        if pred == "depot":
+            depot = _ent(roles.get("where"))
+        elif pred == "needs":
+            site = _ent(roles.get("where"))
+        elif pred == "bridge_on":
+            a, b, via = (_ent(roles.get("a")), _ent(roles.get("b")),
+                         _ent(roles.get("via")))
+            if a and b and via:
+                span[via] = tuple(sorted((a, b)))
+        elif pred == "load_limit":
+            q, of = _qty(roles.get("value")), _ent(roles.get("of"))
+            if q is not None and of:
+                limits[of] = q
+        elif pred in ("mass", "capacity"):
+            q, of = _qty(roles.get("value")), _ent(roles.get("of"))
+            if q is not None and of:
+                (mass if pred == "mass" else cap)[of] = q
+        elif pred == "demand":
+            demand = _qty(roles.get("value"))
+
+    pairs = {(_ent(r.get("roles", {}).get("a")), _ent(r.get("roles", {}).get("b")))
+             for r in reach if r.get("predicate") == "reach"}
+    if depot and site and (depot, site) not in pairs:
+        return False, ("the demand site is not reachable from the depot, so no "
+                       "vehicle can serve it whatever the loads are")
+
+    posted = [v for k, v in limits.items() if k in span]
+    if demand is not None and posted:
+        laden = [mass[v] + demand for v in mass
+                 if v in cap and cap[v] >= demand]
+        if laden and max(laden) <= min(posted):
+            return False, (f"every qualifying vehicle's laden mass "
+                           f"({max(laden):g} kg) clears the lightest posted "
+                           f"limit ({min(posted):g} kg), so no bridge can bind")
+    return True, ""
+
+
+def _ent(role: Any) -> str | None:
+    return role.get("entity") if isinstance(role, dict) else None
+
+
+def _qty(role: Any) -> float | None:
+    if isinstance(role, dict) and "quantity" in role:
+        return float(role["quantity"]["value"])
+    return None
 
 
 def flood_escalate(inputs: Mapping[str, Artifact],
@@ -25,16 +97,14 @@ def flood_escalate(inputs: Mapping[str, Artifact],
     worth doing before there is a utility model to trade against: a heuristic
     gate trades accuracy for cost and cannot be evaluated without one.
     """
-    from .ops import needs_the_solvers
-
     world_art = inputs.get("in")
     reach_art = inputs.get("aux")
     if world_art is None or not world_art.present:
         return ["full"]
-    reach = [Claim.from_dict(c)
-             for c in ((reach_art.value or {}).get("claims", [])
-                       if reach_art is not None and reach_art.present else [])]
-    need, _why = needs_the_solvers(read_world(world_art), reach)
+    need, _why = needs_the_solvers_raw(
+        world_art.value,
+        (reach_art.value or {}).get("claims", [])
+        if reach_art is not None and reach_art.present else [])
     return ["full"] if need else ["cheap"]
 
 

@@ -72,9 +72,23 @@ denominator is what makes that visible.
 **2. Lossless routing saved 4.5%, not the 10% predicted.** The gate fires on
 15.3% of cases but only ASP and SMT sit downstream of it — datalog and the
 reconcile step run unconditionally on every case. **Routing pays in proportion to
-what is downstream of the gate, and nothing else.** Pushing the gate earlier,
-before datalog, is where the remaining saving is, and it is not free: the
-reachability gate *needs* datalog's output.
+what is downstream of the gate**, and pushing the gate earlier is not free,
+because the reachability condition *needs* datalog's output.
+
+> **Corrected, later the same day: 13.1%, not 4.5%.** The missing two thirds was
+> the gate's own implementation. Its policy called `WorldSnapshot.from_dict`,
+> rebuilding every Entity and Claim so that two `if` statements could read six
+> fields — which made the router the **third most expensive node in the routed
+> pipeline at 10.4% of its cost, above datalog itself**, and only 6.5× cheaper
+> than the solvers it decides on. Reading the serialised world directly instead
+> takes it to 1.3% and 56.5×, and lossless routing then saves **13.1%** at
+> accuracy still 1.000. `$/solved above floor` goes 2.469e-08 → 2.145e-08.
+>
+> So the principle needs its second half, and I stated the first and then
+> violated it in the same file: **routing pays in proportion to what is
+> downstream of the gate, and in inverse proportion to what the gate itself
+> costs.** The two gates are asserted to decide identically on every case, so the
+> saving is a pure speed change.
 
 **3. The cheap arm and the no-SMT ablation land on identical accuracy (0.537)
 at 3× different cost.** Two unrelated ways of dropping the load check agreeing
