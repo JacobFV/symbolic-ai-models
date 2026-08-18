@@ -3,6 +3,11 @@
 Standing instructions for autonomous work in this repo. `ROADMAP.md` holds the
 task list and the experimental rules; this file holds the workflow ones.
 
+**Arriving cold? Read `HANDOVER.md` first.** It names where the live edge is,
+the numbers already measured (so you do not re-derive them), what is *believed
+and unrun* (so you do not inherit it as fact), the one thread blocked on a human
+decision, and the traps that cost the last session hours.
+
 ## What we are here to do
 
 **Build a language-understanding substrate whose cost per correct answer is a

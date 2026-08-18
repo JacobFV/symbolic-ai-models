@@ -1928,6 +1928,9 @@ finding that never gets challenged.
 
 | ~~the copy lead~~ | — | **PROMOTED**, above. Survived an independent attack that eliminated three artefact hypotheses — same scored key lists, back-off provably absent from the pointer, leads 5/5 draws including fresh episodes. The *improvement* did not survive: quoted against the wrong baseline, the atomspace-specific increment is **+0.0165**, not +0.049. The attack also found a denominator mismatch in `copy_ceiling` affecting every copy number in this file. |
 
+| `notes/findings/2026-08-18-a-query-pays-for-the-conflicts-it-reads-and-4992-of-them-cost-one.md` | a query over a world holding 4,992 unresolved conflicts reads a median of **0** and a max of **1** of them; 117,129 answers in 0.3s where whole-world enumeration is refused (2^4992); `additive_bounds` matched enumerated extremes 3,273/3,273 | an independent reader tracing `possible_answers_scoped`'s read-set closure loop. The anchor (410/410 against full enumeration on an 8-conflict sub-mixture) is author-designed, and this repo has had author-designed controls pass while hollow — one in this very batch did |
+| `notes/findings/2026-08-18-the-advantage-curve-was-mostly-the-framing-and-what-is-left-is-a-constant.md` plus its same-day correction | the ~5e7 constant, and the three factors any advantage figure must now name | a second corpus. The constant is measured on facts that are 20-character identifiers; prose facts should move it, and nothing here predicts where |
+
 The one thing the queue must not become is a parking lot for results nobody
 intends to challenge. A finding that sits here unchallenged is not "pending"; it
 is unverified, and should be read that way.
@@ -1972,6 +1975,10 @@ Each of these was in the README as a result:
 | "Every rule-based model sees the training set in full" | `ilp` saw 1.1% of available examples |
 | "The mask rate moves the opportunity, not the ability" | half true: nothing is reconstructed, but `acc \| copyable` is a mixture the mask rate reweights, and `copy_lift` falls for six of six pointer models and is negative by 0.60 |
 | "The render is deterministic, so `exact_match <=` graph exactness" | determinism gives `>=`; an upper bound needs injectivity, and a third of hidden symbols never reach the page |
+| "The advantage curve spans seven orders of magnitude; 1.85e11 on ultimate parent" | the arithmetic is right and the **framing** carries it: 99,738x of that row was handing the model the whole graph. Priced against an opponent given only what the query depends on, four query classes land within **1.2x** of each other at ~5e7 |
+| "A retriever can only guess what an answer depends on" (asserted and refuted the same day) | an ideal retriever certifies determinacy in **<=4 rounds** with zero misses. What survives is that it has no *stopping rule* — silently wrong on 1.128% of the world at its natural stop — and over-fetches **46x** |
+| "Ambiguity does not propagate in this graph, amplification 1.0x" | true of the 251 conflicts that occurred, false of the graph. The same conflicts on the highest-exposure nodes contaminate **102x** more; exposure spans 1 to 3,848 inside one relation |
+| "Alternatives are retained, not collapsed" | held only inside the process. `FusionResult.to_dict` carried a count and dropped the competing claims, so retention died at the artifact boundary |
 
 The pattern is worth naming: **six-lesson slices and weak floors both produce
 confident results with the wrong sign.** Three separate conclusions inverted when

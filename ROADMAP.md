@@ -163,6 +163,25 @@ measurements support:
    *above* the oracle because over-fetch is paid every round.
    See `notes/findings/2026-08-18-retrieval-can-certify-determinacy-in-four-rounds-what-it-lacks-is-a-stopping-rule.md`.
 
+**The recommended order as of 2026-08-18, from the cost evidence rather than
+from this list's history.** `HANDOVER.md` has the reasoning; the short form:
+
+1. **Dependency-certification as a substrate-wide contract.** Only
+   `possible_answers_scoped` reports what it read. Generalise it: every kernel
+   and flow node returns the facts it consumed. This is the *only* claim that
+   survived contact with a realistic opponent — the 46x over-fetch and the
+   missing stopping rule are both this, and `check_entitlement` in
+   `symbolic_ai_kernels/abi.py` is the nearest shape to copy.
+2. **A corpus where the certificate is worth money**: the 3.8M-row 13F holdings
+   graph. Portfolio answers depend on hundreds of facts, so over-fetch is not a
+   rounding error. GLEIF ownership is close to exhausted — chain p50 is 2.
+3. **Keep attacking our own published numbers.** Two of the last three findings
+   corrected an earlier headline of ours, at a cost of hours each.
+
+Not this: more kernels, more query classes on GLEIF ownership, another cost row
+against a hypothetical opponent, or any experiment whose write-up could be
+drafted first.
+
 Carried over, still worth doing:
 
 1. **Carry the regime with the finding.** Three flood results met the second task

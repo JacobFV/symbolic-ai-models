@@ -51,6 +51,16 @@ uv run symbolic-ai-models cost runs/both/* --unit answer
 uv run symbolic-ai-models cost runs/both/* --parser-usd-per-btok 0.30   # price the parser we do not have
 ```
 
+**And an advantage figure has to say which of three things it reports**, which
+this repo learned by publishing one that did not. Measured on GLEIF ownership,
+2026-08-18: a constant **~5e7** (the cost of a fact in a kernel against a fact
+in a prompt), times **how much irrelevant context the alternative was handed**
+(up to 1e5 — it was 99,738x of our own published 1.85e11), times **how many
+queries the ingest amortises over** (up to 2e5 — a workload of one query is
+271x, not 5e7). Against a realistically simulated retrieval agent rather than a
+hypothetical one it is **3.36e9**. See
+`notes/findings/2026-08-18-the-advantage-curve-was-mostly-the-framing-and-what-is-left-is-a-constant.md`.
+
 The headline column divides by `accuracy − floor`, so a system at or below its
 floor reads `inf` — the correct entry, not a formatting bug. On the `both`
 sweep, eighteen of nineteen models read `inf`. A `System` is a *list* of
@@ -581,8 +591,9 @@ symbolic-ai-models/
                           #   closure: 0.9785 by FUSING direct edges with other
                           #   entities' filed ultimates, against a swept 0.9005
                           #   (naive floor 0.7503 overstates the lift 3.6x).
-                          #   The graph is 1.99M tokens -- past a context window,
-                          #   so the LLM comparison stops being a price ratio
+                          #   The graph is 1.99M tokens -- but that is what an
+                          #   opponent is HANDED, not what the query depends on
+                          #   (41 tokens): 99,738x of the advantage was framing
     airport_country.py    #   and a wrong answer is
                           #   possible. Country from coordinates alone: 0.9078
                           #   against a SWEPT floor of 0.7888 (the modal-country
