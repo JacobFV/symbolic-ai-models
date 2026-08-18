@@ -19,6 +19,12 @@ symbolic-ai-agents = "symbolic_ai_agents.cli:main"
 symbolic-ai-parsers = "symbolic_ai_parsers.cli:main"
 symbolic-ai-lean = "symbolic_ai_lean.cli:main"
 
+[project.optional-dependencies]
+solvers = [
+    "clingo>=5.8.2",
+    "z3-solver>=5.1.0.0",
+]
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"

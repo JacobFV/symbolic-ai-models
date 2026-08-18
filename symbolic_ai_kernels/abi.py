@@ -244,6 +244,8 @@ KERNELS: dict[str, Kernel] = {}
 #: two failures are different and a caller needs to tell them apart.
 KERNEL_MODULES: dict[str, str] = {
     "datalog@1": "symbolic_ai_kernels.datalog",
+    "asp@1": "symbolic_ai_kernels.asp",
+    "smt@1": "symbolic_ai_kernels.smt",
 }
 
 

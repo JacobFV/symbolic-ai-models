@@ -113,6 +113,11 @@ def project_world(world: WorldSnapshot, *, extra_rules: Iterable[Rule] = (),
 
     # --- entity types and profiles ------------------------------------
     for eid, e in sorted(world.entities.items()):
+        # A unary domain predicate. Every recursive rule and every choice rule
+        # needs one -- a rule whose variables range over nothing has no finite
+        # meaning -- and deriving it from `type/2` would exclude the untyped
+        # entities, which is the wrong domain by a subset nobody would notice.
+        facts.add(("entity", eid))
         for t in e.types:
             facts.add(("type", eid, t))
         for profile, facet in sorted(e.facets.items()):
