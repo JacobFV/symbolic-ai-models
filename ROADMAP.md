@@ -84,6 +84,36 @@ the numbers, the seven floors and the three ablations.
 
 ### Next, in order
 
+**Direction changed 2026-08-18, after the first real-data numbers.** The
+programme stops adding kernels at eight and moves to real-data tasks with real
+floors. The reason is measured, not stylistic: the corpus can populate
+`core.identity`, `core.type` and `logic.proposition` and — outside one source —
+nothing else, because no held source carries a unit and only openflights carries
+a coordinate. Six of the eight kernels were validated on worlds I generated, and
+that was not a scoping choice but a forced one nobody had written down. See
+`notes/findings/2026-08-18-the-corpus-is-a-triple-store-and-the-cards-did-not-say-so.md`.
+
+The defensible system is a typed store plus two or three general reasoning modes
+plus a language model at the surface — not eight domain kernels. What the
+measurements support:
+
+0. **A real-data task with a floor a method can fail to beat, each round.** The
+   airport-country task is the template: externally authored ground truth, a
+   named leak used as an exactly-1.0 anchor, two controls that must fail, and a
+   **swept** floor. Both real-data findings so far had a wrong prediction in
+   them, which is the argument for more of them.
+0b. **Measure the LLM's actual accuracy on the airport task.** Every cost row
+   comparing against a language model currently assumes equal accuracy and is
+   stamped `NOT QUOTABLE` for it. This is the one open thread that needs
+   external paid API access and so has not been run.
+0c. **The advantage is a variable, so map it.** 1,500,000x on shortest path
+   (233k tokens of graph must be *given* to the model), ~6,750x on
+   country-from-coordinate (a coordinate must be given). Two points on the same
+   corpus and substrate. A third and fourth would turn a pair of anecdotes into
+   the curve that says where this substrate is worth building.
+
+Carried over, still worth doing:
+
 1. **Carry the regime with the finding.** Three flood results met the second task
    and none was universal as stated -- see
    `notes/findings/2026-08-18-three-substrate-findings-and-each-is-conditional.md`.
