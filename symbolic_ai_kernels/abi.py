@@ -43,7 +43,7 @@ __all__ = ["SEMANTICS", "AUTHORITY", "Discard", "Projection", "KernelCost",
            "KernelRequest", "KernelResult", "KernelManifest", "Kernel",
            "KernelUnavailable", "KERNELS", "register_kernel", "get_kernel",
            "check_entitlement", "timed", "ANSWERED", "PROVED_IMPOSSIBLE",
-           "EXHAUSTED", "REFUSED", "OUTCOMES"]
+           "EXHAUSTED", "REFUSED", "OUTCOMES", "Witness"]
 
 #: Which logic a kernel reasons under. Metadata, because it changes what a rule
 #: *means* and two kernels disagreeing about it silently is the whole problem.
@@ -140,6 +140,69 @@ class KernelCost:
                 "bytes_written": self.bytes_written, "usd": self.usd}
 
 
+@dataclass(frozen=True)
+class Witness:
+    """The facts that make an **existential** answer true, and nothing else.
+
+    Measured, not asserted. Across four experiments on two corpora
+    (`notes/findings/2026-08-18-a-witness-grows-linearly-and-its-complement-grows-with-the-ball.md`
+    and the three it corrects), a witness is the only dependency small enough to
+    be worth maintaining:
+
+    * A witness's size grows **linearly** in the answer — `d` edges for a
+      `d`-hop path, `k` filers for a `k`-set cover, one model for a
+      satisfiability.
+    * Its universal complement's grows with the **search space that must be
+      excluded** — on the openflights route network the ratio is 2.0x at `d=2`,
+      146x at `d=6`, and 874x at `d=10` where it reaches a third of the corpus.
+    * Under a real corpus update, that difference was worth **95x** on a set
+      cover and **8,932x** on a path.
+
+    So this field exists and its universal counterpart deliberately does not.
+
+    **A kernel must not synthesise one.** A `PROVED_IMPOSSIBLE` outcome has no
+    witness by construction — the whole point of the asymmetry is that the
+    negative claim has no short certificate — and returning the read set in its
+    place is the specific error this repo measured at up to **6,591x** wrong
+    while looking right. Leave it ``None`` and say so in ``diagnostics``.
+
+    ``verifies`` is the field that makes this more than provenance: it says how
+    a reader checks the witness **without re-running the kernel**, which is the
+    entire economic content.
+    """
+
+    kind: str                                #: model | cover | path | assignment
+    facts: tuple[Any, ...]
+    claim: str = ""                          #: the existential claim, in words
+    verifies: str = ""                       #: how to check it without the kernel
+    #: The witness is genuinely empty rather than unfilled. The case that forced
+    #: this field the first time a kernel was wired up: a program whose unique
+    #: stable model is the *empty* one is satisfiable, and the empty set of
+    #: atoms really is the certificate. Without the flag the guard below cannot
+    #: tell that from a kernel that left the field blank, and one of those two
+    #: is a lie.
+    vacuous: bool = False
+
+    def __post_init__(self) -> None:
+        if not self.facts and not self.vacuous:
+            raise ValueError(
+                "a witness with no facts certifies nothing. A kernel that has "
+                "no witness leaves the field None; an empty one reads like a "
+                "certificate and is not. If the emptiness is real -- the empty "
+                "stable model, a vacuously satisfied constraint -- say so with "
+                "vacuous=True.")
+
+    @property
+    def size(self) -> int:
+        return len(self.facts)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {"kind": self.kind, "size": self.size,
+                "facts": [repr(f) for f in self.facts],
+                "claim": self.claim, "verifies": self.verifies,
+                "vacuous": self.vacuous}
+
+
 #: A positive answer was produced.
 ANSWERED = "answered"
 #: No assignment exists, and the kernel established that. An answer.
@@ -200,6 +263,10 @@ class KernelResult:
     #: Finer than ``refused``. Defaults are chosen so an existing kernel that
     #: sets only ``refused`` still classifies correctly.
     outcome: str = ""
+    #: The facts that make an existential answer true — see :class:`Witness`.
+    #: ``None`` is the honest value for a universal or negative answer and is
+    #: the default, so a kernel that has not thought about it does not claim one.
+    witness: Witness | None = None
 
     @property
     def classification(self) -> str:
@@ -236,13 +303,24 @@ class KernelResult:
     def ok(self) -> bool:
         return not self.refused
 
+    @property
+    def maintainable(self) -> bool:
+        """Whether this answer can be re-checked without re-running the kernel.
+
+        True exactly when a witness is present. It is deliberately **not** true
+        for a proof of impossibility, however conclusive: that answer is
+        maintainable only by re-establishing it.
+        """
+        return self.witness is not None
+
     def to_dict(self) -> dict[str, Any]:
         return {"kernel": self.kernel,
                 "claims": [c.to_dict() for c in self.claims],
                 "delta": self.delta.to_dict(),
                 "diagnostics": dict(self.diagnostics),
                 "cost": self.cost.to_dict(), "refused": self.refused,
-                "outcome": self.classification}
+                "outcome": self.classification,
+                "witness": self.witness.to_dict() if self.witness else None}
 
 
 @dataclass(frozen=True)

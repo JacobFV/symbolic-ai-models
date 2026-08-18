@@ -27,7 +27,7 @@ from symbolic_ai_core.artifact.value import Provenance
 from symbolic_ai_core.world import Claim, EntityRef, WorldDelta, WorldSnapshot
 
 from ..abi import (EXHAUSTED, PROVED_IMPOSSIBLE, KernelCost, KernelManifest, KernelRequest, KernelResult,
-                   KernelUnavailable, Projection, check_entitlement,
+                   KernelUnavailable, Projection, Witness, check_entitlement,
                    price_cpu_ns, register_kernel, timed)
 from .project import AspProgram, project_world
 
@@ -158,6 +158,26 @@ class AspKernel:
             # set would be a choice the caller never made and cannot see.
             delta=WorldDelta(claims=claims) if unique else WorldDelta(),
             artifacts={"models": [self._readable(projection, m) for m in models]},
+            # The answer set IS the witness, and until now it was computed,
+            # rendered for humans, and thrown away as far as any consumer was
+            # concerned. It is what makes "a completion exists" checkable
+            # without re-solving: substitute the atoms and evaluate the
+            # constraints. Only for a UNIQUE completion, because with several
+            # answer sets the first one is a choice the caller never made -- the
+            # same reason `delta` is empty in that case.
+            witness=Witness(
+                kind="answer_set",
+                facts=tuple(self._readable(projection, models[0])),
+                claim=("a stable model of this projection exists, so the world "
+                       "admits at least one completion satisfying every "
+                       "constraint the projection carried"),
+                verifies=("substitute these atoms and evaluate the program's "
+                          "constraints; no search is required"),
+                # A unique *empty* stable model is satisfiable and its
+                # certificate is the empty set of atoms. Saying so explicitly
+                # is the difference between a degenerate witness and a missing
+                # one, and the ABI refuses to guess between them.
+                vacuous=not models[0]) if unique else None,
             cost=_cost(ns),
             diagnostics={"satisfiable": True, "n_models": len(models),
                          "unique": unique, "truncated": truncated,
