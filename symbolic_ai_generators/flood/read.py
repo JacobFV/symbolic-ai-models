@@ -25,12 +25,14 @@ from __future__ import annotations
 import hashlib
 import random
 import re
+from dataclasses import replace
 from typing import Iterable, Mapping
 
 from symbolic_ai_core.world import (Claim, Entity, EntityRef, Facet, Quantity,
                                     WorldSnapshot)
 
-__all__ = ["read_report", "corrupt", "CLAIM_KINDS"]
+__all__ = ["read_report", "corrupt", "misread", "CLAIM_KINDS",
+           "MISREADS"]
 
 #: The fact types the report carries, and therefore the ones corruption can
 #: remove one at a time.
@@ -147,3 +149,72 @@ def corrupt(world: WorldSnapshot, *, seed: int, rate: float,
                         and c.roles["via"].id in dropped_bridges)]
     return WorldSnapshot(entities=world.entities, claims=tuple(kept),
                          alignments=world.alignments)
+
+
+#: How a reader gets a number *wrong* rather than missing it. Each is a real
+#: failure of OCR, tokenisation or unit handling, not an abstract perturbation:
+#: a dropped or duplicated digit, a transposition, a thousands separator eaten,
+#: a tonne read as a kilogram.
+MISREADS = ("digit_dropped", "digit_added", "transposed", "unit_confused",
+            "off_by_percent")
+
+
+def misread(world: WorldSnapshot, *, seed: int, rate: float,
+            direction: str = "either") -> WorldSnapshot:
+    """Corrupt each Quantity with probability ``rate``, keeping the claim.
+
+    This is the **precision** channel, and it is a different thing from
+    :func:`corrupt`'s recall channel. A missing constraint is protected by
+    slack — most bridge limits are not the binding one, so losing one often
+    costs nothing. A *wrong* constraint has no such protection: it binds at the
+    wrong value, and the pipeline has no way to notice.
+
+    ``direction`` isolates the asymmetry that matters operationally.
+    ``"permissive"`` only makes limits larger and masses smaller — errors that
+    let a vehicle through that should not go. ``"conservative"`` only does the
+    reverse. ``"either"`` is the realistic mixture. A reader whose errors are
+    conservative is usable in a way one whose errors are permissive is not, even
+    at the same error rate, and an average over both hides that entirely.
+    """
+    r = random.Random(int.from_bytes(
+        hashlib.blake2b(f"misread|{seed}|{rate}|{direction}".encode(),
+                        digest_size=8).digest(), "big"))
+    #: which way a bigger number pushes the answer, per predicate
+    permissive_up = {"load_limit": True, "capacity": True,
+                     "mass": False, "demand": False}
+    out = []
+    for c in world.claims:
+        q = c.roles.get("value")
+        if not isinstance(q, Quantity) or r.random() >= rate:
+            out.append(c)
+            continue
+        want_up = permissive_up.get(c.predicate)
+        value = _perturb(q.value, r)
+        if direction != "either" and want_up is not None:
+            up = (want_up if direction == "permissive" else not want_up)
+            if (value > q.value) != up:
+                value = q.value + (q.value - value)      # flip the direction
+        value = max(1.0, round(value, 3))
+        out.append(replace(c, roles={**c.roles,
+                                     "value": Quantity(value, q.unit, q.stderr)}))
+    return WorldSnapshot(entities=world.entities, claims=tuple(out),
+                         alignments=world.alignments)
+
+
+def _perturb(value: float, r: random.Random) -> float:
+    kind = r.choice(MISREADS)
+    digits = str(int(value))
+    if kind == "digit_dropped" and len(digits) > 1:
+        i = r.randrange(len(digits))
+        return float(digits[:i] + digits[i + 1:] or "1")
+    if kind == "digit_added":
+        i = r.randrange(len(digits) + 1)
+        return float(digits[:i] + str(r.randrange(10)) + digits[i:])
+    if kind == "transposed" and len(digits) > 1:
+        i = r.randrange(len(digits) - 1)
+        swapped = list(digits)
+        swapped[i], swapped[i + 1] = swapped[i + 1], swapped[i]
+        return float("".join(swapped))
+    if kind == "unit_confused":
+        return value * r.choice([1000.0, 0.001])          # t read as kg
+    return value * (1.0 + r.choice([-0.3, -0.2, 0.2, 0.3]))

@@ -242,3 +242,59 @@ def test_the_pipeline_degrades_to_the_trivial_floor_and_not_below(cases):
     assert hit / len(cases) <= trivial + 0.1, (
         "heavy corruption scored above the always-none floor, so the "
         "corruption is doing something other than removing information")
+
+
+def test_precision_errors_hurt_less_than_recall_errors(cases):
+    """The prediction that failed. A wrong number leaves the vehicle in the
+    domain; a missed sentence removes it."""
+    from symbolic_ai_generators.flood.read import corrupt, misread, read_report
+
+    worlds = [read_report(c.report) for c in cases]
+
+    def acc(fn):
+        hit = 0
+        for i, (c, w) in enumerate(zip(cases, worlds)):
+            try:
+                got, _, _ = solve(fn(i, w))
+            except Exception:
+                got = ()
+            hit += tuple(got) == tuple(c.answer)
+        return hit / len(cases)
+
+    recall = acc(lambda i, w: corrupt(w, seed=i, rate=0.20))
+    precision = acc(lambda i, w: misread(w, seed=i, rate=0.20))
+    assert precision > recall, (
+        f"precision {precision:.2f} did not beat recall {recall:.2f}; the "
+        f"domain-vs-constraint mechanism does not hold here")
+
+
+def test_being_admitted_is_less_redundant_than_being_blocked(cases):
+    """The mechanism, measured in the uncorrupted worlds so it cannot be an
+    artefact of how the corruption was applied."""
+    import statistics
+
+    from symbolic_ai_generators.flood.world import _routes
+
+    viable, blocking = [], []
+    for c in cases:
+        routes = list(_routes(c.regions, c.links, c.flooded, c.depot,
+                              c.demand_site))
+        for v, (mass, cap) in c.vehicles.items():
+            if cap < c.demand_kg:
+                continue
+            laden = mass + c.demand_kg
+            ok = blocks = 0
+            for path in routes:
+                lims = [c.bridges[tuple(sorted(e))]
+                        for e in zip(path, path[1:])
+                        if tuple(sorted(e)) in c.bridges]
+                if all(laden <= l for l in lims):
+                    ok += 1
+                else:
+                    blocks += sum(laden > l for l in lims)
+            (viable if ok else blocking).append(ok or blocks)
+
+    assert viable and blocking
+    assert statistics.median(viable) <= statistics.median(blocking), (
+        "a qualifying vehicle had more redundancy than a blocked one, so the "
+        "conservative-worse-than-permissive result has no mechanism")
