@@ -134,3 +134,69 @@ def test_an_absent_world_routes_to_the_expensive_path():
         {"in": Artifact.absent("world_snapshot", why="upstream off")},
         {"model": m.to_dict()})
     assert out == ["full"]
+
+
+# --- the stronger learner, and what it buys its extra headroom with -------
+def test_boosted_trees_round_trip_and_separate():
+    from symbolic_ai_generators.flood.gate_model import BoostedGate, fit_boosted
+
+    rows = [([1.0, 0.0, 0.0], 1) for _ in range(40)] + \
+           [([1.0, 1.0, 0.0], 0) for _ in range(40)]
+    m = fit_boosted(rows, n_trees=20, depth=2, min_leaf=5)
+    assert m.score([1.0, 0.0, 0.0]) > m.score([1.0, 1.0, 0.0])
+    back = BoostedGate.from_dict(m.to_dict())
+    assert back.score([1.0, 0.0, 0.0]) == pytest.approx(m.score([1.0, 0.0, 0.0]))
+
+
+def test_boosted_trees_capture_an_interaction_a_linear_model_cannot():
+    """XOR. This is the whole reason a second learner was worth fitting, and
+    the reason it finds headroom the logistic model leaves."""
+    from symbolic_ai_generators.flood.gate_model import fit, fit_boosted
+
+    rows = ([([1.0, 0.0, 0.0], 0)] * 30 + [([1.0, 1.0, 0.0], 1)] * 30 +
+            [([1.0, 0.0, 1.0], 1)] * 30 + [([1.0, 1.0, 1.0], 0)] * 30)
+    lin = fit(rows, epochs=400)
+    gbt = fit_boosted(rows, n_trees=40, depth=2, min_leaf=5)
+
+    def separates(m):
+        return (min(m.score([1.0, 1.0, 0.0]), m.score([1.0, 0.0, 1.0]))
+                > max(m.score([1.0, 0.0, 0.0]), m.score([1.0, 1.0, 1.0])))
+
+    assert not separates(lin), "the linear model solved XOR, which it cannot"
+    assert separates(gbt)
+
+
+def test_a_boosted_model_fitted_on_another_feature_order_is_refused():
+    from symbolic_ai_generators.flood.gate_model import BoostedGate, fit_boosted
+
+    m = fit_boosted([([1.0] * len(FEATURES), 1),
+                     ([0.0] * len(FEATURES), 0)], n_trees=3, min_leaf=1)
+    d = m.to_dict()
+    d["features"] = list(reversed(d["features"]))
+    with pytest.raises(ValueError, match="current order"):
+        BoostedGate.from_dict(d)
+
+
+def test_the_hand_gate_is_lossless_by_proof_not_by_sample():
+    """The correction to the earlier finding, pinned.
+
+    A provable gate's accuracy is a theorem; a learned gate's is a sample
+    estimate. Measured across three disjoint 1,000-seed evaluation ranges: the
+    hand gate is wrong 0 times, and the boosted gate 1, 2 and 1 -- while
+    capturing more headroom. This test checks the *hand* half, which is the half
+    that must hold at any N.
+    """
+    from symbolic_ai_generators.flood.features import FEATURES as F
+    from symbolic_ai_generators.flood.flow import solve as _solve
+    from symbolic_ai_core.flow import Context
+
+    wrong = 0
+    for s in range(1_000_000, 1_000_060):
+        c = generate(s)
+        full, _, _ = _solve(c.world, ctx=Context())
+        routed, outs, _ = _solve(c.world, ctx=Context(), routed=True)
+        if outs["decision"].value["chosen"] == ["cheap"] and full != routed:
+            wrong += 1
+    assert wrong == 0, (
+        f"the provable gate was wrong {wrong} times; one of its two conditions "
+        f"is not actually sufficient")

@@ -2,7 +2,7 @@
 title: The learned gate captures 11.1% of the routing headroom at zero accuracy loss and the hand-written provable gate captures 13.7% — learning only wins once it is allowed to be wrong
 date: 2026-08-18
 author: lead
-status: provisional
+status: superseded-in-part
 tags: [routing, learning, cost, refuted-prediction]
 ---
 
@@ -104,3 +104,20 @@ best one. A stronger model might close some of the 83%, and the argument that it
 *cannot* close much rests on the mechanism above rather than on having tried one.
 The cheap test of that claim is a gradient-boosted tree on the same features; if
 it captures materially more than 16.6% at bar 1.00, this note is wrong about why.
+
+## The falsification was run, and the headline was too strong
+
+**Superseded in part, same day.** Gradient-boosted trees on the same nine
+features capture **19.3%** of the headroom against the hand gate's **14.5%**, so
+*learning does beat proof on headroom*. The title of this note is wrong as
+stated.
+
+What survives, and in a sharper form, is
+`2026-08-18-a-provable-gate-is-lossless-at-any-n.md`: the boosted gate buys its
+extra headroom by being wrong about 1 world in 750, which is invisible at the
+N = 400 this note evaluated on and stable across three disjoint 1,000-seed
+ranges. The logistic model was lossless across 3,000 seeds — but only because a
+conservatively tuned threshold cost it 2.5 points of headroom against the proof.
+
+The ceiling argument in this note is unaffected: 81% of the available saving is
+still unreachable, for the reason stated.
