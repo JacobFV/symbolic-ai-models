@@ -28,6 +28,36 @@ uv run symbolic-ai-models compare runs/sweep/*
 models are pure Python and run on CPU; nothing in them needs a GPU, and
 `train` fits them in a single pass rather than taking gradient steps.
 
+## What this is for
+
+**A language-understanding substrate whose cost per correct answer is a
+different order of magnitude from neural inference, and whose reasoning is
+inspectable rather than inferred.** The bet is that much of what a transformer
+spends parameters on is structure that can be *stated* — binding, coreference,
+type discipline, relational chaining, compositional inventory — and that a
+system which states it need not re-derive it from tokens at inference time.
+
+This is a frontier bet, not a benchmark chase. `APPROACH.md` is the argument;
+read it before the tables below, because the tables are a development
+instrument and the argument is the thing being tested.
+
+**The scoreboard prices what it scores.** The north star is not tokens/sec — a
+system can be arbitrarily fast and understand nothing, and this repo published
+a throughput headline that said exactly that for months. It is **$ per unit of
+useful capability**, computed by `symbolic_ai_core/cost.py`:
+
+```bash
+uv run symbolic-ai-models cost runs/both/* --unit answer
+uv run symbolic-ai-models cost runs/both/* --parser-usd-per-btok 0.30   # price the parser we do not have
+```
+
+The headline column divides by `accuracy − floor`, so a system at or below its
+floor reads `inf` — the correct entry, not a formatting bug. On the `both`
+sweep, eighteen of nineteen models read `inf`. A `System` is a *list* of
+components and its cost is the sum, so "our part is free" is not expressible:
+if a symbolic reasoner only works because something upstream turned text into a
+graph, that upstream part is in the ledger whether or not it has been built.
+
 ## The two surfaces
 
 `symbolic_ai_models inspect` prints an episode as the harness sees it. This is `unification`, seed 2:
@@ -293,6 +323,18 @@ scoring *negative* `answer_lift`. Undifferentiated, the LM metric measures how w
 Every *number* is teacher-forced scoring, which is how language models are
 trained and evaluated. Free-running generation exists but is deliberately
 **outside** the evaluation path — see below.
+
+**And that, with the 1.4%, is why this curriculum is a development harness and
+not the benchmark.** Teacher-forced position-level scoring over a corpus that is
+98.6% scaffolding is an excellent instrument for *forming* a hypothesis — an
+episode is a pure function of its seed and the graph the prose came from is
+exactly known — and the wrong instrument for *reporting* one. `APPROACH.md`
+states the five properties a reportable benchmark needs (episode-level verdicts,
+free generation, structure the generator did not produce, a floor built from
+every feature the model sees, renaming reported beside the raw score) and names
+`derive:wordnet` as the existing arm closest to them. Work that moves the
+benchmark toward those five outranks work that moves a model up the table
+below.
 
 ## Sampling, for reading rather than scoring
 

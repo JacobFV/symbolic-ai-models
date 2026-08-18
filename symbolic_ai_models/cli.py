@@ -442,6 +442,49 @@ def cmd_compare(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_cost(args: argparse.Namespace) -> int:
+    """Price the runs against the north star: $ per unit of useful capability.
+
+    `compare` answers "which model is better". This answers "what does a right
+    answer cost, and who in the system is paying for it" — the question a
+    throughput number cannot answer and was repeatedly read as answering.
+    """
+    from symbolic_ai_core.cost import (Price, api_component, ledger_from_run,
+                                       ledger_table)
+    price = Price(usd_per_core_hour=args.usd_per_core_hour,
+                  latency_budget_ms=args.latency_budget_ms)
+    # The component this repo does not have. Best exact parse recovery here is
+    # 0.016, so any system that became useful would have bought `text -> Graph`
+    # from somewhere, and its price is part of the answer's price. Passing it in
+    # is how that stops being invisible.
+    extra = []
+    if args.parser_usd_per_mtok is not None:
+        extra.append(api_component("parser", args.parser_usd_per_mtok,
+                                   source="--parser-usd-per-mtok"))
+    if args.parser_usd_per_btok is not None:
+        # Same component, the other unit. Vendors quote $/Mtok and cost
+        # arguments about this repo get made in $/Btok; a factor of 1,000
+        # between two numbers that both look like small dollar amounts is
+        # exactly the mistake worth spending three lines to make impossible.
+        extra.append(api_component("parser",
+                                   args.parser_usd_per_btok / 1000.0,
+                                   source="--parser-usd-per-btok"))
+    rows = []
+    for run in args.runs:
+        row = ledger_from_run(Path(run), args.unit, price=price,
+                              tokens_per_sec=args.tokens_per_sec, extra=extra)
+        if row is not None:
+            rows.append(row)
+    if not rows:
+        print(f"no run under {args.runs} scored unit {args.unit!r}")
+        return 1
+    if args.json:
+        print(json.dumps([r.as_dict() for r in rows], indent=2))
+    else:
+        print(ledger_table(rows))
+    return 0
+
+
 def _cuda() -> bool:
     import torch
     return torch.cuda.is_available()
@@ -551,6 +594,32 @@ def build_parser() -> argparse.ArgumentParser:
     c.add_argument("--history", action="store_true",
                    help="show the eval curve of the first run instead")
     c.set_defaults(fn=cmd_compare)
+
+    k = sub.add_parser("cost", help="price runs by $ per unit of useful "
+                                    "capability, not by tokens/sec")
+    k.add_argument("runs", nargs="+")
+    k.add_argument("--unit", default="answer",
+                   choices=("answer", "proposition", "type"),
+                   help="what one solved thing is (default: answer)")
+    k.add_argument("--usd-per-core-hour", dest="usd_per_core_hour",
+                   type=float, default=0.02)
+    k.add_argument("--latency-budget-ms", dest="latency_budget_ms",
+                   type=float, default=100.0)
+    k.add_argument("--tokens-per-sec", dest="tokens_per_sec", type=float,
+                   default=None,
+                   help="measured inference rate on a quiet box; without it "
+                        "the row is derived from fit+eval time and is marked "
+                        "NOT QUOTABLE")
+    k.add_argument("--parser-usd-per-mtok", dest="parser_usd_per_mtok",
+                   type=float, default=None,
+                   help="price the text -> Graph component this repo does not "
+                        "have; e.g. 0.30 for a neural semantic parser")
+    k.add_argument("--parser-usd-per-btok", dest="parser_usd_per_btok",
+                   type=float, default=None,
+                   help="the same component priced per BILLION tokens, which "
+                        "is the unit this repo's cost target is stated in")
+    k.add_argument("--json", action="store_true")
+    k.set_defaults(fn=cmd_cost)
     return p
 
 

@@ -3,6 +3,41 @@
 Standing instructions for autonomous work in this repo. `ROADMAP.md` holds the
 task list and the experimental rules; this file holds the workflow ones.
 
+## What we are here to do
+
+**Build a language-understanding substrate whose cost per correct answer is a
+different order of magnitude from neural inference, and whose reasoning is
+inspectable rather than inferred.** `APPROACH.md` is the argument. Read it
+before the task list, because the task list is a record of what looked worth
+doing when it was written and the argument is the thing being tested.
+
+This is a **frontier bet, not a benchmark chase.** Nobody has run the pure
+symbolic direction at this scale with this tooling, so the failure mode to avoid
+is not losing to a transformer — it is spending the year proving what was already
+known. Every session should be able to name the thing it now knows that nobody
+knew when it started. If the answer is "we confirmed a number that was already on
+disk", the session was spent wrong.
+
+Three consequences that outrank almost everything below:
+
+- **Rigour is the guard on the work, not the work.** The apparatus in this file
+  was written after a run of confident wrong readings and it earned its place.
+  It has also, twice, become the activity. A control, a refuter and a floor audit
+  belong on a headline going into `RESEARCH_LOG.md` and nowhere else.
+- **Price the capability, not the token.** The north star is
+  `$ / solved episode above floor`, computed by `symbolic_ai_core/cost.py` and
+  printed by `symbolic-ai-models cost`. A throughput number is an *input* to it
+  and is never a headline — this repo led with one for months and it said
+  nothing, because a system can be arbitrarily fast and understand nothing.
+  Cost is charged to the **system**: if a reasoner only works because something
+  upstream produced a graph, that upstream component is in the ledger whether or
+  not it exists yet.
+- **The 179-lesson curriculum is a development harness, not the benchmark.**
+  It is teacher-forced, position-level, and 98.6% scaffolding. It is an
+  excellent instrument for forming a hypothesis and the wrong one for reporting
+  it. Work that moves the benchmark toward the five properties in `APPROACH.md`
+  outranks work that moves a model up the existing table.
+
 ## You are the overseer. Decide, do not ask.
 
 Standing instruction from the user: **do whatever you judge needs doing, and do
@@ -69,8 +104,11 @@ work rather than the guard on the work. Concretely, stop doing these:
 
 - **Re-running a sweep to confirm a number that is already on disk.** It is on
   disk. Read it.
-- **The full 2,500-test suite before every commit.** Once per branch, at the
-  end. The subset rule below is the norm, not the exception.
+- **The full 2,500-test suite before every commit.** Said again on 2026-08-18,
+  interrupting a full run: *"we need to stop testing so much."* Run the subset
+  that could possibly notice what you touched, and only that. A new module with
+  its own passing test file is the whole answer. Once per branch at the very
+  end, if at all — and never as a ritual before committing.
 - **A refuter, a permutation control and a floor audit on a scouting number.**
   Those belong on a headline going into `RESEARCH_LOG.md` and nowhere else.
 - **A written finding for every intermediate step.** One note when an arm
