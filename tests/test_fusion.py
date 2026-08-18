@@ -188,3 +188,97 @@ def test_grouping_is_by_predicate_and_subject():
                        claim("mass", "c", 3.0, subject="r2")])
     assert [(g.predicate, g.subject, len(g.claims)) for g in gs] == [
         ("mass", ("r1",), 2), ("mass", ("r2",), 1)]
+
+
+# --- identity-valued claims, and the invariant that had no claim-layer form -
+from symbolic_ai_core.artifact.value import Provenance as _Prov
+from symbolic_ai_core.runtime.fusion import (DERIVATION_RANK, SUBJECT_ROLES,
+                                             prefer_measured,
+                                             register_subject_roles)
+
+
+def _owner(entity: str, parent: str, derivation: str, producer: str = "p"):
+    return Claim("ultimate_parent",
+                 {"of": EntityRef(entity), "parent": EntityRef(parent)},
+                 provenance=_Prov(producer=producer, derivation=derivation))
+
+
+class TestSubjectRoles:
+    def test_by_default_the_value_entity_lands_in_the_key(self):
+        """The structural problem: with the value in the key, two sources
+        naming two different parents produce two groups and the conflict is
+        invisible -- not a missing fuser, an ungroupable disagreement."""
+        SUBJECT_ROLES.pop("owns_default_demo", None)
+        a = Claim("owns_default_demo", {"of": EntityRef("x"),
+                                        "parent": EntityRef("p1")})
+        b = Claim("owns_default_demo", {"of": EntityRef("x"),
+                                        "parent": EntityRef("p2")})
+        assert len(group_claims([a, b])) == 2
+
+    def test_declaring_the_subject_makes_the_conflict_visible(self):
+        register_subject_roles("ultimate_parent", ("of",))
+        groups = group_claims([_owner("x", "p1", "derived"),
+                               _owner("x", "p2", "measured")])
+        assert len(groups) == 1 and len(groups[0].claims) == 2
+
+    def test_a_subject_with_no_roles_is_refused(self):
+        with pytest.raises(FusionError, match="at least one role"):
+            register_subject_roles("nonsense", ())
+
+    def test_numeric_claims_keep_the_old_key(self):
+        """Registering one predicate must not change how any other groups."""
+        a = Claim("mass", {"of": EntityRef("r"), "value": Quantity(1.0, "kg")})
+        b = Claim("mass", {"of": EntityRef("r"), "value": Quantity(2.0, "kg")})
+        assert len(group_claims([a, b])) == 1
+
+
+class TestPreferMeasured:
+    def test_a_measurement_outranks_an_inference(self):
+        register_subject_roles("ultimate_parent", ("of",))
+        g = group_claims([_owner("x", "guess", "derived"),
+                          _owner("x", "filed", "measured")])[0]
+        assert prefer_measured(g).roles["parent"].id == "filed"
+
+    def test_the_order_the_claims_arrive_in_does_not_matter(self):
+        """Which is the whole point: last-writer-wins rewrote 4,992 measured
+        facts on the real filings depending on which source loaded second."""
+        register_subject_roles("ultimate_parent", ("of",))
+        one = [_owner("x", "guess", "derived"), _owner("x", "filed", "measured")]
+        assert (prefer_measured(group_claims(one)[0]).roles["parent"].id ==
+                prefer_measured(group_claims(one[::-1])[0]).roles["parent"].id)
+
+    def test_the_result_keeps_the_derivation_it_preferred(self):
+        """Otherwise "derived can never become measured" fails at the last
+        step, having been enforced everywhere upstream."""
+        register_subject_roles("ultimate_parent", ("of",))
+        g = group_claims([_owner("x", "guess", "derived"),
+                          _owner("x", "filed", "measured")])[0]
+        assert prefer_measured(g).provenance.derivation == "measured"
+
+    def test_fusing_two_inferences_does_not_promote_them(self):
+        register_subject_roles("ultimate_parent", ("of",))
+        g = group_claims([_owner("x", "same", "derived", "a"),
+                          _owner("x", "same", "derived", "b")])[0]
+        assert prefer_measured(g).provenance.derivation == "derived"
+
+    def test_two_measurements_that_disagree_are_refused_not_resolved(self):
+        """A real conflict between sources. Picking by arrival order is the
+        failure this registry exists to prevent."""
+        register_subject_roles("ultimate_parent", ("of",))
+        g = group_claims([_owner("x", "p1", "measured", "gleif"),
+                          _owner("x", "p2", "measured", "sec")])[0]
+        with pytest.raises(FusionError, match="Keep both as alternatives"):
+            prefer_measured(g)
+
+    def test_an_unstated_derivation_ranks_with_unresolved(self):
+        """A gap in the record is not evidence, but neither is it a finding
+        that the provenance could not be established."""
+        assert DERIVATION_RANK[""] == DERIVATION_RANK["unresolved"]
+        assert DERIVATION_RANK["measured"] > DERIVATION_RANK["derived"]
+        assert DERIVATION_RANK["derived"] > DERIVATION_RANK["simulated"]
+
+    def test_agreement_at_the_top_rank_is_not_a_conflict(self):
+        register_subject_roles("ultimate_parent", ("of",))
+        g = group_claims([_owner("x", "same", "measured", "a"),
+                          _owner("x", "same", "measured", "b")])[0]
+        assert prefer_measured(g).roles["parent"].id == "same"

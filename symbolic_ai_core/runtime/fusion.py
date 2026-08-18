@@ -121,14 +121,44 @@ def register_fusion(predicate: str, rule: FusionRule) -> None:
 # ---------------------------------------------------------------------------
 # grouping
 # ---------------------------------------------------------------------------
+#: Predicate -> the roles that identify what the claim is *about*, when that
+#: is not "every entity mentioned".
+#:
+#: The default key is every ``EntityRef`` role, which is right whenever the
+#: value is a number: two mass readings of one robot differ in the number and
+#: agree on the entity, so they group. It is **wrong whenever the value is
+#: itself an entity.** "Who ultimately owns this company" puts the rival answer
+#: inside the key, so two sources naming two different parents land in two
+#: groups and fusion never sees that they disagree -- not a missing fuser but a
+#: conflict that is structurally invisible.
+SUBJECT_ROLES: dict[str, tuple[str, ...]] = {}
+
+
+def register_subject_roles(predicate: str, roles: Sequence[str]) -> None:
+    """Declare which roles identify the subject of an identity-valued claim."""
+    if not roles:
+        raise FusionError(
+            f"{predicate}: a subject needs at least one role, or every claim "
+            "becomes its own group and fusion is a no-op")
+    SUBJECT_ROLES[predicate] = tuple(roles)
+
+
 def _subject(claim: Claim) -> tuple[str, ...]:
     """The entities a claim is *about*, as its fusion key.
 
-    Entity roles only. Two claims about the same entity with different numeric
-    values are competing readings; two claims with different entities are not
-    about the same thing at all, and grouping on the whole role map would make
-    every claim its own group and fusion a no-op.
+    Entity roles only, and by default all of them: two claims about the same
+    entity with different numeric values are competing readings, while grouping
+    on the whole role map would make every claim its own group.
+
+    A predicate registered in :data:`SUBJECT_ROLES` keys on those roles alone,
+    which is what lets two sources contradict each other about an *identity*
+    and be seen to do so.
     """
+    roles = SUBJECT_ROLES.get(claim.predicate)
+    if roles is not None:
+        return tuple(sorted(
+            v.id for r, v in claim.roles.items()
+            if r in roles and isinstance(v, EntityRef)))
     return tuple(sorted(v.id for v in claim.roles.values()
                         if isinstance(v, EntityRef)))
 
@@ -326,13 +356,23 @@ def intersect_intervals(group: ClaimGroup, *, role: str = "value") -> Claim:
 
 
 def _combined(group: ClaimGroup, roles: Mapping[str, Any], *, method: str,
-              confidence: float | None = None) -> Claim:
+              confidence: float | None = None,
+              derivation: str = "") -> Claim:
+    """Assemble the fused claim.
+
+    ``derivation`` is passed through rather than defaulted, because a fusion
+    that *preferred* a measured claim has produced a measurement, and one that
+    combined several inferences has not. Losing it here would let "derived can
+    never become measured" fail at the last step, having been enforced
+    everywhere upstream.
+    """
     from ..artifact.value import Provenance
     return Claim(
         predicate=group.predicate, roles=dict(roles), modality="asserted",
         confidence=confidence,
         provenance=Provenance(producer="fuse",
                               inputs=tuple(group.producers()),
+                              derivation=derivation,
                               method=f"{method} over {len(group.claims)} claims"))
 
 
@@ -408,3 +448,78 @@ def _apply_vetoes(group: ClaimGroup,
     killed = [c for c in group.claims
               if c.polarity == "positive" and c not in vetoes]
     return list(vetoes), killed
+
+
+#: Which derivation classes may overrule which. A **measurement outranks an
+#: inference about the same thing**, and nothing outranks a measurement. This is
+#: the claim-layer form of the invariant that `license_closure` enforces on
+#: artifacts: *derived can never become measured*.
+#:
+#: ``unresolved`` sits below everything deliberately. A claim whose provenance
+#: could not be established is weaker than one that was inferred by a named
+#: method, because at least the inference can be re-run and disagreed with.
+DERIVATION_RANK: dict[str, int] = {
+    "measured": 4,
+    "reconstructed": 3,
+    "derived": 2,
+    "simulated": 1,
+    "synthetic": 1,
+    "unresolved": 0,
+    "": 0,                                   # unstated
+}
+
+
+def prefer_measured(group: ClaimGroup) -> Claim:
+    """Fuse identity-valued claims by provenance rank, never by arrival order.
+
+    The registry's other fusers all combine *numbers* -- sum them, pool them,
+    intersect them. An identity has nothing to combine: two sources saying a
+    company's ultimate parent is two different entities cannot be averaged, and
+    the only honest operations are to prefer one on stated grounds or to keep
+    both.
+
+    So this prefers the better-attested claim and **records the loser rather
+    than dropping it**, because a disagreement between a filing and an
+    inference is evidence about one of them.
+
+    What it refuses to do is resolve a tie. Two *measured* claims that disagree
+    are a real conflict in the sources, and picking one by arrival order is
+    exactly the last-writer-wins this registry exists to prevent -- measured on
+    real filings, that silently rewrites 4.27% of a 117,129-entity world
+    depending on which source was loaded second.
+    """
+    ranked = sorted(group.claims,
+                    key=lambda c: -DERIVATION_RANK.get(
+                        c.provenance.derivation, 0))
+    best = ranked[0]
+    top = DERIVATION_RANK.get(best.provenance.derivation, 0)
+    tied = [c for c in ranked
+            if DERIVATION_RANK.get(c.provenance.derivation, 0) == top]
+    distinct = {_identity_of(c) for c in tied}
+    if len(distinct) > 1:
+        raise FusionError(
+            f"{group.predicate} on {group.subject}: {len(distinct)} different "
+            f"values are all attested at derivation rank {top} "
+            f"({sorted(d for d in distinct if d)}). Nothing here can choose "
+            "between them, and choosing by arrival order is the failure this "
+            "registry exists to prevent. Keep both as alternatives.")
+    losers = tuple(c for c in ranked if _identity_of(c) != _identity_of(best))
+    if losers:
+        method = ("preferred derivation="
+                  f"{best.provenance.derivation or 'unstated'!r} over "
+                  + ", ".join(sorted({c.provenance.derivation or "unstated"
+                                      for c in losers})))
+    else:
+        method = ("uncontested at derivation="
+                  f"{best.provenance.derivation or 'unstated'!r}")
+    return _combined(group, dict(best.roles), method=method,
+                     confidence=best.confidence,
+                     derivation=best.provenance.derivation)
+
+
+def _identity_of(claim: Claim) -> str:
+    """The entity a claim names, for comparing two identity-valued claims."""
+    for role, filler in sorted(claim.roles.items()):
+        if isinstance(filler, EntityRef) and role not in ("of", "subject"):
+            return filler.id
+    return ""

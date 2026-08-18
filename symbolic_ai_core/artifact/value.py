@@ -139,11 +139,23 @@ class Provenance:
     source_version: str = ""                 #: pinned snapshot of that source
     license: str = ""                        #: SPDX id, or the source's own name
     method: str = ""                         #: how, when "producer" is not enough
+    #: How this came to be known, from ``ontology/vocab.yaml``'s
+    #: ``derivation_classes``. Empty means *unstated*, which is not the same as
+    #: ``"unresolved"`` -- one is a gap in the record and the other is a
+    #: recorded finding that the provenance could not be established.
+    #:
+    #: The vocabulary existed at the source and artifact layers, where
+    #: ``validate.py`` checks it, and stopped there. So a claim inferred by a
+    #: kernel and a claim ingested from a filing were **indistinguishable once
+    #: they were in the world**, which makes "derived can never become
+    #: measured" unenforceable at exactly the layer where fusion happens.
+    derivation: str = ""
 
     def to_dict(self) -> dict[str, Any]:
         return {"producer": self.producer, "inputs": list(self.inputs),
                 "source": self.source, "source_version": self.source_version,
-                "license": self.license, "method": self.method}
+                "license": self.license, "method": self.method,
+                "derivation": self.derivation}
 
 
 @dataclass(frozen=True)
