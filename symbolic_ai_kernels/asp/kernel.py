@@ -26,7 +26,7 @@ from typing import Any, Mapping, Sequence
 from symbolic_ai_core.artifact.value import Provenance
 from symbolic_ai_core.world import Claim, EntityRef, WorldDelta, WorldSnapshot
 
-from ..abi import (KernelCost, KernelManifest, KernelRequest, KernelResult,
+from ..abi import (EXHAUSTED, PROVED_IMPOSSIBLE, KernelCost, KernelManifest, KernelRequest, KernelResult,
                    KernelUnavailable, Projection, check_entitlement,
                    price_cpu_ns, register_kernel, timed)
 from .project import AspProgram, project_world
@@ -99,7 +99,17 @@ class AspKernel:
             ctl = clingo.Control(["0"])          # 0 = enumerate all
             ctl.add("base", [], prog.text)
             ctl.ground([("base", [])])
-            return ctl.solve(on_model=collect)
+            if request.budget_ns is None:
+                return ctl.solve(on_model=collect)
+            # An asynchronous handle rather than clingo's --time-limit, which
+            # takes whole seconds and floors sub-second budgets to 0 -- and 0
+            # means "no limit", so the one wrong value is the one that ignores
+            # the budget entirely. Cancelling leaves ``exhausted`` False, which
+            # is exactly the signal needed below.
+            with ctl.solve(on_model=collect, async_=True) as handle:
+                if not handle.wait(request.budget_ns / 1e9):
+                    handle.cancel()
+                return handle.get()
 
         try:
             result, ns = timed(solve)
@@ -109,8 +119,24 @@ class AspKernel:
                 diagnostics={"program_chars": len(prog.text)})
 
         if not models:
+            # The distinction that must not be got wrong. clingo's
+            # ``result.exhausted`` says the search space was fully explored;
+            # without it, "no models found" means the budget ran out and
+            # **not** that none exist. Reporting impossibility here would be
+            # claiming a proof the solver never produced -- the exact silent
+            # degradation the kernel stack forbids.
+            if not result.exhausted:
+                return KernelResult(
+                    kernel=self.manifest.id,
+                    outcome=EXHAUSTED,
+                    refused=("the search was cut short before any answer set "
+                             "was found. This is retryable with a larger "
+                             "budget and is NOT a claim that none exists."),
+                    cost=_cost(ns),
+                    diagnostics={"discarded": len(projection.discarded)})
             return KernelResult(
                 kernel=self.manifest.id,
+                outcome=PROVED_IMPOSSIBLE,
                 refused=("unsatisfiable: no completion of this world satisfies "
                          "the constraints. That is an answer about the "
                          "PROJECTION, not about the world -- "

@@ -179,3 +179,53 @@ def test_a_higher_arity_domain_must_say_which_column_it_means():
 def test_every_entity_gets_a_unary_domain_predicate():
     p = project_world(birds())
     assert 'entity("opus").' in p.program.text
+
+
+# --- the budget, and the proof it must not claim ---------------------------
+def _pigeonhole(n: int) -> str:
+    """n+1 pigeons into n holes. Unsatisfiable, and hard as n grows."""
+    lines = [f"pigeon({i})." for i in range(n + 1)]
+    lines += [f"hole({j})." for j in range(n)]
+    lines.append("1 { in(P,H) : hole(H) } 1 :- pigeon(P).")
+    lines.append(":- in(P1,H), in(P2,H), P1 < P2.")
+    return "\n".join(lines)
+
+
+def _run(n: int, budget_ns=None):
+    from symbolic_ai_kernels.abi import Projection
+    from symbolic_ai_kernels.asp.mangle import Mangler
+    from symbolic_ai_kernels.asp.project import AspProgram
+    proj = Projection(kernel="asp@1",
+                      program=AspProgram(_pigeonhole(n), Mangler(), ()),
+                      semantics=("closed_world",), discarded=())
+    return K.run(proj, KernelRequest(budget_ns=budget_ns))
+
+
+def test_an_easy_unsatisfiable_program_is_a_proof():
+    r = _run(6)
+    assert r.proved_impossible and r.conclusive and not r.retryable
+
+
+def test_a_budget_that_does_not_bite_leaves_the_proof_intact():
+    """A budget must not weaken a conclusion the solver did reach."""
+    r = _run(6, budget_ns=500_000_000)
+    assert r.proved_impossible and r.conclusive
+
+
+def test_a_search_cut_short_never_claims_impossibility():
+    """The soundness fix. Before this, "no answer sets found" was reported as
+    "unsatisfiable" regardless of why -- so a budget that ran out produced a
+    claimed proof the solver had not made. clingo's `result.exhausted` is the
+    only thing that separates them."""
+    r = _run(13, budget_ns=500_000_000)
+    assert r.exhausted and r.retryable
+    assert not r.conclusive, "a cut-short search settled nothing"
+    assert not r.proved_impossible, "this would be a proof that was never made"
+    assert "NOT a claim that none exists" in r.refused
+
+
+def test_the_budget_is_actually_enforced():
+    import time
+    t0 = time.perf_counter()
+    _run(13, budget_ns=400_000_000)
+    assert time.perf_counter() - t0 < 5.0, "the budget was ignored"
