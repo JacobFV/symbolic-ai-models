@@ -67,18 +67,37 @@ the numbers, the seven floors and the three ablations.
    above the floor -- `ledger_table` now detects it.
 6. **e-graphs** (tier 5). Correct, and 116x short of break-even here.
 
+### Also done, with the number each produced
+
+7. **Rigid body** (tier 6) and the phase-11 fusion gate. Inverse-variance
+   fusion beats both inputs (0.185 against a theory 0.186) and is calibrated.
+8. **A learned gate** on the constrained objective. Boosted trees capture 19.3%
+   of the routing headroom against the provable gate's 14.5% -- and are wrong
+   once per 750 worlds, which is why a proof and a sample estimate are not the
+   same guarantee.
+9. **The composed WordNet+CSKG source**: 0.179 of topics gain a section against
+   0.169 predicted before it was built.
+10. **Geo and economy** (tier 6). Geodesy anchored on published distances; the
+    economy kernel is the first thing to use `transaction_time`, and found that
+    **look-ahead bias is dominated by existence, not revision** (47.8% vs 10.4%).
+11. **A second task**, and the generalisation test it exists for.
+
 ### Next, in order
 
-1. **Rigid body** (tier 6), and with it the first non-trivial **fusion rule**:
-   two kernels claiming the same `pose` must combine by inverse variance rather
-   than last-writer-wins. That is the phase-11 gate.
-2. **A learned gate**, scored on the *constrained* objective -- cheapest arm
-   above an accuracy bar, not the raw ratio.
-3. **A composed knowledge source** (WordNet taxonomy + CSKG properties), which
-   would be the first corpus filling seven of eight sections and the first place
-   the composite double-count guard goes live. Measured at gaining a section on
-   17% of topics, so worth doing and not worth doing next.
-4. **Geo and economy kernels**, the other tier-6 entries.
+1. **Carry the regime with the finding.** Three flood results met the second task
+   and none was universal as stated -- see
+   `notes/findings/2026-08-18-three-substrate-findings-and-each-is-conditional.md`.
+   The axes that turned out to matter (decision margin, cost concentration,
+   distance above the floor) are not recorded in the older notes and should be.
+2. **A third task in a third regime**, which is what would test the regime
+   *boundary* rather than its existence. The obvious gap is a task with an
+   expensive kernel *and* a large decision margin -- neither existing task has
+   both.
+3. **Text in front of the solvency task.** The flood parser work measured what
+   fidelity a pipeline needs; solvency's figures come from filings, and the same
+   question there is about numeric extraction rather than entity recall.
+4. **Profiles with no kernel behind them** stay out: `politics`, `biology`,
+   `software` are named in the architecture note and are not registered.
 
 ### What the substrate must not become
 
