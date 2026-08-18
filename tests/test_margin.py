@@ -132,3 +132,34 @@ def test_the_advice_names_the_channel_to_spend_on():
     tight = margin_profile([95.0], threshold_decide, threshold_scale)
     loose = margin_profile([400.0], threshold_decide, threshold_scale)
     assert "RECALL" in tight.advice() and "PRECISION" in loose.advice()
+
+
+# --- the consumer ---------------------------------------------------------
+def test_the_cli_advice_flips_with_the_margin_knob():
+    """A capability with no consumer is the same shape as a profile with no
+    kernel behind it. The CLI is the consumer, and its advice has to change when
+    the thing it is advising about changes -- otherwise it is a slogan."""
+    from symbolic_ai_core.cli import main
+
+    pytest.importorskip("clingo")
+    out = []
+    for slack, expect in ((0.15, "RECALL"), (2.0, "PRECISION")):
+        import io
+        import contextlib
+
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            rc = main(["margin", "scheduling", "-n", "8", "--slack", str(slack)])
+        assert rc == 0
+        out.append(buf.getvalue())
+        assert expect in out[-1], f"slack {slack} advised {out[-1]!r}"
+
+    assert "should fire" in out[0]
+    assert "do not build a router" in out[1]
+
+
+def test_the_cli_rejects_an_unknown_task():
+    from symbolic_ai_core.cli import main
+
+    with pytest.raises(SystemExit):
+        main(["margin", "not_a_task"])

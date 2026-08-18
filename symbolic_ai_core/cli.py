@@ -5,6 +5,9 @@ by reading code:
 
 ``sources``   what does this repo know about, and which bytes are on this disk?
 ``kernels``   which kernels exist, what do they require, and is the toolchain here?
+``margin``    how far each task sits from its decision boundary, and therefore
+              whether to spend on recall or precision and whether a router is
+              worth building at all.
 ``flood``     run the three-kernel task and print the trace and the answer.
 """
 
@@ -106,6 +109,84 @@ def _flood(args) -> int:
     return 0
 
 
+def _margin(args) -> int:
+    """Profile each task's decision margin and say which errors matter.
+
+    The point of a margin number is that it changes what you build next, so this
+    prints the advice rather than the distribution.
+    """
+    from dataclasses import replace
+
+    from .runtime.margin import margin_profile
+    from .world import Quantity, WorldSnapshot
+
+    def scale_quantity(world, factor, predicate):
+        out = []
+        for c in world.claims:
+            q = c.roles.get("value")
+            if c.predicate == predicate and isinstance(q, Quantity):
+                roles = dict(c.roles)
+                roles["value"] = Quantity(max(0.01, q.value * factor), q.unit,
+                                          q.stderr)
+                out.append(replace(c, roles=roles))
+            else:
+                out.append(c)
+        return WorldSnapshot(entities=world.entities, claims=tuple(out))
+
+    tasks = {}
+
+    if args.task in ("all", "flood"):
+        from symbolic_ai_core.flow import Context
+        from symbolic_ai_generators.flood import generate as flood
+        from symbolic_ai_generators.flood.flow import solve
+
+        pairs = [(flood(s).world, v) for s in range(args.n)
+                 for v in sorted(flood(s).vehicles)]
+        tasks["flood"] = (
+            pairs,
+            lambda pw: pw[1] in solve(pw[0], ctx=Context())[0],
+            lambda pw, f: (scale_quantity(pw[0], f, "load_limit"), pw[1]))
+
+    if args.task in ("all", "solvency"):
+        from symbolic_ai_generators.solvency import decide, generate as solv
+
+        cases = [solv(s) for s in range(args.n * 3)]
+        tasks["solvency"] = (
+            cases,
+            lambda c: decide(c, as_of=c.decision_date)[0],
+            lambda c, f: replace(c, filings=tuple((e, v * f, k)
+                                                  for e, v, k in c.filings)))
+
+    if args.task in ("all", "scheduling"):
+        from symbolic_ai_generators.scheduling import generate as sched
+        from symbolic_ai_generators.scheduling.ops import build_program
+        from symbolic_ai_kernels import KernelRequest, get_kernel
+
+        asp = get_kernel("asp@1")
+
+        def sched_decide(w):
+            program, _ = build_program(w)
+            request = KernelRequest(params={"program": program,
+                                            "max_models": 1})
+            return asp.run(asp.project(w, request), request).ok
+
+        tasks["scheduling"] = (
+            [sched(s, slack=args.slack).world for s in range(args.n)],
+            sched_decide,
+            lambda w, f: scale_quantity(w, f, "duration"))
+
+    if not tasks:
+        print(f"unknown task {args.task!r}")
+        return 1
+
+    for name, (corpus, decide_fn, scale_fn) in tasks.items():
+        p = margin_profile(corpus, decide_fn, scale_fn)
+        print(f"{name}:")
+        print(f"  n={p.n}  unbounded={p.unbounded}")
+        print(f"  {p.advice()}")
+    return 0
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="symbolic-ai", description=__doc__)
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -116,6 +197,15 @@ def main(argv: Sequence[str] | None = None) -> int:
     p = sub.add_parser("kernels", help="registered kernels and their toolchains")
     p.add_argument("-v", "--verbose", action="store_true")
     p.set_defaults(fn=_kernels)
+
+    p = sub.add_parser("margin",
+                       help="which errors matter, from the uncorrupted corpus")
+    p.add_argument("task", nargs="?", default="all",
+                   choices=("all", "flood", "solvency", "scheduling"))
+    p.add_argument("-n", type=int, default=20)
+    p.add_argument("--slack", type=float, default=0.15,
+                   help="scheduling only: the decision-margin knob")
+    p.set_defaults(fn=_margin)
 
     p = sub.add_parser("flood", help="run the three-kernel flood task")
     p.add_argument("--seed", type=int, default=0)
