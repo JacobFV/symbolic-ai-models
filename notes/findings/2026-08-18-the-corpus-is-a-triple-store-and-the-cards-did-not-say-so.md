@@ -101,6 +101,27 @@ the corpus this repo built its federation layer around, and no manifest field
 could have shown it. It also means every capability claim about this corpus,
 including the ones above, is bounded by how well four regexes read a text bag.
 
+## Second correction, same day: the audit understated the corpus too
+
+This note said the 14 GB *"cannot drive `smt` with units, `geo`, `rigid` or
+`economy` at all"*. Geo was corrected above — openflights has coordinates in its
+body. **Economy is wrong for a different and more interesting reason.**
+
+Ownership consolidation is **relational and needs no units**. GLEIF files
+124,460 direct-consolidation edges and 130,355 ultimate-consolidation edges, and
+a closure over them scores 0.9785 against independently filed labels — see
+`notes/findings/2026-08-18-ownership-closure-and-the-advantage-curve-spans-seven-orders-of-magnitude.md`.
+
+The mistake was in the question. This audit asked **which profiles can be
+populated** and then reasoned as if that answered **which questions can be
+asked**. A kernel does not need every profile it can consume; it needs the ones
+its question requires. The monetary half of the economy kernel is indeed
+unreachable here — no unit, no amount — and the *structural* half is 250,000
+edges of real filed data.
+
+So the corpus is poorer than the source cards imply and richer than this audit
+implied, and both errors are now on record.
+
 ## What would refute what is left
 
 - A body key spelling I do not match. `BODY_HINTS` is deliberately narrow —
