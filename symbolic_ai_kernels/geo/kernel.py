@@ -118,7 +118,7 @@ class GeoKernel:
                                          MODEL_STDERR_KM))},
                   modality="asserted",
                   provenance=Provenance(
-                      producer="geo@1",
+                      producer="geo@1", derivation="derived",
                       method=f"{method} on {prog.crs}; stderr "
                              f"{MODEL_STDERR_FRACTION:.1%} of the distance, a "
                              f"stated assumption covering datum realisation and "

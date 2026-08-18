@@ -81,7 +81,7 @@ class EGraphKernel:
             {"before": len(cons), "after": len(result.constraints)},
             modality="asserted",
             provenance=Provenance(
-                producer=self.manifest.id,
+                producer=self.manifest.id, derivation="derived",
                 method=f"equality saturation, {result.report.stopped_by}"))
         return KernelResult(
             kernel=self.manifest.id, claims=(claim,),

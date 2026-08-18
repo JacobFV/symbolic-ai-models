@@ -183,7 +183,7 @@ class AspKernel:
                        for n, a in zip(names, args)},
                 modality=modality,
                 provenance=Provenance(
-                    producer=self.manifest.id,
+                    producer=self.manifest.id, derivation="derived",
                     method="answer set programming, stable model semantics"))
 
     def _readable(self, projection: Projection, model) -> list[str]:

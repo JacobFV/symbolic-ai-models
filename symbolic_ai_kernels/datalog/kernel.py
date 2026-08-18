@@ -195,7 +195,7 @@ def _fact_to_claim(fact: Fact, roles: dict[str, list[str]],
     return Claim(
         predicate=pred, roles=filled, modality="asserted",
         provenance=Provenance(
-            producer="datalog@1",
+            producer="datalog@1", derivation="derived",
             method="stratified datalog, closed world, negation as failure"))
 
 

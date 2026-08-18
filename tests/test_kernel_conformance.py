@@ -80,6 +80,22 @@ def test_every_kernel_answers_availability_without_raising(kid):
 
 
 @pytest.mark.parametrize("kid", sorted(CONFORMANCE))
+def test_every_kernel_states_how_its_claims_were_derived(kid):
+    """A claim inferred by a kernel and a claim ingested from a filing were
+    indistinguishable once fused, because `Provenance.derivation` shipped to
+    the claim layer and nothing populated it -- see
+    notes/findings/2026-08-18-the-registry-could-not-see-an-identity-conflict-and-load-order-rewrote-4992-facts.md.
+    Same style as the budget_ns check above: this reads the source rather
+    than trusting a claim of conformance. The whole module, not just the
+    class, because two kernels (`datalog@1`, `rigid@1`) build their claims in
+    a module-level helper the class calls rather than a method."""
+    src = inspect.getsource(inspect.getmodule(type(get_kernel(kid))))
+    assert "derivation=" in src, (
+        f"{kid} constructs a Provenance without stating derivation, so its "
+        "claims cannot be told apart from a measured fact once fused")
+
+
+@pytest.mark.parametrize("kid", sorted(CONFORMANCE))
 def test_an_external_kernel_names_its_dependency(kid):
     m = get_kernel(kid).manifest
     if m.runtime == "external":

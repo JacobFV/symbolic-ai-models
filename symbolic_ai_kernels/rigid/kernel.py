@@ -168,7 +168,7 @@ def _claim(b: Body, frame: str, dt: float, valid: Interval) -> Claim:
                  "value": Quantity(_norm(b.position), "m", b.pos_stderr)},
         modality="asserted", valid_time=valid,
         provenance=Provenance(
-            producer="rigid@1",
+            producer="rigid@1", derivation="simulated",
             method=f"semi-implicit Euler, dt={dt}s, frame {frame}; position "
                    f"error grown as sqrt(s^2 + (s*dt)^2) with velocity error "
                    f"taken as s per second -- a stated assumption, not a "

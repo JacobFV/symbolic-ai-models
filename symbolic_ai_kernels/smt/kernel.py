@@ -193,7 +193,7 @@ class SmtKernel:
                        "value": Quantity(_as_float(raw), v.unit)},
                 modality="possible",
                 provenance=Provenance(
-                    producer=self.manifest.id,
+                    producer=self.manifest.id, derivation="derived",
                     method="SMT witness; one satisfying assignment, not a "
                            "measurement"))
 

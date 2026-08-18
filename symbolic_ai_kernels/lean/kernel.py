@@ -102,7 +102,7 @@ class LeanKernel:
             Claim("type_valid", {"claim": f"claim#{i}"},
                   polarity="negative", modality="asserted",
                   provenance=Provenance(
-                      producer=self.manifest.id,
+                      producer=self.manifest.id, derivation="derived",
                       method=f"typecheck failed: {why}"))
             for i, why, _ in bad)
         check_entitlement(projection, claims)

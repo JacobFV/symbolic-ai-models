@@ -149,7 +149,7 @@ class EconomyKernel:
                 valid_time=Interval(str(period), str(period)),
                 transaction_time=Interval(str(as_of), str(as_of)),
                 provenance=Provenance(
-                    producer="economy@1",
+                    producer="economy@1", derivation="derived",
                     method=f"sum of {indicator} over {len(used)} of "
                            f"{len(members)} consolidated entities, using the "
                            f"latest vintage published on or before {as_of}")))
