@@ -32,7 +32,7 @@ from symbolic_ai_core.artifact.value import Provenance
 from symbolic_ai_core.world import (Claim, EntityRef, Quantity, WorldDelta,
                                     WorldSnapshot)
 
-from ..abi import (KernelCost, KernelManifest, KernelRequest, KernelResult,
+from ..abi import (EXHAUSTED, PROVED_IMPOSSIBLE, KernelCost, KernelManifest, KernelRequest, KernelResult,
                    KernelUnavailable, Projection, check_entitlement,
                    price_cpu_ns, register_kernel, timed)
 from .project import SmtProgram, Variable, project_world, unit_of
@@ -132,10 +132,19 @@ class SmtKernel:
             return KernelResult(kernel=self.manifest.id,
                                 refused=f"the constraint system is malformed: {e}")
 
+        # Honour the budget. Declared on KernelRequest since the ABI was
+        # written and read by nothing until now -- the third field in this
+        # substrate to be documented and never exercised. It matters most here
+        # of all the kernels, because size does not order this one's cost and
+        # a budget is the only control a planner has over it.
+        if request.budget_ns is not None:
+            solver.set("timeout", max(1, int(request.budget_ns // 1_000_000)))
+
         check, ns = timed(solver.check)
         if check == z3.unsat:
             return KernelResult(
                 kernel=self.manifest.id,
+                outcome=PROVED_IMPOSSIBLE,
                 refused=("unsat: no assignment satisfies these constraints. "
                          f"That is a statement about the PROJECTION -- "
                          f"{len(projection.discarded)} things were discarded "
@@ -143,10 +152,13 @@ class SmtKernel:
                 cost=_cost(ns),
                 diagnostics={"satisfiable": False,
                              "discarded": len(projection.discarded)})
-        if check == z3.unknown:                               # pragma: no cover
+        if check == z3.unknown:
             return KernelResult(
                 kernel=self.manifest.id,
-                refused=f"z3 returned unknown: {solver.reason_unknown()}",
+                outcome=EXHAUSTED,
+                refused=(f"z3 returned unknown: {solver.reason_unknown()}. "
+                         "This is retryable with a larger budget; it is not a "
+                         "statement about the problem."),
                 cost=_cost(ns))
 
         model = solver.model()

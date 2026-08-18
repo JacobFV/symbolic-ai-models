@@ -163,3 +163,89 @@ def test_the_manifest_declares_an_external_dependency():
     assert K.manifest.runtime == "external"
     assert K.manifest.dependencies == ("z3-solver>=4.13",)
     assert set(K.manifest.semantics) == {"classical", "constraint"}
+
+
+# --- the budget, and the outcomes it makes distinguishable -----------------
+def _wide_system(n: int = 300, ratio: float = 6.0, seed: int = 1):
+    """A system large enough that z3 takes real time to settle it."""
+    import random
+    rng = random.Random(seed)
+    names = [f"x{i}" for i in range(n)]
+    cons = [{"op": ">=", "args": [
+        {"op": "+", "args": [{"var": f"{l}@sat"}
+                             for l in rng.sample(names, 3)]},
+        {"q": {"value": 1, "unit": "1"}}]} for _ in range(int(n * ratio))]
+    w = WorldSnapshot(entities={"sat": Entity("sat", facets={
+        "logic.constraint": Facet("logic.constraint",
+                                  {"variables": {m: {"unit": "1"}
+                                                 for m in names}})})})
+    return w, cons
+
+
+def test_a_small_budget_is_exhausted_rather_than_refused():
+    """The distinction the ABI could not express: a planner must tell "ran out
+    of time" from "cannot be done" -- one is retryable and the other is waste.
+
+    `budget_ns` was declared on KernelRequest when the ABI was written and read
+    by nothing in the repo until now.
+    """
+    w, cons = _wide_system()
+    req = KernelRequest(params={"constraints": cons}, budget_ns=1_000_000)
+    r = K.run(K.project(w, req), req)
+    assert r.exhausted and r.retryable
+    assert not r.conclusive, "nothing was established"
+    assert "retryable" in r.refused
+
+
+def test_the_same_system_settles_when_the_budget_is_lifted():
+    """Which is what makes the previous result a statement about the budget
+    and not about the problem."""
+    w, cons = _wide_system()
+    req = KernelRequest(params={"constraints": cons})
+    r = K.run(K.project(w, req), req)
+    assert r.conclusive and not r.exhausted
+
+
+def test_an_unsat_is_a_proof_not_a_refusal():
+    """Reporting a proof of infeasibility as a failure reads the most valuable
+    thing a solver says as the least."""
+    req = KernelRequest(params={"constraints": [
+        {"op": "<=", "args": [{"var": "mass@robot"},
+                              {"q": {"value": 1, "unit": "kg"}}]}]})
+    r = K.run(K.project(robot(), req), req)
+    assert r.proved_impossible
+    assert r.conclusive, "unsat settles the question"
+    assert not r.ok, "and ok keeps its old meaning: no positive answer"
+    assert not r.retryable, "more budget will not make it satisfiable"
+
+
+def test_a_unit_mismatch_never_reaches_the_budget_at_all():
+    """Units are checked at projection, so comparing kilograms to seconds
+    fails before a solver is asked -- and therefore can never be mistaken for
+    a budget exhaustion, which is the whole point of checking there."""
+    req = KernelRequest(params={"constraints": [
+        {"op": "<=", "args": [{"var": "mass@robot"},
+                              {"q": {"value": 1, "unit": "s"}}]}]})
+    with pytest.raises(UnitError):
+        K.run(K.project(robot(), req), req)
+
+
+def test_an_empty_system_is_refused_and_not_retryable():
+    r = K.run(K.project(robot(), KernelRequest()), KernelRequest())
+    assert not r.conclusive and not r.retryable and not r.exhausted
+
+
+def test_ok_still_means_what_two_generators_read_it_to_mean():
+    """`feasible = result.ok` appears in scheduling/ops.py and flood/ops.py and
+    feeds published numbers. Widening ok to include proved_impossible would
+    have inverted them silently."""
+    req = KernelRequest(params={"constraints": under_20kg()})
+    r = K.run(K.project(robot(), req), req)
+    assert r.ok and r.conclusive and not r.proved_impossible
+
+
+def test_a_kernel_that_sets_no_outcome_still_classifies():
+    """Seven kernels predate this field and must keep working."""
+    from symbolic_ai_kernels.abi import ANSWERED, REFUSED, KernelResult
+    assert KernelResult(kernel="k").classification == ANSWERED
+    assert KernelResult(kernel="k", refused="nope").classification == REFUSED

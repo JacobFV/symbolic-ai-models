@@ -42,7 +42,8 @@ __all__ = ["SEMANTICS", "AUTHORITY", "Discard", "Projection", "KernelCost",
            "KERNEL_MODULES", "kernel_ids", "price_cpu_ns",
            "KernelRequest", "KernelResult", "KernelManifest", "Kernel",
            "KernelUnavailable", "KERNELS", "register_kernel", "get_kernel",
-           "check_entitlement", "timed"]
+           "check_entitlement", "timed", "ANSWERED", "PROVED_IMPOSSIBLE",
+           "EXHAUSTED", "REFUSED", "OUTCOMES"]
 
 #: Which logic a kernel reasons under. Metadata, because it changes what a rule
 #: *means* and two kernels disagreeing about it silently is the whole problem.
@@ -139,6 +140,19 @@ class KernelCost:
                 "bytes_written": self.bytes_written, "usd": self.usd}
 
 
+#: A positive answer was produced.
+ANSWERED = "answered"
+#: No assignment exists, and the kernel established that. An answer.
+PROVED_IMPOSSIBLE = "proved_impossible"
+#: The budget ran out before anything was established. Retryable.
+EXHAUSTED = "exhausted"
+#: Cannot be done at all: malformed input, absent toolchain, missing
+#: capability. Retrying is waste.
+REFUSED = "refused"
+
+OUTCOMES = (ANSWERED, PROVED_IMPOSSIBLE, EXHAUSTED, REFUSED)
+
+
 @dataclass(frozen=True)
 class KernelRequest:
     """What is being asked. ``goal`` is kernel-specific; ``budget`` is not."""
@@ -156,6 +170,23 @@ class KernelResult:
     ``refused`` is a first-class outcome and carries its reason. A kernel that
     cannot answer says so; it does not return an empty delta that reads as "no
     consequences".
+
+    ``outcome`` is finer, and it exists because ``refused`` conflated three
+    things a planner must tell apart:
+
+    * **proved impossible** — the solver established that no assignment exists.
+      That is an *answer*, often the most valuable one, and reporting it as a
+      refusal reads a proof as a failure.
+    * **exhausted** — the budget ran out. Retryable, and the only one of the
+      three where trying again with more budget is sensible.
+    * **refused** — malformed input, an absent toolchain, a missing capability.
+      Permanent; retrying is waste.
+
+    ``ok`` deliberately keeps its old meaning — a usable positive answer — and
+    is **not** widened to include ``proved_impossible``. Two generators read
+    ``result.ok`` as ``feasible``, and those feed published numbers; widening it
+    would silently invert them. The distinction goes in a new field beside the
+    old one rather than by redefining it.
     """
 
     kernel: str
@@ -166,6 +197,40 @@ class KernelResult:
     diagnostics: Mapping[str, Any] = field(default_factory=dict)
     cost: KernelCost = field(default_factory=KernelCost)
     refused: str = ""
+    #: Finer than ``refused``. Defaults are chosen so an existing kernel that
+    #: sets only ``refused`` still classifies correctly.
+    outcome: str = ""
+
+    @property
+    def classification(self) -> str:
+        """``outcome`` if the kernel set one, else inferred from ``refused``."""
+        if self.outcome:
+            return self.outcome
+        return REFUSED if self.refused else ANSWERED
+
+    @property
+    def proved_impossible(self) -> bool:
+        """The solver established that no assignment exists. An answer."""
+        return self.classification == PROVED_IMPOSSIBLE
+
+    @property
+    def exhausted(self) -> bool:
+        """The budget ran out. The one case where retrying is sensible."""
+        return self.classification == EXHAUSTED
+
+    @property
+    def retryable(self) -> bool:
+        return self.exhausted
+
+    @property
+    def conclusive(self) -> bool:
+        """Something was established: an answer, or a proof of impossibility.
+
+        This is what a planner should branch on when it wants to know whether
+        the question is *settled*, as against :attr:`ok` which asks whether a
+        positive answer was produced.
+        """
+        return self.classification in (ANSWERED, PROVED_IMPOSSIBLE)
 
     @property
     def ok(self) -> bool:
@@ -176,7 +241,8 @@ class KernelResult:
                 "claims": [c.to_dict() for c in self.claims],
                 "delta": self.delta.to_dict(),
                 "diagnostics": dict(self.diagnostics),
-                "cost": self.cost.to_dict(), "refused": self.refused}
+                "cost": self.cost.to_dict(), "refused": self.refused,
+                "outcome": self.classification}
 
 
 @dataclass(frozen=True)
