@@ -151,3 +151,86 @@ def test_the_table_sorts_on_the_column_that_cannot_be_gamed():
     assert cheap_useless.usd_per_btok_in < dear_useful.usd_per_btok_in
     table = ledger_table([cheap_useless, dear_useful])
     assert table.index("dear") < table.index("cheap")
+
+
+# --- the perverse regime the flood routing sweep found --------------------
+def _row(name, rate, per_solved, per_attempt, floor=0.440):
+    from symbolic_ai_core.cost import Ledger, Price
+    return Ledger(system=name, unit="answer", price=Price(), basis="measured",
+                  quotable=True, usd_per_btok_in=1.0,
+                  usd_per_attempt=per_attempt,
+                  usd_per_solved=per_attempt / rate,
+                  usd_per_solved_above_floor=per_solved,
+                  ms_per_action=None, bytes_per_retained_proposition=None,
+                  rate=rate, floor=floor, n=800, dominant_component="cpu")
+
+
+#: The measured flood-task frontier: a 0.887-accuracy arm outranks a 1.000 one.
+FLOOD = [_row("lossless", 1.000, 2.058e-8, 1.152e-8),
+         _row("slack-1.4", 0.887, 2.001e-8, 8.954e-9)]
+
+
+def test_the_ratio_really_does_prefer_the_less_capable_arm():
+    """Not hypothetical. These are the measured numbers, and if this assertion
+    ever fails the finding it guards has stopped being true."""
+    from symbolic_ai_core.cost import perverse_regime
+
+    pair = perverse_regime(FLOOD)
+    assert pair is not None
+    winner, better = pair
+    assert winner.system == "slack-1.4" and better.system == "lossless"
+    assert winner.rate < better.rate
+
+
+def test_the_table_says_so_rather_than_letting_the_reader_take_the_top_row():
+    from symbolic_ai_core.cost import ledger_table
+
+    out = ledger_table(FLOOD)
+    assert "PERVERSE REGIME" in out
+    assert "slack-1.4" in out and "lossless" in out
+    assert out.index("slack-1.4") < out.index("lossless"), (
+        "the sort should still be by the ratio; the warning is the guard, not "
+        "a resort that would hide which column was used")
+
+
+def test_no_warning_when_the_ratio_winner_is_also_the_most_capable():
+    """The case the metric was designed for, and handles correctly."""
+    from symbolic_ai_core.cost import ledger_table, perverse_regime
+
+    rows = [_row("good", 1.000, 1.0e-8, 1.0e-8),
+            _row("weak", 0.600, 3.0e-8, 4.0e-9)]
+    assert perverse_regime(rows) is None
+    assert "PERVERSE REGIME" not in ledger_table(rows)
+
+
+def test_cheapest_above_is_the_question_worth_asking():
+    from symbolic_ai_core.cost import cheapest_above
+
+    assert cheapest_above(FLOOD, 0.95).system == "lossless"
+    assert cheapest_above(FLOOD, 0.80).system == "slack-1.4"
+    assert cheapest_above(FLOOD, 1.01) is None
+
+
+def test_the_table_reports_the_constrained_winner_and_who_missed_the_bar():
+    from symbolic_ai_core.cost import ledger_table
+
+    out = ledger_table(FLOOD, min_rate=0.95)
+    assert "cheapest at rate >= 0.950: lossless" in out
+    assert "below the bar: slack-1.4" in out
+
+
+def test_an_unreachable_bar_says_what_the_best_actually_is():
+    from symbolic_ai_core.cost import ledger_table
+
+    out = ledger_table(FLOOD, min_rate=1.01)
+    assert "no system reaches" in out and "1.000" in out
+
+
+def test_a_row_at_or_below_its_floor_is_excluded_from_the_check():
+    """An infinite ratio is a correct entry, not a candidate for 'winner'."""
+    from symbolic_ai_core.cost import perverse_regime
+
+    import math
+    rows = FLOOD + [_row("floor-bound", 0.440, math.inf, 1.0e-9)]
+    pair = perverse_regime(rows)
+    assert pair is not None and pair[0].system == "slack-1.4"

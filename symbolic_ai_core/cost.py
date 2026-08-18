@@ -78,7 +78,7 @@ from typing import Any, Iterable, Literal, Sequence
 __all__ = [
     "Price", "Component", "System", "Capability", "Ledger",
     "cpu_component", "api_component", "capability_from_summary", "ledger",
-    "ledger_table",
+    "ledger_table", "cheapest_above", "perverse_regime",
 ]
 
 #: A commodity CPU core-hour. Spot/preemptible x86 sits near this at the time of
@@ -478,12 +478,60 @@ def _usd(value: float) -> str:
     return f"${value:.2e}"
 
 
-def ledger_table(rows: Iterable[Ledger]) -> str:
-    """Render ledger rows, sorted by the column that cannot be gamed.
+def cheapest_above(rows: Iterable[Ledger], min_rate: float) -> Ledger | None:
+    """The cheapest row that still achieves ``rate >= min_rate``.
+
+    This is the question anyone deploying actually has — *minimise cost subject
+    to capability* — and it is the one ``usd_per_solved_above_floor`` alone does
+    not answer. See :func:`perverse_regime` for why the unconstrained ratio can
+    prefer a worse system.
+    """
+    ok = [r for r in rows if r.rate >= min_rate]
+    return min(ok, key=lambda r: r.usd_per_attempt) if ok else None
+
+
+def perverse_regime(rows: Iterable[Ledger]) -> tuple[Ledger, Ledger] | None:
+    """``(ratio winner, more capable row)`` when the ratio prefers the worse one.
+
+    A lossy arm beats a better one on ``$/solved-above-floor`` exactly when
+
+        relative cost saving  >  relative lift loss
+        dcost / cost          >  dacc / (acc - floor)
+
+    and when ``acc >> floor`` that right-hand denominator is large, so accuracy
+    is *cheap in lift terms*. The metric is therefore well behaved where a
+    system is weak and perverse where it is strong -- the opposite of the regime
+    a maturing system lives in. Measured at 2.8% on the flood task, where a
+    0.887-accuracy arm outranked a 1.000-accuracy one:
+    ``notes/findings/2026-08-18-dollars-per-solved-above-floor-rewards-losing-accuracy.md``.
+
+    Returns ``None`` when the ratio winner is also the most capable row, which
+    is the case the metric was designed for and the case it handles correctly.
+    """
+    rows = [r for r in rows if math.isfinite(r.usd_per_solved_above_floor)]
+    if len(rows) < 2:
+        return None
+    winner = min(rows, key=lambda r: r.usd_per_solved_above_floor)
+    better = max(rows, key=lambda r: r.rate)
+    return (winner, better) if better.rate > winner.rate else None
+
+
+def ledger_table(rows: Iterable[Ledger], *, min_rate: float | None = None) -> str:
+    """Render ledger rows, sorted by the column that cannot be gamed -- and say
+    so when that column is nevertheless preferring a worse system.
 
     The sort key is ``usd_per_solved_above_floor``. Sorting by
     ``usd_per_btok_in`` would put a system that understands nothing at the top,
     which is precisely the reading this whole module exists to prevent.
+
+    But the ratio has a **perverse regime** far above the floor, so the table
+    checks for it and prints a warning naming both rows when it fires. A reader
+    who sorts and takes the top row would otherwise ship a 0.887 system over a
+    1.000 one with nothing on the page to explain why.
+
+    ``min_rate`` turns the table into the question worth asking -- *the cheapest
+    arm achieving accuracy >= a* -- by marking rows that miss the bar and
+    reporting the constrained winner.
     """
     rows = sorted(rows, key=lambda r: r.usd_per_solved_above_floor)
     if not rows:
@@ -509,4 +557,29 @@ def ledger_table(rows: Iterable[Ledger]) -> str:
     lines.append("")
     lines.append("Sorted by $/solved-above-floor. A system at or below its "
                  "floor reads 'inf' and that is the correct entry.")
+
+    pair = perverse_regime(rows)
+    if pair is not None:
+        winner, better = pair
+        lines.append("")
+        lines.append(
+            f"  !! PERVERSE REGIME: the ratio ranks {winner.system} "
+            f"(rate {winner.rate:.3f}) above {better.system} "
+            f"(rate {better.rate:.3f}). Far above the floor a cost saving buys "
+            f"more than the lift it costs, so the ratio prefers the LESS "
+            f"capable system. Do not read the top row as the answer -- ask for "
+            f"the cheapest arm above an accuracy bar instead.")
+    if min_rate is not None:
+        pick = cheapest_above(rows, min_rate)
+        lines.append("")
+        if pick is None:
+            lines.append(f"  no system reaches rate >= {min_rate:.3f}; the "
+                         f"best is {max(r.rate for r in rows):.3f}")
+        else:
+            lines.append(f"  cheapest at rate >= {min_rate:.3f}: {pick.system} "
+                         f"({_usd(pick.usd_per_attempt)}/attempt, rate "
+                         f"{pick.rate:.3f})")
+        missed = [r.system for r in rows if r.rate < min_rate]
+        if missed:
+            lines.append(f"  below the bar: {', '.join(missed)}")
     return "\n".join(lines)
