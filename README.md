@@ -587,6 +587,10 @@ symbolic-ai-models/
       project.py kernel.py#   kernel and the first with a clock. Returns poses
                           #   with honest error bars, which is what makes
                           #   inverse-variance fusion possible
+    geo/                  #   tier 6 (native): geodesy on a stated datum.
+      geodesy.py          #   Vincenty on WGS84, NaN on the antipodal case
+      project.py kernel.py#   rather than a silent spherical substitute; a
+                          #   coordinate without a CRS is not a location
   symbolic_ai_atomspace/  # 005: the IR as a knob -- match and rewrite over atoms
   symbolic_ai_lean/       # 006: the IR as a knob -- a kernel that can *refuse*
     expr.py kernel.py     #   native, total, fuel-bounded; Lean 4's Expr, subset

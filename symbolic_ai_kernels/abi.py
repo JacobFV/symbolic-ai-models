@@ -257,6 +257,7 @@ KERNEL_MODULES: dict[str, str] = {
     "lean@1": "symbolic_ai_kernels.lean",
     "egraph@1": "symbolic_ai_kernels.egraph",
     "rigid@1": "symbolic_ai_kernels.rigid",
+    "geo@1": "symbolic_ai_kernels.geo",
 }
 
 
