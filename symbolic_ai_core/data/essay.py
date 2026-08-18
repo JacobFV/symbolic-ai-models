@@ -53,7 +53,13 @@ from typing import Any, Iterator, Sequence
 __all__ = [
     "Mention", "Sentence", "Paragraph", "Essay",
     "SECTIONS", "rich_topics", "gather", "plan", "realise", "generate",
+    "sections_available", "REQUIRED",
 ]
+
+#: What this generator cannot run without. Deliberately short: everything else
+#: is a section that will silently not appear, which is a *reportable* fact
+#: rather than a fatal one -- see :func:`sections_available`.
+REQUIRED = ("word", "pos", "hypernyms", "hyponyms", "siblings")
 
 
 # ---------------------------------------------------------------- content ---
@@ -147,6 +153,25 @@ SECTIONS: dict[str, dict[str, Any]] = {
 #: because the graph does not say which relation holds between two triples.
 _ADDITIVE = ("Moreover, ", "In addition, ", "Further, ", "", "", "Besides that, ")
 _QUALIFY = ("That said, ", "Even so, ", "At the same time, ", "", "")
+
+
+def sections_available(kg: Any, *, name: str = "", sample: int = 512
+                       ) -> dict[str, float]:
+    """Per section, the share of sampled nodes whose accessor returns anything.
+
+    A section whose accessor is populated **nowhere** can never appear, and an
+    essay corpus that is quietly missing two of its eight rhetorical sections
+    reads exactly like one that is not. Measured rather than assumed, because
+    the assumption was wrong: WordNet returns nothing at all for
+    ``properties_of`` and ``abilities_of``, so the *qualities* and *behaviour*
+    sections have never appeared in any essay this repo has generated.
+    """
+    from .knowledge_source import capabilities_of
+
+    report = capabilities_of(kg, name=name, sample=sample,
+                             names=[spec["accessor"] for spec in SECTIONS.values()])
+    return {sec: report.coverage.get(spec["accessor"], 0.0)
+            for sec, spec in SECTIONS.items()}
 
 
 def rich_topics(kg: Any, *, min_sections: int = 3,
@@ -608,8 +633,21 @@ def _write_inference(kg, topic, sections, w, rng, paragraphs, sentences,
 
 def generate(kg: Any, *, n: int, seed0: int = 0, width: int = 4,
              max_sections: int = 5, min_sections: int = 3,
-             topics: Sequence[int] | None = None) -> Iterator[Essay]:
-    """``n`` essays, one per topic, deterministic in ``(topic, seed)``."""
+             topics: Sequence[int] | None = None,
+             source: str = "") -> Iterator[Essay]:
+    """``n`` essays, one per topic, deterministic in ``(topic, seed)``.
+
+    The source's capabilities are checked **before** anything is generated, and
+    a missing one is refused by name. Only the five in :data:`REQUIRED` are
+    fatal; the rest are sections that will not appear, which
+    :func:`sections_available` reports and this function deliberately does not
+    fail on -- WordNet populates two of the eight nowhere, and refusing it
+    would refuse every essay corpus this repo has measured.
+    """
+    from .knowledge_source import capabilities_of, require_capabilities
+
+    require_capabilities(capabilities_of(kg, name=source or "", names=REQUIRED),
+                         REQUIRED, who="the essay generator")
     pool = list(topics) if topics is not None else rich_topics(
         kg, min_sections=min_sections)
     if not pool:
