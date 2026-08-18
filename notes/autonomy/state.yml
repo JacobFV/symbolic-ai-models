@@ -1,0 +1,120 @@
+schema_version: 1
+# Working memory across autonomous invocations. Not a bureaucracy: updated when
+# the research state moves, not after every command. HANDOVER.md remains the
+# human-readable cold-start document; this is the machine-readable one.
+updated: 2026-08-18
+
+mission:
+  north_star: >
+    $ per correct answer, an order of magnitude below neural inference, with the
+    reasoning inspectable rather than inferred. Priced against a *realistic*
+    opponent, not one handed the whole corpus.
+  current_thesis: >
+    The one capability that survived contact with a realistic retrieval opponent
+    is dependency certification: naming exactly what an answer rests on. A
+    retriever can certify determinacy in <=4 rounds but has no stopping rule and
+    over-fetches 46x. The open question is whether the certificate is worth
+    money, and the untested claim is that its value shows up not at query time
+    but at *maintenance* time -- work not done when the corpus updates.
+
+frontier:
+  current_question: >
+    Under a real filed corpus update, does a dependency certificate let us prove
+    which cached answers survive -- and is the surviving fraction large enough
+    to be worth anything? Sub-question, believed to be the actual finding: the
+    *granularity* of the certificate decides whether it buys anything at all.
+  why_it_matters: >
+    It converts "the certificate is nice bookkeeping" into a priced capability an
+    LM/retrieval opponent structurally cannot have: it cannot certify that an
+    answer did not depend on a changed fact, so it re-answers everything.
+  current_bottleneck: >
+    Only `possible_answers_scoped` reports a read set, and it reports reads over
+    *conflicts*, not over facts. There is no substrate-wide read-set object.
+  expected_unlock: >
+    A `ReadSet`/certificate contract makes incremental maintenance measurable,
+    and makes "cost proportional to the delta, not the corpus" a number.
+
+measured:
+  - claim: "A query pays for the conflicts it reads; 4,992 conflicts cost <=1 read per query."
+    evidence: notes/findings/2026-08-18-a-query-pays-for-the-conflicts-it-reads-and-4992-of-them-cost-one.md
+    commit: 5c4e283
+  - claim: "The solver rung changes the answer on 15 of 3,044 hubs; the cheap bound is exact on 99.5%."
+    evidence: notes/findings/2026-08-18-the-solver-rung-is-needed-on-15-hubs-out-of-3044.md
+    commit: 467fa4d
+  - claim: "99,738x of the published advantage was the framing; four query classes land within 1.2x at ~5e7."
+    evidence: notes/findings/2026-08-18-the-advantage-curve-was-mostly-the-framing-and-what-is-left-is-a-constant.md
+    commit: a528890
+  - claim: "Ideal retrieval certifies determinacy in <=4 rounds; what it lacks is a stopping rule (1.128% silently wrong) and it over-fetches 46x."
+    evidence: notes/findings/2026-08-18-retrieval-can-certify-determinacy-in-four-rounds-what-it-lacks-is-a-stopping-rule.md
+    commit: 46e4a49
+  - claim: "SEC 13F is on disk as two filed snapshots -- dec2025 3,473,209 rows and a later 3,822,885 -- so the corpus delta is real, not synthetic."
+    evidence: data/sources/sec-edgar/commandagi-r2-2026-08-15/sec13f/
+    commit: 9dd6970
+
+beliefs:
+  - claim: "An assertion-level certificate is worthless under a refiling corpus: 13F refiles every position each quarter, so every read fact is superseded."
+    confidence: 0.85
+    basis: "13F filings restate the full portfolio; the snapshots carry no assertion ids, only (filer, security) triples."
+    falsifier: "assertion-level survival materially above 0%"
+  - claim: "A read-set certificate (invalidate if any read fact changed) is sound but nearly worthless for aggregate queries, because argmax reads the whole portfolio and portfolios churn."
+    confidence: 0.7
+    basis: "reading every row to prove nothing is bigger means one changed row kills the certificate"
+    falsifier: "read-set survival on top-holding queries above ~25%"
+  - claim: "A validity-condition certificate (the answer survives while no other position exceeds v) survives most updates and costs O(delta), not O(corpus)."
+    confidence: 0.6
+    basis: "top positions are sticky quarter to quarter"
+    falsifier: "validity-condition survival within 2x of read-set survival"
+  - claim: "This is adjacent to incremental view maintenance (DBSP, differential dataflow) and the novelty is not the maintenance -- it is that the certificate is produced by a general recording mechanism across heterogeneous kernels, and that it is priced against an opponent with no such object."
+    confidence: 0.75
+    basis: "prior art is large and well known; the repo must not reinvent it and call it new"
+    falsifier: "an existing system already emits cross-kernel dependency certificates priced this way"
+
+unknowns:
+  - question: "Do openflights and geonames both carry a country for the same place, and do they disagree?"
+    importance: "Would be the first genuine two-source property conflict in the corpus; three findings in a row have said there is none."
+    cheapest_discriminating_test: "join on coordinates/IATA and diff the country field"
+  - question: "Does scoping buy anything on a dense graph?"
+    importance: "Parked with a prediction that it buys little; a contradiction is publishable."
+    cheapest_discriminating_test: "possible_answers_scoped over range_limited_routing on the route network"
+  - question: "Is the ~5e7 fact-in-kernel vs fact-in-prompt constant a property of 20-character identifiers?"
+    importance: "It is the whole cost argument's remaining constant."
+    cheapest_discriminating_test: "re-price on a prose corpus (gutenberg, stackexchange)"
+
+active_work: []
+
+candidate_directions:
+  - id: cert-maintenance-13f
+    expected_information_gain: high
+    expected_capability_gain: high
+    strategic_leverage: high
+    estimated_cost: medium
+    reason: "Turns the certificate into a priced capability at maintenance time on a real filed delta."
+  - id: readset-substrate
+    expected_information_gain: low
+    expected_capability_gain: high
+    strategic_leverage: high
+    estimated_cost: low
+    reason: "Infrastructure demanded by the above; build only what it demands."
+  - id: two-source-property-conflict
+    expected_information_gain: high
+    expected_capability_gain: low
+    strategic_leverage: medium
+    estimated_cost: low
+    reason: "Cheap, and either produces the corpus's first real cross-source conflict or kills the hope."
+
+blockers:
+  - "Every accuracy comparison against a language model is unrun and NOT QUOTABLE: needs paid API credentials. User's fork, ROADMAP item 0b."
+
+research_debt:
+  - assumption: "The cost rows are input-token lower bounds with perfect accuracy assumed for both sides."
+    load_bearing_for: ["every advantage ratio in HANDOVER section 3"]
+    reason_to_revisit: "If accuracy is ever measured and the symbolic side is not perfect, every ratio moves."
+
+last_cycle:
+  action: "Cold start under the autonomous mandate: oriented, installed the scheduler, found the real 13F delta."
+  result: "Two filed 13F snapshots on disk; the maintenance experiment is well-founded."
+  belief_update: "none yet"
+
+next:
+  preferred_action: cert-maintenance-13f
+  alternatives: [two-source-property-conflict, dense-graph-scoping]

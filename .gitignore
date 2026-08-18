@@ -105,3 +105,6 @@ __pycache__/
 # `CLAUDE.md` -- it is a directory of other checkouts, not content.
 .claude/scheduled_tasks.lock
 .claude/worktrees/
+
+# autonomy scheduler scratch (heartbeat noise, never committed)
+.autonomy/
