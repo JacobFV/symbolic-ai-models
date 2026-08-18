@@ -239,11 +239,23 @@ def test_the_report_names_the_outcome_rather_than_a_message():
 
 def test_an_unsettled_search_is_never_reported_as_infeasible():
     """The specific corruption: `feasible` False for a search that
-    established nothing."""
+    established nothing.
+
+    **One solve, and the assertion is about that solve.** The first version of
+    this called `_solve_with(budget)` twice and asserted a property of the
+    *second* run from the *first* run's `settled` flag — two independent races
+    at a nanosecond budget — so it failed roughly one run in four, and it failed
+    on correct behaviour: a second solve that happened to finish is entitled to
+    emit its claim. The test above says this in its own docstring, three lines
+    up: *"a budget the solver beats is not exceeded, and clingo sometimes
+    finishes inside a nanosecond window. The invariant does not depend on who
+    wins."* It does not depend on who wins — but only if you ask the same run
+    twice instead of running it twice.
+    """
     for budget in (1, 1_000):
-        rep = _solve_with(budget)["report"].value
-        if not rep["settled"]:
-            assert out_has_no_claim(_solve_with(budget))
+        out = _solve_with(budget)
+        if not out["report"].value["settled"]:
+            assert out_has_no_claim(out)
 
 
 def out_has_no_claim(out) -> bool:
