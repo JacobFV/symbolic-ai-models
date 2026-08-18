@@ -49,8 +49,9 @@ measured on those bytes and nothing in it is injected.
 | the experiments | `scripts/gleif_scoped_ambiguity.py`, `gleif_ambiguity_ladder.py`, `alignment_bounds.py`, `ambiguity_advantage.py`, `retrieval_rounds.py`, `gleif_fund_exposure.py` | every number in §3 |
 
 Tests: `tests/test_ambiguity.py` (38), `tests/test_fusion.py`,
-`tests/test_certificate.py` (17). Full suite **3,371 passed, 10 skipped** as of
-this revision, run at its end.
+`tests/test_certificate.py` (17), `tests/test_witness.py` (12). Full suite
+**3,394 passed, 10 skipped**. One test in that run was a ~25% flake that raced
+the solver against itself; it is fixed and verified over 25 runs.
 
 ## 3. Measured. Do not re-derive these.
 
@@ -238,6 +239,47 @@ both fell** — see §5. What is parked now:
 | "make dependency-certification a substrate-wide contract" (this handover's own §7 item 1, previous revision) | the **lower-value half** of the right idea. Every kernel reporting its read set is worth **0.3x–1.0x** per quarter, and the read set over-reads the actual dependency by up to **6,591x**. What pays is a **witness** plus a **minimal** dependency, and neither is producible by the generic mechanism |
 | "the lever is the logical form of the claim" (mine, two hours later) | **wrong.** The lever is the *true dependency* of the claim. The 95x NP/coNP gap on set cover is real; the 8,932x version of it on shortest path collapses to **1.4x** once the optimality certificate is hand-derived, and the rest was the BFS over-reading |
 
+## 3c. The constant we retracted is the amortisation constant
+
+`notes/findings/2026-08-18-the-framing-factor-we-retracted-is-the-amortisation-constant.md`
+
+Every advantage number in §3 and §3b begins at the **second** arrow of
+`APPROACH.md`'s thesis. All 19 catalogued sources arrive already structured —
+verified across the 14 GB: every table is `(id, label, kind, body, source_url)`
+or `(source_id, target_id, kind)`, `body` is key-value metadata or empty
+(patentsview's 8.5M bodies are 0 characters), the longest natural-language field
+in the corpus is a **patent title** at 59.4 chars mean, and courtlistener is a
+77M-edge citation map with no text column. So `observations -> typed world` has
+never been priced and there is nothing on disk on which it could be.
+
+Pricing it needs no experiment:
+
+```
+breakeven = (corpus_tokens x rate) / (dependency_tokens x rate)
+          = corpus_tokens / dependency_tokens = 4.08e6 / 41 = 99,512 queries
+```
+
+— identical on both price sheets, because our per-query cost is eleven orders
+below either. **99,512 is the 99,738x in §5**, the factor retracted as "just the
+framing", to within 0.23% rounding. They are the same quantity by construction.
+
+The retraction was right about the claim and wrong about the number. Handing a
+model the whole graph *per query* is indefensible; handing it the whole graph
+*once* is the **build step**, and it is what our side gets for free. So:
+
+> The symbolic advantage is an **amortisation argument** and always was. The
+> ~5e7 per-query figure is real and lives entirely on the far side of a
+> crossover nobody had located. At 13F's 32% quarterly churn, a corpus that must
+> be re-extracted needs **~350 queries a day** to stay ahead of its own
+> rebuilding.
+
+**Boundary condition of the programme, stated precisely.** The advantage is
+measured and large where structure is **already filed** — regulatory,
+bibliographic, geographic — because a registry paid the extraction cost and
+externalised it, which is why nothing published here is wrong. It is
+**unmeasured** where structure must be **derived from observation**, which is
+the domain `APPROACH.md` names as the target.
+
 ## 6. Blocked, and it needs a human
 
 **Every accuracy comparison against a language model is unrun and stamped NOT
@@ -245,6 +287,13 @@ QUOTABLE** (`ROADMAP.md` item 0b). It needs paid API access. The cost rows in §
 dodge this by being *lower bounds* — input tokens only, zero output, perfect
 accuracy — which is why they carry no equal-accuracy assumption. But "is the
 symbolic answer *righter*" cannot be dodged forever.
+
+**Second blocker, new, and it needs a download rather than a decision.** No
+corpus of **raw observations with ground-truth structure** exists on disk, so the
+first arrow cannot be measured at all (§3c). The cheapest fix is the strongest:
+**raw SEC 13F filings in HTML** — the ground truth is *already in this repo* as
+the 3.8M-row extracted holdings tables, so only the unstructured side is missing.
+Alternatives: UD treebanks (text → parse), courtlistener full-text opinions.
 
 The fork, which is the user's and not an agent's: **get credentials, or accept
 that this programme publishes cost bounds and capability certificates and never
@@ -269,16 +318,25 @@ has a demonstrated failure rate.
    one, a minimal dependency where you can derive one, and say plainly where you
    cannot* — because a read set that reads like a dependency is worse than no
    certificate, being 6,591x wrong and looking right.
-3. **Try hub labelling as a cheaper optimality certificate.** The newest finding's
-   own refuter: meet-in-the-middle may not be optimal, and 2-hop covers /
-   hub-labelling schemes are a real literature built for exactly "certify a
-   shortest-path distance cheaply". If one stays small at `d = 10`, the whole
-   witness/complement asymmetry weakens and item 2's contract changes.
-4. **Re-price the ~5e7 constant on a prose corpus.** It is the last load-bearing
+3. ~~Try hub labelling as a cheaper optimality certificate.~~ **Not run, and the
+   reasoning is in
+   `notes/decisions/2026-08-18-not-running-the-hub-labelling-refuter-because-the-ball-dominates-it.md`.**
+   Maintenance cost is `|dependency|/|corpus|`, so any certificate whose
+   dependency is the whole edge set is dominated by the ball — and both
+   candidates are. The LP dual is constant in `d` but its validity is a
+   conjunction over every edge; hub labelling is small per query but sound only
+   via a **global** 2-hop-cover invariant whose verification is APSP-equivalent,
+   making it a trusted index rather than a self-contained certificate.
+   **Separator certificates are not disposed of by that argument and stay open**
+   — on a graph with good separators, which an airline network is not.
+4. **Get raw observations on disk** (§6, second blocker). This now gates the
+   only unmeasured arrow of the thesis, and the SEC route needs a download
+   rather than a research decision.
+5. **Re-price the ~5e7 constant on a prose corpus.** It is the last load-bearing
    number in the cost argument that has never been attacked, gutenberg and
    stackexchange are both on disk, and the mechanism (facts here are
    20-character identifiers) predicts it should move.
-5. **The shrinking-corpus inversion.** One arm, and it is the falsifier for the
+6. **The shrinking-corpus inversion.** One arm, and it is the falsifier for the
    witness asymmetry rather than another confirmation of it.
 
 **What not to do:** more kernels (the data says stop at eight); more query
