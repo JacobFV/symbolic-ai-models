@@ -556,6 +556,17 @@ symbolic-ai-models/
     envs/                 #   choice, retry, repair, probe
     agents/               #   random, shortcut, context (floors); recall, careful
     train.py trace.py     #   rollouts; trajectories, for reading, not a metric
+  symbolic_ai_adapters/   # bytes as they arrive -> typed world IR. The boundary
+    openflights.py        #   where an external schema stops being authoritative.
+                          #   Records what it discarded, and asserts the CRS with
+                          #   a citation because the bytes state no datum and the
+                          #   geo kernel refuses a place without one
+  symbolic_ai_tasks/      # tasks over bytes this repo did NOT author, where the
+    airport_country.py    #   difficulty is whatever it is and a wrong answer is
+                          #   possible. Country from coordinates alone: 0.9078
+                          #   against a SWEPT floor of 0.7888 (the modal-country
+                          #   floor, 0.2087, overstates the lift 5.9x), an exact
+                          #   1.0 anchor on the leak, two controls below floor
   symbolic_ai_generators/ # latent worlds, rendered into several surfaces
     scheduling/           #   machine assignment: the third task, built for the
                           #   cell the others miss -- an expensive kernel (ASP,
