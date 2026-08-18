@@ -13,8 +13,10 @@ import pytest
 from symbolic_ai_core.runtime.ambiguity import (Alternatives,
                                                 AmbiguityExplosion,
                                                 PossibleAnswers,
+                                                additive_bounds,
                                                 alternatives_from, exposure,
                                                 possible_answers,
+                                                possible_answers_scoped,
                                                 rank_by_exposure)
 
 
@@ -154,3 +156,147 @@ class TestExposure:
         6 depending only on where the conflict lands, and on GLEIF the spread
         is 1 to 3,848 inside a single relation."""
         assert exposure("f2", self.KIDS) != exposure("hub", self.KIDS)
+
+
+class TestScopedEnumeration:
+    """A query should pay for the conflicts it reads, not the ones that exist.
+
+    `possible_answers` prices a query at the whole world's product, so 251
+    retained GLEIF conflicts refuse *every* query -- including one whose answer
+    depends on a single one of them.
+    """
+
+    @staticmethod
+    def _many(n: int = 200) -> Alternatives:
+        return Alternatives({f"c{i}": ("a", "b") for i in range(n)})
+
+    def test_the_whole_world_product_refuses_what_one_conflict_decides(self):
+        big = self._many()
+        with pytest.raises(AmbiguityExplosion):
+            possible_answers(lambda a: a["c7"], big)
+        got = possible_answers_scoped(lambda a: a["c7"], big)
+        assert set(got.answers) == {"a", "b"}
+        assert got.worlds == 2
+        assert got.read == ("c7",)
+
+    def test_a_query_reading_two_conflicts_costs_four_worlds_not_2_pow_200(self):
+        got = possible_answers_scoped(
+            lambda a: (a["c1"], a["c2"]), self._many())
+        assert got.worlds == 4
+        assert len(got.answers) == 4
+        assert set(got.read) == {"c1", "c2"}
+
+    def test_it_agrees_with_full_enumeration_answer_for_answer(self):
+        alts = Alternatives({"x": (1, 2), "y": (10, 20), "z": (100, 200)})
+
+        def q(a):
+            return a["x"] + a["y"]
+
+        full, scoped = possible_answers(q, alts), possible_answers_scoped(q, alts)
+        assert set(full.answers) == set(scoped.answers)
+        assert full.worlds == 8 and scoped.worlds == 4
+
+    def test_a_read_set_that_grows_with_the_choice_is_discovered(self):
+        """The read set is not static: which conflict matters can depend on
+        how an earlier one was settled, so one pass is not enough."""
+        alts = Alternatives({"x": ("stop", "go"), "y": (1, 2)})
+
+        def q(a):
+            return a["x"] if a["x"] == "stop" else a["y"]
+
+        got = possible_answers_scoped(q, alts)
+        assert set(got.answers) == {"stop", 1, 2}
+        assert set(got.read) == {"x", "y"}
+
+    def test_the_defaults_pass_is_discarded_not_reported(self):
+        """The first pass runs against first-alternative defaults. If its
+        answers leaked into the result, `y`'s second value would be missing."""
+        alts = Alternatives({"x": ("stop", "go"), "y": (1, 2)})
+        got = possible_answers_scoped(
+            lambda a: a["x"] if a["x"] == "stop" else a["y"], alts)
+        assert got.worlds == 4
+        assert sum(len(v) for v in got.answers.values()) == 4
+
+    def test_a_genuinely_wide_query_is_still_refused_and_says_so(self):
+        with pytest.raises(AmbiguityExplosion, match="reads 12 of 200"):
+            possible_answers_scoped(
+                lambda a: sum(a[f"c{i}"] == "a" for i in range(12)),
+                self._many(), max_worlds=1024)
+
+    def test_reading_a_settled_subject_is_a_key_error_not_a_silent_default(self):
+        with pytest.raises(KeyError):
+            possible_answers_scoped(lambda a: a["nope"], self._many())
+
+    def test_iterating_the_assignment_counts_as_reading_all_of_it(self):
+        """A computation that walks the whole mixture has depended on all of
+        it as far as this can tell, and recording nothing there is how an
+        exact method quietly becomes an approximate one."""
+        alts = Alternatives({"x": (1, 2), "y": (1, 2)})
+        with pytest.raises(AmbiguityExplosion):
+            possible_answers_scoped(lambda a: sum(a.values()), alts,
+                                    max_worlds=2)
+
+    def test_a_query_reading_nothing_is_one_world(self):
+        got = possible_answers_scoped(lambda a: 7, self._many())
+        assert got.worlds == 1 and got.read == () and set(got.answers) == {7}
+
+    def test_each_answer_carries_only_the_conflicts_it_rests_on(self):
+        got = possible_answers_scoped(lambda a: a["c3"], self._many())
+        for assignments in got.answers.values():
+            for assignment in assignments:
+                assert set(assignment) == {"c3"}
+
+
+class TestAdditiveBounds:
+    """The case scoping does not cover: a query that really does read all of
+    them. A count over every ambiguous alignment is not enumerable and is not
+    therefore unanswerable."""
+
+    def test_the_bounds_are_the_enumerated_extremes_exactly(self):
+        alts = Alternatives({f"c{i}": (0, 1, 3) for i in range(6)})
+        contribution = lambda s, v: v
+        full = possible_answers(lambda a: sum(a.values()), alts,
+                                max_worlds=10_000)
+        b = additive_bounds(alts, contribution)
+        assert b.low == min(full.answers) and b.high == max(full.answers)
+
+    def test_each_bound_is_attained_by_the_assignment_it_returns(self):
+        alts = Alternatives({"a": (1, 5), "b": (2, -2)})
+        b = additive_bounds(alts, lambda s, v: v, base=100.0)
+        assert sum(b.low_choice.values()) + 100.0 == b.low
+        assert sum(b.high_choice.values()) + 100.0 == b.high
+
+    def test_a_conflict_whose_alternatives_score_alike_adds_no_width(self):
+        alts = Alternatives({"same": ("gb", "gb2"), "differs": ("gb", "us")})
+        b = additive_bounds(alts, lambda s, v: float(v.startswith("gb")))
+        assert b.width == 1.0
+        assert [s for s, _ in b.width_by_subject] == ["differs"]
+
+    def test_width_attribution_is_widest_first(self):
+        alts = Alternatives({"small": (0, 1), "big": (0, 10), "mid": (0, 5)})
+        b = additive_bounds(alts, lambda s, v: v)
+        assert [s for s, _ in b.width_by_subject] == ["big", "mid", "small"]
+
+    def test_an_answer_no_conflict_can_move_is_determined(self):
+        alts = Alternatives({"x": ("a", "b")})
+        assert additive_bounds(alts, lambda s, v: 1.0).determined
+        assert not additive_bounds(alts, lambda s, v: v == "a").determined
+
+
+class TestTheRefusalIsActionable:
+    def test_a_scoped_refusal_names_the_conflicts_the_query_depends_on(self):
+        alts = Alternatives({f"c{i}": ("a", "b") for i in range(50)})
+        with pytest.raises(AmbiguityExplosion) as exc:
+            possible_answers_scoped(
+                lambda a: tuple(a[f"c{i}"] for i in range(15)), alts,
+                max_worlds=64)
+        assert set(exc.value.read) == {f"c{i}" for i in range(15)}
+        assert exc.value.worlds == 2 ** 15
+
+    def test_a_whole_world_refusal_names_nothing_rather_than_lying(self):
+        """`possible_answers` has no query-specific read set to report, and an
+        empty tuple says so; inventing one would be worse than none."""
+        alts = Alternatives({f"c{i}": ("a", "b") for i in range(50)})
+        with pytest.raises(AmbiguityExplosion) as exc:
+            possible_answers(lambda a: a["c0"], alts)
+        assert exc.value.read == ()

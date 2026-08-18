@@ -81,6 +81,19 @@ the numbers, the seven floors and the three ablations.
     economy kernel is the first thing to use `transaction_time`, and found that
     **look-ahead bias is dominated by existence, not revision** (47.8% vs 10.4%).
 11. **A second task**, and the generalisation test it exists for.
+12. **Computing with a retained mixture, at real scale.** A query now pays for
+    the conflicts it *reads*, not the ones that exist: 117,129 ownership
+    answers in 0.3s over a world holding **4,992** unresolved conflicts that
+    `possible_answers` refuses outright (2^4992 worlds), reading a median of
+    **0** and a maximum of **1** — and 4.274% of them come back *undetermined
+    with their alternatives* rather than silently whichever source loaded
+    second. Retention costs **2.8-3.4x** a collapsed answer ($1.4e-11 per
+    query). Where the query genuinely reads everything — a portfolio count over
+    a hub with 197 conflicts beneath it, or 598 ambiguous SEC->GLEIF
+    alignments — `additive_bounds` returns attained extremes in linear time and
+    matched enumeration exactly on **3,273/3,273** checkable cases. The cheap
+    alternative, set propagation, is wrong on **19/19** correlated pairs.
+    See `notes/findings/2026-08-18-a-query-pays-for-the-conflicts-it-reads-and-4992-of-them-cost-one.md`.
 
 ### Next, in order
 

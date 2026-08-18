@@ -25,6 +25,7 @@ What makes this task worth having rather than merely available:
 from __future__ import annotations
 
 import collections
+import functools
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Mapping
@@ -44,13 +45,18 @@ class UltimateParentTask:
     direct: Mapping[str, str]
     truth: Mapping[str, str]
 
-    @property
+    @functools.cached_property
     def ids(self) -> tuple[str, ...]:
         """Entities carrying both a direct and an ultimate parent.
 
         Scored only where both exist. An entity with an ultimate parent and no
         direct parent is not a failure of the closure, it is a hole in the
         input, and scoring it would price a data gap as a reasoning error.
+
+        **Cached**, because it sorts 117k ids and reads like an attribute.
+        Written as a plain property it made one loop 100,000x slower by being
+        evaluated inside a comprehension's condition, and nothing about the
+        call site said it was doing work.
         """
         return tuple(sorted(set(self.direct) & set(self.truth)))
 
