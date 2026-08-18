@@ -77,3 +77,36 @@ If the read set turns out to be large for ordinary queries — if GLEIF's chains
 routinely pass through many conflicts — scoped enumeration buys nothing and the
 honest report is that the bound was not the obstacle. That is a real possible
 outcome and it is what arm 1's read-set distribution decides.
+
+---
+
+## Second pre-registration, same day: the rung nobody had tested
+
+The finding this note produced left "a wide read set **and** a non-additive
+answer is a solver's job" as an assertion. The test: **concentration** beneath a
+hub — the largest number of a hub's entities that any single party ultimately
+owns — under the 4,992-conflict mixture.
+
+The two ends of that one statistic are not the same problem, which is why it was
+chosen:
+
+- the **maximum** is closed-form. Conflicts are independent, so for each
+  candidate owner the world where every conflict that *can* name it does name it
+  is consistent, and taking the best owner is exact in linear time.
+- the **minimum** is makespan minimisation with restricted assignment — each
+  conflict places its weight on one of two owners, minimise the maximum load —
+  which is the classical NP-hard shape.
+
+Predicted before the run:
+
+1. closed-form max == enumerated max on **100%** of hubs enumeration can reach.
+   This is a proof, so anything less is a bug rather than a finding.
+2. solver min == enumerated min on **100%**, for the same reason.
+3. the cheap lower bound (heaviest conflict, heaviest fixed owner, even spread)
+   is already exact on **>=70%** of the 3,044 hubs, and where it is not the gap
+   is usually 1. If it is exact everywhere, the solver rung is unnecessary on
+   this corpus and that is the result.
+4. concentration is undetermined — min != max — on **>=80%** of hubs.
+5. the collapsed answer lands inside [min, max] on **100%**: it is one of the
+   worlds, and anything else is a bug in the mixture construction.
+6. solver median under **10 ms**, total under **60 s** for 3,044 hubs.

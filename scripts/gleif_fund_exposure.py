@@ -149,6 +149,23 @@ def main() -> None:
     print(f"\ntotal exposure (fund+subfund) for the real 251: "
           f"{sum(combined_exposure)}")
 
+    # The refuter this finding named: "restricting to IS_FUND-MANAGED_BY /
+    # IS_SUBFUND_OF misses a third cross-population relation this script did
+    # not check -- IS_INTERNATIONAL_BRANCH_OF (1,920 edges) and IS_FEEDER_TO
+    # (1,359 edges) are smaller and unexamined here." Checked now, on the same
+    # 251, with the same walk.
+    print()
+    for kind in ("IS_INTERNATIONAL_BRANCH_OF", "IS_FEEDER_TO"):
+        kids = load_children(kind)
+        all_nodes = load_all_nodes(kind)
+        hubs = sum(1 for e in conflicts if e in kids)
+        anywhere = sum(1 for e in conflicts if e in all_nodes)
+        exp = [exposure(e, kids) for e in conflicts]
+        print(f"{kind}: {len(all_nodes):,} nodes, {len(kids):,} hubs; of the "
+              f"{len(conflicts)} conflicts {hubs} are a hub and {anywhere} "
+              f"appear anywhere")
+        summarize(f"exposure via {kind}", exp)
+
 
 if __name__ == "__main__":
     main()

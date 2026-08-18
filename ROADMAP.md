@@ -94,6 +94,19 @@ the numbers, the seven floors and the three ablations.
     matched enumeration exactly on **3,273/3,273** checkable cases. The cheap
     alternative, set propagation, is wrong on **19/19** correlated pairs.
     See `notes/findings/2026-08-18-a-query-pays-for-the-conflicts-it-reads-and-4992-of-them-cost-one.md`.
+13. **The solver rung, tested rather than asserted.** "Wide read set plus a
+    non-additive answer is a solver's job" was an assertion; on *concentration*
+    beneath a hub the **maximum is closed-form and free** while the **minimum is
+    NP-hard**, and over 3,044 real hubs the cheap lower bound is already exact
+    on **99.5%** — the solver changes the answer on **15**, by up to 4, and you
+    cannot know which 15 without asking. 3,044 exact optima in **1.6s**, the
+    largest a 2^197-world mixture. The rule that falls out: verify the cheap
+    bound with one call (1.29 calls per hub). Also: the obvious `#minimize` over
+    `#max` encoding did not finish in 13 minutes and the decision-problem
+    encoding takes 1.6s, so **the price of a kernel is the price of its
+    encoding** — and `asp@1` has no optimisation path at all, which is now a
+    change with a driver.
+    See `notes/findings/2026-08-18-the-solver-rung-is-needed-on-15-hubs-out-of-3044.md`.
 
 ### Next, in order
 
