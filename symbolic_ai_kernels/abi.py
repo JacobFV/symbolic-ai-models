@@ -255,6 +255,7 @@ KERNEL_MODULES: dict[str, str] = {
     "asp@1": "symbolic_ai_kernels.asp",
     "smt@1": "symbolic_ai_kernels.smt",
     "lean@1": "symbolic_ai_kernels.lean",
+    "egraph@1": "symbolic_ai_kernels.egraph",
 }
 
 
