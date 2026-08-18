@@ -13,5 +13,8 @@ from .airport_country import (FLOOR_NAME, AirportCountryTask, evaluate,
                               load_task, predict_anchor, predict_knn,
                               predict_modal)
 
+from .ultimate_parent import UltimateParentTask
+
 __all__ = ["AirportCountryTask", "load_task", "evaluate", "predict_knn",
-           "predict_modal", "predict_anchor", "FLOOR_NAME"]
+           "predict_modal", "predict_anchor", "FLOOR_NAME",
+           "UltimateParentTask"]

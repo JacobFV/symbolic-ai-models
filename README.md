@@ -562,7 +562,13 @@ symbolic-ai-models/
                           #   a citation because the bytes state no datum and the
                           #   geo kernel refuses a place without one
   symbolic_ai_tasks/      # tasks over bytes this repo did NOT author, where the
-    airport_country.py    #   difficulty is whatever it is and a wrong answer is
+    ultimate_parent.py    #   difficulty is whatever it is. GLEIF ownership
+                          #   closure: 0.9785 by FUSING direct edges with other
+                          #   entities' filed ultimates, against a swept 0.9005
+                          #   (naive floor 0.7503 overstates the lift 3.6x).
+                          #   The graph is 1.99M tokens -- past a context window,
+                          #   so the LLM comparison stops being a price ratio
+    airport_country.py    #   and a wrong answer is
                           #   possible. Country from coordinates alone: 0.9078
                           #   against a SWEPT floor of 0.7888 (the modal-country
                           #   floor, 0.2087, overstates the lift 5.9x), an exact
