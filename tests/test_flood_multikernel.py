@@ -473,3 +473,43 @@ def test_the_raw_gate_agrees_with_the_object_gate_exactly(cases):
         objects = [Claim.from_dict(x) for x in raw]
         assert (needs_the_solvers(c.world, objects)[0]
                 == needs_the_solvers_raw(world_artifact(c.world).value, raw)[0]), c.seed
+
+
+# --- a negative needs every route settled ---------------------------------
+def _loads_with(case, budget_ns):
+    """Drive the loads node directly, reusing the flow's own routes artifact."""
+    from symbolic_ai_core.artifact.value import Artifact
+    from symbolic_ai_generators.flood.ops import _check_loads
+
+    class _Ctx:
+        cost_usd = None
+
+    _, outs, _ = solve(case.world)
+    return _check_loads(
+        {"world": Artifact(type="json", value=case.world.to_dict()),
+         "routes": outs["routes"]},
+        {"budget_ns": budget_ns}, _Ctx())
+
+
+def test_a_vehicle_is_ruled_out_only_when_every_route_was_settled(cases):
+    """`feasible = any(t["feasible"] for t in tries)` made a timed-out route
+    indistinguishable from one the solver had ruled out, so a single unfinished
+    search could produce an asserted "cannot serve".
+
+    Stated as an invariant rather than a timing assertion: a vehicle listed as
+    unsettled must have no claim, however the budget race resolves.
+    """
+    for budget in (None, 1, 1_000):
+        out = _loads_with(cases[0], budget)
+        unsettled = set(out["report"].value["unsettled_vehicles"])
+        claimed = {c["roles"]["vehicle"]["entity"]
+                   for c in out["claims"].value["claims"]}
+        assert not (unsettled & claimed), (
+            f"budget={budget}: {unsettled & claimed} got a claim from a "
+            "search that established nothing")
+
+
+def test_with_no_budget_every_vehicle_is_settled(cases):
+    out = _loads_with(cases[0], None)
+    assert out["report"].value["unsettled_vehicles"] == []
+    assert len(out["claims"].value["claims"]) > 0

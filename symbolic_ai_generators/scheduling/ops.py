@@ -111,24 +111,37 @@ def _solve(inputs: Mapping[str, Artifact], params: Mapping[str, Any],
     world = read_world(inputs["world"])
     program, notes = build_program(world)
     asp = get_kernel("asp@1")
-    request = KernelRequest(params={"program": program, "max_models": 1})
+    request = KernelRequest(
+        params={"program": program, "max_models": 1},
+        budget_ns=params.get("budget_ns"))
     projection = asp.project(world, request)
     result = asp.run(projection, request)
     ctx.cost_usd = result.cost.usd
     feasible = result.ok
-    claim = Claim("feasible_schedule", {"of": EntityRef("plan")},
-                  polarity="positive" if feasible else "negative",
-                  modality="asserted",
-                  provenance=Provenance(
-                      producer="scheduling.solve@1", inputs=("asp@1",),
-                      method="answer set search over one machine per job; "
-                             "durations and capacities entered through the "
-                             "supplied program as centihours and are NOT "
-                             "unit-checked by the projection"))
+
+    # An unfinished search is not a negative answer. Before this, `not
+    # result.ok` became `polarity="negative", modality="asserted"` -- so a
+    # solver that ran out of time would have entered "this schedule is NOT
+    # feasible" into the world as a fact it had never established. Latent while
+    # nothing passed a budget, exactly as the ASP unsat/exhausted conflation
+    # was latent until something could interrupt the search.
+    claims = ()
+    if result.conclusive:
+        claims = (Claim("feasible_schedule", {"of": EntityRef("plan")},
+                        polarity="positive" if feasible else "negative",
+                        modality="asserted",
+                        provenance=Provenance(
+                            producer="scheduling.solve@1", inputs=("asp@1",),
+                            method="answer set search over one machine per job; "
+                                   "durations and capacities entered through the "
+                                   "supplied program as centihours and are NOT "
+                                   "unit-checked by the projection")),)
     return {
-        "claims": claims_artifact((claim,), "scheduling.solve@1"),
+        "claims": claims_artifact(claims, "scheduling.solve@1"),
         "report": Artifact(type="json", value={
             "feasible": feasible, "refused": result.refused,
+            "outcome": result.classification,
+            "settled": result.conclusive,
             "unchecked_numeric_facts": len(notes),
             "projection_discarded": len(projection.discarded),
             "diagnostics": dict(result.diagnostics)}),

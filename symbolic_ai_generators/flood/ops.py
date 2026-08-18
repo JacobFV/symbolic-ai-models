@@ -171,19 +171,30 @@ def _check_loads(inputs: Mapping[str, Artifact], params: Mapping[str, Any],
                     {"op": "+", "args": [{"var": f"mass@{vid}"},
                                          {"var": f"payload@{vid}"}]},
                     {"q": {"value": limit, "unit": "kg"}}]})
-            request = KernelRequest(params={"constraints": constraints})
+            request = KernelRequest(params={"constraints": constraints},
+                                    budget_ns=params.get("budget_ns"))
             projection = smt.project(world, request)
             result = smt.run(projection, request)
             usd += result.cost.usd or 0.0
             per_vehicle[vid].append({
                 "route": i, "edges": route, "limits": on_route,
-                "feasible": result.ok, "why": result.refused})
+                "feasible": result.ok, "settled": result.conclusive,
+                "outcome": result.classification, "why": result.refused})
             if result.ok:
                 break
 
     claims = []
+    unsettled: list[str] = []
     for vid, tries in sorted(per_vehicle.items()):
         feasible = any(t["feasible"] for t in tries)
+        # Three outcomes, not two. A witness on any route settles it positive.
+        # A negative needs EVERY route to have been settled -- if one search ran
+        # out of time, "no route admitted it" is a statement about the budget.
+        # Before this, an exhausted solver made `feasible` False and the claim
+        # went out as an asserted negative the kernel had never established.
+        if not feasible and not all(t["settled"] for t in tries):
+            unsettled.append(vid)
+            continue
         claims.append(Claim(
             "can_serve", {"vehicle": EntityRef(vid)},
             polarity="positive" if feasible else "negative",
@@ -191,13 +202,15 @@ def _check_loads(inputs: Mapping[str, Artifact], params: Mapping[str, Any],
             provenance=Provenance(
                 producer="flood.check_loads@1", inputs=("smt@1",),
                 method="SMT over the laden mass on each candidate route; a "
-                       "vehicle qualifies if SOME route admits it")))
+                       "vehicle qualifies if SOME route admits it, and is "
+                       "ruled out only if EVERY route was settled against it")))
     # A composite node prices itself from the kernels it called, not from its
     # own wall clock: the loop around them is free and the solver calls are not.
     ctx.cost_usd = usd
     return {
         "claims": claims_artifact(claims, "flood.check_loads@1"),
         "report": Artifact(type="json", value={
+            "unsettled_vehicles": unsettled,
             "n_routes": len(routes), "per_vehicle": per_vehicle,
             "n_smt_calls": sum(len(v) for v in per_vehicle.values()),
             "usd": usd}),

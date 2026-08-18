@@ -184,3 +184,67 @@ def test_a_duration_in_the_wrong_unit_is_refused_where_the_check_still_exists():
     with pytest.raises(ValueError, match="not hours"):
         build_program(WorldSnapshot(entities=c.world.entities,
                                     claims=tuple(claims)))
+
+
+# --- an unfinished search is not a negative answer -------------------------
+def _solve_with(budget_ns, seed=7, n_jobs=14, n_machines=4):
+    from symbolic_ai_core.artifact.value import Artifact
+    from symbolic_ai_generators.scheduling.ops import _solve
+    from symbolic_ai_generators.scheduling.world import generate
+
+    class _Ctx:
+        cost_usd = None
+
+    case = generate(seed, n_jobs=n_jobs, n_machines=n_machines)
+    w = Artifact(type="json", value=case.world.to_dict())
+    return _solve({"world": w}, {"budget_ns": budget_ns}, _Ctx())
+
+
+def test_a_settled_search_still_emits_its_claim():
+    out = _solve_with(None)
+    assert out["report"].value["settled"] is True
+    assert len(out["claims"].value["claims"]) == 1
+
+
+def test_a_claim_is_emitted_if_and_only_if_the_search_settled():
+    """The invariant, which holds whichever way the race goes.
+
+    Before this fix, `not result.ok` became polarity="negative",
+    modality="asserted" -- so a solver that ran out of time entered "this
+    schedule is NOT feasible" into the world as a fact it never established.
+    Latent while nothing passed a budget, exactly as the ASP
+    unsat/exhausted conflation was latent until something could interrupt a
+    search.
+
+    Asserting `outcome == "exhausted"` for a tiny budget would be flaky: a
+    budget the solver beats is not exceeded, and clingo sometimes finishes
+    inside a nanosecond window. The invariant does not depend on who wins.
+    """
+    for budget in (None, 1, 1_000, 1_000_000):
+        out = _solve_with(budget)
+        settled = out["report"].value["settled"]
+        n = len(out["claims"].value["claims"])
+        assert (n == 1) == settled, (
+            f"budget={budget}: settled={settled} but {n} claims emitted")
+        assert n in (0, 1)
+
+
+def test_the_report_names_the_outcome_rather_than_a_message():
+    """A caller must tell an infeasible schedule from an unfinished one
+    without string-matching a refusal."""
+    from symbolic_ai_kernels.abi import OUTCOMES
+    for budget in (None, 1):
+        assert _solve_with(budget)["report"].value["outcome"] in OUTCOMES
+
+
+def test_an_unsettled_search_is_never_reported_as_infeasible():
+    """The specific corruption: `feasible` False for a search that
+    established nothing."""
+    for budget in (1, 1_000):
+        rep = _solve_with(budget)["report"].value
+        if not rep["settled"]:
+            assert out_has_no_claim(_solve_with(budget))
+
+
+def out_has_no_claim(out) -> bool:
+    return out["claims"].value["claims"] == []
