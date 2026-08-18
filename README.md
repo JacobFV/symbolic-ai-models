@@ -575,6 +575,10 @@ symbolic-ai-models/
     smt/                  #   tier 3 (z3, optional): arithmetic + logic, and it
       units.py            #   picks up exactly the claims datalog discards.
       project.py kernel.py#   Units checked before the solver; no conversions
+    lean/                 #   tier 4 (native): the VERIFIER, and the only veto
+      project.py kernel.py#   in the stack. Typechecks each claim against the
+                          #   world's own entity types -- catches the role
+                          #   confusion the untyped kernels cannot see
   symbolic_ai_atomspace/  # 005: the IR as a knob -- match and rewrite over atoms
   symbolic_ai_lean/       # 006: the IR as a knob -- a kernel that can *refuse*
     expr.py kernel.py     #   native, total, fuel-bounded; Lean 4's Expr, subset
