@@ -201,44 +201,6 @@ comparison is narrow and should be stated narrowly: this gets delta-proportional
 maintenance for an **arbitrary computation including an external solver**, with
 no per-query delta rule.
 
-## 4. Believed, not measured. Do not inherit as fact.
-
-Recorded deliberately, with mechanisms, so a later contradiction is a finding
-rather than a surprise.
-
-Both of the previous revision's parked predictions have now been **run, and
-both fell** — see §5. What is parked now:
-
-- **A corpus that mostly *shrinks* inverts the witness asymmetry.** The witness
-  is monotone under additions and dies on deletion; 13F opened 411,122 against
-  333,014 closed. On a shrinking corpus the witness should be the fragile half
-  and the optimality claim the stable one. Cheap and unrun.
-- **Most kernels here have a witness available and discard it.** The ASP kernel
-  holds the model and returns only claims; the cover experiment had to
-  re-extract the picked filers by hand. Confidence ~0.7, from reading the code.
-- **The minimal path certificate is derived only for hops ≤ 2**, which is every
-  case in that sample because the co-holding graph is nearly complete. On a
-  graph with real diameter the minimal optimality set is the ball of radius
-  `d−1`, which grows, and the 1.4x could open back up. **That is the experiment
-  that would break the newest finding**, and it is the one to run first if you
-  want to attack it.
-- **The ~5e7 constant is a measurement, not a law.** It is the ratio of a fact
-  in a kernel to a fact in a prompt, on one corpus whose facts are 20-character
-  identifiers. A corpus of prose facts should move it. Still unrun.
-
-## 5. Corrected this session. Do not quote the dead versions.
-
-| was published as | what it actually is |
-|---|---|
-| "the advantage curve spans seven orders of magnitude, 1.85e11 on ultimate parent" | arithmetic right, framing load-bearing: **99,738x** of it was handing the model the whole graph. Against an opponent given only the dependency, four query classes are within **1.2x** at ~5e7 |
-| "a retriever can only guess what the answer depends on" (mine, same day) | **wrong.** An ideal retriever certifies determinacy in **≤4 rounds**, zero misses. What survives: it has no **stopping rule** — at its natural stop it is silently wrong on **1.128%** of the world — and it over-fetches **46x** |
-| "ambiguity does not propagate in this graph, 1.0x" | true of the 251 conflicts that occurred, false of the graph: the same conflicts on the highest-exposure nodes would contaminate **102x** more |
-| "alternatives retained not collapsed" | held only inside the process until `to_dict` was fixed; retention died at the artifact boundary |
-| "scoping buys little on a dense graph" (parked prediction) | **false on the filed-real mixture**: read p50 1, max 8, **0 refusals** in 250 queries, anchor 179/179. What breaks is **wall time** — 48.3 ms/query against GLEIF's 2.8 µs, 17,000x — and the governing variable is `conflict rate x read footprint`, not topology. GLEIF's 2.8 µs was a property of a two-fact query, never of a forest |
-| "the corpus has no genuine two-source property conflict" (three findings) | **false**: four airports where openflights and geonames disagree on country and the disagreement survives ICAO agreement, name agreement and a self-incoherence filter — EUN, SMW, VIL (Western Sahara) and PRN (Kosovo). Broadest defensible count 8 |
-| "make dependency-certification a substrate-wide contract" (this handover's own §7 item 1, previous revision) | the **lower-value half** of the right idea. Every kernel reporting its read set is worth **0.3x–1.0x** per quarter, and the read set over-reads the actual dependency by up to **6,591x**. What pays is a **witness** plus a **minimal** dependency, and neither is producible by the generic mechanism |
-| "the lever is the logical form of the claim" (mine, two hours later) | **wrong.** The lever is the *true dependency* of the claim. The 95x NP/coNP gap on set cover is real; the 8,932x version of it on shortest path collapses to **1.4x** once the optimality certificate is hand-derived, and the rest was the BFS over-reading |
-
 ## 3c. The constant we retracted is the amortisation constant
 
 `notes/findings/2026-08-18-the-framing-factor-we-retracted-is-the-amortisation-constant.md`
@@ -280,6 +242,100 @@ externalised it, which is why nothing published here is wrong. It is
 **unmeasured** where structure must be **derived from observation**, which is
 the domain `APPROACH.md` names as the target.
 
+## 3d. The first arrow, measured
+
+`notes/findings/2026-08-18-the-first-arrow-is-cheap-and-bad.md`. §3c named
+acquiring a raw-observation corpus as the highest-value data need. There is one:
+**5,000 OpenAlex works, 5,992,167 characters of abstracts, 44,446 affiliation
+strings** at `data/sources/openalex-prose/`, paired with the ROR institution ids
+OpenAlex resolved them to. It is the first raw prose this repo has held.
+
+**The crossover does not transfer; the dependency does.**
+
+| | GLEIF ownership | OpenAlex prose |
+|---|---:|---:|
+| **dependency per query** | **41 tokens** | **302.3 tokens** |
+| crossover | 99,512 queries | **5,242 queries** |
+
+The formula held and the number moved **19x**, because `corpus` scales with
+corpus size — **never quote the crossover as a constant across corpora**. The
+corpus-independent term is the dependency, and that is the re-pricing §4 asked
+for: **7.4x larger on prose**.
+
+**Extraction, work-disjoint split, 11,954 held-out strings of which 84.1% were
+never seen.** A ladder of four rungs, each reported as a fraction of a ceiling
+the task itself imposes:
+
+| | F1 unseen | % of ceiling | precision |
+|---|---:|---:|---:|
+| memoriser | 0.000 | 0% | 0% |
+| v0 component vote | 0.303 | 42.2% | 29.1% |
+| v1 + IDF | 0.377 | 52.6% | 39.9% |
+| v2 + word-overlap fallback | 0.366 | 51.0% | 36.1% |
+| **v3 + specificity-first** | **0.379** | **52.9%** | **54.7%** |
+| *ceiling* | *0.717* | *100%* | *72.8%* |
+
+**The ceiling is the most useful number and was not designed for.** On strings
+seen *verbatim*, agreement is only 58.1% exact / F1 0.717, because OpenAlex
+assigns institutions **per author** rather than per string — the label is not a
+function of the input. Anything above 0.717 is using more than the string.
+
+**A cost comparison that does not need the credentials §6 is blocked on**, by
+bounding the model at perfection: 14,091 ns / **$7.83e-11** against **$4.56e-04**
+for input tokens alone. Per *correct* extraction that is **≥1,766,210x whatever
+the model scores**, since it cannot exceed F1 1.0.
+
+> **The first arrow is cheap and bad.** F1 0.379 builds a world that is mostly
+> wrong, and a millionth of the price does not repair it. Three principled
+> improvements over the naive dictionary bought +0.077 and left 47% of the
+> ceiling unreached, so the weakness is real rather than a lazy first attempt.
+> Every advantage in §3, §3b and §3c sits downstream of this.
+
+Two things inside the ladder outlive its top line: **v2 made it worse** — a
+fallback firing where the extractor knows least, guessing worse than abstaining,
+the same shape as the largest harness effect in this repo's history — and **F1
+is insensitive to the operating point**, so the precision/recall *frontier* is
+the object. v3 is the rung to ship despite the flat F1: for a world that will be
+reasoned over, fewer wrong facts beats more facts.
+
+## 4. Believed, not measured. Do not inherit as fact.
+
+Recorded deliberately, with mechanisms, so a later contradiction is a finding
+rather than a surprise.
+
+Both of the previous revision's parked predictions have now been **run, and
+both fell** — see §5. What is parked now:
+
+- **A corpus that mostly *shrinks* inverts the witness asymmetry.** The witness
+  is monotone under additions and dies on deletion; 13F opened 411,122 against
+  333,014 closed. On a shrinking corpus the witness should be the fragile half
+  and the optimality claim the stable one. Cheap and unrun.
+- **Most kernels here have a witness available and discard it.** The ASP kernel
+  holds the model and returns only claims; the cover experiment had to
+  re-extract the picked filers by hand. Confidence ~0.7, from reading the code.
+- **The minimal path certificate is derived only for hops ≤ 2**, which is every
+  case in that sample because the co-holding graph is nearly complete. On a
+  graph with real diameter the minimal optimality set is the ball of radius
+  `d−1`, which grows, and the 1.4x could open back up. **That is the experiment
+  that would break the newest finding**, and it is the one to run first if you
+  want to attack it.
+- **The ~5e7 constant is a measurement, not a law.** It is the ratio of a fact
+  in a kernel to a fact in a prompt, on one corpus whose facts are 20-character
+  identifiers. A corpus of prose facts should move it. Still unrun.
+
+## 5. Corrected this session. Do not quote the dead versions.
+
+| was published as | what it actually is |
+|---|---|
+| "the advantage curve spans seven orders of magnitude, 1.85e11 on ultimate parent" | arithmetic right, framing load-bearing: **99,738x** of it was handing the model the whole graph. Against an opponent given only the dependency, four query classes are within **1.2x** at ~5e7 |
+| "a retriever can only guess what the answer depends on" (mine, same day) | **wrong.** An ideal retriever certifies determinacy in **≤4 rounds**, zero misses. What survives: it has no **stopping rule** — at its natural stop it is silently wrong on **1.128%** of the world — and it over-fetches **46x** |
+| "ambiguity does not propagate in this graph, 1.0x" | true of the 251 conflicts that occurred, false of the graph: the same conflicts on the highest-exposure nodes would contaminate **102x** more |
+| "alternatives retained not collapsed" | held only inside the process until `to_dict` was fixed; retention died at the artifact boundary |
+| "scoping buys little on a dense graph" (parked prediction) | **false on the filed-real mixture**: read p50 1, max 8, **0 refusals** in 250 queries, anchor 179/179. What breaks is **wall time** — 48.3 ms/query against GLEIF's 2.8 µs, 17,000x — and the governing variable is `conflict rate x read footprint`, not topology. GLEIF's 2.8 µs was a property of a two-fact query, never of a forest |
+| "the corpus has no genuine two-source property conflict" (three findings) | **false**: four airports where openflights and geonames disagree on country and the disagreement survives ICAO agreement, name agreement and a self-incoherence filter — EUN, SMW, VIL (Western Sahara) and PRN (Kosovo). Broadest defensible count 8 |
+| "make dependency-certification a substrate-wide contract" (this handover's own §7 item 1, previous revision) | the **lower-value half** of the right idea. Every kernel reporting its read set is worth **0.3x–1.0x** per quarter, and the read set over-reads the actual dependency by up to **6,591x**. What pays is a **witness** plus a **minimal** dependency, and neither is producible by the generic mechanism |
+| "the lever is the logical form of the claim" (mine, two hours later) | **wrong.** The lever is the *true dependency* of the claim. The 95x NP/coNP gap on set cover is real; the 8,932x version of it on shortest path collapses to **1.4x** once the optimality certificate is hand-derived, and the rest was the BFS over-reading |
+
 ## 6. Blocked, and it needs a human
 
 **Every accuracy comparison against a language model is unrun and stamped NOT
@@ -288,12 +344,16 @@ dodge this by being *lower bounds* — input tokens only, zero output, perfect
 accuracy — which is why they carry no equal-accuracy assumption. But "is the
 symbolic answer *righter*" cannot be dodged forever.
 
-**Second blocker, new, and it needs a download rather than a decision.** No
-corpus of **raw observations with ground-truth structure** exists on disk, so the
-first arrow cannot be measured at all (§3c). The cheapest fix is the strongest:
-**raw SEC 13F filings in HTML** — the ground truth is *already in this repo* as
-the 3.8M-row extracted holdings tables, so only the unstructured side is missing.
-Alternatives: UD treebanks (text → parse), courtlistener full-text opinions.
+**Second blocker — partly cleared, and what remains is a free signup.** §3d has
+raw prose on disk now via OpenAlex, so the first arrow is measured. What is still
+blocked is the *better* corpus: **CourtListener's v4 API returns 401** and both
+bulk listings are closed (404 / 403). It is the best available test of this arrow
+because its **77M-edge citation map is already in this repo as ground truth** and
+citations appear in opinions as prose — a sentence-level extraction task, where
+OpenAlex only offered a short-string one. A CourtListener API token is **free**
+but requires registering an account, which is an outward-facing action under the
+user's identity and not an agent's to take. **One signup unlocks the strongest
+version of the programme's weakest measurement.**
 
 The fork, which is the user's and not an agent's: **get credentials, or accept
 that this programme publishes cost bounds and capability certificates and never
@@ -329,14 +389,19 @@ has a demonstrated failure rate.
    making it a trusted index rather than a self-contained certificate.
    **Separator certificates are not disposed of by that argument and stay open**
    — on a graph with good separators, which an airline network is not.
-4. **Get raw observations on disk** (§6, second blocker). This now gates the
-   only unmeasured arrow of the thesis, and the SEC route needs a download
-   rather than a research decision.
-5. **Re-price the ~5e7 constant on a prose corpus.** It is the last load-bearing
+4. ~~Get raw observations on disk.~~ **Done — §3d.** What is left is the
+   CourtListener token (§6), which is a free signup and is the user's to make.
+5. ~~Re-price the ~5e7 constant on a prose corpus.~~ **Done — §3d.** The
+   dependency is 7.4x larger on prose; the crossover does not transfer at all. It is the last load-bearing
    number in the cost argument that has never been attacked, gutenberg and
    stackexchange are both on disk, and the mechanism (facts here are
    20-character identifiers) predicts it should move.
-6. **The shrinking-corpus inversion.** One arm, and it is the falsifier for the
+6. **Attack the 0.717 ceiling, or accept it.** The residual 47% is the whole
+   question for the first arrow: is it reachable by anything that is not a
+   model? ROR's own reconciliation service and a full gazetteer are both
+   untried, and both are symbolic. *Why this ranks high:* every advantage this
+   repo publishes sits downstream of this number.
+7. **The shrinking-corpus inversion.** One arm, and it is the falsifier for the
    witness asymmetry rather than another confirmation of it.
 
 **What not to do:** more kernels (the data says stop at eight); more query

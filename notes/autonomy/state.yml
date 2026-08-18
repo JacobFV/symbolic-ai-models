@@ -72,6 +72,15 @@ measured:
   - claim: "No source on disk carries raw prose. All 19 are (id,label,kind,body,source_url) or (source_id,target_id,kind); the longest natural-language field in 14 GB is a patent title at 59.4 chars mean; patentsview bodies are 0 chars; courtlistener is a 77M-edge citation map with no text column."
     evidence: scripts/extraction_breakeven.py docstring; verified across data/sources/
     commit: pending
+  - claim: "The first arrow measured for the first time, on 5,000 OpenAlex works. Symbolic extraction from prose reaches F1 0.379 on unseen affiliation strings -- 52.9% of a 0.717 ceiling the task itself imposes, because OpenAlex labels institutions per AUTHOR not per string so the label is not a function of the input. Three principled improvements over a naive dictionary bought +0.077."
+    evidence: notes/findings/2026-08-18-the-first-arrow-is-cheap-and-bad.md
+    commit: d45c9c3
+  - claim: "Cost per CORRECT extraction favours the symbolic extractor by at least 1,766,210x whatever a model scores, since a model cannot exceed F1 1.0. First credential-free bound on the comparison ROADMAP 0b blocks."
+    evidence: same finding, section C
+    commit: 0cf99cd
+  - claim: "The crossover does NOT transfer across corpora: 5,242 on prose against GLEIF's 99,512, because corpus_tokens scales with corpus size. The transferable term is the dependency -- 302 tokens on prose against 41, i.e. 7.4x larger."
+    evidence: same finding, section A
+    commit: 0cf99cd
   - claim: "Scoping survives a dense graph. On the filed-real routing mixture: read p50 1, max 8, 0 refusals in 250 queries, anchor 179/179. What breaks is wall time -- 48.3 ms/query against GLEIF's 2.8 us -- and the governing variable is conflict rate x read footprint, not topology."
     evidence: notes/findings/2026-08-18-scoping-survives-a-dense-graph-and-what-breaks-is-wall-time-not-refusal.md
     commit: 2b8443d
@@ -131,13 +140,15 @@ candidate_directions:
 blockers:
   - "Every accuracy comparison against a language model is unrun and NOT QUOTABLE: needs paid API credentials. User's fork, ROADMAP item 0b."
   - >
-    No corpus of RAW OBSERVATIONS with ground-truth structure exists on disk, so
-    the first arrow of APPROACH.md's thesis (observations -> typed world) cannot
-    be measured at all. Every published cost number begins at the second arrow.
-    Cheapest fix, and it needs only a download: raw SEC 13F filings in HTML --
-    the GROUND TRUTH is already here as the 3.8M-row extracted holdings tables,
-    so only the unstructured side is missing. Alternatives: UD treebanks,
-    courtlistener full-text opinions.
+    PARTLY CLEARED. Raw prose is on disk via OpenAlex and the first arrow is
+    measured. What remains blocked is the BETTER corpus: CourtListener's v4 API
+    returns 401 and both bulk listings are closed (404/403). It is the strongest
+    available test of this arrow because its 77M-edge citation map is ALREADY in
+    this repo as ground truth and citations appear in opinions as prose -- a
+    sentence-level extraction task, where OpenAlex offered only a short-string
+    one. The token is FREE but requires registering an account, which is an
+    outward-facing action under the user's identity. One signup unlocks the
+    strongest version of the programme's weakest measurement.
 
 research_debt:
   - assumption: "Every advantage ratio assumes the world already exists."
@@ -176,13 +187,19 @@ last_cycle:
     repo now say the cheap half of a problem is the useful half.
 
 next:
-  preferred_action: hub-labelling-as-a-cheaper-optimality-certificate
+  preferred_action: attack-the-0717-extraction-ceiling
   why_shipped_instead: >
     witness-on-kernelresult is DONE: `Witness` is on the kernel ABI, the ASP
     kernel returns its answer set instead of discarding it, and
     `KernelResult.maintainable` is true exactly when a witness is present --
     deliberately NOT for a proof of impossibility, however conclusive.
   why: >
+    The residual 47% of the extraction ceiling is the whole question for the
+    first arrow, and every advantage this repo publishes sits downstream of it.
+    ROR's own reconciliation service and a full institution gazetteer are both
+    untried and both symbolic; if either reaches the ceiling the bet holds, and
+    if neither does then the arrow needs something that is not string matching.
+  superseded_hub_labelling: >
     It is the newest finding's own named refuter. Meet-in-the-middle may not be
     the cheapest certificate for "no shorter path"; hub labelling and 2-hop
     covers are a literature built for exactly that. If one stays small at d=10,
