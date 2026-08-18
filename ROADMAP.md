@@ -151,6 +151,18 @@ measurements support:
    equal-accuracy assumption.
    See `notes/findings/2026-08-18-the-advantage-curve-was-mostly-the-framing-and-what-is-left-is-a-constant.md`.
 
+0d. **The opponent that exists is agentic retrieval, and it has now been priced
+   without an API.** An ideal lexical retriever answers the *lookup* in round 1
+   (117,129/117,129) and can certify *determinacy* in **<=4 rounds** — so
+   "retrieval cannot find the dependency" is refuted, and it was my claim.
+   What survives is sharper: it has **no stopping rule** (at its natural stop,
+   k=1, it silently reports "determined" for **1.128%** of the world) and it
+   **over-fetches 46x** (1,901 tokens pulled against a 41-token dependency).
+   Realistic advantage: **3.36e9** marginal, 1.30e9 amortised — between the
+   whole-corpus framing (5.01e12) and the oracle opponent (5.03e7), and 67x
+   *above* the oracle because over-fetch is paid every round.
+   See `notes/findings/2026-08-18-retrieval-can-certify-determinacy-in-four-rounds-what-it-lacks-is-a-stopping-rule.md`.
+
 Carried over, still worth doing:
 
 1. **Carry the regime with the finding.** Three flood results met the second task
