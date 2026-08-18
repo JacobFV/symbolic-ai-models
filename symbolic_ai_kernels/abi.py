@@ -254,6 +254,7 @@ KERNEL_MODULES: dict[str, str] = {
     "datalog@1": "symbolic_ai_kernels.datalog",
     "asp@1": "symbolic_ai_kernels.asp",
     "smt@1": "symbolic_ai_kernels.smt",
+    "lean@1": "symbolic_ai_kernels.lean",
 }
 
 
