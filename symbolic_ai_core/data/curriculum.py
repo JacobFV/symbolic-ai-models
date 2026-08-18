@@ -24,8 +24,8 @@ from typing import Any, Iterator, Sequence
 
 from .term_graph import TermGraph, term_graph_from_json
 
-__all__ = ["Episode", "lesson_ids", "resolve_lessons", "generate", "write_jsonl",
-           "read_jsonl", "build_split"]
+__all__ = ["Episode", "lesson_ids", "resolve_lessons", "generate", "episode_at",
+           "write_jsonl", "read_jsonl", "build_split"]
 
 
 @dataclass
@@ -344,34 +344,64 @@ def generate(lessons: Sequence[str], *, n: int, seed0: int = 0,
     from . import langdb
     langdb.ensure_for([language])
     make_binder = _binder_factory(curriculum)
-    from symbolic_ai_data.binding import using
     for lid in lessons:
-        L = lc.get(lid)
         for i in range(n):
-            seed = seed0 + i
-            # One binder per episode, seeded from (graph, lesson, seed), so a
-            # KG episode is a pure function of its address exactly as a base
-            # episode is. Both halves are drawn inside the same `with`, or the
-            # text and the graph would be two different worlds.
-            binder = make_binder(lid, seed) if make_binder is not None else None
-            try:
-                with using(binder):
-                    ex = L.example(seed, language=language)
-                    st = L.structured(seed)
-            except Exception:
-                if on_error == "raise":
-                    raise
-                continue
-            if ex.instance_id != st["instance_id"]:            # pragma: no cover
-                raise RuntimeError(
-                    f"{lid} seed {seed}: text and structure are different episodes")
-            yield Episode(
-                lesson_id=lid, seed=seed, instance_id=ex.instance_id,
-                language=ex.language, prompt=ex.prompt, answer=ex.answer,
-                choices=list(ex.choices),
-                graph=term_graph_from_json(st["observation"], max_nodes=max_nodes),
-                tags=list(ex.metadata.get("tags") or []),
-            )
+            ep = episode_at(lid, seed0 + i, language=language,
+                            max_nodes=max_nodes, make_binder=make_binder,
+                            on_error=on_error, lc=lc)
+            if ep is not None:
+                yield ep
+
+
+def episode_at(lesson_id: str, seed: int, *, language: str = "english",
+               max_nodes: int = 512, curriculum: str = "base",
+               make_binder=None, on_error: str = "raise",
+               lc=None) -> "Episode | None":
+    """One episode, addressed directly. The unit :func:`generate` iterates.
+
+    Split out of ``generate`` so that a dataset can be an **address space**
+    rather than a sequence: :mod:`symbolic_ai_core.data.dataset` needs to build
+    the episode at ordinal *n* without generating the *n-1* before it, which is
+    what makes a practically unbounded training stream cost the same memory as
+    a small one.
+
+    ``make_binder`` and ``lc`` are passed in by a caller that has already paid
+    for them — building the binder factory decompresses a vendored graph, and
+    doing it per episode would make this a hundred times slower than the loop it
+    replaced. ``generate`` therefore still hoists both, and its output is
+    byte-identical; ``tests/test_curriculum_fingerprint.py`` is what says so.
+    """
+    from symbolic_ai_data.binding import using
+    if lc is None:
+        lc = _lc()
+        from . import langdb
+        langdb.ensure_for([language])
+    if make_binder is None and curriculum not in ("base", "", None):
+        make_binder = _binder_factory(curriculum)
+    L = lc.get(lesson_id)
+    # One binder per episode, seeded from (graph, lesson, seed), so a KG episode
+    # is a pure function of its address exactly as a base episode is. Both
+    # halves are drawn inside the same `with`, or the text and the graph would
+    # be two different worlds.
+    binder = make_binder(lesson_id, seed) if make_binder is not None else None
+    try:
+        with using(binder):
+            ex = L.example(seed, language=language)
+            st = L.structured(seed)
+    except Exception:
+        if on_error == "raise":
+            raise
+        return None
+    if ex.instance_id != st["instance_id"]:                    # pragma: no cover
+        raise RuntimeError(
+            f"{lesson_id} seed {seed}: text and structure are different episodes")
+    return Episode(
+        lesson_id=lesson_id, seed=seed, instance_id=ex.instance_id,
+        language=ex.language, prompt=ex.prompt, answer=ex.answer,
+        choices=list(ex.choices),
+        graph=term_graph_from_json(st["observation"], max_nodes=max_nodes),
+        tags=list(ex.metadata.get("tags") or []),
+    )
 
 
 def write_jsonl(path: str | Path, episodes: Iterator[Episode] | Sequence[Episode]) -> int:
