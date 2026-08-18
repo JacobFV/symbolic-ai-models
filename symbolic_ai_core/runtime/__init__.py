@@ -8,8 +8,9 @@ from __future__ import annotations
 
 from .fusion import (FUSION_RULES, ClaimGroup, FusionResult, fuse,
                      group_claims, independent_odds, intersect_intervals,
-                     log_opinion_pool, register_fusion, sum_quantities)
+                     inverse_variance, log_opinion_pool, register_fusion,
+                     sum_quantities)
 
 __all__ = ["FUSION_RULES", "ClaimGroup", "FusionResult", "fuse", "group_claims",
-           "independent_odds", "intersect_intervals", "log_opinion_pool",
-           "register_fusion", "sum_quantities"]
+           "independent_odds", "intersect_intervals", "inverse_variance",
+           "log_opinion_pool", "register_fusion", "sum_quantities"]

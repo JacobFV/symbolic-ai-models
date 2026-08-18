@@ -10,7 +10,7 @@ forces, fluxes, counts        sum
 probabilities (consensus)     log-opinion pool
 probabilities (independent)   odds multiplication, prior stated
 intervals, constraints        intersection
-poses                         covariance-aware estimation (not here yet)
+poses, estimates              inverse-variance weighted mean
 proof validity                an exact kernel's veto
 policy or legal authority     precedence
 alternative hypotheses        **keep the mixture**
@@ -42,7 +42,8 @@ from ..world import Claim, EntityRef, Quantity
 
 __all__ = ["ClaimGroup", "FusionResult", "FUSION_RULES", "register_fusion",
            "group_claims", "fuse", "sum_quantities", "log_opinion_pool",
-           "independent_odds", "intersect_intervals", "FusionError"]
+           "independent_odds", "intersect_intervals", "inverse_variance",
+           "FusionError"]
 
 
 class FusionError(ValueError):
@@ -240,6 +241,41 @@ def independent_odds(group: ClaimGroup, *, prior: float = 0.5) -> Claim:
     return _combined(group, dict(group.claims[0].roles),
                      method=f"independent odds (prior {prior})",
                      confidence=post)
+
+
+def inverse_variance(group: ClaimGroup, *, role: str = "value") -> Claim:
+    """Estimates with error bars, combined by precision. The pose rule.
+
+    Weight each reading by ``1/sigma^2`` and take the weighted mean; the fused
+    error is ``1/sqrt(sum of weights)``, which is **smaller than either input**.
+    That is the whole reason a predictor and a sensor are worth having together,
+    and it is the standard result — not a heuristic.
+
+    **A reading with no stated error is refused, not treated as exact.** An
+    infinite weight would let one claim dominate completely while looking like a
+    very good measurement, and `None` here means *not stated*, which is the one
+    thing it definitely does not mean. That refusal is why
+    :mod:`symbolic_ai_kernels.rigid` goes to the trouble of growing an honest
+    error bar through its integration step.
+    """
+    qs = _quantities(group, role)
+    missing = [c.provenance.producer or "?" for c, q in zip(group.claims, qs)
+               if q.stderr is None]
+    if missing:
+        raise FusionError(
+            f"{group.predicate}: {missing} state no error bar. Treating an "
+            f"unstated error as zero gives that claim infinite weight, which "
+            f"looks exactly like a very good measurement and is not one.")
+    if any(q.stderr <= 0 for q in qs):
+        raise FusionError(
+            f"{group.predicate}: a zero or negative error bar claims infinite "
+            f"precision; nothing this kernel stack produces is exact.")
+    weights = [1.0 / (q.stderr ** 2) for q in qs]
+    total = sum(weights)
+    value = sum(w * q.value for w, q in zip(weights, qs)) / total
+    return _combined(group, {role: Quantity(value, qs[0].unit,
+                                            math.sqrt(1.0 / total))},
+                     method="inverse-variance weighted mean")
 
 
 def intersect_intervals(group: ClaimGroup, *, role: str = "value") -> Claim:
