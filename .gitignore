@@ -97,3 +97,11 @@ __pycache__/
 !/kg/**/schema.json
 !/kg/**/stats*.json
 !/kg/**/LICENSE*
+
+# Agent-harness scratch. `scheduled_tasks.lock` is a transient lock held by the
+# scheduling tooling on whichever machine is running it; it was committed once
+# by accident and carries no information a clone can use. `worktrees/` is where
+# parallel agents get their own checkouts, per the delegation rule in
+# `CLAUDE.md` -- it is a directory of other checkouts, not content.
+.claude/scheduled_tasks.lock
+.claude/worktrees/
