@@ -487,9 +487,34 @@ symbolic-ai-models/
       curriculum.py       # symbolic_ai_data -> Episode (text + graph, one seed)
       fingerprint.py      # a checksum of the corpus; the generator cannot move
                           #   without a test saying so
-      graph.py            # term JSON -> flat node array + parent pointer
+      term_graph.py       # term JSON -> flat node array + parent pointer.
+                          #   Was `graph.py`; a bare "graph" now names four
+                          #   different things and the alias is deprecated
       tokenizer.py        # one vocabulary, byte fallback, lossless
       batch.py            # SymbolicBatch + the relation algebra  <- the harness
+      key.py              # SampleKey + the keyed permutation: a dataset is an
+                          #   ADDRESS SPACE, evaluated one point at a time
+      case.py             # WorldCase: one sample, several surfaces. Episode is
+                          #   now a *view* over it
+      dataset.py stream.py#   ReplayableDataset; bounded batching, resumable
+    artifact/             # what travels on a flow edge: immutable, content
+      value.py store.py   #   addressed, inline-or-blob, absent-is-not-zero
+    world/                # the world IR -- ARBITRARY topology, unlike the flow
+      entity.py claim.py  #   n-ary nested claims, valid + transaction time
+      snapshot.py delta.py#   kernels return deltas; nothing mutates a world
+      profile.py          #   semi-overlapping capability sets, not one ontology
+    flow/                 # the flow DAG -- acyclic, typed ports, structural cache
+      flow_graph.py       #   the graph as data; every editor is a projection
+      compile.py          #   cycle detection naming the members, port typing
+      evaluate.py         #   memoised on content; unpriced != free in the trace
+      container.py        #   fold: recurrence lives INSIDE a node
+    runtime/
+      fusion.py           # property-specific; the default keeps the mixture
+    source/               # source != snapshot != artifact, and licence closure
+      manifest.py         #   YAML authored, canonical JSON hashed
+      registry.py         #   no hardcoded source dict; a directory of cards
+      license.py          #   `unresolved` is more restrictive than anything known
+      validate.py build.py#   JSON Schema + one vocabulary file, and the catalog
     registry.py           # the versioned-name rule, written once for everyone
     floors.py             # empirical_floor, lift, and exact per-head counting
     shortcuts.py          # what an unthinking cheat scores: a floor and an audit
@@ -531,6 +556,19 @@ symbolic-ai-models/
     envs/                 #   choice, retry, repair, probe
     agents/               #   random, shortcut, context (floors); recall, careful
     train.py trace.py     #   rollouts; trajectories, for reading, not a metric
+  symbolic_ai_kernels/    # specialised reasoners behind one narrow contract.
+    abi.py                #   P_K: world -> kernel language, DECLARING what it
+                          #   discarded; R_K: result -> WorldDelta. No universal
+                          #   inference language -- see the decision note
+    datalog/              #   tier 1: semi-naive fixed point, stratified
+      engine.py           #   negation, incremental on a WorldDelta. Native.
+      project.py kernel.py
+    asp/                  #   tier 2 (clingo, optional): defaults with
+      project.py kernel.py#   exceptions, world completion. Several answer sets
+      mangle.py           #   are several hypotheses and it does not pick one
+    smt/                  #   tier 3 (z3, optional): arithmetic + logic, and it
+      units.py            #   picks up exactly the claims datalog discards.
+      project.py kernel.py#   Units checked before the solver; no conversions
   symbolic_ai_atomspace/  # 005: the IR as a knob -- match and rewrite over atoms
   symbolic_ai_lean/       # 006: the IR as a knob -- a kernel that can *refuse*
     expr.py kernel.py     #   native, total, fuel-bounded; Lean 4's Expr, subset
@@ -541,6 +579,16 @@ symbolic-ai-models/
                           #   count prunes 0.370 at 0.988. No model registered.
                           #   both: Graph is the one shared thing never varied.
                           #   notes/decisions/2026-08-14-the-ir-is-a-knob.md
+  ontology/               # the controlled vocabularies, defined ONCE
+    vocab.yaml            #   every enum; a hand-copied enum is how a sibling
+    schema/               #   project got ten values where its schema had twelve
+  catalog/sources/        # what each source IS -- never what this disk holds
+  manifests/              # what EXISTS: snapshots (exact bytes + sha256),
+    snapshots/ artifacts/ #   artifacts (parents, generator, licence closure),
+    views/ splits/        #   and the two directories named before they are used
+  generated/catalog.json  # compiled from the above; never edited by hand
+  data/                   # $SYMBOLIC_AI_DATA -- bulk bytes, untracked, in
+                          #   SOURCE-NATIVE layout. 14 GB of it, 19 sources
   notes/                  # the lab notebook; one file per note (worktrees merge)
     questions/            #   the parking lot: ideas, whether or not chased
     findings/ decisions/
