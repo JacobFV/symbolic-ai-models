@@ -557,6 +557,11 @@ symbolic-ai-models/
     agents/               #   random, shortcut, context (floors); recall, careful
     train.py trace.py     #   rollouts; trajectories, for reading, not a metric
   symbolic_ai_generators/ # latent worlds, rendered into several surfaces
+    scheduling/           #   machine assignment: the third task, built for the
+                          #   cell the others miss -- an expensive kernel (ASP,
+                          #   99% of pipeline cost) AND a tunable decision
+                          #   margin, which is what showed the two regime
+                          #   boundaries are one variable
     solvency/             #   a covenant test over REVISED filings -- the two
                           #   times, and the second task, structurally opposite
                           #   to flood: one boolean, no search
