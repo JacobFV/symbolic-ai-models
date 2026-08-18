@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import math
 import random
+from dataclasses import replace
 
 import pytest
 
@@ -180,3 +181,62 @@ def _group(*quantities):
         Claim("pose", {"of": EntityRef("b"), "value": q},
               provenance=Provenance(producer=f"k{i}"))
         for i, q in enumerate(quantities)))
+
+
+# --- the time is part of the type ----------------------------------------
+def test_two_horizons_do_not_fuse_into_a_position_at_no_time():
+    """Measured before the fix: poses for t+0.1s and t+0.9s fused by inverse
+    variance into 0.387 m, silently, because from fusion's point of view that is
+    its job. They are two states, not two readings of one."""
+    K.project(world(), KernelRequest())
+    t0 = "2026-08-18T12:00:00"
+    a = run_at(0.1, t0).claims[0]
+    b = run_at(0.9, t0).claims[0]
+    assert a.valid_time.start != b.valid_time.start
+
+    out = fuse([a, b], rules={"pose": inverse_variance})
+    assert len(out.resolved) == 2, "two moments were merged into one"
+    kept = sorted(c.roles["value"].value for c in out.resolved)
+    assert kept == sorted([a.roles["value"].value, b.roles["value"].value]), (
+        "the values were combined rather than kept apart")
+    # and the thing that would have happened without the split
+    merged = fuse([a, replace(b, valid_time=a.valid_time)],
+                  rules={"pose": inverse_variance})
+    assert len(merged.resolved) == 1
+    assert min(kept) < merged.resolved[0].roles["value"].value < max(kept), (
+        "same-time claims did not combine, so the split is not what separated "
+        "the two horizons")
+
+
+def test_two_estimates_of_the_SAME_moment_do_fuse():
+    """The split must not break the case fusion is for."""
+    t0 = "2026-08-18T12:00:00"
+    pred = run_at(0.5, t0).claims[0]
+    sensor = Claim("pose", {"of": EntityRef("ball"),
+                            "value": Quantity(pred.roles["value"].value + 0.2,
+                                              "m", 0.05)},
+                   valid_time=pred.valid_time,
+                   provenance=Provenance(producer="sensor"))
+    out = fuse([pred, sensor], rules={"pose": inverse_variance})
+    assert len(out.resolved) == 1
+
+
+def test_an_untimed_prediction_says_so_rather_than_pretending():
+    out = run(world())
+    assert out.diagnostics["timed"] is False
+    assert "at no time at all" in out.diagnostics["untimed_warning"]
+
+    timed_out = run_at(0.1, "2026-08-18T12:00:00")
+    assert timed_out.diagnostics["timed"] is True
+    assert timed_out.diagnostics["untimed_warning"] == ""
+
+
+def test_an_unparseable_epoch_does_not_become_a_fabricated_time():
+    out = run_at(0.1, "next tuesday")
+    assert out.diagnostics["timed"] is False
+    assert out.claims[0].valid_time.unbounded
+
+
+def run_at(dt, t0):
+    return K.run(K.project(world(), KernelRequest()),
+                 KernelRequest(params={"dt_s": dt, "t0": t0}))

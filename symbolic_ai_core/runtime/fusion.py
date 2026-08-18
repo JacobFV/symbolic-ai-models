@@ -36,7 +36,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass, field
-from typing import Any, Callable, Iterable, Mapping, Sequence
+from typing import Any, Callable, Iterable, Mapping, Sequence, Sequence
 
 from ..world import Claim, EntityRef, Quantity
 
@@ -134,11 +134,43 @@ def _subject(claim: Claim) -> tuple[str, ...]:
 
 
 def group_claims(claims: Iterable[Claim]) -> list[ClaimGroup]:
+    """Group by ``(predicate, subject)`` and then split on **disjoint times**.
+
+    Two poses of one body, one for t+0.1s and one for t+0.9s, are not two
+    readings of one state -- they are two states. Fusing them by inverse variance
+    produced a position at no time at all, silently, because from fusion's point
+    of view that is its job. The predicate is the type and *the time is part of
+    it*.
+
+    An untimed claim has an unbounded interval and still combines with anything,
+    which is the correct reading of "this claim does not say when".
+    """
     buckets: dict[tuple[str, tuple[str, ...]], list[Claim]] = {}
     for c in claims:
         buckets.setdefault((c.predicate, _subject(c)), []).append(c)
-    return [ClaimGroup(pred, subj, tuple(cs))
-            for (pred, subj), cs in sorted(buckets.items())]
+    out: list[ClaimGroup] = []
+    for (pred, subj), cs in sorted(buckets.items()):
+        for chunk in _split_disjoint_times(cs):
+            out.append(ClaimGroup(pred, subj, tuple(chunk)))
+    return out
+
+
+def _split_disjoint_times(claims: Sequence[Claim]) -> list[list[Claim]]:
+    """Partition into runs whose validity can refer to the same moment.
+
+    Transitive by construction: a claim joins a run when it overlaps *every*
+    member, so a chain of pairwise-overlapping-but-collectively-inconsistent
+    intervals does not get merged into one.
+    """
+    runs: list[list[Claim]] = []
+    for c in claims:
+        for run in runs:
+            if all(c.valid_time.overlaps(o.valid_time) for o in run):
+                run.append(c)
+                break
+        else:
+            runs.append([c])
+    return runs
 
 
 # ---------------------------------------------------------------------------

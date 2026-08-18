@@ -19,7 +19,7 @@ from __future__ import annotations
 import math
 from typing import Any
 
-from symbolic_ai_core.artifact.value import Provenance
+from symbolic_ai_core.artifact.value import Interval, Provenance
 from symbolic_ai_core.world import (Claim, EntityRef, Facet, Quantity,
                                     WorldDelta, WorldSnapshot)
 
@@ -83,9 +83,11 @@ class RigidKernel:
                         f"diverges and a result past the tolerance would be a "
                         f"number rather than a prediction")
 
+        t0 = request.params.get("t0")
         stepped, ns = timed(lambda: [_step(b, prog.gravity, dt)
                                      for b in prog.bodies])
-        claims = tuple(_claim(b, prog.frame, dt) for b in stepped)
+        valid = _valid_time(t0, dt)
+        claims = tuple(_claim(b, prog.frame, dt, valid) for b in stepped)
         check_entitlement(projection, claims)
         cpu, wall = ns
         return KernelResult(
@@ -98,6 +100,19 @@ class RigidKernel:
                 for b in stepped}),
             cost=KernelCost(cpu_ns=cpu, wall_ns=wall, usd=price_cpu_ns(cpu)),
             diagnostics={"bodies": len(stepped), "dt_s": dt,
+                         # An untimed pose overlaps every other pose in fusion,
+                         # so two horizons would combine into a position at no
+                         # time at all. Reported here rather than as a discard
+                         # on the projection: the caller holds that object, so a
+                         # discard added inside `run` would never be seen -- the
+                         # same dead-guard shape as the geo CRS check.
+                         "timed": not valid.unbounded,
+                         "untimed_warning": (
+                             "" if not valid.unbounded else
+                             "no t0 supplied, so these poses carry no "
+                             "valid_time; an untimed interval overlaps "
+                             "everything and two horizons of this kernel will "
+                             "fuse into a position at no time at all"),
                          "frame": prog.frame,
                          "gravity": list(prog.gravity),
                          "without_uncertainty":
@@ -127,11 +142,31 @@ def _step(b: Body, gravity: tuple[float, ...], dt: float) -> Body:
                 frame=b.frame, pos_stderr=stderr)
 
 
-def _claim(b: Body, frame: str, dt: float) -> Claim:
+def _valid_time(t0: Any, dt: float) -> Interval:
+    """The instant this prediction is *for*, when the caller supplied an epoch.
+
+    Without ``t0`` the claim is untimed, which is honest -- this kernel steps a
+    relative ``dt`` and has no clock of its own -- and it is also dangerous,
+    because an untimed interval overlaps everything and two predictions for
+    different horizons will fuse. The refusal to invent an epoch and the discard
+    that reports it are the two halves of saying so.
+    """
+    from datetime import datetime, timedelta
+
+    if not t0:
+        return Interval()
+    try:
+        at = datetime.fromisoformat(str(t0)) + timedelta(seconds=dt)
+    except (TypeError, ValueError):
+        return Interval()
+    return Interval(at.isoformat(), at.isoformat())
+
+
+def _claim(b: Body, frame: str, dt: float, valid: Interval) -> Claim:
     return Claim(
         "pose", {"of": EntityRef(b.id),
                  "value": Quantity(_norm(b.position), "m", b.pos_stderr)},
-        modality="asserted",
+        modality="asserted", valid_time=valid,
         provenance=Provenance(
             producer="rigid@1",
             method=f"semi-implicit Euler, dt={dt}s, frame {frame}; position "

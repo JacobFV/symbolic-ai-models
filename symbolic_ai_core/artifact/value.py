@@ -35,6 +35,17 @@ __all__ = ["Artifact", "ArtifactRef", "Interval", "Provenance", "artifact_id",
 ID_ALGO = "blake2b"
 
 
+def _instant(text: str | None) -> float | None:
+    """An ISO-8601 timestamp as a number, or ``None`` if it is not one."""
+    if text is None:
+        return None
+    from datetime import datetime
+    try:
+        return datetime.fromisoformat(text).timestamp()
+    except (TypeError, ValueError):
+        return None
+
+
 def to_wire(value: Any) -> Any:
     """Recursively replace anything with a ``to_dict`` by its dict form.
 
@@ -88,6 +99,34 @@ class Interval:
 
     def to_dict(self) -> dict[str, Any]:
         return {"start": self.start, "end": self.end}
+
+    @property
+    def unbounded(self) -> bool:
+        return self.start is None and self.end is None
+
+    def overlaps(self, other: "Interval") -> bool:
+        """Whether two intervals can be talking about the same moment.
+
+        An **unbounded** interval overlaps everything, which is the correct
+        reading of "this claim does not say when": it cannot be shown to be
+        about a different time, so it stays combinable.
+
+        Bounds that are not ISO-parseable are treated as disjoint unless equal.
+        That is the conservative direction -- it leaves claims in separate
+        groups, producing an unresolved mixture rather than a silent merge, and
+        an unresolved mixture is a thing a reader notices.
+        """
+        if self.unbounded or other.unbounded:
+            return True
+        a0, a1 = _instant(self.start), _instant(self.end)
+        b0, b1 = _instant(other.start), _instant(other.end)
+        if None in (a0, a1, b0, b1) and (a0 is None or b0 is None):
+            return (self.start, self.end) == (other.start, other.end)
+        lo_a = a0 if a0 is not None else float("-inf")
+        hi_a = a1 if a1 is not None else float("inf")
+        lo_b = b0 if b0 is not None else float("-inf")
+        hi_b = b1 if b1 is not None else float("inf")
+        return lo_a <= hi_b and lo_b <= hi_a
 
 
 @dataclass(frozen=True)
