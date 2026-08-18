@@ -6,19 +6,23 @@ with coordinates". Neither records **which fields survived the ingest**, and on
 this repo's own 14 GB that gap is the difference between a source and a source
 you can use:
 
-* GeoNames arrives as 29 million rows of ``(source_id, target_id, kind)`` and
-  **has no latitude column**, so the geo kernel — which is entirely about
-  coordinates — cannot read the only geospatial source in the data root.
-* SEC EDGAR has no amount and no filing date, so the economy kernel cannot read
-  it either.
+* GeoNames arrives as 29 million rows and **has no coordinate anywhere** — not
+  in a column and not in its ``body``, which carries
+  ``pop, feature, country, area, langs, capital, continent``. Its source card
+  declares ``geo.place``. The geo kernel cannot read the only gazetteer here.
+* No source in 1.2 billion rows carries a **unit**, and ``Quantity`` refuses to
+  construct without one.
 
-Both kernels were built against generated worlds. That was recorded as a scoping
-choice and was in fact forced, and nothing in the catalogue said so.
-
-So capabilities are **detected from the columns**, exactly as
+So capabilities are **detected from the bytes**, exactly as
 :mod:`symbolic_ai_core.data.knowledge_source` detects them from accessors, and
 for the same reason: a stream that declares what it is about tells you nothing
 about what it can populate.
+
+Detection reads two levels, because reading only the first got it wrong. Column
+names are the schema; a ``body`` string is a **shadow schema** carrying typed
+fields with no type — openflights' coordinates and gutenberg's dates both live
+there, and a column-level audit reported both sources as carrying nothing. See
+``notes/lessons/2026-08-18-a-column-audit-cannot-see-a-shadow-schema.md``.
 """
 
 from __future__ import annotations
@@ -28,8 +32,11 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Iterable, Mapping, Sequence
 
-__all__ = ["SnapshotSchema", "schema_of", "profiles_supported", "COLUMN_HINTS",
-           "GENERIC_SCHEMAS"]
+__all__ = ["SnapshotSchema", "IngestProjection", "schema_of",
+           "profiles_supported", "declared_profiles", "audit_snapshots",
+           "body_fields", "build_schemas", "write_schemas", "schemas_path",
+           "COLUMN_HINTS", "BODY_HINTS", "GENERIC_SCHEMAS",
+           "DETECTABLE_PROFILES"]
 
 #: Column-name patterns that indicate a field is present. Deliberately generous
 #: — the audit's job is to find sources that are *missing* something, so a false
@@ -83,6 +90,14 @@ class SnapshotSchema:
                 "profiles": sorted(profiles_supported(self.fields))}
 
 
+#: The profiles this module has a detection rule for. A declaration outside
+#: this set can be neither confirmed nor refuted here, and must be reported as
+#: undetermined rather than quietly counted as a loss.
+DETECTABLE_PROFILES: frozenset[str] = frozenset({
+    "core.identity", "core.type", "logic.proposition", "core.time",
+    "core.quantity", "geo.place", "core.space"})
+
+
 def profiles_supported(fields: Iterable[str]) -> frozenset[str]:
     """Which world profiles a set of detected fields could populate.
 
@@ -116,11 +131,12 @@ def _fields_of(columns: Iterable[str]) -> frozenset[str]:
     return frozenset(found)
 
 
-def schema_of(snapshot: Any, root: Path, *, max_files: int = 40
-              ) -> SnapshotSchema:
+def schema_of(snapshot: Any, root: Path, *, max_files: int = 40,
+              sample_rows: int = 2000) -> SnapshotSchema:
     """Read the parquet schemas a snapshot actually contains.
 
-    Reads **metadata only** — a parquet footer, not the data — so auditing 14 GB
+    Reads parquet footers, plus — only where a ``body`` column exists — one
+    bounded row-group sample per file to find the shadow schema. Auditing 14 GB
     costs a few hundred seeks rather than a decompression pass.
     """
     import pyarrow.parquet as pq
@@ -128,6 +144,7 @@ def schema_of(snapshot: Any, root: Path, *, max_files: int = 40
     base = snapshot.resolve(root)
     files = sorted(base.rglob("*.parquet")) if base.exists() else []
     seen: set[tuple[str, ...]] = set()
+    hidden: frozenset[str] = frozenset()
     rows = read = unreadable = 0
     for f in files[:max_files]:
         try:
@@ -135,12 +152,24 @@ def schema_of(snapshot: Any, root: Path, *, max_files: int = 40
         except Exception:
             unreadable += 1
             continue
-        seen.add(tuple(pf.schema_arrow.names))
+        names = tuple(pf.schema_arrow.names)
+        seen.add(names)
         rows += pf.metadata.num_rows
         read += 1
+        if "body" in names and pf.metadata.num_row_groups:
+            # The shadow schema. Costs one row group per file rather than a
+            # footer, which is why it is bounded and sampled: the question is
+            # "does this key ever appear", not "how often".
+            try:
+                sample = (pf.read_row_group(0, columns=["body"])
+                          .slice(0, sample_rows).column("body").to_pylist())
+            except Exception:
+                sample = []
+            hidden |= body_fields(sample)
     columns = tuple(sorted(seen))
     fields = frozenset().union(*(_fields_of(c) for c in columns)) if columns \
         else frozenset()
+    fields |= hidden
     return SnapshotSchema(snapshot=snapshot.id, source=snapshot.source,
                           files_read=read, rows=rows, columns=columns,
                           unreadable=unreadable, fields=fields)
@@ -173,8 +202,22 @@ class IngestProjection:
 
     @property
     def discarded(self) -> tuple[str, ...]:
-        """Declared upstream, absent from the bytes: the ingest threw it away."""
-        return tuple(sorted(set(self.declared) - set(self.held)))
+        """Declared upstream, detectable, and absent: the ingest threw it away.
+
+        Only profiles this module can actually *detect* count. A declared
+        profile with no detection rule is :attr:`undetermined`, not discarded —
+        the first version of this conflated them and reported openflights'
+        ``geo.network`` as a loss when the truth was that nothing here knows
+        what a route network looks like. That error ran in the direction that
+        made the finding more dramatic, which is the direction to distrust.
+        """
+        return tuple(sorted((set(self.declared) & DETECTABLE_PROFILES)
+                            - set(self.held)))
+
+    @property
+    def undetermined(self) -> tuple[str, ...]:
+        """Declared, but this audit has no rule that could confirm or deny it."""
+        return tuple(sorted(set(self.declared) - DETECTABLE_PROFILES))
 
     @property
     def retained(self) -> tuple[str, ...]:
@@ -187,7 +230,8 @@ class IngestProjection:
     def to_dict(self) -> dict[str, Any]:
         return {"declared": list(self.declared), "held": list(self.held),
                 "retained": list(self.retained),
-                "discarded": list(self.discarded), "lossy": self.lossy,
+                "discarded": list(self.discarded),
+                "undetermined": list(self.undetermined), "lossy": self.lossy,
                 "schema": self.schema.to_dict()}
 
 
@@ -258,3 +302,32 @@ def write_schemas(root: Path | None = None, **kw) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(_json.dumps(doc, indent=2, sort_keys=True) + "\n")
     return path
+
+
+#: A ``body`` column is a schemaless escape hatch, and this corpus uses it as
+#: one: openflights hides ``lat=`` and ``lon=`` in there, gutenberg hides
+#: ``issued=``. A schema-level audit that reads only column names calls both of
+#: those sources generic and is wrong. This is the shadow schema — typed fields
+#: with no type, invisible to the manifests, which is the exact failure the
+#: typed world IR exists to prevent.
+_BODY_KEY = re.compile(r"([A-Za-z_][A-Za-z0-9_]*)=")
+
+#: Which body keys count as which field. Deliberately narrow: a key must be an
+#: unambiguous name for the thing, because a body is untyped and a wrong guess
+#: here manufactures a capability out of a substring.
+BODY_HINTS: dict[str, frozenset[str]] = {
+    "lat": frozenset({"lat", "latitude"}),
+    "lon": frozenset({"lon", "lng", "longitude"}),
+    "time": frozenset({"issued", "date", "created", "updated", "published",
+                       "year", "filed"}),
+    "value": frozenset({"pop", "population", "area", "amount", "value"}),
+}
+
+
+def body_fields(bodies: Sequence[str | None]) -> frozenset[str]:
+    """Fields hidden in the key=value bodies of a sample of rows."""
+    keys: set[str] = set()
+    for b in bodies:
+        if b:
+            keys.update(k.lower() for k in _BODY_KEY.findall(b))
+    return frozenset(f for f, names in BODY_HINTS.items() if keys & names)

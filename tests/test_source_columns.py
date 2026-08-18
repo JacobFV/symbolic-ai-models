@@ -14,7 +14,9 @@ import json
 import pytest
 
 from symbolic_ai_core.source import SourceRegistry, data_root
-from symbolic_ai_core.source.columns import (GENERIC_SCHEMAS, IngestProjection,
+from symbolic_ai_core.source.columns import (DETECTABLE_PROFILES,
+                                             GENERIC_SCHEMAS, IngestProjection,
+                                             body_fields,
                                              SnapshotSchema, _fields_of,
                                              audit_snapshots, build_schemas,
                                              declared_profiles,
@@ -71,6 +73,14 @@ class TestIngestProjection:
         return IngestProjection(snapshot="s", source="src", declared=declared,
                                 held=held, schema=_schema())
 
+    def test_an_undetectable_declaration_is_not_counted_as_a_loss(self):
+        p = self._proj(("geo.network",), ())
+        assert not p.lossy and p.undetermined == ("geo.network",)
+
+    def test_body_keys_are_read_only_for_unambiguous_names(self):
+        assert body_fields(["lat=1 lon=2"]) == {"lat", "lon"}
+        assert body_fields(["callsign=GENERAL active=Y"]) == frozenset()
+
     def test_a_declared_profile_absent_from_the_bytes_is_a_discard(self):
         p = self._proj(("geo.place", "core.identity"), ("core.identity",))
         assert p.discarded == ("geo.place",)
@@ -92,19 +102,34 @@ class TestAgainstTheHeldBytes:
     def test_every_snapshot_is_audited(self, audits):
         assert len(audits) == len(SourceRegistry().snapshots())
 
-    def test_no_held_source_can_populate_a_coordinate(self, audits):
-        """The finding, as a test. If a future ingest keeps lat/lon this fails
-        and should be deleted -- that is the point of writing it down."""
-        assert [a.source for a in audits
-                if "geo.place" in a.held] == []
+    def test_only_openflights_can_populate_a_coordinate(self, audits):
+        """Written first as "no source can", which was true of the *columns*
+        and false of the data: openflights hides lat/lon in its body string.
+        The corrected claim is narrower and still worth pinning."""
+        assert sorted(a.source for a in audits if "geo.place" in a.held) == [
+            "openflights"]
 
-    def test_the_geo_sources_are_exactly_the_lossy_ones(self, audits):
-        assert sorted(a.source for a in audits if a.lossy) == [
-            "geonames", "openflights"]
+    def test_geonames_is_the_one_provably_lossy_ingest(self, audits):
+        """29 M rows of the repo's flagship gazetteer, and its body carries
+        pop/feature/country/area and no coordinate at all."""
+        assert sorted(a.source for a in audits if a.lossy) == ["geonames"]
 
-    def test_a_lossy_ingest_never_silently_matches_its_card(self, audits):
+    def test_a_declaration_with_no_detector_is_undetermined_not_discarded(
+            self, audits):
+        of = next(a for a in audits if a.source == "openflights")
+        assert of.undetermined == ("geo.network",) and not of.lossy
+
+    def test_the_shadow_schema_is_found_where_it_exists(self, audits):
+        """gutenberg's only temporal field is `issued=` inside a body."""
+        gb = next(a for a in audits if a.source == "gutenberg")
+        assert "core.time" in gb.held
+
+    def test_every_declared_profile_is_accounted_for(self, audits):
+        """Retained, discarded or undetermined -- a declaration may not simply
+        vanish from the audit."""
         for a in audits:
-            assert set(a.retained) | set(a.discarded) == set(a.declared)
+            assert (set(a.retained) | set(a.discarded)
+                    | set(a.undetermined)) == set(a.declared)
 
 
 class TestGeneratedDocument:
@@ -122,7 +147,8 @@ class TestGeneratedDocument:
         for entry in doc["snapshots"].values():
             held = set(entry["held"])
             assert held == set(profiles_supported(entry["schema"]["fields"]))
-            assert set(entry["discarded"]) == set(entry["declared"]) - held
+            assert set(entry["discarded"]) == (
+                (set(entry["declared"]) & DETECTABLE_PROFILES) - held)
 
     def test_an_empty_measurement_refuses_to_be_written(self, tmp_path):
         """A generated file asserting 'no source has coordinates' because it

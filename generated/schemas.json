@@ -44,7 +44,8 @@
         "snapshot": "cfpb@commandagi-r2-2026-08-15",
         "source": "cfpb",
         "unreadable": 0
-      }
+      },
+      "undetermined": []
     },
     "commandagi-kg-dev@commandagi-r2-2026-08-15": {
       "declared": [],
@@ -97,7 +98,8 @@
         "snapshot": "commandagi-kg-dev@commandagi-r2-2026-08-15",
         "source": "commandagi-kg-dev",
         "unreadable": 0
-      }
+      },
+      "undetermined": []
     },
     "commandagi-kg@commandagi-r2-2026-08-15": {
       "declared": [],
@@ -174,7 +176,8 @@
         "snapshot": "commandagi-kg@commandagi-r2-2026-08-15",
         "source": "commandagi-kg",
         "unreadable": 0
-      }
+      },
+      "undetermined": []
     },
     "courtlistener@commandagi-r2-2026-08-15": {
       "declared": [],
@@ -209,7 +212,8 @@
         "snapshot": "courtlistener@commandagi-r2-2026-08-15",
         "source": "courtlistener",
         "unreadable": 0
-      }
+      },
+      "undetermined": []
     },
     "cskg@commandagi-r2-2026-08-15": {
       "declared": [],
@@ -244,7 +248,8 @@
         "snapshot": "cskg@commandagi-r2-2026-08-15",
         "source": "cskg",
         "unreadable": 0
-      }
+      },
+      "undetermined": []
     },
     "fec@commandagi-r2-2026-08-15": {
       "declared": [],
@@ -288,7 +293,8 @@
         "snapshot": "fec@commandagi-r2-2026-08-15",
         "source": "fec",
         "unreadable": 0
-      }
+      },
+      "undetermined": []
     },
     "gdelt@commandagi-r2-2026-08-15": {
       "declared": [],
@@ -330,7 +336,8 @@
         "snapshot": "gdelt@commandagi-r2-2026-08-15",
         "source": "gdelt",
         "unreadable": 0
-      }
+      },
+      "undetermined": []
     },
     "geonames@commandagi-r2-2026-08-15": {
       "declared": [
@@ -342,6 +349,7 @@
       ],
       "held": [
         "core.identity",
+        "core.quantity",
         "core.type",
         "logic.proposition"
       ],
@@ -366,12 +374,14 @@
         ],
         "fields": [
           "identity",
-          "relation"
+          "relation",
+          "value"
         ],
         "files_read": 7,
         "generic": true,
         "profiles": [
           "core.identity",
+          "core.quantity",
           "core.type",
           "logic.proposition"
         ],
@@ -379,7 +389,8 @@
         "snapshot": "geonames@commandagi-r2-2026-08-15",
         "source": "geonames",
         "unreadable": 0
-      }
+      },
+      "undetermined": []
     },
     "gh-archive@commandagi-r2-2026-08-15": {
       "declared": [],
@@ -414,7 +425,8 @@
         "snapshot": "gh-archive@commandagi-r2-2026-08-15",
         "source": "gh-archive",
         "unreadable": 0
-      }
+      },
+      "undetermined": []
     },
     "gleif@commandagi-r2-2026-08-15": {
       "declared": [
@@ -460,13 +472,15 @@
         "snapshot": "gleif@commandagi-r2-2026-08-15",
         "source": "gleif",
         "unreadable": 0
-      }
+      },
+      "undetermined": []
     },
     "gutenberg@commandagi-r2-2026-08-15": {
       "declared": [],
       "discarded": [],
       "held": [
         "core.identity",
+        "core.time",
         "core.type",
         "logic.proposition"
       ],
@@ -489,12 +503,14 @@
         ],
         "fields": [
           "identity",
-          "relation"
+          "relation",
+          "time"
         ],
         "files_read": 2,
         "generic": true,
         "profiles": [
           "core.identity",
+          "core.time",
           "core.type",
           "logic.proposition"
         ],
@@ -502,7 +518,8 @@
         "snapshot": "gutenberg@commandagi-r2-2026-08-15",
         "source": "gutenberg",
         "unreadable": 0
-      }
+      },
+      "undetermined": []
     },
     "openalex@commandagi-r2-2026-08-15": {
       "declared": [],
@@ -553,24 +570,26 @@
         "snapshot": "openalex@commandagi-r2-2026-08-15",
         "source": "openalex",
         "unreadable": 0
-      }
+      },
+      "undetermined": []
     },
     "openflights@commandagi-r2-2026-08-15": {
       "declared": [
         "geo.network",
         "geo.place"
       ],
-      "discarded": [
-        "geo.network",
-        "geo.place"
-      ],
+      "discarded": [],
       "held": [
         "core.identity",
+        "core.space",
         "core.type",
+        "geo.place",
         "logic.proposition"
       ],
-      "lossy": true,
-      "retained": [],
+      "lossy": false,
+      "retained": [
+        "geo.place"
+      ],
       "schema": {
         "columns": [
           [
@@ -588,20 +607,27 @@
         ],
         "fields": [
           "identity",
+          "lat",
+          "lon",
           "relation"
         ],
         "files_read": 4,
         "generic": true,
         "profiles": [
           "core.identity",
+          "core.space",
           "core.type",
+          "geo.place",
           "logic.proposition"
         ],
         "rows": 86187,
         "snapshot": "openflights@commandagi-r2-2026-08-15",
         "source": "openflights",
         "unreadable": 0
-      }
+      },
+      "undetermined": [
+        "geo.network"
+      ]
     },
     "patentsview@commandagi-r2-2026-08-15": {
       "declared": [],
@@ -643,7 +669,8 @@
         "snapshot": "patentsview@commandagi-r2-2026-08-15",
         "source": "patentsview",
         "unreadable": 0
-      }
+      },
+      "undetermined": []
     },
     "sec-edgar@commandagi-r2-2026-08-15": {
       "declared": [],
@@ -700,7 +727,8 @@
         "snapshot": "sec-edgar@commandagi-r2-2026-08-15",
         "source": "sec-edgar",
         "unreadable": 0
-      }
+      },
+      "undetermined": []
     },
     "senate-lda@commandagi-r2-2026-08-15": {
       "declared": [],
@@ -745,7 +773,8 @@
         "snapshot": "senate-lda@commandagi-r2-2026-08-15",
         "source": "senate-lda",
         "unreadable": 0
-      }
+      },
+      "undetermined": []
     },
     "stackexchange@commandagi-r2-2026-08-15": {
       "declared": [],
@@ -780,7 +809,8 @@
         "snapshot": "stackexchange@commandagi-r2-2026-08-15",
         "source": "stackexchange",
         "unreadable": 0
-      }
+      },
+      "undetermined": []
     },
     "usaspending@commandagi-r2-2026-08-15": {
       "declared": [],
@@ -825,7 +855,8 @@
         "snapshot": "usaspending@commandagi-r2-2026-08-15",
         "source": "usaspending",
         "unreadable": 0
-      }
+      },
+      "undetermined": []
     },
     "wikidata@commandagi-r2-2026-08-15": {
       "declared": [
@@ -866,12 +897,13 @@
         "snapshot": "wikidata@commandagi-r2-2026-08-15",
         "source": "wikidata",
         "unreadable": 0
-      }
+      },
+      "undetermined": []
     }
   },
   "totals": {
     "generic": 9,
-    "lossy": 2,
+    "lossy": 1,
     "rows_sampled": 1216407910,
     "snapshots": 19
   }
