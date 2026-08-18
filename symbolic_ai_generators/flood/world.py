@@ -82,7 +82,7 @@ def _rng(seed: int) -> random.Random:
 
 
 def generate(seed: int, *, n_regions: int = 6, n_vehicles: int = 3,
-             n_chords: int = 2) -> FloodCase:
+             n_chords: int = 2, n_bridges: int | None = None) -> FloodCase:
     """One case. Pure in ``seed``.
 
     The road network is a **ring plus chords**, so it is genuinely cyclic — the
@@ -114,7 +114,13 @@ def generate(seed: int, *, n_regions: int = 6, n_vehicles: int = 3,
     # or none: at the first parameters tried, 10 of 12 seeds answered "every
     # truck" or "no truck", which is a task with almost no signal in it.
     bridges: dict[tuple[str, str], float] = {}
-    for link in r.sample(links, max(3, (2 * len(links)) // 3)):
+    # `n_bridges` exists to hold the number of corruptible facts FIXED while
+    # `n_chords` varies. Without it, a redundancy sweep also sweeps how many
+    # limits there are to misread, and the two effects are inseparable -- a
+    # confound that ate one afternoon's conclusion before it was noticed.
+    n_b = (max(3, (2 * len(links)) // 3) if n_bridges is None
+           else min(n_bridges, len(links)))
+    for link in r.sample(links, n_b):
         bridges[link] = float(r.choice([2500, 3000, 3500, 4500, 6000]))
 
     vehicles = {f"truck_{i}": (float(r.choice([1200, 1800, 2600, 3200])),

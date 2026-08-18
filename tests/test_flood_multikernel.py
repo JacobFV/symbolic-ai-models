@@ -268,9 +268,54 @@ def test_precision_errors_hurt_less_than_recall_errors(cases):
         f"domain-vs-constraint mechanism does not hold here")
 
 
+def test_the_conservative_penalty_grows_with_connectivity(cases):
+    """The mechanism that survived, and it is not the one first proposed.
+
+    Single-viable-route fragility was the first explanation and its own control
+    killed it: the conservative-vs-permissive gap is *nil* at zero chords, where
+    every qualifying vehicle sits on exactly one route, and largest at six,
+    where almost none does. What actually moves is the answer's size -- a
+    conservative error can only damage a positive, and there are more of them in
+    a better-connected world.
+
+    Bridges are pinned so the sweep does not also sweep how many limits there
+    are to misread; that confound ate the first version of this result.
+    """
+    from symbolic_ai_generators.flood.read import misread, read_report
+
+    def gap(chords):
+        cs = [generate(s, n_chords=chords, n_bridges=4)
+              for s in range(len(cases))]
+        ws = [read_report(c.report) for c in cs]
+
+        def acc(direction):
+            hit = 0
+            for i, (c, w) in enumerate(zip(cs, ws)):
+                try:
+                    got, _, _ = solve(misread(w, seed=i, rate=0.20,
+                                              direction=direction))
+                except Exception:
+                    got = ()
+                hit += tuple(got) == tuple(c.answer)
+            return hit / len(cs)
+
+        return acc("permissive") - acc("conservative"), cs
+
+    wide, wide_cases = gap(6)
+    narrow, narrow_cases = gap(0)
+    assert wide > narrow, (
+        f"the gap did not grow with connectivity ({narrow:.3f} -> {wide:.3f}); "
+        f"the surviving mechanism does not hold here")
+    assert (sum(len(c.answer) for c in wide_cases)
+            > sum(len(c.answer) for c in narrow_cases)), (
+        "the quantity the mechanism rests on -- more positives when better "
+        "connected -- did not move")
+
+
 def test_being_admitted_is_less_redundant_than_being_blocked(cases):
-    """The mechanism, measured in the uncorrupted worlds so it cannot be an
-    artefact of how the corruption was applied."""
+    """The count the refuted mechanism rested on. Kept because the count is
+    real and is still the reason PERMISSIVE errors are mild; what it does not
+    explain is why conservative errors are harsh."""
     import statistics
 
     from symbolic_ai_generators.flood.world import _routes

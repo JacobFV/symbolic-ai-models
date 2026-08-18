@@ -1,5 +1,5 @@
 ---
-title: Precision errors hurt less than recall errors, conservative errors hurt more than permissive ones, and one asymmetry explains both — I predicted the opposite of each
+title: Precision errors hurt less than recall errors and conservative errors hurt more than permissive ones — I predicted the opposite of each, and then my own control refuted my explanation too
 date: 2026-08-18
 author: lead
 status: provisional
@@ -48,38 +48,70 @@ Direction of the error, at rate 0.10:
 | either | 0.820 | 0.920 |
 | permissive (limits up, masses down) | **0.867** | **0.930** |
 
-## The mechanism, measured rather than argued
+## The mechanism I proposed, and the control that refuted it
 
-> **Being admitted is under-determined. Being blocked is over-determined.**
+The first explanation I wrote down was this:
 
-Directly counted over 300 worlds:
+> Being admitted is under-determined. Being blocked is over-determined.
+
+with the supporting count over 300 worlds at the default parameters:
 
 | | n | median | mean | share at the margin |
 |---|---|---|---|---|
-| vehicles that can go — routes that work | 442 | **1** | 1.40 | **69.0% have exactly one** |
-| vehicles that cannot — violated limits across all routes | 354 | **2** | 1.82 | 22.3% would be freed by one flip |
+| vehicles that can go — routes that work | 442 | 1 | 1.40 | 69.0% have exactly one |
+| vehicles that cannot — violated limits across all routes | 354 | 2 | 1.82 | 22.3% freed by one flip |
 
-A qualifying vehicle usually has exactly **one** viable route, and every bridge
-on it must hold: a conjunction with no redundancy. Break any single limit on
-that route and the vehicle is gone. A blocked vehicle is blocked by a median of
-**two** violated limits across all routes, so relaxing one leaves it blocked 78%
-of the time.
+The story: a qualifying vehicle usually has exactly one viable route, every
+bridge on it must hold, so a conservative error is decisive; a blocked vehicle is
+blocked several times over, so a permissive error usually is not enough.
 
-That explains both inversions at once:
+**That story is wrong, and its own control says so.** If single-viable-route
+fragility were the driver, the conservative-vs-permissive gap should be *largest*
+where that share is highest. Sweeping the number of chords in the road network —
+with the number of bridges **held fixed at 4**, because otherwise the sweep also
+sweeps how many limits there are to misread and the two effects are inseparable:
 
-- **Conservative errors** attack the conjunction that admits a vehicle, where a
-  single break is decisive. **Permissive errors** attack the over-determined
-  blocking, where a single relaxation usually is not enough.
-- **Recall errors** can delete a *domain element* — a vehicle whose `mass` or
-  `capacity` sentence was missed drops out of the fleet and can never be named.
-  **Precision errors** never do; they leave the vehicle in the domain with a
-  wrong number, and a wrong number is often not the binding one.
+| chords | single-route share | conservative | permissive | gap |
+|---|---|---|---|---|
+| 0 | **1.000** | 0.907 | 0.880 | **−0.027** |
+| 2 | 0.699 | 0.840 | 0.867 | +0.027 |
+| 4 | 0.401 | 0.760 | 0.900 | +0.140 |
+| 6 | **0.167** | 0.747 | 0.913 | **+0.167** |
 
-The second bullet is the same mechanism as the recall finding's per-kind result,
-where `mass` (0.733) and `capacity` (0.747) were the most damaging kinds to lose
-and `flooded` (0.960) the least. Two independent channels, one explanation:
+The gap is *nil* exactly where every qualifying vehicle sits on a single route,
+and largest where almost none does. The proposed mechanism is refuted.
 
-> **The fragility is in domain membership, not in constraint values.**
+## The mechanism that survives
+
+Reading the two columns apart rather than as a gap:
+
+- **permissive damage is flat to slightly falling** (0.880 → 0.913) as
+  redundancy rises;
+- **conservative damage rises sharply** (0.907 → 0.747).
+
+and the quantity that moves with them:
+
+| chords | mean answer size | empty-answer share | mean viable routes |
+|---|---|---|---|
+| 0 | 0.59 | 0.700 | 0.62 |
+| 2 | 1.44 | 0.340 | 1.57 |
+| 4 | 2.23 | 0.107 | 3.05 |
+| 6 | 2.43 | 0.047 | 4.83 |
+
+> **A conservative error can only damage a positive, and positives get more
+> numerous as the world gets more connected. A permissive error can only damage
+> a negative, and negatives get more over-determined at the same time.**
+
+Both halves push the gap the same way, and the second half is the surviving part
+of the original story: a blocked vehicle at 6 chords must be blocked on every one
+of ~5 routes, so relaxing one limit almost never frees it. What did *not*
+survive is the claim about the admitting side — one viable route is not what
+makes conservative errors bite; having more vehicles to break is.
+
+The recall result's per-kind ordering — `mass` (0.733) and `capacity` (0.747)
+worst to lose, `flooded` (0.960) mildest — is unaffected and has its own
+mechanism, which the precision-vs-recall comparison also supports: **a recall
+error can delete a domain element and a precision error never can.**
 
 ## What this changes about where parse effort goes
 
@@ -93,11 +125,10 @@ about conjunctions with no redundancy, which is not specific to bridges — then
    conservative**, at equal error rate. That is the opposite of the usual
    engineering instinct, and it is a property of the *task's* asymmetry, not of
    the reader.
-3. It is also a warning about this task specifically: 69% of qualifying vehicles
-   sit on a single viable route, so the generator produces worlds with very
-   little routing redundancy. A more redundant world would blunt the whole
-   effect, and the number that would show it is the median-viable-routes figure
-   above.
+3. **The effect strengthens with connectivity**, which was not the guess. At
+   the default two chords the gap is +0.027; at six it is +0.167. So the more
+   route redundancy a domain has, the more it matters that a reader's errors
+   skew permissive rather than conservative.
 
 ## What would have refuted it
 
@@ -106,9 +137,14 @@ about conjunctions with no redundancy, which is not specific to bridges — then
 - **The corruption being unrealistic.** The five misread modes are digit-level
   and unit-level failures, not Gaussian noise, and `unit_confused` (×1000)
   produces the largest errors available.
-- **The asymmetry being an artefact of the direction-flipping code.** It is
-  measured independently of the corruption, by counting viable routes and
-  violated limits in the *uncorrupted* worlds.
+- **The asymmetry being an artefact of the direction-flipping code.** The route
+  and limit counts are taken in the *uncorrupted* worlds, independently of the
+  injection.
+- **The redundancy sweep being confounded.** It was, on the first run: more
+  chords means more links means more bridges, so the sweep also swept how many
+  limits there were to misread. Re-run with the bridge count pinned at 4, the
+  pattern held and got cleaner — and in the process refuted the mechanism the
+  first draft of this note asserted.
 
 ## What it does not establish
 
