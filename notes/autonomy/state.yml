@@ -66,6 +66,12 @@ measured:
   - claim: "Seven openflights IATA nodes are two airports each. Blast radius: airport_country 0.117% of nodes but 0.234% of ANSWERS -- a merged node is also a neighbour, so counting dirty nodes understates damage by 2x. range_limited_routing 0. Nothing published moves: 1-NN 0.9078 -> 0.9098."
     evidence: notes/findings/2026-08-18-seven-iata-nodes-are-two-airports-each-and-it-moves-the-headline-by-0-0021.md
     commit: HEAD
+  - claim: "The 99,738x this repo retracted as 'just the framing' is the amortisation constant: breakeven = corpus_tokens/dependency_tokens = 4.08e6/41 = 99,512 queries, identical on both price sheets because our per-query cost is eleven orders below either. At 13F's 32% quarterly churn that is 350 queries/day to stay ahead of re-extraction."
+    evidence: notes/findings/2026-08-18-the-framing-factor-we-retracted-is-the-amortisation-constant.md
+    commit: pending
+  - claim: "No source on disk carries raw prose. All 19 are (id,label,kind,body,source_url) or (source_id,target_id,kind); the longest natural-language field in 14 GB is a patent title at 59.4 chars mean; patentsview bodies are 0 chars; courtlistener is a 77M-edge citation map with no text column."
+    evidence: scripts/extraction_breakeven.py docstring; verified across data/sources/
+    commit: pending
   - claim: "Scoping survives a dense graph. On the filed-real routing mixture: read p50 1, max 8, 0 refusals in 250 queries, anchor 179/179. What breaks is wall time -- 48.3 ms/query against GLEIF's 2.8 us -- and the governing variable is conflict rate x read footprint, not topology."
     evidence: notes/findings/2026-08-18-scoping-survives-a-dense-graph-and-what-breaks-is-wall-time-not-refusal.md
     commit: 2b8443d
@@ -124,8 +130,23 @@ candidate_directions:
 
 blockers:
   - "Every accuracy comparison against a language model is unrun and NOT QUOTABLE: needs paid API credentials. User's fork, ROADMAP item 0b."
+  - >
+    No corpus of RAW OBSERVATIONS with ground-truth structure exists on disk, so
+    the first arrow of APPROACH.md's thesis (observations -> typed world) cannot
+    be measured at all. Every published cost number begins at the second arrow.
+    Cheapest fix, and it needs only a download: raw SEC 13F filings in HTML --
+    the GROUND TRUTH is already here as the 3.8M-row extracted holdings tables,
+    so only the unstructured side is missing. Alternatives: UD treebanks,
+    courtlistener full-text opinions.
 
 research_debt:
+  - assumption: "Every advantage ratio assumes the world already exists."
+    load_bearing_for: ["the ~5e7 constant", "every row of the cost table", "the certificate arm's maintenance advantages"]
+    reason_to_revisit: >
+      Measured this cycle: the build step costs 99,512 queries' worth of saving,
+      which is real but bounded and is met by construction for filed domains.
+      It is NOT met, and cannot currently be tested, for derived-from-observation
+      domains -- which is the target APPROACH.md names.
   - assumption: "The cost rows are input-token lower bounds with perfect accuracy assumed for both sides."
     load_bearing_for: ["every advantage ratio in HANDOVER section 3"]
     reason_to_revisit: "If accuracy is ever measured and the symbolic side is not perfect, every ratio moves."
@@ -155,14 +176,25 @@ last_cycle:
     repo now say the cheap half of a problem is the useful half.
 
 next:
-  preferred_action: witness-on-kernelresult
+  preferred_action: hub-labelling-as-a-cheaper-optimality-certificate
+  why_shipped_instead: >
+    witness-on-kernelresult is DONE: `Witness` is on the kernel ABI, the ASP
+    kernel returns its answer set instead of discarding it, and
+    `KernelResult.maintainable` is true exactly when a witness is present --
+    deliberately NOT for a proof of impossibility, however conclusive.
   why: >
+    It is the newest finding's own named refuter. Meet-in-the-middle may not be
+    the cheapest certificate for "no shorter path"; hub labelling and 2-hop
+    covers are a literature built for exactly that. If one stays small at d=10,
+    the witness/complement asymmetry weakens and the kernel contract just
+    shipped needs revisiting.
+  superseded_why: >
     Three measurements now agree that a kernel should return a WITNESS and
     should not pretend to return a minimal dependency for a universal claim.
     The 95x and the 13,987x are currently properties of two scripts.
     symbolic_ai_kernels/abi.py has the right shape already (check_entitlement)
     and the ASP kernel holds the model it throws away.
   alternatives:
-    - hub-labelling-as-a-cheaper-optimality-certificate   # the real refuter for the newest finding
     - reprice-the-5e7-constant-on-a-prose-corpus
     - shrinking-corpus-inverts-the-asymmetry
+    - wire-witness-into-the-remaining-seven-kernels
