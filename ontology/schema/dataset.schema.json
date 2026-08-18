@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://symbolic-ai-models/ontology/dataset.schema.json",
+  "title": "dataset_recipe",
+  "description": "How examples EXIST, not where a jsonl happens to be. A recipe names its sources by typed ref, its generator by id, the surfaces it can emit and the objectives it supports, and its splits as key ranges or pinned key manifests. A sample is a pure function of (recipe hash, source snapshot versions, key), which is what makes materialisation optional rather than authoritative.",
+  "type": "object",
+  "required": ["id", "generator", "surfaces", "splits"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]*$"},
+    "description": {"type": "string"},
+    "sources": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Typed refs. A generator drawing on a knowledge source names the SNAPSHOT, not the source, because two snapshots of one source produce different corpora and a number attached to the wrong one is unattributable."
+    },
+    "generator": {
+      "type": "object",
+      "required": ["id"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {"type": "string"},
+        "version": {"type": "string"},
+        "params": {"type": "object", "additionalProperties": true},
+        "requires_capabilities": {
+          "type": "array", "items": {"type": "string"},
+          "description": "Checked against the source before anything is generated. A capability that is present but unpopulated fails here -- see symbolic_ai_core/data/knowledge_source.py."
+        }
+      }
+    },
+    "transforms": {"type": "array", "items": {"type": "string"}},
+    "surfaces": {
+      "type": "array", "items": {"type": "string"},
+      "description": "What one sample can be rendered as: text, term_graph, world_ir, scene_view, geo_view, table. Several at once from ONE latent world -- that is what lets a next-token model and a missing-claim model be scored on the same sample rather than on two corpora only claimed to correspond."
+    },
+    "objectives": {"type": "array", "items": {"type": "string"}},
+    "splits": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "seed0": {"type": "integer"},
+          "per_unit": {"type": "integer", "description": "samples per addressing unit in one epoch-block"},
+          "shuffle": {"type": "boolean"},
+          "finite": {"type": "boolean", "description": "an evaluation split is pinned and refuses a second epoch, because scoring 'the next sixteen' is a function of how long the run happened to go on"},
+          "keys_manifest": {"type": "string"}
+        }
+      }
+    },
+    "materialization": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "policy": {"type": "string", "enum": ["never", "optional", "required"]},
+        "note": {"type": "string"}
+      }
+    },
+    "coverage": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "What this recipe's source cannot supply, recorded on the recipe rather than discovered later. An essay corpus missing three of its eight rhetorical sections reads exactly like one that is not."
+    },
+    "notes": {"type": "string"},
+    "recipe_hash": {"type": "string"}
+  }
+}

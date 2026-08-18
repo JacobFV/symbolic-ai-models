@@ -1,0 +1,73 @@
+# Dataset recipe. See symbolic_ai_core/data/recipe.py.
+id: kg_essays_wordnet_v1
+description: >-
+  Multi-paragraph essays realised from a WordNet subgraph, where a fact stated in
+  paragraph two is needed to resolve a mention in paragraph five. The opposite
+  shape from the formal curriculum, whose single terse paragraph makes pointing a
+  short-range operation and vocabulary memorisation a viable strategy.
+
+sources:
+  - source/wordnet
+
+generator:
+  id: kg_essays
+  version: '1'
+  params:
+    source: wordnet
+    width: 4
+    max_sections: 5
+    min_sections: 3
+  requires_capabilities:
+    - word
+    - pos
+    - hypernyms
+    - hyponyms
+    - siblings
+
+transforms: []
+
+surfaces:
+  - text
+  - mention_spans
+
+objectives:
+  - next_token
+  - long_range_coreference
+  - multi_hop_inference
+
+splits:
+  train:
+    seed0: 0
+    per_unit: 1000
+    shuffle: true
+  eval:
+    seed0: 1000000
+    per_unit: 4
+    shuffle: false
+    finite: true
+
+materialization:
+  policy: never
+
+coverage:
+  measured: '2026-08-18'
+  rich_topics: 1074
+  of_nodes: 13810
+  dead_sections:
+    - qualities
+    - behaviour
+  thin_sections:
+    - membership
+  note: >-
+    WordNet populates `properties_of` and `abilities_of` NOWHERE, so the
+    qualities and behaviour sections can never appear in this corpus, and
+    membership fires on 0.3% of topics. Five of the generator's eight rhetorical
+    sections are reachable. Recorded here because a corpus five-eighths as varied
+    as intended reads exactly like one that is not -- see
+    notes/findings/2026-08-18-three-of-the-eight-essay-sections-have-never-appeared.md
+
+notes: >-
+  `kg_essays_cskg_v1` is the same recipe over CSKG, which fills exactly the two
+  sections this one cannot and loses composition and substance in exchange. They
+  are complementary rather than alternatives, and a composed source is measured
+  at gaining a section on 17% of topics -- see notes/questions/.

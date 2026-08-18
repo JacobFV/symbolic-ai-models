@@ -1,0 +1,60 @@
+# Dataset recipe: how examples EXIST, not where a jsonl happens to be.
+# Hand-authored and authoritative; see symbolic_ai_core/data/recipe.py.
+id: formal_curriculum_v1
+description: >-
+  The 179-lesson teacher-forced curriculum every published number in this repo
+  was measured on. Registered as a recipe not because it needed one, but because
+  it is the reference the other recipes are read against -- and because writing
+  it down forces its two load-bearing properties into the open: an episode is a
+  pure function of (lesson, seed), and the eval split starts a million seeds away
+  so the two ranges cannot meet.
+
+sources: []
+
+generator:
+  id: formal_curriculum
+  version: '1'
+  params:
+    lessons: all
+    language: english
+    curriculum: base
+    max_nodes: 512
+
+transforms: []
+
+surfaces:
+  - text
+  - term_graph
+
+objectives:
+  - next_token
+  - missing_term
+
+splits:
+  train:
+    seed0: 0
+    per_unit: 1000000
+    shuffle: true
+  eval:
+    seed0: 1000000
+    per_unit: 16
+    shuffle: false
+    finite: true
+
+materialization:
+  policy: never
+  note: >-
+    A jsonl under runs/ is a CACHE. Delete it and the same seeds rebuild it byte
+    for byte; keep it and it is still not the dataset.
+
+coverage:
+  note: >-
+    98.6% scaffolding and position-level teacher forcing. CLAUDE.md is explicit
+    that this is a development harness and the wrong instrument for reporting,
+    which is recorded here so a recipe consumer meets it too.
+
+notes: >-
+  The `kg:` and `derive:` curricula are the same 179 lessons under a different
+  binder and are selected with generator.params.curriculum rather than by a
+  separate recipe, because a separate recipe would imply a separate corpus and
+  the lesson ids are identical on purpose.

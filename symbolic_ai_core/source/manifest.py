@@ -34,7 +34,40 @@ def load_yaml(path: str | Path) -> dict[str, Any]:
     if not isinstance(d, dict):
         raise ValueError(f"{path}: a manifest is a mapping, got "
                          f"{type(d).__name__}")
+    bad = _non_json(d)
+    if bad:
+        raise ValueError(
+            f"{path}: {bad} parsed to a type JSON has no equivalent for. "
+            f"YAML's implicit typing is doing it -- an unquoted 2026-08-18 is a "
+            f"`date`, an unquoted `no` is `False`, an unquoted 1:30 is 90. The "
+            f"whole authored-YAML/canonical-JSON contract rests on the parse "
+            f"being JSON-compatible, so quote it.")
     return d
+
+
+#: What ``json.dumps`` will accept. Everything else is YAML being clever.
+_JSON_TYPES = (str, int, float, bool, type(None))
+
+
+def _non_json(value: Any, path: str = "") -> str:
+    """The first path to a value JSON cannot represent, or ``""``."""
+    if isinstance(value, dict):
+        for k, v in value.items():
+            if not isinstance(k, str):
+                return f"key {k!r} at {path or '<root>'} is a {type(k).__name__}"
+            got = _non_json(v, f"{path}.{k}" if path else k)
+            if got:
+                return got
+        return ""
+    if isinstance(value, (list, tuple)):
+        for i, v in enumerate(value):
+            got = _non_json(v, f"{path}[{i}]")
+            if got:
+                return got
+        return ""
+    if isinstance(value, bool) or isinstance(value, _JSON_TYPES):
+        return ""
+    return f"{path or '<root>'} is a {type(value).__name__}"
 
 
 def dump_yaml(path: str | Path, data: Mapping[str, Any], *,

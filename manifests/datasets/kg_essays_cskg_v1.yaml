@@ -1,0 +1,71 @@
+# Dataset recipe. See symbolic_ai_core/data/recipe.py.
+id: kg_essays_cskg_v1
+description: >-
+  Multi-paragraph essays realised from a CSKG subgraph, where a fact stated in
+  paragraph two is needed to resolve a mention in paragraph five. The opposite
+  shape from the formal curriculum, whose single terse paragraph makes pointing a
+  short-range operation and vocabulary memorisation a viable strategy.
+
+sources:
+  - source/cskg
+
+generator:
+  id: kg_essays
+  version: '1'
+  params:
+    source: cskg
+    width: 4
+    max_sections: 5
+    min_sections: 3
+  requires_capabilities:
+    - word
+    - pos
+    - hypernyms
+    - hyponyms
+    - siblings
+
+transforms: []
+
+surfaces:
+  - text
+  - mention_spans
+
+objectives:
+  - next_token
+  - long_range_coreference
+  - multi_hop_inference
+
+splits:
+  train:
+    seed0: 0
+    per_unit: 1000
+    shuffle: true
+  eval:
+    seed0: 1000000
+    per_unit: 4
+    shuffle: false
+    finite: true
+
+materialization:
+  policy: never
+
+coverage:
+  measured: '2026-08-18'
+  rich_topics: 2467
+  of_nodes: 30315
+  dead_sections:
+    - membership
+  thin_sections:
+    - composition
+    - substance
+  note: >-
+    CSKG fills `qualities` (0.405 of rich topics) and `behaviour` (0.230), which
+    WordNet populates nowhere, and loses composition (0.117) and substance
+    (0.010) in exchange. `membership` is dead here as it is everywhere.
+    Seven of eight sections are reachable, one more than WordNet.
+
+notes: >-
+  The vendored CSKG here is a SELECTIONAL PROJECTION, not the full graph -- see
+  catalog/sources/cskg.yaml. It is also a consolidation of seven upstreams
+  including WordNet 3.0, so any corpus composed from this and
+  kg_essays_wordnet_v1 ingests some assertions twice.
