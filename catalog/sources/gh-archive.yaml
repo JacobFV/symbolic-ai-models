@@ -1,0 +1,34 @@
+# Source card: what this resource IS. Hand-authored and authoritative.
+# It says nothing about what bytes this machine holds -- that is a
+# snapshot manifest under manifests/snapshots/.
+id: gh-archive
+title: GH Archive
+description: The public GitHub event stream, archived hourly. Used here for the software dependency and
+  collaboration network.
+homepage: https://www.gharchive.org
+upstream_release: unresolved
+attribution_confidence: established
+access:
+  class: public
+  modes:
+  - dump
+  dua_required: false
+license:
+  name: GH Archive publishes freely; the underlying events are GitHub's
+  redistribution: unresolved
+  commercial_use: unresolved
+lifecycle: active
+priority: p2
+streams:
+  gharchive:
+    description: Daily event partitions.
+    modality: event_stream
+    derivation: measured
+    evidence_role: observation
+    upstream: gh-archive
+    upstream_confidence: established
+notes: 'Redistribution unresolved: GH Archive itself publishes freely, but the events are GitHub''s and
+  their terms have not been read by anyone here.'
+tags:
+- software
+- events

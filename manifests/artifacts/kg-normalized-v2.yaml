@@ -1,0 +1,72 @@
+# Artifact manifest: something MANUFACTURED, with its parents, its
+# generator and a licence closure computed from the parents rather
+# than authored here. Derived can never become measured.
+id: kg-normalized-v2
+artifact_type: normalized_triples
+description: Schema-normalised triples, revision v2, over the staged ingest corpora. One TSV.gz per source
+  stream, node tables beside edge tables.
+parents:
+- snapshot/cfpb@commandagi-r2-2026-08-15
+- snapshot/commandagi-kg@commandagi-r2-2026-08-15
+- snapshot/courtlistener@commandagi-r2-2026-08-15
+- snapshot/cskg@commandagi-r2-2026-08-15
+- snapshot/fec@commandagi-r2-2026-08-15
+- snapshot/gdelt@commandagi-r2-2026-08-15
+- snapshot/geonames@commandagi-r2-2026-08-15
+- snapshot/gh-archive@commandagi-r2-2026-08-15
+- snapshot/gleif@commandagi-r2-2026-08-15
+- snapshot/gutenberg@commandagi-r2-2026-08-15
+- snapshot/openalex@commandagi-r2-2026-08-15
+- snapshot/openflights@commandagi-r2-2026-08-15
+- snapshot/patentsview@commandagi-r2-2026-08-15
+- snapshot/sec-edgar@commandagi-r2-2026-08-15
+- snapshot/senate-lda@commandagi-r2-2026-08-15
+- snapshot/stackexchange@commandagi-r2-2026-08-15
+- snapshot/usaspending@commandagi-r2-2026-08-15
+- snapshot/wikidata@commandagi-r2-2026-08-15
+generator:
+  name: kg normalisation pass
+  version: v2
+  command: unresolved -- the driver was not committed with the output
+derivation: derived
+assumptions:
+- Relation names were mapped into a local vocabulary; the source-native predicate is NOT preserved in
+  the output, so an assertion here cannot be traced back to its upstream predicate.
+- Concepts were collapsed by label in several sources, which merges identities the federation layer would
+  keep apart.
+failure_modes:
+- CSKG is itself a composite of seven upstreams. An assertion ingested both directly and through CSKG
+  appears twice and reads as two independent observations.
+- The gdelt windows overlap; pooled without event-id dedup they double-count the intersection.
+- The three CommandAGI storage formats (cold export, Iceberg, D1 dump) are one graph. Counts agreeing
+  across them are one fact.
+storage:
+  format: tsv_gz
+  root: artifacts/kg-normalized-v2
+  locations:
+  - file:///home/brandonin/Documents/symbolic-ai-models/data/artifacts/kg-normalized-v2
+  files: 40
+  bytes: 8018543834
+license_lineage:
+  redistribution: unresolved
+  commercial_use: unresolved
+  spdx: CC-BY-4.0 AND CC-BY-SA-4.0 AND CC0-1.0 AND ODbL-1.0
+  sources:
+  - CC-BY-4.0
+  - CC-BY-SA-4.0
+  - CC0-1.0
+  - ODbL-1.0
+stats:
+  mapped_kinds: 123
+  report: manifests/artifacts/kg-normalized-v2/manifest.json
+notes: 'The generator''s own report is kept verbatim beside this file as manifest.json plus its stats*.json,
+  because it records rejection counts and per-kind tallies that no summary should paraphrase.
+
+
+  **Redistribution closure: `unresolved`.** Computed from the parents, not chosen here. Two independent
+  reasons block it, and either alone would: commandagi-kg prohibit redistribution outright, and courtlistener,
+  gh-archive, gutenberg, patentsview, senate-lda have licences nobody has established -- and unresolved
+  poisons the closure on purpose, because the alternative is a closure that is wrong in the permissive
+  direction. Nothing derived from this may be published until those parents are removed or their terms
+  established.'
+manifest_hash: sha256:615c8574ac333b20355713ee0303b1c0cce4ad580b5afd68acf5b8d11d83a3e6

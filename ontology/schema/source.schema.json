@@ -1,0 +1,196 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://symbolic-ai-models/ontology/source.schema.json",
+  "title": "source",
+  "description": "An external evidence-producing resource. A source card says what the source IS -- who publishes it, under what licence, what streams it emits. It says NOTHING about what bytes this machine happens to hold: that is a snapshot, and two machines may legitimately disagree about holdings while agreeing completely about the source.",
+  "type": "object",
+  "required": [
+    "id",
+    "title",
+    "access",
+    "license",
+    "lifecycle"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._-]*$"
+    },
+    "title": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "homepage": {
+      "type": "string"
+    },
+    "provider": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "record": {
+          "type": "string"
+        }
+      }
+    },
+    "upstream_release": {
+      "type": "string",
+      "description": "The upstream version this source is pinned to, or 'unresolved'. 'unresolved' is an honest statement and is not a defect; inventing a version is."
+    },
+    "access": {
+      "type": "object",
+      "required": [
+        "class"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "class": {
+          "type": "string"
+        },
+        "modes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "dua_required": {
+          "type": "boolean"
+        },
+        "notes": {
+          "type": "string"
+        }
+      }
+    },
+    "license": {
+      "type": "object",
+      "required": [
+        "redistribution"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "spdx": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "redistribution": {
+          "type": "string"
+        },
+        "commercial_use": {
+          "type": "string"
+        },
+        "attribution": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        }
+      }
+    },
+    "lifecycle": {
+      "type": "string"
+    },
+    "priority": {
+      "type": "string"
+    },
+    "streams": {
+      "type": "object",
+      "description": "One semantic stream id, used unchanged from source through snapshot, view and run. The alternative -- stream names spread across `published_modalities`, `evidence[].stream` and an inventory -- produces near-synonyms like `eeg` and `eeg_64ch` that no consumer can reconcile.",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "modality": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "string"
+          },
+          "unit": {
+            "type": "string"
+          },
+          "derivation": {
+            "type": "string"
+          },
+          "evidence_role": {
+            "type": "string"
+          },
+          "profiles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "upstream": {
+            "type": "string"
+          },
+          "upstream_confidence": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "axes": {
+      "type": "object",
+      "description": "The grouping axes THIS source actually has, declared per source rather than enumerated globally. A global enumeration has to anticipate every corpus organisation that will ever exist, and grows a new member every time it meets one it did not.",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "parent": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "split_constraints": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "independent_axes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "A valid split must not let these axes cross the boundary. This is a POLICY. It does not say which member is in test -- that is a split manifest."
+        }
+      }
+    },
+    "notes": {
+      "type": "string"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "attribution_confidence": {
+      "type": "string",
+      "enum": [
+        "established",
+        "hypothesis",
+        "unresolved"
+      ],
+      "description": "Whether the upstream this card names is established or guessed. A card whose id asserts an upstream the pull did not record says 'hypothesis' here, so that the guess cannot quietly become the provenance of everything derived from it."
+    }
+  }
+}

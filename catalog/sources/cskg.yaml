@@ -1,0 +1,39 @@
+# Source card: what this resource IS. Hand-authored and authoritative.
+# It says nothing about what bytes this machine holds -- that is a
+# snapshot manifest under manifests/snapshots/.
+id: cskg
+title: CSKG (Commonsense Knowledge Graph)
+description: The consolidated commonsense graph over ConceptNet 5.7, WordNet 3.0, ATOMIC, FrameNet, Roget,
+  Visual Genome and Wikidata-CS. Already vendored here in a narrow projection; this is the fuller staged
+  cut.
+homepage: https://github.com/usc-isi-i2/cskg
+upstream_release: unresolved
+attribution_confidence: established
+access:
+  class: public
+  modes:
+  - dump
+  dua_required: false
+license:
+  spdx: CC-BY-SA-4.0
+  name: Creative Commons Attribution-ShareAlike 4.0
+  redistribution: share_alike
+  commercial_use: permitted
+lifecycle: active
+priority: p0
+streams:
+  cskg:
+    description: The consolidated edge table.
+    modality: commonsense_graph
+    derivation: measured
+    evidence_role: observation
+    upstream: cskg
+    upstream_confidence: established
+notes: '**The vendored copy in symbolic_ai_kg/data/ is a selectional projection, not this.** It collapses
+  concepts by lemma, reads only selected relations and maps them into a small local relation set. Calling
+  that projection ''CSKG'' is the same class of error as calling a slice a result, and it is renamed cskg_selectional_v1
+  for exactly that reason. CSKG is itself a composite of seven upstreams, so an assertion ingested both
+  directly and through CSKG is ONE observation seen twice -- see the double-counting test.'
+tags:
+- commonsense
+- composite

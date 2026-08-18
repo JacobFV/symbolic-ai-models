@@ -1,0 +1,80 @@
+# Source card: what this resource IS. Hand-authored and authoritative.
+# It says nothing about what bytes this machine holds -- that is a
+# snapshot manifest under manifests/snapshots/.
+id: commandagi-kg
+title: CommandAGI knowledge graph (cold tier)
+description: 'The production long-term-memory graph: 3.05M nodes and 5.20M edges across four cliques,
+  with the full event log behind them. Held here in three storage formats -- the cold-tier NDJSON/parquet
+  export, the same tables as Iceberg, and the hot-tier D1 SQL dump.'
+provider:
+  name: CommandAGI
+  record: 9ff33ff377111861ec1bd6e9cd3ee51b
+upstream_release: unresolved
+attribution_confidence: established
+access:
+  class: internal
+  modes:
+  - dump
+  dua_required: false
+  notes: Produced by the CommandAGI stack; pulled from its own R2 buckets with an account token. Not public.
+license:
+  name: Internal -- CommandAGI. No redistribution.
+  redistribution: prohibited
+  commercial_use: prohibited
+lifecycle: active
+priority: p0
+streams:
+  graph/clique:
+    description: 'Per-clique projection snapshots: the authoritative current node and edge state, plus
+      DuckDB-compacted parquet adjacency.'
+    modality: property_graph
+    derivation: measured
+    evidence_role: observation
+    upstream: commandagi-kg
+    upstream_confidence: established
+  graph/log:
+    description: The full event log by sequence -- history, provenance and causal chain. This is the derivation
+      record, not a second copy of the state.
+    modality: event_log
+    derivation: measured
+    evidence_role: observation
+    upstream: commandagi-kg
+    upstream_confidence: established
+  __r2_data_catalog:
+    description: The same graph as Iceberg tables. NOT an independent observation of it.
+    modality: iceberg
+    derivation: measured
+    evidence_role: observation
+    upstream: commandagi-kg
+    upstream_confidence: established
+  d1:
+    description: Hot-tier D1 SQL dump. A bounded cache over the cold tier, demoted from source-of-truth.
+      Also NOT independent.
+    modality: sqlite_dump
+    derivation: measured
+    evidence_role: observation
+    upstream: commandagi-kg
+    upstream_confidence: established
+  test:
+    description: Pipeline test fixtures.
+    modality: fixtures
+    derivation: measured
+    evidence_role: observation
+    upstream: commandagi-kg
+    upstream_confidence: established
+  _acquisition:
+    description: The staging README, file inventory and download script that produced this pull.
+    modality: provenance
+    derivation: measured
+    evidence_role: prior
+    upstream: commandagi-kg
+    upstream_confidence: established
+notes: '**Three storage formats of one graph, not three sources.** Counts agreeing across graph/, __r2_data_catalog/
+  and d1/ are ONE fact confirmed by construction, and quoting them as three independent verifications
+  is exactly the composite-source double-count this federation layer refuses. Redistribution is prohibited,
+  so every artifact derived from it inherits prohibited through the licence closure -- which is computed,
+  not authored.'
+tags:
+- internal
+- property-graph
+- ltm

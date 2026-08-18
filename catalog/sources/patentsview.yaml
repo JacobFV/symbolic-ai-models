@@ -1,0 +1,80 @@
+# Source card: what this resource IS. Hand-authored and authoritative.
+# It says nothing about what bytes this machine holds -- that is a
+# snapshot manifest under manifests/snapshots/.
+id: patentsview
+title: PatentsView (hypothesis)
+description: US patent grants and applications with their citation network, CPC classification, inventors,
+  assignees and WIPO fields.
+homepage: https://patentsview.org
+upstream_release: unresolved
+attribution_confidence: hypothesis
+access:
+  class: public
+  modes:
+  - dump
+  dua_required: false
+license:
+  name: PatentsView publishes under CC-BY-4.0 IF the attribution holds; not established for this pull
+  redistribution: unresolved
+  commercial_use: unresolved
+lifecycle: active
+priority: p1
+streams:
+  appcite:
+    description: Application-to-patent citations.
+    modality: citation_graph
+    derivation: measured
+    evidence_role: observation
+    upstream: patentsview
+    upstream_confidence: hypothesis
+  cite:
+    description: Granted-patent citations.
+    modality: citation_graph
+    derivation: measured
+    evidence_role: observation
+    upstream: patentsview
+    upstream_confidence: hypothesis
+  cpc:
+    description: CPC classification assignments.
+    modality: classification
+    derivation: measured
+    evidence_role: observation
+    upstream: patentsview
+    upstream_confidence: hypothesis
+  inventor:
+    description: Patent-to-inventor links.
+    modality: entity_links
+    derivation: measured
+    evidence_role: observation
+    upstream: patentsview
+    upstream_confidence: hypothesis
+  assignee:
+    description: Patent-to-assignee links.
+    modality: entity_links
+    derivation: measured
+    evidence_role: observation
+    upstream: patentsview
+    upstream_confidence: hypothesis
+  patents:
+    description: Patent nodes.
+    modality: entity_nodes
+    derivation: measured
+    evidence_role: observation
+    upstream: patentsview
+    upstream_confidence: hypothesis
+  wipo:
+    description: WIPO technology field assignments.
+    modality: classification
+    derivation: measured
+    evidence_role: observation
+    upstream: patentsview
+    upstream_confidence: hypothesis
+notes: Seven staged directories, one probable upstream. Namespaces observed throughout are `kg:patent:`,
+  `kg:assignee:` and `kg:inventor:`, and the table shapes match PatentsView's published ones -- but no
+  upstream release was recorded, so both the attribution and the licence stay unresolved. If the attribution
+  is later established, the licence becomes CC-BY-4.0 and the closure over every derived artifact loosens;
+  until then it does not.
+tags:
+- patents
+- citation
+- classification

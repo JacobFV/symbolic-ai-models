@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://symbolic-ai-models/ontology/artifact.schema.json",
+  "title": "artifact",
+  "description": "Anything manufactured from snapshots or other artifacts. Geometry, normalised triples, feature tensors, indexes, checkpoints, calibration products -- all of them need parents, a generator, parameters, validation and a licence lineage, so all of them are this object and a typed artifact adds fields rather than starting over.",
+  "type": "object",
+  "required": ["id", "artifact_type", "parents", "generator"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {"type": "string"},
+    "artifact_type": {"type": "string"},
+    "description": {"type": "string"},
+    "parents": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Typed refs. Every one of them, including the ones that only supplied a parameter -- an artifact whose parent list is incomplete produces a licence closure that is wrong in the permissive direction."
+    },
+    "generator": {
+      "type": "object",
+      "required": ["name"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {"type": "string"}, "version": {"type": "string"},
+        "commit": {"type": "string"}, "command": {"type": "string"}
+      }
+    },
+    "parameters": {"type": "object", "additionalProperties": true},
+    "derivation": {"type": "string", "description": "measured | derived | simulated | ... Derived can never become measured."},
+    "assumptions": {"type": "array", "items": {"type": "string"}},
+    "uncertainty": {"type": "object", "additionalProperties": true},
+    "validation": {"type": "object", "additionalProperties": true},
+    "failure_modes": {"type": "array", "items": {"type": "string"}},
+    "storage": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "format": {"type": "string"},
+        "locations": {"type": "array", "items": {"type": "string"}},
+        "root": {"type": "string"},
+        "bytes": {"type": "integer"},
+        "files": {"type": "integer"}
+      }
+    },
+    "license_lineage": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Computed, never authored: the closure over the parents' licences, taking the most restrictive term on each axis."
+    },
+    "stats": {"type": "object", "additionalProperties": true},
+    "manifest_hash": {"type": "string"},
+    "notes": {"type": "string"}
+  }
+}

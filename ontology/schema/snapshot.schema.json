@@ -1,0 +1,147 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://symbolic-ai-models/ontology/snapshot.schema.json",
+  "title": "snapshot",
+  "description": "Exact bytes obtained from one source at one time. A snapshot is the only object in this layer that may assert what is on a disk, and it asserts it about a NAMED location -- so a second machine that lacks the bytes disagrees with the `locations` list, not with the manifest.",
+  "type": "object",
+  "required": [
+    "id",
+    "source",
+    "acquired",
+    "storage"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "`<source>@<version-or-acquisition>`"
+    },
+    "source": {
+      "type": "string",
+      "description": "typed ref: source/<id>"
+    },
+    "acquired": {
+      "type": "object",
+      "required": [
+        "at"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "from": {
+          "type": "string",
+          "description": "the URI the bytes came from"
+        },
+        "at": {
+          "type": "string"
+        },
+        "via": {
+          "type": "string",
+          "description": "the pipeline that fetched them, when it is not a direct download"
+        },
+        "by": {
+          "type": "string"
+        },
+        "relocated_at": {
+          "type": "string",
+          "description": "When these bytes were last moved on this machine. Distinct from `at`, which is when they were obtained from the source and never changes -- conflating the two makes a relocation look like a re-acquisition."
+        }
+      }
+    },
+    "upstream_release": {
+      "type": "string"
+    },
+    "storage": {
+      "type": "object",
+      "required": [
+        "layout",
+        "locations"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "layout": {
+          "type": "string",
+          "description": "'source_native' means the upstream directory structure was preserved verbatim. It almost always should be: BIDS, NWB, zarr, Iceberg and parquet collections each have a layout their own tools expect, and rewriting them into one house style breaks every reader upstream ships."
+        },
+        "format": {
+          "type": "string"
+        },
+        "locations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Where these bytes can currently be found. A LIST, and not part of the identity: adding an S3 mirror must not change what the snapshot is."
+        },
+        "root": {
+          "type": "string",
+          "description": "path relative to the data root"
+        }
+      }
+    },
+    "inventory": {
+      "type": "object",
+      "description": "What is in it, per stream. Counts are exact unless a field says otherwise -- a sampled count and a corpus count are different numbers and must never be quoted interchangeably.",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": true,
+        "properties": {
+          "files": {
+            "type": "integer"
+          },
+          "bytes": {
+            "type": "integer"
+          },
+          "rows": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "rows_exact": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "files": {
+      "type": "array",
+      "description": "Every file, with its digest. This is what 'a run bottoms out in exact byte snapshots' actually means.",
+      "items": {
+        "type": "object",
+        "required": [
+          "path",
+          "bytes"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "bytes": {
+            "type": "integer"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "stream": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "manifest_hash": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "files_sidecar": {
+      "type": "string",
+      "description": "Relative name of a TSV holding the per-file digests, used instead of an inline list when the file count would make the manifest unreadable."
+    },
+    "files_digest": {
+      "type": "string",
+      "description": "sha256 over the canonical JSON of the file rows, so the sidecar cannot drift from the manifest unnoticed."
+    }
+  }
+}

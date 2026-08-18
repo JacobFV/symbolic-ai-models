@@ -1,0 +1,120 @@
+# The controlled vocabularies. One definition each, generated into everything
+# that needs one. See ontology/README.md for why this file exists.
+version: 1
+
+# ---------------------------------------------------------------------------
+# What kind of object a typed ref points at. Every cross-reference in this
+# layer is `<class>/<id>`, so that a bare string can never be ambiguous about
+# what it names -- a mistake worth pre-empting because the alternative is a
+# `constrains:` field holding three different kinds of thing at once.
+# ---------------------------------------------------------------------------
+ref_classes:
+  - source        # an external evidence-producing resource
+  - snapshot      # exact bytes obtained from one source at one version/time
+  - artifact      # anything manufactured from snapshots or other artifacts
+  - view          # a declarative projection/sampling over data, usually virtual
+  - split         # exact train/val/test membership, immutable once published
+  - run           # one execution consuming exact views, artifacts and splits
+  - release       # a publishable bundle descended from runs and artifacts
+  - stream        # one semantic channel within a source
+  - kernel        # a registered computation with a manifest
+  - dataset       # a recipe: sources + generator + transforms + tasks
+
+# ---------------------------------------------------------------------------
+# How a source may be reached. `status` used to be one field mixing local
+# possession, acquisition priority, access restriction and lifecycle; those are
+# four independent variables and a single enum forced false exclusivities
+# (`p0` and `restricted` are not alternatives).
+# ---------------------------------------------------------------------------
+access_classes:
+  - public              # fetchable by anyone, no account
+  - registration        # free account or API key
+  - agreement           # a data use agreement must be signed
+  - commercial          # paid licence
+  - internal            # produced by us, not published
+  - unresolved          # not yet established -- NOT a synonym for public
+
+lifecycles:
+  - active
+  - frozen              # still published, no longer updated
+  - retired             # withdrawn upstream
+  - unresolved
+
+priorities: [p0, p1, p2, watch]
+
+# How bytes may be passed on. Absence of a licence is `unresolved`, never
+# `permitted`: a derived artifact computes its licence closure as the *most*
+# restrictive of its parents, and an unknown parent poisons the closure on
+# purpose.
+redistribution:
+  - permitted
+  - attribution_only
+  - share_alike
+  - non_commercial
+  - prohibited
+  - unresolved
+
+# ---------------------------------------------------------------------------
+# What a piece of evidence is allowed to do to a model. Roles are enforced,
+# not documentation: an `oracle` stream that leaked into training is the
+# failure this vocabulary exists to make expressible.
+# ---------------------------------------------------------------------------
+evidence_roles:
+  - observation         # measured, may constrain freely
+  - boundary            # a constraint on the world, not an observation of it
+  - prior               # belief before evidence
+  - calibration         # fits a nuisance parameter, never the target
+  - oracle              # ground truth for evaluation, NEVER for training
+  - teacher             # another model's output; a derived label, not a measurement
+  - evaluation          # scored against, never fitted on
+  - negative_control    # must fail; a result that survives it is not a result
+
+# Whether a value was measured or manufactured. **Derived can never become
+# measured**: once a value has been computed from something else, no downstream
+# consumer may treat it as an observation, however many hops away it is.
+derivation_classes:
+  - measured
+  - derived
+  - simulated
+  - synthetic
+  - reconstructed
+  - unresolved
+
+# ---------------------------------------------------------------------------
+# How two identities from two different sources may be related. `exact_match`
+# is deliberately not the default: an alignment asserted at full strength is a
+# merge wearing a claim's clothes.
+# ---------------------------------------------------------------------------
+alignment_relations:
+  - exact_match
+  - close_match
+  - broad_match
+  - narrow_match
+  - related
+  - possibly_same
+  - contradicts
+  - supersedes
+
+# What kind of thing a snapshot's bytes are, so a reader knows what opens them
+# without guessing from an extension.
+storage_formats:
+  - parquet
+  - ndjson
+  - ndjson_gz
+  - tsv_gz
+  - csv
+  - json
+  - jsonl
+  - sqlite_dump
+  - iceberg
+  - arrow
+  - zarr
+  - netcdf
+  - rdf_turtle
+  - rdf_ntriples
+  - shapefile
+  - geopackage
+  - raster
+  - archive
+  - mixed
+  - unresolved

@@ -1,0 +1,35 @@
+# Source card: what this resource IS. Hand-authored and authoritative.
+# It says nothing about what bytes this machine holds -- that is a
+# snapshot manifest under manifests/snapshots/.
+id: stackexchange
+title: Stack Exchange data dumps
+description: Post link graphs across Stack Exchange sites. A question-answer relation network with human-authored
+  'these two are related/duplicate' edges, which is an unusual and useful supervision signal for alignment.
+homepage: https://archive.org/details/stackexchange
+upstream_release: unresolved
+attribution_confidence: established
+access:
+  class: public
+  modes:
+  - dump
+  dua_required: false
+license:
+  spdx: CC-BY-SA-4.0
+  name: Creative Commons Attribution-ShareAlike 4.0
+  redistribution: share_alike
+  commercial_use: permitted
+lifecycle: active
+priority: p1
+streams:
+  stackexchange:
+    description: Per-site post link edges.
+    modality: link_graph
+    derivation: measured
+    evidence_role: observation
+    upstream: stackexchange
+    upstream_confidence: established
+notes: Share-alike. Anything derived from this inherits share_alike through the licence closure, which
+  is computed and not authored -- see symbolic_ai_core/source/license.py.
+tags:
+- qa
+- link-graph

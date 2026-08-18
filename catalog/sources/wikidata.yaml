@@ -1,0 +1,43 @@
+# Source card: what this resource IS. Hand-authored and authoritative.
+# It says nothing about what bytes this machine holds -- that is a
+# snapshot manifest under manifests/snapshots/.
+id: wikidata
+title: Wikidata
+description: 'The general-purpose entity backbone: qualified, referenced, temporally scoped statements
+  over tens of millions of identities, with cross-source id bridges. This is the source most likely to
+  carry the alignment claims the federation layer needs, because it already publishes them.'
+homepage: https://www.wikidata.org
+provider:
+  name: Wikimedia Foundation
+upstream_release: unresolved
+attribution_confidence: established
+access:
+  class: public
+  modes:
+  - dump
+  - sparql
+  - api
+  dua_required: false
+license:
+  spdx: CC0-1.0
+  name: CC0 1.0 Universal
+  redistribution: permitted
+  commercial_use: permitted
+lifecycle: active
+priority: p0
+streams:
+  wikidata:
+    description: Entity backbone and cross-source id bridges.
+    modality: entity_graph
+    derivation: measured
+    evidence_role: observation
+    upstream: wikidata
+    upstream_confidence: established
+    profiles:
+    - core.identity
+    - core.type
+notes: The staged cut holds a 12M-entity core and a fuller backbone. Both are projections; neither is
+  the full dump, and a count taken over them is a count over the projection.
+tags:
+- entity
+- backbone

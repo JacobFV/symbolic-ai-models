@@ -1,0 +1,36 @@
+# Source card: what this resource IS. Hand-authored and authoritative.
+# It says nothing about what bytes this machine holds -- that is a
+# snapshot manifest under manifests/snapshots/.
+id: gutenberg
+title: Project Gutenberg catalog
+description: 'Catalogue metadata for the Project Gutenberg corpus: works, authors, subjects. The texts
+  themselves are not in this pull.'
+homepage: https://www.gutenberg.org
+upstream_release: unresolved
+attribution_confidence: established
+access:
+  class: public
+  modes:
+  - dump
+  dua_required: false
+license:
+  name: Project Gutenberg terms; catalogue feeds offered for free use
+  redistribution: unresolved
+  commercial_use: unresolved
+lifecycle: active
+priority: p2
+streams:
+  gutenberg:
+    description: Catalogue nodes and rows.
+    modality: bibliographic
+    derivation: measured
+    evidence_role: observation
+    upstream: gutenberg
+    upstream_confidence: established
+notes: Redistribution is recorded as unresolved rather than permitted. The catalogue feeds are offered
+  for free use and the underlying texts are public domain in the US, but Project Gutenberg's trademark
+  terms are not an SPDX licence and nobody here has established what they permit for a derived corpus.
+  Unresolved poisons the licence closure on purpose; that is the safe direction.
+tags:
+- literature
+- bibliographic

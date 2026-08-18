@@ -1,0 +1,72 @@
+# Source card: what this resource IS. Hand-authored and authoritative.
+# It says nothing about what bytes this machine holds -- that is a
+# snapshot manifest under manifests/snapshots/.
+id: sec-edgar
+title: SEC EDGAR
+description: 'US Securities and Exchange Commission filings: 13F institutional holdings, insider transactions,
+  financial reports, and the CIK-to-name bridge.'
+homepage: https://www.sec.gov/edgar
+upstream_release: unresolved
+attribution_confidence: hypothesis
+access:
+  class: public
+  modes:
+  - dump
+  - api
+  dua_required: false
+license:
+  name: US Government work (17 U.S.C. 105); SEC asks for a declared user agent and fair request rates
+  redistribution: permitted
+  commercial_use: permitted
+lifecycle: active
+priority: p1
+streams:
+  entity/sec:
+    description: CIK-to-name bridge.
+    modality: entity_nodes
+    derivation: measured
+    evidence_role: observation
+    upstream: sec-edgar
+    upstream_confidence: established
+  sec13f:
+    description: 13F institutional holdings.
+    modality: holdings
+    derivation: measured
+    evidence_role: observation
+    upstream: sec-edgar
+    upstream_confidence: established
+  sec_fin:
+    description: Financial reports.
+    modality: financials
+    derivation: measured
+    evidence_role: observation
+    upstream: sec-edgar
+    upstream_confidence: established
+  sec_insider:
+    description: Insider transactions.
+    modality: transactions
+    derivation: measured
+    evidence_role: observation
+    upstream: sec-edgar
+    upstream_confidence: established
+  finance/13f:
+    description: A second 13F cut over a different date window.
+    modality: holdings
+    derivation: measured
+    evidence_role: observation
+    upstream: sec-edgar
+    upstream_confidence: established
+  finance/insider:
+    description: A second insider cut over a different date window.
+    modality: transactions
+    derivation: measured
+    evidence_role: observation
+    upstream: sec-edgar
+    upstream_confidence: established
+notes: '`finance/13f` and `finance/insider` OVERLAP `sec13f` and `sec_insider` in subject and partly in
+  date range. They are kept as separate streams rather than merged because two overlapping windows pooled
+  without a marker double-count the intersection, and the manifest is the only place that will remember.'
+tags:
+- finance
+- filings
+- temporal

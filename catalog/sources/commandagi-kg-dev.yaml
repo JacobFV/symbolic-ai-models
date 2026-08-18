@@ -1,0 +1,36 @@
+# Source card: what this resource IS. Hand-authored and authoritative.
+# It says nothing about what bytes this machine holds -- that is a
+# snapshot manifest under manifests/snapshots/.
+id: commandagi-kg-dev
+title: CommandAGI knowledge graph (dev stack, cold tier)
+description: The development stack's cold bucket. A near-empty graph beside a real one.
+provider:
+  name: CommandAGI
+upstream_release: unresolved
+attribution_confidence: established
+access:
+  class: internal
+  modes:
+  - dump
+  dua_required: false
+  notes: Produced by the CommandAGI stack; pulled from its own R2 buckets with an account token. Not public.
+license:
+  name: Internal -- CommandAGI. No redistribution.
+  redistribution: prohibited
+  commercial_use: prohibited
+lifecycle: active
+priority: p2
+streams:
+  _dev-bucket:
+    description: Dev cold-tier export.
+    modality: property_graph
+    derivation: measured
+    evidence_role: observation
+    upstream: commandagi-kg-dev
+    upstream_confidence: established
+notes: Registered as its own source rather than folded into commandagi-kg so that a count taken over 'the
+  CommandAGI graph' cannot silently include a dev stack. A control that shares a name with its treatment
+  is how the two come to drift together.
+tags:
+- internal
+- control

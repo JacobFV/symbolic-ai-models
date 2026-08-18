@@ -1,0 +1,36 @@
+# Source card: what this resource IS. Hand-authored and authoritative.
+# It says nothing about what bytes this machine holds -- that is a
+# snapshot manifest under manifests/snapshots/.
+id: gleif
+title: GLEIF (Global Legal Entity Identifier Foundation)
+description: Legal entity identifiers and the parent/child relationships between legal entities. The authoritative
+  ownership backbone for finance.
+homepage: https://www.gleif.org
+upstream_release: unresolved
+attribution_confidence: established
+access:
+  class: public
+  modes:
+  - dump
+  dua_required: false
+license:
+  spdx: CC0-1.0
+  name: CC0 1.0 Universal
+  redistribution: permitted
+  commercial_use: permitted
+lifecycle: active
+priority: p1
+streams:
+  gleif:
+    description: LEI2 entity records and relationship records.
+    modality: entity_graph
+    derivation: measured
+    evidence_role: observation
+    upstream: gleif
+    upstream_confidence: established
+    profiles:
+    - core.identity
+tags:
+- finance
+- ownership
+- entity

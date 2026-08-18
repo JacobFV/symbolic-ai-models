@@ -1,0 +1,2817 @@
+{
+ "artifacts": {
+  "kg-normalized-v2": {
+   "artifact_type": "normalized_triples",
+   "assumptions": [
+    "Relation names were mapped into a local vocabulary; the source-native predicate is NOT preserved in the output, so an assertion here cannot be traced back to its upstream predicate.",
+    "Concepts were collapsed by label in several sources, which merges identities the federation layer would keep apart."
+   ],
+   "derivation": "derived",
+   "description": "Schema-normalised triples, revision v2, over the staged ingest corpora. One TSV.gz per source stream, node tables beside edge tables.",
+   "failure_modes": [
+    "CSKG is itself a composite of seven upstreams. An assertion ingested both directly and through CSKG appears twice and reads as two independent observations.",
+    "The gdelt windows overlap; pooled without event-id dedup they double-count the intersection.",
+    "The three CommandAGI storage formats (cold export, Iceberg, D1 dump) are one graph. Counts agreeing across them are one fact."
+   ],
+   "generator": {
+    "command": "unresolved -- the driver was not committed with the output",
+    "name": "kg normalisation pass",
+    "version": "v2"
+   },
+   "id": "kg-normalized-v2",
+   "license_lineage": {
+    "commercial_use": "unresolved",
+    "redistribution": "unresolved",
+    "sources": [
+     "CC-BY-4.0",
+     "CC-BY-SA-4.0",
+     "CC0-1.0",
+     "ODbL-1.0"
+    ],
+    "spdx": "CC-BY-4.0 AND CC-BY-SA-4.0 AND CC0-1.0 AND ODbL-1.0"
+   },
+   "manifest_hash": "sha256:615c8574ac333b20355713ee0303b1c0cce4ad580b5afd68acf5b8d11d83a3e6",
+   "notes": "The generator's own report is kept verbatim beside this file as manifest.json plus its stats*.json, because it records rejection counts and per-kind tallies that no summary should paraphrase.\n\n**Redistribution closure: `unresolved`.** Computed from the parents, not chosen here. Two independent reasons block it, and either alone would: commandagi-kg prohibit redistribution outright, and courtlistener, gh-archive, gutenberg, patentsview, senate-lda have licences nobody has established -- and unresolved poisons the closure on purpose, because the alternative is a closure that is wrong in the permissive direction. Nothing derived from this may be published until those parents are removed or their terms established.",
+   "parents": [
+    "snapshot/cfpb@commandagi-r2-2026-08-15",
+    "snapshot/commandagi-kg@commandagi-r2-2026-08-15",
+    "snapshot/courtlistener@commandagi-r2-2026-08-15",
+    "snapshot/cskg@commandagi-r2-2026-08-15",
+    "snapshot/fec@commandagi-r2-2026-08-15",
+    "snapshot/gdelt@commandagi-r2-2026-08-15",
+    "snapshot/geonames@commandagi-r2-2026-08-15",
+    "snapshot/gh-archive@commandagi-r2-2026-08-15",
+    "snapshot/gleif@commandagi-r2-2026-08-15",
+    "snapshot/gutenberg@commandagi-r2-2026-08-15",
+    "snapshot/openalex@commandagi-r2-2026-08-15",
+    "snapshot/openflights@commandagi-r2-2026-08-15",
+    "snapshot/patentsview@commandagi-r2-2026-08-15",
+    "snapshot/sec-edgar@commandagi-r2-2026-08-15",
+    "snapshot/senate-lda@commandagi-r2-2026-08-15",
+    "snapshot/stackexchange@commandagi-r2-2026-08-15",
+    "snapshot/usaspending@commandagi-r2-2026-08-15",
+    "snapshot/wikidata@commandagi-r2-2026-08-15"
+   ],
+   "stats": {
+    "mapped_kinds": 123,
+    "report": "manifests/artifacts/kg-normalized-v2/manifest.json"
+   },
+   "storage": {
+    "bytes": 8018543834,
+    "files": 40,
+    "format": "tsv_gz",
+    "locations": [
+     "file:///home/brandonin/Documents/symbolic-ai-models/data/artifacts/kg-normalized-v2"
+    ],
+    "root": "artifacts/kg-normalized-v2"
+   }
+  },
+  "kg-normalized-v3": {
+   "artifact_type": "normalized_triples",
+   "assumptions": [
+    "Relation names were mapped into a local vocabulary; the source-native predicate is NOT preserved in the output, so an assertion here cannot be traced back to its upstream predicate.",
+    "Concepts were collapsed by label in several sources, which merges identities the federation layer would keep apart."
+   ],
+   "derivation": "derived",
+   "description": "Schema-normalised triples, revision v3, over the staged ingest corpora. One TSV.gz per source stream, node tables beside edge tables.",
+   "failure_modes": [
+    "CSKG is itself a composite of seven upstreams. An assertion ingested both directly and through CSKG appears twice and reads as two independent observations.",
+    "The gdelt windows overlap; pooled without event-id dedup they double-count the intersection.",
+    "The three CommandAGI storage formats (cold export, Iceberg, D1 dump) are one graph. Counts agreeing across them are one fact."
+   ],
+   "generator": {
+    "command": "unresolved -- the driver was not committed with the output",
+    "name": "kg normalisation pass",
+    "version": "v3"
+   },
+   "id": "kg-normalized-v3",
+   "license_lineage": {
+    "commercial_use": "unresolved",
+    "redistribution": "unresolved",
+    "sources": [
+     "CC-BY-4.0",
+     "CC-BY-SA-4.0",
+     "CC0-1.0",
+     "ODbL-1.0"
+    ],
+    "spdx": "CC-BY-4.0 AND CC-BY-SA-4.0 AND CC0-1.0 AND ODbL-1.0"
+   },
+   "manifest_hash": "sha256:480518a6764ef6fa5ef3e457bda0f56f6b1cf8673da0f10cd3f2fb7a350d0e96",
+   "notes": "The generator's own report is kept verbatim beside this file as manifest.json plus its stats*.json, because it records rejection counts and per-kind tallies that no summary should paraphrase.\n\n**Redistribution closure: `unresolved`.** Computed from the parents, not chosen here. Two independent reasons block it, and either alone would: commandagi-kg prohibit redistribution outright, and courtlistener, gh-archive, gutenberg, patentsview, senate-lda have licences nobody has established -- and unresolved poisons the closure on purpose, because the alternative is a closure that is wrong in the permissive direction. Nothing derived from this may be published until those parents are removed or their terms established.",
+   "parents": [
+    "snapshot/cfpb@commandagi-r2-2026-08-15",
+    "snapshot/commandagi-kg@commandagi-r2-2026-08-15",
+    "snapshot/courtlistener@commandagi-r2-2026-08-15",
+    "snapshot/cskg@commandagi-r2-2026-08-15",
+    "snapshot/fec@commandagi-r2-2026-08-15",
+    "snapshot/gdelt@commandagi-r2-2026-08-15",
+    "snapshot/geonames@commandagi-r2-2026-08-15",
+    "snapshot/gh-archive@commandagi-r2-2026-08-15",
+    "snapshot/gleif@commandagi-r2-2026-08-15",
+    "snapshot/gutenberg@commandagi-r2-2026-08-15",
+    "snapshot/openalex@commandagi-r2-2026-08-15",
+    "snapshot/openflights@commandagi-r2-2026-08-15",
+    "snapshot/patentsview@commandagi-r2-2026-08-15",
+    "snapshot/sec-edgar@commandagi-r2-2026-08-15",
+    "snapshot/senate-lda@commandagi-r2-2026-08-15",
+    "snapshot/stackexchange@commandagi-r2-2026-08-15",
+    "snapshot/usaspending@commandagi-r2-2026-08-15",
+    "snapshot/wikidata@commandagi-r2-2026-08-15"
+   ],
+   "stats": {
+    "mapped_kinds": 197,
+    "report": "manifests/artifacts/kg-normalized-v3/manifest.json"
+   },
+   "storage": {
+    "bytes": 7893259568,
+    "files": 34,
+    "format": "tsv_gz",
+    "locations": [
+     "file:///home/brandonin/Documents/symbolic-ai-models/data/artifacts/kg-normalized-v3"
+    ],
+    "root": "artifacts/kg-normalized-v3"
+   }
+  },
+  "kg-normalized-v4": {
+   "artifact_type": "normalized_triples",
+   "assumptions": [
+    "Relation names were mapped into a local vocabulary; the source-native predicate is NOT preserved in the output, so an assertion here cannot be traced back to its upstream predicate.",
+    "Concepts were collapsed by label in several sources, which merges identities the federation layer would keep apart."
+   ],
+   "derivation": "derived",
+   "description": "Schema-normalised triples, revision v4, over the staged ingest corpora. One TSV.gz per source stream, node tables beside edge tables.",
+   "failure_modes": [
+    "CSKG is itself a composite of seven upstreams. An assertion ingested both directly and through CSKG appears twice and reads as two independent observations.",
+    "The gdelt windows overlap; pooled without event-id dedup they double-count the intersection.",
+    "The three CommandAGI storage formats (cold export, Iceberg, D1 dump) are one graph. Counts agreeing across them are one fact."
+   ],
+   "generator": {
+    "command": "unresolved -- the driver was not committed with the output",
+    "name": "kg normalisation pass",
+    "version": "v4"
+   },
+   "id": "kg-normalized-v4",
+   "license_lineage": {
+    "commercial_use": "unresolved",
+    "redistribution": "unresolved",
+    "sources": [
+     "CC-BY-4.0",
+     "CC-BY-SA-4.0",
+     "CC0-1.0",
+     "ODbL-1.0"
+    ],
+    "spdx": "CC-BY-4.0 AND CC-BY-SA-4.0 AND CC0-1.0 AND ODbL-1.0"
+   },
+   "manifest_hash": "sha256:ea6a8a8dd664e32dfa4642cf7dee69aa35f8a15c567eb3157392864157e7c8ac",
+   "notes": "The generator's own report is kept verbatim beside this file as manifest.json plus its stats*.json, because it records rejection counts and per-kind tallies that no summary should paraphrase.\n\n**Redistribution closure: `unresolved`.** Computed from the parents, not chosen here. Two independent reasons block it, and either alone would: commandagi-kg prohibit redistribution outright, and courtlistener, gh-archive, gutenberg, patentsview, senate-lda have licences nobody has established -- and unresolved poisons the closure on purpose, because the alternative is a closure that is wrong in the permissive direction. Nothing derived from this may be published until those parents are removed or their terms established.",
+   "parents": [
+    "snapshot/cfpb@commandagi-r2-2026-08-15",
+    "snapshot/commandagi-kg@commandagi-r2-2026-08-15",
+    "snapshot/courtlistener@commandagi-r2-2026-08-15",
+    "snapshot/cskg@commandagi-r2-2026-08-15",
+    "snapshot/fec@commandagi-r2-2026-08-15",
+    "snapshot/gdelt@commandagi-r2-2026-08-15",
+    "snapshot/geonames@commandagi-r2-2026-08-15",
+    "snapshot/gh-archive@commandagi-r2-2026-08-15",
+    "snapshot/gleif@commandagi-r2-2026-08-15",
+    "snapshot/gutenberg@commandagi-r2-2026-08-15",
+    "snapshot/openalex@commandagi-r2-2026-08-15",
+    "snapshot/openflights@commandagi-r2-2026-08-15",
+    "snapshot/patentsview@commandagi-r2-2026-08-15",
+    "snapshot/sec-edgar@commandagi-r2-2026-08-15",
+    "snapshot/senate-lda@commandagi-r2-2026-08-15",
+    "snapshot/stackexchange@commandagi-r2-2026-08-15",
+    "snapshot/usaspending@commandagi-r2-2026-08-15",
+    "snapshot/wikidata@commandagi-r2-2026-08-15"
+   ],
+   "stats": {
+    "mapped_kinds": 243,
+    "report": "manifests/artifacts/kg-normalized-v4/manifest.json"
+   },
+   "storage": {
+    "bytes": 8159876039,
+    "files": 34,
+    "format": "tsv_gz",
+    "locations": [
+     "file:///home/brandonin/Documents/symbolic-ai-models/data/artifacts/kg-normalized-v4"
+    ],
+    "root": "artifacts/kg-normalized-v4"
+   }
+  },
+  "kg-normalized-v5": {
+   "artifact_type": "normalized_triples",
+   "assumptions": [
+    "Relation names were mapped into a local vocabulary; the source-native predicate is NOT preserved in the output, so an assertion here cannot be traced back to its upstream predicate.",
+    "Concepts were collapsed by label in several sources, which merges identities the federation layer would keep apart."
+   ],
+   "derivation": "derived",
+   "description": "Schema-normalised triples, revision v5, over the staged ingest corpora. One TSV.gz per source stream, node tables beside edge tables.",
+   "failure_modes": [
+    "CSKG is itself a composite of seven upstreams. An assertion ingested both directly and through CSKG appears twice and reads as two independent observations.",
+    "The gdelt windows overlap; pooled without event-id dedup they double-count the intersection.",
+    "The three CommandAGI storage formats (cold export, Iceberg, D1 dump) are one graph. Counts agreeing across them are one fact."
+   ],
+   "generator": {
+    "command": "unresolved -- the driver was not committed with the output",
+    "name": "kg normalisation pass",
+    "version": "v5"
+   },
+   "id": "kg-normalized-v5",
+   "license_lineage": {
+    "commercial_use": "unresolved",
+    "redistribution": "unresolved",
+    "sources": [
+     "CC-BY-4.0",
+     "CC-BY-SA-4.0",
+     "CC0-1.0",
+     "ODbL-1.0"
+    ],
+    "spdx": "CC-BY-4.0 AND CC-BY-SA-4.0 AND CC0-1.0 AND ODbL-1.0"
+   },
+   "manifest_hash": "sha256:c85d7b9a2ca9bfb3d0ccd0b2e612c2a8ab6d7ff737e513c72eaf79505fa65649",
+   "notes": "The generator's own report is kept verbatim beside this file as manifest.json plus its stats*.json, because it records rejection counts and per-kind tallies that no summary should paraphrase.\n\n**Redistribution closure: `unresolved`.** Computed from the parents, not chosen here. Two independent reasons block it, and either alone would: commandagi-kg prohibit redistribution outright, and courtlistener, gh-archive, gutenberg, patentsview, senate-lda have licences nobody has established -- and unresolved poisons the closure on purpose, because the alternative is a closure that is wrong in the permissive direction. Nothing derived from this may be published until those parents are removed or their terms established.",
+   "parents": [
+    "artifact/kg-normalized-v4",
+    "snapshot/cfpb@commandagi-r2-2026-08-15",
+    "snapshot/commandagi-kg@commandagi-r2-2026-08-15",
+    "snapshot/courtlistener@commandagi-r2-2026-08-15",
+    "snapshot/cskg@commandagi-r2-2026-08-15",
+    "snapshot/fec@commandagi-r2-2026-08-15",
+    "snapshot/gdelt@commandagi-r2-2026-08-15",
+    "snapshot/geonames@commandagi-r2-2026-08-15",
+    "snapshot/gh-archive@commandagi-r2-2026-08-15",
+    "snapshot/gleif@commandagi-r2-2026-08-15",
+    "snapshot/gutenberg@commandagi-r2-2026-08-15",
+    "snapshot/openalex@commandagi-r2-2026-08-15",
+    "snapshot/openflights@commandagi-r2-2026-08-15",
+    "snapshot/patentsview@commandagi-r2-2026-08-15",
+    "snapshot/sec-edgar@commandagi-r2-2026-08-15",
+    "snapshot/senate-lda@commandagi-r2-2026-08-15",
+    "snapshot/stackexchange@commandagi-r2-2026-08-15",
+    "snapshot/usaspending@commandagi-r2-2026-08-15",
+    "snapshot/wikidata@commandagi-r2-2026-08-15"
+   ],
+   "stats": {
+    "mapped_kinds": 263,
+    "report": "manifests/artifacts/kg-normalized-v5/manifest.json"
+   },
+   "storage": {
+    "bytes": 8317076678,
+    "files": 34,
+    "format": "tsv_gz",
+    "locations": [
+     "file:///home/brandonin/Documents/symbolic-ai-models/data/artifacts/kg-normalized-v5"
+    ],
+    "root": "artifacts/kg-normalized-v5"
+   }
+  }
+ },
+ "closures": {
+  "artifact/kg-normalized-v2": {
+   "commercial_use": "unresolved",
+   "redistribution": "unresolved",
+   "sources": [
+    "CC-BY-4.0",
+    "CC-BY-SA-4.0",
+    "CC0-1.0",
+    "ODbL-1.0"
+   ],
+   "spdx": "CC-BY-4.0 AND CC-BY-SA-4.0 AND CC0-1.0 AND ODbL-1.0"
+  },
+  "artifact/kg-normalized-v3": {
+   "commercial_use": "unresolved",
+   "redistribution": "unresolved",
+   "sources": [
+    "CC-BY-4.0",
+    "CC-BY-SA-4.0",
+    "CC0-1.0",
+    "ODbL-1.0"
+   ],
+   "spdx": "CC-BY-4.0 AND CC-BY-SA-4.0 AND CC0-1.0 AND ODbL-1.0"
+  },
+  "artifact/kg-normalized-v4": {
+   "commercial_use": "unresolved",
+   "redistribution": "unresolved",
+   "sources": [
+    "CC-BY-4.0",
+    "CC-BY-SA-4.0",
+    "CC0-1.0",
+    "ODbL-1.0"
+   ],
+   "spdx": "CC-BY-4.0 AND CC-BY-SA-4.0 AND CC0-1.0 AND ODbL-1.0"
+  },
+  "artifact/kg-normalized-v5": {
+   "commercial_use": "unresolved",
+   "redistribution": "unresolved",
+   "sources": [
+    "CC-BY-4.0",
+    "CC-BY-SA-4.0",
+    "CC0-1.0",
+    "ODbL-1.0"
+   ],
+   "spdx": "CC-BY-4.0 AND CC-BY-SA-4.0 AND CC0-1.0 AND ODbL-1.0"
+  }
+ },
+ "digest": "sha256:a5f317ec47b53e4108b16d97c5c9222aa0ad271b72e8d236ac0c345afd7bf684",
+ "lineage": {
+  "artifact/kg-normalized-v4": [
+   "artifact/kg-normalized-v5"
+  ],
+  "snapshot/cfpb@commandagi-r2-2026-08-15": [
+   "artifact/kg-normalized-v2",
+   "artifact/kg-normalized-v3",
+   "artifact/kg-normalized-v4",
+   "artifact/kg-normalized-v5"
+  ],
+  "snapshot/commandagi-kg@commandagi-r2-2026-08-15": [
+   "artifact/kg-normalized-v2",
+   "artifact/kg-normalized-v3",
+   "artifact/kg-normalized-v4",
+   "artifact/kg-normalized-v5"
+  ],
+  "snapshot/courtlistener@commandagi-r2-2026-08-15": [
+   "artifact/kg-normalized-v2",
+   "artifact/kg-normalized-v3",
+   "artifact/kg-normalized-v4",
+   "artifact/kg-normalized-v5"
+  ],
+  "snapshot/cskg@commandagi-r2-2026-08-15": [
+   "artifact/kg-normalized-v2",
+   "artifact/kg-normalized-v3",
+   "artifact/kg-normalized-v4",
+   "artifact/kg-normalized-v5"
+  ],
+  "snapshot/fec@commandagi-r2-2026-08-15": [
+   "artifact/kg-normalized-v2",
+   "artifact/kg-normalized-v3",
+   "artifact/kg-normalized-v4",
+   "artifact/kg-normalized-v5"
+  ],
+  "snapshot/gdelt@commandagi-r2-2026-08-15": [
+   "artifact/kg-normalized-v2",
+   "artifact/kg-normalized-v3",
+   "artifact/kg-normalized-v4",
+   "artifact/kg-normalized-v5"
+  ],
+  "snapshot/geonames@commandagi-r2-2026-08-15": [
+   "artifact/kg-normalized-v2",
+   "artifact/kg-normalized-v3",
+   "artifact/kg-normalized-v4",
+   "artifact/kg-normalized-v5"
+  ],
+  "snapshot/gh-archive@commandagi-r2-2026-08-15": [
+   "artifact/kg-normalized-v2",
+   "artifact/kg-normalized-v3",
+   "artifact/kg-normalized-v4",
+   "artifact/kg-normalized-v5"
+  ],
+  "snapshot/gleif@commandagi-r2-2026-08-15": [
+   "artifact/kg-normalized-v2",
+   "artifact/kg-normalized-v3",
+   "artifact/kg-normalized-v4",
+   "artifact/kg-normalized-v5"
+  ],
+  "snapshot/gutenberg@commandagi-r2-2026-08-15": [
+   "artifact/kg-normalized-v2",
+   "artifact/kg-normalized-v3",
+   "artifact/kg-normalized-v4",
+   "artifact/kg-normalized-v5"
+  ],
+  "snapshot/openalex@commandagi-r2-2026-08-15": [
+   "artifact/kg-normalized-v2",
+   "artifact/kg-normalized-v3",
+   "artifact/kg-normalized-v4",
+   "artifact/kg-normalized-v5"
+  ],
+  "snapshot/openflights@commandagi-r2-2026-08-15": [
+   "artifact/kg-normalized-v2",
+   "artifact/kg-normalized-v3",
+   "artifact/kg-normalized-v4",
+   "artifact/kg-normalized-v5"
+  ],
+  "snapshot/patentsview@commandagi-r2-2026-08-15": [
+   "artifact/kg-normalized-v2",
+   "artifact/kg-normalized-v3",
+   "artifact/kg-normalized-v4",
+   "artifact/kg-normalized-v5"
+  ],
+  "snapshot/sec-edgar@commandagi-r2-2026-08-15": [
+   "artifact/kg-normalized-v2",
+   "artifact/kg-normalized-v3",
+   "artifact/kg-normalized-v4",
+   "artifact/kg-normalized-v5"
+  ],
+  "snapshot/senate-lda@commandagi-r2-2026-08-15": [
+   "artifact/kg-normalized-v2",
+   "artifact/kg-normalized-v3",
+   "artifact/kg-normalized-v4",
+   "artifact/kg-normalized-v5"
+  ],
+  "snapshot/stackexchange@commandagi-r2-2026-08-15": [
+   "artifact/kg-normalized-v2",
+   "artifact/kg-normalized-v3",
+   "artifact/kg-normalized-v4",
+   "artifact/kg-normalized-v5"
+  ],
+  "snapshot/usaspending@commandagi-r2-2026-08-15": [
+   "artifact/kg-normalized-v2",
+   "artifact/kg-normalized-v3",
+   "artifact/kg-normalized-v4",
+   "artifact/kg-normalized-v5"
+  ],
+  "snapshot/wikidata@commandagi-r2-2026-08-15": [
+   "artifact/kg-normalized-v2",
+   "artifact/kg-normalized-v3",
+   "artifact/kg-normalized-v4",
+   "artifact/kg-normalized-v5"
+  ],
+  "source/cfpb": [
+   "snapshot/cfpb@commandagi-r2-2026-08-15"
+  ],
+  "source/commandagi-kg": [
+   "snapshot/commandagi-kg@commandagi-r2-2026-08-15"
+  ],
+  "source/commandagi-kg-dev": [
+   "snapshot/commandagi-kg-dev@commandagi-r2-2026-08-15"
+  ],
+  "source/courtlistener": [
+   "snapshot/courtlistener@commandagi-r2-2026-08-15"
+  ],
+  "source/cskg": [
+   "snapshot/cskg@commandagi-r2-2026-08-15"
+  ],
+  "source/fec": [
+   "snapshot/fec@commandagi-r2-2026-08-15"
+  ],
+  "source/gdelt": [
+   "snapshot/gdelt@commandagi-r2-2026-08-15"
+  ],
+  "source/geonames": [
+   "snapshot/geonames@commandagi-r2-2026-08-15"
+  ],
+  "source/gh-archive": [
+   "snapshot/gh-archive@commandagi-r2-2026-08-15"
+  ],
+  "source/gleif": [
+   "snapshot/gleif@commandagi-r2-2026-08-15"
+  ],
+  "source/gutenberg": [
+   "snapshot/gutenberg@commandagi-r2-2026-08-15"
+  ],
+  "source/openalex": [
+   "snapshot/openalex@commandagi-r2-2026-08-15"
+  ],
+  "source/openflights": [
+   "snapshot/openflights@commandagi-r2-2026-08-15"
+  ],
+  "source/patentsview": [
+   "snapshot/patentsview@commandagi-r2-2026-08-15"
+  ],
+  "source/sec-edgar": [
+   "snapshot/sec-edgar@commandagi-r2-2026-08-15"
+  ],
+  "source/senate-lda": [
+   "snapshot/senate-lda@commandagi-r2-2026-08-15"
+  ],
+  "source/stackexchange": [
+   "snapshot/stackexchange@commandagi-r2-2026-08-15"
+  ],
+  "source/usaspending": [
+   "snapshot/usaspending@commandagi-r2-2026-08-15"
+  ],
+  "source/wikidata": [
+   "snapshot/wikidata@commandagi-r2-2026-08-15"
+  ]
+ },
+ "schema": "sai.catalog@1",
+ "snapshots": {
+  "cfpb@commandagi-r2-2026-08-15": {
+   "acquired": {
+    "at": "2026-08-15",
+    "from": "r2://commandagi-kg-cold (and the ingest prefixes beside it)",
+    "relocated_at": "2026-08-18",
+    "via": "commandagi KG ingest; staged to ~/Downloads/kg by dl-kg.py"
+   },
+   "files": [
+    {
+     "bytes": 9184,
+     "path": "cfpb/complaints_2025_p0.parquet",
+     "sha256": "25331bf56f39acfa32441f4a4c60bfa9d64ef01b67bbfa561db4649b8d536f77",
+     "stream": "cfpb"
+    },
+    {
+     "bytes": 9585,
+     "path": "cfpb/entities_2025_p0.parquet",
+     "sha256": "c3197ba1fef88d317cf2c50c81981e4731ec2ede0eb4f3e067737c8ce346142c",
+     "stream": "cfpb"
+    }
+   ],
+   "id": "cfpb@commandagi-r2-2026-08-15",
+   "inventory": {
+    "cfpb": {
+     "bytes": 18769,
+     "files": 2
+    }
+   },
+   "manifest_hash": "sha256:186fba3714962c75ba21a5a5b145dcf087467f7bec949cc7207be52784d2d7ef",
+   "source": "source/cfpb",
+   "storage": {
+    "format": "parquet",
+    "layout": "pipeline_native",
+    "locations": [
+     "file:///home/brandonin/Documents/symbolic-ai-models/data/sources/cfpb/commandagi-r2-2026-08-15"
+    ],
+    "root": "sources/cfpb/commandagi-r2-2026-08-15"
+   },
+   "upstream_release": "unresolved"
+  },
+  "commandagi-kg-dev@commandagi-r2-2026-08-15": {
+   "acquired": {
+    "at": "2026-08-15",
+    "from": "r2://commandagi-kg-cold (and the ingest prefixes beside it)",
+    "relocated_at": "2026-08-18",
+    "via": "commandagi KG ingest; staged to ~/Downloads/kg by dl-kg.py"
+   },
+   "files_digest": "sha256:2a77be78885cf75c579a2c18ca2412bcddce0ca6b9dbc898676e4b719d96a5b5",
+   "files_sidecar": "commandagi-kg-dev__commandagi-r2-2026-08-15.files.tsv",
+   "id": "commandagi-kg-dev@commandagi-r2-2026-08-15",
+   "inventory": {
+    "_dev-bucket/graph": {
+     "bytes": 335076252,
+     "files": 2012
+    },
+    "_dev-bucket/graph-remote": {
+     "bytes": 51570,
+     "files": 7
+    }
+   },
+   "manifest_hash": "sha256:408a573d4cdaf4f3378bd2fd3bf48d9328363ff8840ba5392330b6d1e7ebee30",
+   "notes": "The dev stack's cold bucket. Kept apart from production because a near-empty dev graph pooled with the real one is a silent dilution of every count taken over the pair.",
+   "source": "source/commandagi-kg-dev",
+   "storage": {
+    "format": "mixed",
+    "layout": "source_native",
+    "locations": [
+     "file:///home/brandonin/Documents/symbolic-ai-models/data/sources/commandagi-kg-dev/commandagi-r2-2026-08-15"
+    ],
+    "root": "sources/commandagi-kg-dev/commandagi-r2-2026-08-15"
+   },
+   "upstream_release": "unresolved"
+  },
+  "commandagi-kg@commandagi-r2-2026-08-15": {
+   "acquired": {
+    "at": "2026-08-15",
+    "from": "r2://commandagi-kg-cold (and the ingest prefixes beside it)",
+    "relocated_at": "2026-08-18",
+    "via": "commandagi KG ingest; staged to ~/Downloads/kg by dl-kg.py"
+   },
+   "files_digest": "sha256:46c7a55495c1205bde6e980fb8d4103672bd8dc6e1d07b3d1a86750212b6b20a",
+   "files_sidecar": "commandagi-kg__commandagi-r2-2026-08-15.files.tsv",
+   "id": "commandagi-kg@commandagi-r2-2026-08-15",
+   "inventory": {
+    "__r2_data_catalog/019f2030-26dc-70d2-8780-2fe860b708bd": {
+     "bytes": 239787024,
+     "files": 88
+    },
+    "_acquisition": {
+     "bytes": 304657,
+     "files": 3
+    },
+    "d1": {
+     "bytes": 6551052344,
+     "files": 2
+    },
+    "graph": {
+     "bytes": 1028,
+     "files": 2
+    },
+    "graph/clique": {
+     "bytes": 228483466,
+     "files": 1671
+    },
+    "graph/log": {
+     "bytes": 106597294,
+     "files": 346
+    },
+    "test": {
+     "bytes": 1188,
+     "files": 2
+    }
+   },
+   "manifest_hash": "sha256:470fe5c81269e16965a52713060ddd6a176c6cf3ab2f31b577c81be87f9b8e78",
+   "notes": "Three representations of one graph: the cold-tier NDJSON/parquet export (graph/), the same tables as Iceberg (__r2_data_catalog/) and the hot-tier D1 SQL dump (d1/). They are not three sources; they are one source in three storage formats, and the manifest says so rather than letting a later reader treat agreeing counts across them as three independent confirmations. The staging README, INVENTORY.tsv and dl-kg.py travel with them as the acquisition record.",
+   "source": "source/commandagi-kg",
+   "storage": {
+    "format": "mixed",
+    "layout": "source_native",
+    "locations": [
+     "file:///home/brandonin/Documents/symbolic-ai-models/data/sources/commandagi-kg/commandagi-r2-2026-08-15"
+    ],
+    "root": "sources/commandagi-kg/commandagi-r2-2026-08-15"
+   },
+   "upstream_release": "unresolved"
+  },
+  "courtlistener@commandagi-r2-2026-08-15": {
+   "acquired": {
+    "at": "2026-08-15",
+    "from": "r2://commandagi-kg-cold (and the ingest prefixes beside it)",
+    "relocated_at": "2026-08-18",
+    "via": "commandagi KG ingest; staged to ~/Downloads/kg by dl-kg.py"
+   },
+   "files": [
+    {
+     "bytes": 238107643,
+     "path": "caselaw/citation_map_p0.parquet",
+     "sha256": "9d6c8315ffe7382adb7b5e5d3a08c64f4dc53949195a53dae70923d60165c1dc",
+     "stream": "caselaw"
+    },
+    {
+     "bytes": 148683566,
+     "path": "caselaw/citation_map_p1.parquet",
+     "sha256": "2cdece84344db4f1d92a012183360c601d353a423b1ce529cf64653f232e076f",
+     "stream": "caselaw"
+    }
+   ],
+   "id": "courtlistener@commandagi-r2-2026-08-15",
+   "inventory": {
+    "caselaw": {
+     "bytes": 386791209,
+     "files": 2
+    }
+   },
+   "manifest_hash": "sha256:65a550e424b7cc78858295ca135e18c4b5f598fe79dc43fdff275981a437caba",
+   "notes": "Upstream unresolved. The id namespace observed in the parquet is `kg:clop:`, which is consistent with CourtListener opinion ids; that is a hypothesis and the source card records it as one.",
+   "source": "source/courtlistener",
+   "storage": {
+    "format": "parquet",
+    "layout": "pipeline_native",
+    "locations": [
+     "file:///home/brandonin/Documents/symbolic-ai-models/data/sources/courtlistener/commandagi-r2-2026-08-15"
+    ],
+    "root": "sources/courtlistener/commandagi-r2-2026-08-15"
+   },
+   "upstream_release": "unresolved"
+  },
+  "cskg@commandagi-r2-2026-08-15": {
+   "acquired": {
+    "at": "2026-08-15",
+    "from": "r2://commandagi-kg-cold (and the ingest prefixes beside it)",
+    "relocated_at": "2026-08-18",
+    "via": "commandagi KG ingest; staged to ~/Downloads/kg by dl-kg.py"
+   },
+   "files": [
+    {
+     "bytes": 28838905,
+     "path": "cskg/cskg_full_p0.parquet",
+     "sha256": "e9a4fe2df2fe4fb85f95b00090506cc58b6d8e676008efb26102b3ef600a8f69",
+     "stream": "cskg"
+    }
+   ],
+   "id": "cskg@commandagi-r2-2026-08-15",
+   "inventory": {
+    "cskg": {
+     "bytes": 28838905,
+     "files": 1
+    }
+   },
+   "manifest_hash": "sha256:db4065ea40693ff5a88d806e62f4342134ee5084df4b53e2a5708639bc7d2a91",
+   "source": "source/cskg",
+   "storage": {
+    "format": "parquet",
+    "layout": "pipeline_native",
+    "locations": [
+     "file:///home/brandonin/Documents/symbolic-ai-models/data/sources/cskg/commandagi-r2-2026-08-15"
+    ],
+    "root": "sources/cskg/commandagi-r2-2026-08-15"
+   },
+   "upstream_release": "unresolved"
+  },
+  "fec@commandagi-r2-2026-08-15": {
+   "acquired": {
+    "at": "2026-08-15",
+    "from": "r2://commandagi-kg-cold (and the ingest prefixes beside it)",
+    "relocated_at": "2026-08-18",
+    "via": "commandagi KG ingest; staged to ~/Downloads/kg by dl-kg.py"
+   },
+   "files": [
+    {
+     "bytes": 2405616,
+     "path": "fec/contributions_2026-2024_p0.parquet",
+     "sha256": "9b8f9b42c7713ee8fefe6e731bf261ad3b97ce667f85a3a2fca9a50fbd222a83",
+     "stream": "fec"
+    },
+    {
+     "bytes": 587158,
+     "path": "fec/entities_2026-2024_p0.parquet",
+     "sha256": "591ea004a922d0edc278679e57be3f1bcb998d009a74d49d3f312ba19c042b97",
+     "stream": "fec"
+    }
+   ],
+   "id": "fec@commandagi-r2-2026-08-15",
+   "inventory": {
+    "fec": {
+     "bytes": 2992774,
+     "files": 2
+    }
+   },
+   "manifest_hash": "sha256:a7933ebf22ac9d381cd7fcf7f452593061085be76840bc4c6eb0087bdac75848",
+   "source": "source/fec",
+   "storage": {
+    "format": "parquet",
+    "layout": "pipeline_native",
+    "locations": [
+     "file:///home/brandonin/Documents/symbolic-ai-models/data/sources/fec/commandagi-r2-2026-08-15"
+    ],
+    "root": "sources/fec/commandagi-r2-2026-08-15"
+   },
+   "upstream_release": "unresolved"
+  },
+  "gdelt@commandagi-r2-2026-08-15": {
+   "acquired": {
+    "at": "2026-08-15",
+    "from": "r2://commandagi-kg-cold (and the ingest prefixes beside it)",
+    "relocated_at": "2026-08-18",
+    "via": "commandagi KG ingest; staged to ~/Downloads/kg by dl-kg.py"
+   },
+   "files": [
+    {
+     "bytes": 1954,
+     "path": "gdelt/country/actors_20260311_60d_p0.parquet",
+     "sha256": "1206e03d922318ff278762da2b8be3b59b9708950a55da747d8f1758b28395ca",
+     "stream": "gdelt/country"
+    },
+    {
+     "bytes": 1943,
+     "path": "gdelt/country/actors_20260510_30d_p0.parquet",
+     "sha256": "064470a649dc5c93857eb0c4a84f193dda92026f5a6cc3b22229b032f209e0b9",
+     "stream": "gdelt/country"
+    },
+    {
+     "bytes": 1927,
+     "path": "gdelt/country/actors_20260609_14d_p0.parquet",
+     "sha256": "5d748c2f369e27ad8bd77b344581b83a01318b6566e051ec80cb74d78c9d4d0c",
+     "stream": "gdelt/country"
+    },
+    {
+     "bytes": 1957,
+     "path": "gdelt/country/actors_20260623_2d_p0.parquet",
+     "sha256": "7fd85c1c921bab8bc992564e184e0e48db437b4df39c4bb36b624a200a1970ca",
+     "stream": "gdelt/country"
+    },
+    {
+     "bytes": 3722254,
+     "path": "gdelt/country/events_20260311_60d_p0.parquet",
+     "sha256": "b54f9f6c057fbea881e353881a57bdef3abb893787c2af725c7836a45680aff6",
+     "stream": "gdelt/country"
+    },
+    {
+     "bytes": 1514033,
+     "path": "gdelt/country/events_20260510_30d_p0.parquet",
+     "sha256": "a0ca43a3540789cc731f860fa20de5d3a4c448d019793baf1c303176bb83f0bd",
+     "stream": "gdelt/country"
+    },
+    {
+     "bytes": 491876,
+     "path": "gdelt/country/events_20260609_14d_p0.parquet",
+     "sha256": "3190d3e986ac9a2ad4c00f20cf6aafdd126a4b84ceda6a17a6303703d9bcf38d",
+     "stream": "gdelt/country"
+    },
+    {
+     "bytes": 3759996,
+     "path": "gdelt/country/events_20260623_2d_p0.parquet",
+     "sha256": "b03fe321a701d810a095c8bb24b0c0a1044bfbdedbc24e97727fef69994b5927",
+     "stream": "gdelt/country"
+    },
+    {
+     "bytes": 7738658,
+     "path": "gdelt/events_30day_p0.parquet",
+     "sha256": "2752d03bfcb9a5deebe7d3c699711a7f4e23eef8fcec88ff297935982faa0b4d",
+     "stream": "gdelt"
+    },
+    {
+     "bytes": 16025194,
+     "path": "gdelt/events_60day_p0.parquet",
+     "sha256": "14655f6a151480e3b758ac26cf7a72321c99262fdb7d75bd1c3ac3254c00b0cd",
+     "stream": "gdelt"
+    },
+    {
+     "bytes": 1875646,
+     "path": "gdelt/events_7day_p0.parquet",
+     "sha256": "0b065ce8ffe9623df2de18db316cc0df38d721e674dfa11648bde91d5281a98c",
+     "stream": "gdelt"
+    },
+    {
+     "bytes": 188314,
+     "path": "gdelt/events_recent_p0.parquet",
+     "sha256": "7fd493affc9478d585e87c11dd239a922f5e3360de86f1e8a039387d87a0c59a",
+     "stream": "gdelt"
+    },
+    {
+     "bytes": 131047,
+     "path": "gdelt/name/actors_20260311_60d_p0.parquet",
+     "sha256": "b532d0227e019f2e2a9788c7036d4375283726cf75b911363e0fb206ce4a22e7",
+     "stream": "gdelt/name"
+    },
+    {
+     "bytes": 107692,
+     "path": "gdelt/name/actors_20260510_30d_p0.parquet",
+     "sha256": "ca077e9c878624c3e2b2ad897d4029139f2e2f316f8d4e459121bef83ede9b53",
+     "stream": "gdelt/name"
+    },
+    {
+     "bytes": 79983,
+     "path": "gdelt/name/actors_20260609_14d_p0.parquet",
+     "sha256": "cd1c215859ff28e22d2d4b5b262e9a6ded76ff4f51c5fcc88961ed66b947a4a3",
+     "stream": "gdelt/name"
+    },
+    {
+     "bytes": 131244,
+     "path": "gdelt/name/actors_20260623_2d_p0.parquet",
+     "sha256": "b4c3a23ed2c7391a3681f20ace9e3080985e482b0bdd8d8864638a5deb1ad98f",
+     "stream": "gdelt/name"
+    },
+    {
+     "bytes": 36437,
+     "path": "gdelt/name/actors_20260623_p0.parquet",
+     "sha256": "cc26be5ad37556d6ec929e4ff2420725ddc234d5b40c874c35a320d74ec3cbca",
+     "stream": "gdelt/name"
+    },
+    {
+     "bytes": 131449,
+     "path": "gdelt/name/actors_latest_p0.parquet",
+     "sha256": "1169a6856d750fa8d35eb8fa0240eaf35821879c2f1212d52f2c8646d1b1bfb1",
+     "stream": "gdelt/name"
+    },
+    {
+     "bytes": 19157016,
+     "path": "gdelt/name/events_20260311_60d_p0.parquet",
+     "sha256": "a6f46a1065473fc082ba0134057d8ff64b9b6862bac19ecd46ccd34f8b23e5b5",
+     "stream": "gdelt/name"
+    },
+    {
+     "bytes": 7761792,
+     "path": "gdelt/name/events_20260510_30d_p0.parquet",
+     "sha256": "5c062d236d6a4980d3d645403787806bda0997d8622806a9aea64f327713342c",
+     "stream": "gdelt/name"
+    },
+    {
+     "bytes": 2565517,
+     "path": "gdelt/name/events_20260609_14d_p0.parquet",
+     "sha256": "2c5bbf4aaad23fb55f681dbbd5ba30292c2ff80534037da4a14d4c919152b811",
+     "stream": "gdelt/name"
+    },
+    {
+     "bytes": 19276115,
+     "path": "gdelt/name/events_20260623_2d_p0.parquet",
+     "sha256": "eadd93e9f33f29c41ef68c01a046a7f44f256a412b42a7875f61f71e0e7db5ae",
+     "stream": "gdelt/name"
+    },
+    {
+     "bytes": 210962,
+     "path": "gdelt/name/events_20260623_p0.parquet",
+     "sha256": "cfb571b86c07cd3475f58860076debba223992fe232a2e706939a712effbda86",
+     "stream": "gdelt/name"
+    },
+    {
+     "bytes": 19310097,
+     "path": "gdelt/name/events_latest_p0.parquet",
+     "sha256": "f2d227fb99de1d52e85ecb7916f0c992eae2d423c6287e090de9194b00ae3788",
+     "stream": "gdelt/name"
+    }
+   ],
+   "id": "gdelt@commandagi-r2-2026-08-15",
+   "inventory": {
+    "gdelt": {
+     "bytes": 25827812,
+     "files": 4
+    },
+    "gdelt/country": {
+     "bytes": 9495940,
+     "files": 8
+    },
+    "gdelt/name": {
+     "bytes": 68899351,
+     "files": 12
+    }
+   },
+   "manifest_hash": "sha256:574eb74daf2f0268213bff4821219ec470546863cc82fe505dd9af79f02d3292",
+   "source": "source/gdelt",
+   "storage": {
+    "format": "parquet",
+    "layout": "pipeline_native",
+    "locations": [
+     "file:///home/brandonin/Documents/symbolic-ai-models/data/sources/gdelt/commandagi-r2-2026-08-15"
+    ],
+    "root": "sources/gdelt/commandagi-r2-2026-08-15"
+   },
+   "upstream_release": "unresolved"
+  },
+  "geonames@commandagi-r2-2026-08-15": {
+   "acquired": {
+    "at": "2026-08-15",
+    "from": "r2://commandagi-kg-cold (and the ingest prefixes beside it)",
+    "relocated_at": "2026-08-18",
+    "via": "commandagi KG ingest; staged to ~/Downloads/kg by dl-kg.py"
+   },
+   "files": [
+    {
+     "bytes": 890642,
+     "path": "geonames/code_bridges_2026_p0.parquet",
+     "sha256": "943d0ebe566a3197d4d4cbe175b967f0c1c37daffdf30b1fc03c2c08529585c4",
+     "stream": "geonames"
+    },
+    {
+     "bytes": 6636,
+     "path": "geonames/countryinfo_2026_p0.parquet",
+     "sha256": "59cda9d122cf6b595f5c17959987643df94368e8e6ecdfefd7000695822741ae",
+     "stream": "geonames"
+    },
+    {
+     "bytes": 11444,
+     "path": "geonames/countryinfo_nodes_2026_p0.parquet",
+     "sha256": "653ef5c884e565bf46320ece00fb8ad0bcc74d9d537b87eb8174fb7bb475cbe9",
+     "stream": "geonames"
+    },
+    {
+     "bytes": 110534671,
+     "path": "geonames/place_nodes_2026_p0.parquet",
+     "sha256": "02cb53f4e05064909d62f52dcd83b3cbfa989270ccef7d643b4ed821a22ce9a8",
+     "stream": "geonames"
+    },
+    {
+     "bytes": 15174671,
+     "path": "geonames/places_2026_p0.parquet",
+     "sha256": "6edbbbde01a5c03a8d220ae955e790b1b93cd3a3f788b8444ae72b67d0c91637",
+     "stream": "geonames"
+    },
+    {
+     "bytes": 7205891,
+     "path": "geonames/wikidata_bridge_2026_p0.parquet",
+     "sha256": "5835ea89c90f019023d110bf7ba61073febcab3d4b1ead0f0cc94d7be9a98383",
+     "stream": "geonames"
+    },
+    {
+     "bytes": 7651813,
+     "path": "geonames/wikipedia_links_2026_p0.parquet",
+     "sha256": "b2a5a0b2829c81ea4576b16c6de4322c0aeea38a54da9be60f379e649b1fdc69",
+     "stream": "geonames"
+    }
+   ],
+   "id": "geonames@commandagi-r2-2026-08-15",
+   "inventory": {
+    "geonames": {
+     "bytes": 141475768,
+     "files": 7
+    }
+   },
+   "manifest_hash": "sha256:bcb76c7c652485b14085da727ab6476c8e0efe1b07c4fd95c51543bd51cd2fa4",
+   "source": "source/geonames",
+   "storage": {
+    "format": "parquet",
+    "layout": "pipeline_native",
+    "locations": [
+     "file:///home/brandonin/Documents/symbolic-ai-models/data/sources/geonames/commandagi-r2-2026-08-15"
+    ],
+    "root": "sources/geonames/commandagi-r2-2026-08-15"
+   },
+   "upstream_release": "unresolved"
+  },
+  "gh-archive@commandagi-r2-2026-08-15": {
+   "acquired": {
+    "at": "2026-08-15",
+    "from": "r2://commandagi-kg-cold (and the ingest prefixes beside it)",
+    "relocated_at": "2026-08-18",
+    "via": "commandagi KG ingest; staged to ~/Downloads/kg by dl-kg.py"
+   },
+   "files": [
+    {
+     "bytes": 52775435,
+     "path": "gharchive/events_2026-06-14_15_p0.parquet",
+     "sha256": "eb4f45803122c62669ecf53d4c9e8b744417377fee798e0cb3b11f05dcb36802",
+     "stream": "gharchive"
+    },
+    {
+     "bytes": 53179125,
+     "path": "gharchive/events_2026-06-16_17_p0.parquet",
+     "sha256": "38fba13c04be59fa286b9d0f9e5b56c7839c0eb842b5a8dd80092fea730d4cee",
+     "stream": "gharchive"
+    },
+    {
+     "bytes": 29018992,
+     "path": "gharchive/events_2026-06-18_p0.parquet",
+     "sha256": "39e4ab23516ccaed61d5082339de79882a40b2fd3ca4514a556c2405585c5b97",
+     "stream": "gharchive"
+    },
+    {
+     "bytes": 28737428,
+     "path": "gharchive/events_2026-06-19_p0.parquet",
+     "sha256": "eb0cef605d948c9f94ace02a732d0c78abd039c0bc186087e0858cfb7960c06f",
+     "stream": "gharchive"
+    },
+    {
+     "bytes": 26907709,
+     "path": "gharchive/events_2026-06-20_p0.parquet",
+     "sha256": "abb6ff157ba0901befdac4ce53a615e42a3dab900d4dd57947e3351f99e5081d",
+     "stream": "gharchive"
+    }
+   ],
+   "id": "gh-archive@commandagi-r2-2026-08-15",
+   "inventory": {
+    "gharchive": {
+     "bytes": 190618689,
+     "files": 5
+    }
+   },
+   "manifest_hash": "sha256:4d7ebc69e359b60e6163e2bf1452cb8eb11362b4bf6107bf295cbfe4639cfd7c",
+   "source": "source/gh-archive",
+   "storage": {
+    "format": "parquet",
+    "layout": "pipeline_native",
+    "locations": [
+     "file:///home/brandonin/Documents/symbolic-ai-models/data/sources/gh-archive/commandagi-r2-2026-08-15"
+    ],
+    "root": "sources/gh-archive/commandagi-r2-2026-08-15"
+   },
+   "upstream_release": "unresolved"
+  },
+  "gleif@commandagi-r2-2026-08-15": {
+   "acquired": {
+    "at": "2026-08-15",
+    "from": "r2://commandagi-kg-cold (and the ingest prefixes beside it)",
+    "relocated_at": "2026-08-18",
+    "via": "commandagi KG ingest; staged to ~/Downloads/kg by dl-kg.py"
+   },
+   "files": [
+    {
+     "bytes": 74564438,
+     "path": "gleif/lei2_entities_p0.parquet",
+     "sha256": "494de62b1b49fb0ad2f34d986f691f7be2a7c23263e426ad7c93842fa2d4a230",
+     "stream": "gleif"
+    },
+    {
+     "bytes": 5457730,
+     "path": "gleif/relationships_p0.parquet",
+     "sha256": "aaf4d473e37ee436e677c0b95ac942b1082286de6c0b639996210bfff09dbd74",
+     "stream": "gleif"
+    }
+   ],
+   "id": "gleif@commandagi-r2-2026-08-15",
+   "inventory": {
+    "gleif": {
+     "bytes": 80022168,
+     "files": 2
+    }
+   },
+   "manifest_hash": "sha256:ef2dba610d692b501e9c673a02fca7a7b94f7034d5b8ca71770bacb36087dba8",
+   "source": "source/gleif",
+   "storage": {
+    "format": "parquet",
+    "layout": "pipeline_native",
+    "locations": [
+     "file:///home/brandonin/Documents/symbolic-ai-models/data/sources/gleif/commandagi-r2-2026-08-15"
+    ],
+    "root": "sources/gleif/commandagi-r2-2026-08-15"
+   },
+   "upstream_release": "unresolved"
+  },
+  "gutenberg@commandagi-r2-2026-08-15": {
+   "acquired": {
+    "at": "2026-08-15",
+    "from": "r2://commandagi-kg-cold (and the ingest prefixes beside it)",
+    "relocated_at": "2026-08-18",
+    "via": "commandagi KG ingest; staged to ~/Downloads/kg by dl-kg.py"
+   },
+   "files": [
+    {
+     "bytes": 3103283,
+     "path": "gutenberg/catalog_2026_p0.parquet",
+     "sha256": "8584325d44d9ddee287ecddd502dee155dc7ca60f4361214b4cc38ffbfa702fd",
+     "stream": "gutenberg"
+    },
+    {
+     "bytes": 4151105,
+     "path": "gutenberg/catalog_nodes_2026_p0.parquet",
+     "sha256": "73f3d37827baa9c78f86b2f7c54d095b55b04ead4f873389a7790409bcfd51e9",
+     "stream": "gutenberg"
+    }
+   ],
+   "id": "gutenberg@commandagi-r2-2026-08-15",
+   "inventory": {
+    "gutenberg": {
+     "bytes": 7254388,
+     "files": 2
+    }
+   },
+   "manifest_hash": "sha256:1a0716c34d3ebfb4ed549f26466fa6890723b97523c962c51a75ae69800f5389",
+   "source": "source/gutenberg",
+   "storage": {
+    "format": "parquet",
+    "layout": "pipeline_native",
+    "locations": [
+     "file:///home/brandonin/Documents/symbolic-ai-models/data/sources/gutenberg/commandagi-r2-2026-08-15"
+    ],
+    "root": "sources/gutenberg/commandagi-r2-2026-08-15"
+   },
+   "upstream_release": "unresolved"
+  },
+  "openalex@commandagi-r2-2026-08-15": {
+   "acquired": {
+    "at": "2026-08-15",
+    "from": "r2://commandagi-kg-cold (and the ingest prefixes beside it)",
+    "relocated_at": "2026-08-18",
+    "via": "commandagi KG ingest; staged to ~/Downloads/kg by dl-kg.py"
+   },
+   "files": [
+    {
+     "bytes": 245301952,
+     "path": "openalex/authorship_tail50_p0.parquet",
+     "sha256": "3c20b1d84ca63f0a753e626bf40431adda54764942d490f4dc80f61f0487b922",
+     "stream": "openalex"
+    },
+    {
+     "bytes": 241309283,
+     "path": "openalex/authorship_tail50_p1.parquet",
+     "sha256": "28e336b0172382e103c3cc09abeee5487101e2b4886c3e9bf21bf0eda87974de",
+     "stream": "openalex"
+    },
+    {
+     "bytes": 48120866,
+     "path": "openalex/authorship_tail50_p2.parquet",
+     "sha256": "5e074b5847ef56a3ec4de84c8d6c7dfb9572d9452d33f4899faa1a885a9aadb3",
+     "stream": "openalex"
+    },
+    {
+     "bytes": 113331132,
+     "path": "openalex/bridges_2026q1_tail_p0.parquet",
+     "sha256": "06b58461c0044157ef722b37c95f42e5bdead8e8e3bfe069c6f9046f5b244417",
+     "stream": "openalex"
+    },
+    {
+     "bytes": 232779176,
+     "path": "openalex/cites_2026q1_tail_p0.parquet",
+     "sha256": "dace5fdb561f4cdfc3b44190b5f152e834bf1e971d4487cfb9a30e4eef6d0dda",
+     "stream": "openalex"
+    },
+    {
+     "bytes": 31737740,
+     "path": "openalex/cites_2026q1_tail_p1.parquet",
+     "sha256": "2fecdd275c8890924056a4faa1cfe49c4e409360e9b2ebc9c2b9ed0ccea886c1",
+     "stream": "openalex"
+    },
+    {
+     "bytes": 236261845,
+     "path": "openalex/cites_tail50_p0.parquet",
+     "sha256": "0da26472ede9bf0c2ff8832a172c7632a21f97bcde791d0cc3e27dc5f363b0c5",
+     "stream": "openalex"
+    },
+    {
+     "bytes": 235064993,
+     "path": "openalex/cites_tail50_p1.parquet",
+     "sha256": "fef14d8787109dc9f5316ad5370302fb4871c39045ca4aad6933953ed84cfaeb",
+     "stream": "openalex"
+    },
+    {
+     "bytes": 239478652,
+     "path": "openalex/cites_tail50_p2.parquet",
+     "sha256": "b75ddb9a46d5e0e816ec0a376e52cf76439e97b7546e30c9ced93b3e6c0e4901",
+     "stream": "openalex"
+    },
+    {
+     "bytes": 237280951,
+     "path": "openalex/cites_tail50_p3.parquet",
+     "sha256": "3e3eb12067d2c60f660042343f41512827da699cefffbe420dbf4068ef9697e5",
+     "stream": "openalex"
+    },
+    {
+     "bytes": 79454993,
+     "path": "openalex/cites_tail50_p4.parquet",
+     "sha256": "e28af7eebbf29edfa016ae9d44eadf0569cdad6ff4ce7551d29683ede468089d",
+     "stream": "openalex"
+    },
+    {
+     "bytes": 440908,
+     "path": "openalex/funders_tail50_p0.parquet",
+     "sha256": "a57500778acbc205f08c3d417fccb8e31293d64c5e3cb1450fbc5bfe13adbd3c",
+     "stream": "openalex"
+    },
+    {
+     "bytes": 18806052,
+     "path": "openalex/funding_tail50_p0.parquet",
+     "sha256": "db05411c4e346c2ed172cf6c65d6413d547fde23f5eabe3f2ef1e799718b4788",
+     "stream": "openalex"
+    },
+    {
+     "bytes": 350115,
+     "path": "openalex/mesh_nodes_tail50_p0.parquet",
+     "sha256": "93553de1536c153e1e1672ef6ccf37bfc8adbb606ce67c171a62b3cf521d35d4",
+     "stream": "openalex"
+    },
+    {
+     "bytes": 104657292,
+     "path": "openalex/mesh_tail50_p0.parquet",
+     "sha256": "82744c2cead23b5468fc841abf0567a83424e342fb331ecb1995fcca67cedb3d",
+     "stream": "openalex"
+    },
+    {
+     "bytes": 137337914,
+     "path": "openalex/people_tail50_p0.parquet",
+     "sha256": "632f5f30c66ed539c798a83087acb7bd655123a6126142dda0cdcb5e96d7658c",
+     "stream": "openalex"
+    },
+    {
+     "bytes": 77154,
+     "path": "openalex/topic_nodes_tail50_p0.parquet",
+     "sha256": "71ebf34cd134979efdf3dc29192277f35eba4a90d6faf32c52ce8d71f1b1f313",
+     "stream": "openalex"
+    },
+    {
+     "bytes": 102758500,
+     "path": "openalex/topics_tail50_p0.parquet",
+     "sha256": "2aca0d7340a1cf4598a5def0789b4b5b550df340dc7436699e2d9ce8d0c4c746",
+     "stream": "openalex"
+    },
+    {
+     "bytes": 1337669,
+     "path": "openalex/venue_nodes_tail50_p0.parquet",
+     "sha256": "93e8dfc8ea116423b947804806209c311498039c36c3fa83b0720127b8d9ac73",
+     "stream": "openalex"
+    },
+    {
+     "bytes": 105734616,
+     "path": "openalex/venues_tail50_p0.parquet",
+     "sha256": "28c646a63683b300a1ef715a601705195ae0ea9c5c90ef4f3bbeabaa175e6912",
+     "stream": "openalex"
+    },
+    {
+     "bytes": 109027599,
+     "path": "openalex/works_2026q1_tail_p0.parquet",
+     "sha256": "5bb3ea49826458ca0ab9fcf033a65156a827d69d3c2d26003b4578cd3d6e990d",
+     "stream": "openalex"
+    },
+    {
+     "bytes": 234612457,
+     "path": "openalex/works_tail50_p0.parquet",
+     "sha256": "bca8a89b34ed2e35bd81a68c8524a49893da929a689383e462d26d6f04cc6f8b",
+     "stream": "openalex"
+    },
+    {
+     "bytes": 193486665,
+     "path": "openalex/works_tail50_p1.parquet",
+     "sha256": "c3c40dc860c16729933fce94a6efc53dd6c2355456c2def858766b4e1b0aaa76",
+     "stream": "openalex"
+    }
+   ],
+   "id": "openalex@commandagi-r2-2026-08-15",
+   "inventory": {
+    "openalex": {
+     "bytes": 2948748524,
+     "files": 23
+    }
+   },
+   "manifest_hash": "sha256:7d784774dc2f671ae79efa7a5288cb2d86896223b2fceb2cd7f5501d28de03b2",
+   "source": "source/openalex",
+   "storage": {
+    "format": "parquet",
+    "layout": "pipeline_native",
+    "locations": [
+     "file:///home/brandonin/Documents/symbolic-ai-models/data/sources/openalex/commandagi-r2-2026-08-15"
+    ],
+    "root": "sources/openalex/commandagi-r2-2026-08-15"
+   },
+   "upstream_release": "unresolved"
+  },
+  "openflights@commandagi-r2-2026-08-15": {
+   "acquired": {
+    "at": "2026-08-15",
+    "from": "r2://commandagi-kg-cold (and the ingest prefixes beside it)",
+    "relocated_at": "2026-08-18",
+    "via": "commandagi KG ingest; staged to ~/Downloads/kg by dl-kg.py"
+   },
+   "files": [
+    {
+     "bytes": 141065,
+     "path": "openflights/airline_nodes_2026_p0.parquet",
+     "sha256": "13c19cc1fa7f6935c5f2233cd87124ec836f3f050376dd474c95046361dccd6a",
+     "stream": "openflights"
+    },
+    {
+     "bytes": 107635,
+     "path": "openflights/airlines_2026_p0.parquet",
+     "sha256": "252b8b7732c948781acc00a0ccb3605fab9e0bbef3d059bd0a1298e6cd586e79",
+     "stream": "openflights"
+    },
+    {
+     "bytes": 248908,
+     "path": "openflights/airports_2026_p0.parquet",
+     "sha256": "c105f811e8e5855dc0a87881c7245ee7e456e060fc8bfefc0189ff7d8cc81adc",
+     "stream": "openflights"
+    },
+    {
+     "bytes": 150280,
+     "path": "openflights/routes_2026_p0.parquet",
+     "sha256": "3ac385b676d19898282f2ed02eaf9001c30fa765878b854cf5fc36ba34a3fa92",
+     "stream": "openflights"
+    }
+   ],
+   "id": "openflights@commandagi-r2-2026-08-15",
+   "inventory": {
+    "openflights": {
+     "bytes": 647888,
+     "files": 4
+    }
+   },
+   "manifest_hash": "sha256:3fc0fc5a49b677af5903fa393fc0f48c4e5688224b017d1c5d703ca0a070bc2f",
+   "source": "source/openflights",
+   "storage": {
+    "format": "parquet",
+    "layout": "pipeline_native",
+    "locations": [
+     "file:///home/brandonin/Documents/symbolic-ai-models/data/sources/openflights/commandagi-r2-2026-08-15"
+    ],
+    "root": "sources/openflights/commandagi-r2-2026-08-15"
+   },
+   "upstream_release": "unresolved"
+  },
+  "patentsview@commandagi-r2-2026-08-15": {
+   "acquired": {
+    "at": "2026-08-15",
+    "from": "r2://commandagi-kg-cold (and the ingest prefixes beside it)",
+    "relocated_at": "2026-08-18",
+    "via": "commandagi KG ingest; staged to ~/Downloads/kg by dl-kg.py"
+   },
+   "files": [
+    {
+     "bytes": 211586011,
+     "path": "appcite/app_citations_p0.parquet",
+     "sha256": "ee52a8436b5604aee0e126ddb08d058d893afe3844b9246149329966fe2e6e8c",
+     "stream": "appcite"
+    },
+    {
+     "bytes": 239837488,
+     "path": "appcite/app_citations_p1.parquet",
+     "sha256": "95a6f052d0fdd47121509e4074445e5c5542f94f3c4fbacfffe32947680109af",
+     "stream": "appcite"
+    },
+    {
+     "bytes": 245811488,
+     "path": "appcite/app_citations_p2.parquet",
+     "sha256": "a36ec311ea593a945e1de4bbd22ab318aa6106d765c9639177c51557c75325aa",
+     "stream": "appcite"
+    },
+    {
+     "bytes": 88093100,
+     "path": "appcite/app_citations_p3.parquet",
+     "sha256": "acfe1a4ececd891ffc1e6905a4feb551b482424b84a32f7501525ca3e0425856",
+     "stream": "appcite"
+    },
+    {
+     "bytes": 129382364,
+     "path": "assignee/patent_assignee_p0.parquet",
+     "sha256": "6e14ff226afde5feeed2cd2ea084cedc9243cb34e8eef0a5fd0ab790167e33c8",
+     "stream": "assignee"
+    },
+    {
+     "bytes": 242915553,
+     "path": "cite/patent_citations_p0.parquet",
+     "sha256": "4809fa3f39a60f11ec49325d23ac733b1cd84b58a86debd20125f47489c233ca",
+     "stream": "cite"
+    },
+    {
+     "bytes": 218523707,
+     "path": "cite/patent_citations_p1.parquet",
+     "sha256": "fd59178d2e4e265d48b255de1e1f8f2cf9875ae0e5cc0adcb14272e73243db54",
+     "stream": "cite"
+    },
+    {
+     "bytes": 159755726,
+     "path": "cite/patent_citations_p2.parquet",
+     "sha256": "f04b7f64308b43cad3648cda774e1cc7eb819416a88401225f2bdd0018ea8849",
+     "stream": "cite"
+    },
+    {
+     "bytes": 242355504,
+     "path": "cpc/patent_cpc_p0.parquet",
+     "sha256": "2b8a2d6f4470b98a41d08e9f72e48a77be1fcdcdc39265bf76e488644f305f16",
+     "stream": "cpc"
+    },
+    {
+     "bytes": 161404233,
+     "path": "cpc/patent_cpc_p1.parquet",
+     "sha256": "87d3ed5bf7edd75fc05f62cfc4e04924d1463f36ceafaa9a58692f879b372738",
+     "stream": "cpc"
+    },
+    {
+     "bytes": 238215383,
+     "path": "inventor/patent_inventor_p0.parquet",
+     "sha256": "54687f9192d7356338cfd11c51cfb01375b0286a1878912a18e53de000df7170",
+     "stream": "inventor"
+    },
+    {
+     "bytes": 72282033,
+     "path": "inventor/patent_inventor_p1.parquet",
+     "sha256": "440b7c57913bf68d20894bee3fce0a1558fd5e5da4d29b801db9510bfb991b51",
+     "stream": "inventor"
+    },
+    {
+     "bytes": 171964736,
+     "path": "patents/patent_nodes_p0.parquet",
+     "sha256": "83dcb85d7cc2ecd8d16fa0747432b622c8e29379a6902ab0a3018c4591fb814d",
+     "stream": "patents"
+    },
+    {
+     "bytes": 35165058,
+     "path": "wipo/patent_wipo_p0.parquet",
+     "sha256": "826374c57b1528303de44f563ec3948f8b795253429a3c7affc08a422b0da61b",
+     "stream": "wipo"
+    }
+   ],
+   "id": "patentsview@commandagi-r2-2026-08-15",
+   "inventory": {
+    "appcite": {
+     "bytes": 785328087,
+     "files": 4
+    },
+    "assignee": {
+     "bytes": 129382364,
+     "files": 1
+    },
+    "cite": {
+     "bytes": 621194986,
+     "files": 3
+    },
+    "cpc": {
+     "bytes": 403759737,
+     "files": 2
+    },
+    "inventor": {
+     "bytes": 310497416,
+     "files": 2
+    },
+    "patents": {
+     "bytes": 171964736,
+     "files": 1
+    },
+    "wipo": {
+     "bytes": 35165058,
+     "files": 1
+    }
+   },
+   "manifest_hash": "sha256:4c4b4f0f6232659120f9e59a48bfff0f64d75f4641a5c1a37db81aefb120892b",
+   "notes": "Seven staged directories, one probable upstream. The id namespaces are `kg:patent:`, `kg:assignee:` and `kg:inventor:` throughout, and the tables (citations, CPC classification, inventor and assignee links, WIPO fields) match PatentsView's published shape -- but the pull did not record an upstream release, so the card says unresolved.",
+   "source": "source/patentsview",
+   "storage": {
+    "format": "parquet",
+    "layout": "pipeline_native",
+    "locations": [
+     "file:///home/brandonin/Documents/symbolic-ai-models/data/sources/patentsview/commandagi-r2-2026-08-15"
+    ],
+    "root": "sources/patentsview/commandagi-r2-2026-08-15"
+   },
+   "upstream_release": "unresolved"
+  },
+  "sec-edgar@commandagi-r2-2026-08-15": {
+   "acquired": {
+    "at": "2026-08-15",
+    "from": "r2://commandagi-kg-cold (and the ingest prefixes beside it)",
+    "relocated_at": "2026-08-18",
+    "via": "commandagi KG ingest; staged to ~/Downloads/kg by dl-kg.py"
+   },
+   "files": [
+    {
+     "bytes": 697069,
+     "path": "finance/13f/entities_01mar2026-31may2026_p0.parquet",
+     "sha256": "8884d3e3493d95c2de70c0267f116b5ddea46ca49d00878eba3069e2a5947f7c",
+     "stream": "finance/13f"
+    },
+    {
+     "bytes": 21717901,
+     "path": "finance/13f/holdings_01mar2026-31may2026_p0.parquet",
+     "sha256": "48d4228238253ffcfa66dc67b2631469e93b78611f971ab04d9b97c226ed52ae",
+     "stream": "finance/13f"
+    },
+    {
+     "bytes": 947039,
+     "path": "finance/insider/entities_2025q2_to_2026q1_p0.parquet",
+     "sha256": "08dd56beabb88fe0c974eaf4af092962589f99b7cf0d78d0419767c9af413540",
+     "stream": "finance/insider"
+    },
+    {
+     "bytes": 1375243,
+     "path": "finance/insider/txns_2025q2_to_2026q1_p0.parquet",
+     "sha256": "ceb2c01347202c43678304cd1b95c21ebcc0a0ce657e8d58a2b3ea02c5b2209e",
+     "stream": "finance/insider"
+    },
+    {
+     "bytes": 192283,
+     "path": "sec/cik_name_2026_p0.parquet",
+     "sha256": "03b55381e57435e8dbdf4663c86645e3783296f59a14a7a0108bdc7dcafde7f7",
+     "stream": "sec"
+    },
+    {
+     "bytes": 7254988,
+     "path": "sec13f/holdings_dec2025_p0.parquet",
+     "sha256": "0a47b25baa0f435356594d9b90b13a064bc33d5311be34f634c54028e09e37c0",
+     "stream": "sec13f"
+    },
+    {
+     "bytes": 7928575,
+     "path": "sec13f/holdings_p0.parquet",
+     "sha256": "cf94dbd0afe95ecced0b311b4f2274bbc416c9f8c93c856341916f874c2b065c",
+     "stream": "sec13f"
+    },
+    {
+     "bytes": 3719699,
+     "path": "sec_fin/reports_p0.parquet",
+     "sha256": "ad8b2363247f475d2f7007661a6a4506f90ade3d9a29f7e0a37e1f9de39022ed",
+     "stream": "sec_fin"
+    },
+    {
+     "bytes": 276988,
+     "path": "sec_insider/insider_2026q1_p0.parquet",
+     "sha256": "77d06f23df193ca2974385e058d2dd7343c4251561fac5249968202a3f2057e1",
+     "stream": "sec_insider"
+    }
+   ],
+   "id": "sec-edgar@commandagi-r2-2026-08-15",
+   "inventory": {
+    "finance/13f": {
+     "bytes": 22414970,
+     "files": 2
+    },
+    "finance/insider": {
+     "bytes": 2322282,
+     "files": 2
+    },
+    "sec": {
+     "bytes": 192283,
+     "files": 1
+    },
+    "sec13f": {
+     "bytes": 15183563,
+     "files": 2
+    },
+    "sec_fin": {
+     "bytes": 3719699,
+     "files": 1
+    },
+    "sec_insider": {
+     "bytes": 276988,
+     "files": 1
+    }
+   },
+   "manifest_hash": "sha256:53032a17f643dd4342616fda5cc8809704cd3e148115cba991e60348fbc9c187",
+   "notes": "CIK-keyed filings: 13F holdings, insider transactions and financial reports, plus the CIK-to-name bridge. `finance/` holds a second cut of 13F and insider over a different date window and is kept as its own stream rather than merged, because two overlapping windows pooled without a marker double-count the intersection.",
+   "source": "source/sec-edgar",
+   "storage": {
+    "format": "parquet",
+    "layout": "pipeline_native",
+    "locations": [
+     "file:///home/brandonin/Documents/symbolic-ai-models/data/sources/sec-edgar/commandagi-r2-2026-08-15"
+    ],
+    "root": "sources/sec-edgar/commandagi-r2-2026-08-15"
+   },
+   "upstream_release": "unresolved"
+  },
+  "senate-lda@commandagi-r2-2026-08-15": {
+   "acquired": {
+    "at": "2026-08-15",
+    "from": "r2://commandagi-kg-cold (and the ingest prefixes beside it)",
+    "relocated_at": "2026-08-18",
+    "via": "commandagi KG ingest; staged to ~/Downloads/kg by dl-kg.py"
+   },
+   "files": [
+    {
+     "bytes": 195586,
+     "path": "lobbying/disclosures_2025_p0.parquet",
+     "sha256": "55b87ab8b43c1932e57c3d4b22dc63d3e86dad928b73d175d3837ebbcb64ecf5",
+     "stream": "lobbying"
+    },
+    {
+     "bytes": 267237,
+     "path": "lobbying/entities_2025_p0.parquet",
+     "sha256": "66a9201322049134d116773bd2df120a24a158d89afa053c0d1af706439a84fd",
+     "stream": "lobbying"
+    }
+   ],
+   "id": "senate-lda@commandagi-r2-2026-08-15",
+   "inventory": {
+    "lobbying": {
+     "bytes": 462823,
+     "files": 2
+    }
+   },
+   "manifest_hash": "sha256:306e3c2ff6873571f3ec4b7129acffabd1762ccc2716359482913cc4f58cbcf8",
+   "notes": "Lobbying disclosures. Upstream unresolved between the Senate LDA filings and a redistributor of them.",
+   "source": "source/senate-lda",
+   "storage": {
+    "format": "parquet",
+    "layout": "pipeline_native",
+    "locations": [
+     "file:///home/brandonin/Documents/symbolic-ai-models/data/sources/senate-lda/commandagi-r2-2026-08-15"
+    ],
+    "root": "sources/senate-lda/commandagi-r2-2026-08-15"
+   },
+   "upstream_release": "unresolved"
+  },
+  "stackexchange@commandagi-r2-2026-08-15": {
+   "acquired": {
+    "at": "2026-08-15",
+    "from": "r2://commandagi-kg-cold (and the ingest prefixes beside it)",
+    "relocated_at": "2026-08-18",
+    "via": "commandagi KG ingest; staged to ~/Downloads/kg by dl-kg.py"
+   },
+   "files": [
+    {
+     "bytes": 10663,
+     "path": "stackexchange/ai-stackexchange-com_postlinks_2026_p0.parquet",
+     "sha256": "f6378bdeba1a0b2997c0d86c79c85ed75f02a57a51d45b275a9d6972cc97ccd9",
+     "stream": "stackexchange"
+    },
+    {
+     "bytes": 232366,
+     "path": "stackexchange/apple-stackexchange-com_postlinks_2026_p0.parquet",
+     "sha256": "3dc4a8ac37c7e3484794a0a1e63fcab94c47c187dbe3c836989f6d1035d4d902",
+     "stream": "stackexchange"
+    },
+    {
+     "bytes": 1580968,
+     "path": "stackexchange/askubuntu-com_postlinks_2026_p0.parquet",
+     "sha256": "df60f737adbe913738dda98607c6f8161c8b9c2607c005b1ee3bb3c639aec256",
+     "stream": "stackexchange"
+    },
+    {
+     "bytes": 89818,
+     "path": "stackexchange/aviation-stackexchange-com_postlinks_2026_p0.parquet",
+     "sha256": "a2ea0bab76eb53ea0bca6da62d5eee8d372230e5a4f6af46dc506d60c44f08b1",
+     "stream": "stackexchange"
+    },
+    {
+     "bytes": 38469,
+     "path": "stackexchange/biology-stackexchange-com_postlinks_2026_p0.parquet",
+     "sha256": "0964213f52f6ec1f1e0da9babdbc116d629327b935b1a6250e596183315e4c19",
+     "stream": "stackexchange"
+    },
+    {
+     "bytes": 91967,
+     "path": "stackexchange/chemistry-stackexchange-com_postlinks_2026_p0.parquet",
+     "sha256": "6a684e545535003730ec7f8e796ceab0afd51e058bd38f1aaf752eed274dc90b",
+     "stream": "stackexchange"
+    },
+    {
+     "bytes": 71360,
+     "path": "stackexchange/cs-stackexchange-com_postlinks_2026_p0.parquet",
+     "sha256": "5248b70857bd6fc61666904d527adade3b6e206177f34d6f430a4182bae89668",
+     "stream": "stackexchange"
+    },
+    {
+     "bytes": 22527,
+     "path": "stackexchange/datascience-stackexchange-com_postlinks_2026_p0.parquet",
+     "sha256": "363953b672f4424da0cf83b7b758ee212cd1e9cc17eca60377ef36079ded63ac",
+     "stream": "stackexchange"
+    },
+    {
+     "bytes": 137479,
+     "path": "stackexchange/dba-stackexchange-com_postlinks_2026_p0.parquet",
+     "sha256": "27dfc078796e652813533dde15ddad7d135872dff1ff9888a336319c0a42c063",
+     "stream": "stackexchange"
+    },
+    {
+     "bytes": 12726,
+     "path": "stackexchange/economics-stackexchange-com_postlinks_2026_p0.parquet",
+     "sha256": "7c647ee901e40206a227e61f0703ad919d92eb685ba0038400cf51a9ae7f7759",
+     "stream": "stackexchange"
+    },
+    {
+     "bytes": 590320,
+     "path": "stackexchange/electronics-stackexchange-com_postlinks_2026_p0.parquet",
+     "sha256": "d4565f5506333669f95d811344755f7c77d786b53e187b301c98d68793f96e51",
+     "stream": "stackexchange"
+    },
+    {
+     "bytes": 367436,
+     "path": "stackexchange/english-stackexchange-com_postlinks_2026_p0.parquet",
+     "sha256": "caedd74b438218e9011752dc8552f06e19675a42edfa838ae2e9a9cc04869cf9",
+     "stream": "stackexchange"
+    },
+    {
+     "bytes": 162330,
+     "path": "stackexchange/gaming-stackexchange-com_postlinks_2026_p0.parquet",
+     "sha256": "4b188ed1622be5e0b82511e98592439ad57d3fd764736032de5d85cf3e217b8e",
+     "stream": "stackexchange"
+    },
+    {
+     "bytes": 260954,
+     "path": "stackexchange/gis-stackexchange-com_postlinks_2026_p0.parquet",
+     "sha256": "fd1b5ecee04d2b4929b01f5a7ef89030dea44d7738ed228f818791c9f10ce342",
+     "stream": "stackexchange"
+    },
+    {
+     "bytes": 16972,
+     "path": "stackexchange/history-stackexchange-com_postlinks_2026_p0.parquet",
+     "sha256": "929a21a691a175fee2e50bc8d7e781dc0dc925ef1bf757fa529c0b578c531062",
+     "stream": "stackexchange"
+    },
+    {
+     "bytes": 30879,
+     "path": "stackexchange/law-stackexchange-com_postlinks_2026_p0.parquet",
+     "sha256": "b14a09c67a6b69f9018d95685d3eb50bdd2aa2a362644814e6ece5d94d141a85",
+     "stream": "stackexchange"
+    },
+    {
+     "bytes": 3420620,
+     "path": "stackexchange/math-stackexchange-com_postlinks_2026_p0.parquet",
+     "sha256": "95863321d6a0aee52dcf6b2f8dc1c61aab76d558f6be461382d9439a5b75ef81",
+     "stream": "stackexchange"
+    },
+    {
+     "bytes": 41795,
+     "path": "stackexchange/philosophy-stackexchange-com_postlinks_2026_p0.parquet",
+     "sha256": "22681180d8937923347b40f3768a72b847ae5678685e054dab6442d42f34d5a9",
+     "stream": "stackexchange"
+    },
+    {
+     "bytes": 597094,
+     "path": "stackexchange/physics-stackexchange-com_postlinks_2026_p0.parquet",
+     "sha256": "86fb51dbb90c3844db1df57e333fb959282063a752493dd16c8a9948c4567599",
+     "stream": "stackexchange"
+    },
+    {
+     "bytes": 33538,
+     "path": "stackexchange/politics-stackexchange-com_postlinks_2026_p0.parquet",
+     "sha256": "694ca78593c2750eb27ee0593364c8ca25c8836bac0eb7806dc913bf90a13a8f",
+     "stream": "stackexchange"
+    },
+    {
+     "bytes": 166312,
+     "path": "stackexchange/security-stackexchange-com_postlinks_2026_p0.parquet",
+     "sha256": "e294f609b18c4fab8bc87b40c5b6f74d639d52e64bdb515d48e4164c1aaa2224",
+     "stream": "stackexchange"
+    },
+    {
+     "bytes": 264644,
+     "path": "stackexchange/serverfault-com_postlinks_2026_p0.parquet",
+     "sha256": "7d622e60f7871b1eb5566c773557c8be18da86ca2f6fcad31a7023c6e1088153",
+     "stream": "stackexchange"
+    },
+    {
+     "bytes": 21705,
+     "path": "stackexchange/skeptics-stackexchange-com_postlinks_2026_p0.parquet",
+     "sha256": "84d28f6a1e8a982add3d234acdf48fa99d5e3c251516eaddf416a0150276af09",
+     "stream": "stackexchange"
+    },
+    {
+     "bytes": 84597,
+     "path": "stackexchange/space-stackexchange-com_postlinks_2026_p0.parquet",
+     "sha256": "59796e924560e4219b97d86e81959de18d8bf63c25e578e617c1095cdd6f9d0f",
+     "stream": "stackexchange"
+    },
+    {
+     "bytes": 61438041,
+     "path": "stackexchange/stackoverflow-com_postlinks_2026_p0.parquet",
+     "sha256": "26e3d35b6e37666fba425812f20df1784fbb02e4d1c12d04db2fe877efcdd4b7",
+     "stream": "stackexchange"
+    },
+    {
+     "bytes": 590320,
+     "path": "stackexchange/stats-stackexchange-com_postlinks_2026_p0.parquet",
+     "sha256": "d4565f5506333669f95d811344755f7c77d786b53e187b301c98d68793f96e51",
+     "stream": "stackexchange"
+    },
+    {
+     "bytes": 697849,
+     "path": "stackexchange/superuser-com_postlinks_2026_p0.parquet",
+     "sha256": "ce20e2ba1cad054c88ea62038189fd5c4b7ccbc515c91d22edce4b0aae6978bc",
+     "stream": "stackexchange"
+    },
+    {
+     "bytes": 391128,
+     "path": "stackexchange/unix-stackexchange-com_postlinks_2026_p0.parquet",
+     "sha256": "ee1ad80af9b934a1ee5fa56ee28932357353ec54a1c310b2547b9d0265f8d55a",
+     "stream": "stackexchange"
+    },
+    {
+     "bytes": 91788,
+     "path": "stackexchange/worldbuilding-stackexchange-com_postlinks_2026_p0.parquet",
+     "sha256": "41913a6e78f4831aa652796934ee6af68fca0e97b708b9ba09b00b2cd9608599",
+     "stream": "stackexchange"
+    }
+   ],
+   "id": "stackexchange@commandagi-r2-2026-08-15",
+   "inventory": {
+    "stackexchange": {
+     "bytes": 71556665,
+     "files": 29
+    }
+   },
+   "manifest_hash": "sha256:6a903b9e629452ad3fa8ec9ed5b1a046d6b39cb0d65b6821c8e5864a21946620",
+   "source": "source/stackexchange",
+   "storage": {
+    "format": "parquet",
+    "layout": "pipeline_native",
+    "locations": [
+     "file:///home/brandonin/Documents/symbolic-ai-models/data/sources/stackexchange/commandagi-r2-2026-08-15"
+    ],
+    "root": "sources/stackexchange/commandagi-r2-2026-08-15"
+   },
+   "upstream_release": "unresolved"
+  },
+  "usaspending@commandagi-r2-2026-08-15": {
+   "acquired": {
+    "at": "2026-08-15",
+    "from": "r2://commandagi-kg-cold (and the ingest prefixes beside it)",
+    "relocated_at": "2026-08-18",
+    "via": "commandagi KG ingest; staged to ~/Downloads/kg by dl-kg.py"
+   },
+   "files": [
+    {
+     "bytes": 100875,
+     "path": "usaspending/awards_contracts_fy2026_p0.parquet",
+     "sha256": "88ae0a195f4783f42afbe74ab416146fdda80fe836b9404c823e1e1e06d4e5ef",
+     "stream": "usaspending"
+    },
+    {
+     "bytes": 94676,
+     "path": "usaspending/entities_contracts_fy2026_p0.parquet",
+     "sha256": "d370b5b2467a80e5b139d9903abfc3971c5f89589e89f498e31adc9c684f5d77",
+     "stream": "usaspending"
+    }
+   ],
+   "id": "usaspending@commandagi-r2-2026-08-15",
+   "inventory": {
+    "usaspending": {
+     "bytes": 195551,
+     "files": 2
+    }
+   },
+   "manifest_hash": "sha256:bce780685b3a067a276d688b4deef7a605c494bc98fbfc352576ec24b4220b84",
+   "source": "source/usaspending",
+   "storage": {
+    "format": "parquet",
+    "layout": "pipeline_native",
+    "locations": [
+     "file:///home/brandonin/Documents/symbolic-ai-models/data/sources/usaspending/commandagi-r2-2026-08-15"
+    ],
+    "root": "sources/usaspending/commandagi-r2-2026-08-15"
+   },
+   "upstream_release": "unresolved"
+  },
+  "wikidata@commandagi-r2-2026-08-15": {
+   "acquired": {
+    "at": "2026-08-15",
+    "from": "r2://commandagi-kg-cold (and the ingest prefixes beside it)",
+    "relocated_at": "2026-08-18",
+    "via": "commandagi KG ingest; staged to ~/Downloads/kg by dl-kg.py"
+   },
+   "files": [
+    {
+     "bytes": 52752503,
+     "path": "wikidata/backbone_core12m_p0.parquet",
+     "sha256": "b6ed68a5fdb6d2755b63f12d287547f5d237b17ff0b787237ff0911bbb40ee76",
+     "stream": "wikidata"
+    },
+    {
+     "bytes": 226521412,
+     "path": "wikidata/backbone_full_p0.parquet",
+     "sha256": "96777f5c515c68430265ca2e8f8079a1213a6f75f82e76e24ec8a6e3b6ac87b8",
+     "stream": "wikidata"
+    },
+    {
+     "bytes": 231699817,
+     "path": "wikidata/backbone_full_p1.parquet",
+     "sha256": "2635718bf9e4175ba123eee46edb5b74b153070df722de8d8964e865efd626d5",
+     "stream": "wikidata"
+    },
+    {
+     "bytes": 231048443,
+     "path": "wikidata/backbone_full_p2.parquet",
+     "sha256": "b632cbd5c08de3b45edb43aadf3b7fbbf7cd92c332d98edc4a7a7a6d8ff40c76",
+     "stream": "wikidata"
+    },
+    {
+     "bytes": 229364722,
+     "path": "wikidata/backbone_full_p3.parquet",
+     "sha256": "bf8ab7f6e3e420d14fb18d983e15743341a80f4ca571d398208e403a03966132",
+     "stream": "wikidata"
+    },
+    {
+     "bytes": 123016483,
+     "path": "wikidata/backbone_full_p4.parquet",
+     "sha256": "df59eb1b4f90f8f9130417af56ab96f7b8be0a1596b183ab05c810b1303bbfc3",
+     "stream": "wikidata"
+    },
+    {
+     "bytes": 981136,
+     "path": "wikidata/idbridges_full_p0.parquet",
+     "sha256": "2115ef9f099c7fd84643f6804ad0d74d61096dc1fe76c5f74d3fc24ce349e21a",
+     "stream": "wikidata"
+    }
+   ],
+   "id": "wikidata@commandagi-r2-2026-08-15",
+   "inventory": {
+    "wikidata": {
+     "bytes": 1095384516,
+     "files": 7
+    }
+   },
+   "manifest_hash": "sha256:0d7ddca1b5ba3cefce3771df7bf01f31e86ce5d561b4592ffbd582f0addd3767",
+   "source": "source/wikidata",
+   "storage": {
+    "format": "parquet",
+    "layout": "pipeline_native",
+    "locations": [
+     "file:///home/brandonin/Documents/symbolic-ai-models/data/sources/wikidata/commandagi-r2-2026-08-15"
+    ],
+    "root": "sources/wikidata/commandagi-r2-2026-08-15"
+   },
+   "upstream_release": "unresolved"
+  }
+ },
+ "sources": {
+  "cfpb": {
+   "access": {
+    "class": "public",
+    "dua_required": false,
+    "modes": [
+     "dump"
+    ]
+   },
+   "attribution_confidence": "established",
+   "description": "Consumer complaint records against financial institutions.",
+   "homepage": "https://www.consumerfinance.gov/data-research/consumer-complaints/",
+   "id": "cfpb",
+   "license": {
+    "commercial_use": "permitted",
+    "name": "US Government work (17 U.S.C. 105)",
+    "redistribution": "permitted"
+   },
+   "lifecycle": "active",
+   "priority": "p2",
+   "streams": {
+    "cfpb": {
+     "derivation": "measured",
+     "description": "Complaints and the entities complained about.",
+     "evidence_role": "observation",
+     "modality": "complaints",
+     "upstream": "cfpb",
+     "upstream_confidence": "established"
+    }
+   },
+   "tags": [
+    "government",
+    "finance"
+   ],
+   "title": "Consumer Financial Protection Bureau",
+   "upstream_release": "unresolved"
+  },
+  "commandagi-kg": {
+   "access": {
+    "class": "internal",
+    "dua_required": false,
+    "modes": [
+     "dump"
+    ],
+    "notes": "Produced by the CommandAGI stack; pulled from its own R2 buckets with an account token. Not public."
+   },
+   "attribution_confidence": "established",
+   "description": "The production long-term-memory graph: 3.05M nodes and 5.20M edges across four cliques, with the full event log behind them. Held here in three storage formats -- the cold-tier NDJSON/parquet export, the same tables as Iceberg, and the hot-tier D1 SQL dump.",
+   "id": "commandagi-kg",
+   "license": {
+    "commercial_use": "prohibited",
+    "name": "Internal -- CommandAGI. No redistribution.",
+    "redistribution": "prohibited"
+   },
+   "lifecycle": "active",
+   "notes": "**Three storage formats of one graph, not three sources.** Counts agreeing across graph/, __r2_data_catalog/ and d1/ are ONE fact confirmed by construction, and quoting them as three independent verifications is exactly the composite-source double-count this federation layer refuses. Redistribution is prohibited, so every artifact derived from it inherits prohibited through the licence closure -- which is computed, not authored.",
+   "priority": "p0",
+   "provider": {
+    "name": "CommandAGI",
+    "record": "9ff33ff377111861ec1bd6e9cd3ee51b"
+   },
+   "streams": {
+    "__r2_data_catalog": {
+     "derivation": "measured",
+     "description": "The same graph as Iceberg tables. NOT an independent observation of it.",
+     "evidence_role": "observation",
+     "modality": "iceberg",
+     "upstream": "commandagi-kg",
+     "upstream_confidence": "established"
+    },
+    "_acquisition": {
+     "derivation": "measured",
+     "description": "The staging README, file inventory and download script that produced this pull.",
+     "evidence_role": "prior",
+     "modality": "provenance",
+     "upstream": "commandagi-kg",
+     "upstream_confidence": "established"
+    },
+    "d1": {
+     "derivation": "measured",
+     "description": "Hot-tier D1 SQL dump. A bounded cache over the cold tier, demoted from source-of-truth. Also NOT independent.",
+     "evidence_role": "observation",
+     "modality": "sqlite_dump",
+     "upstream": "commandagi-kg",
+     "upstream_confidence": "established"
+    },
+    "graph/clique": {
+     "derivation": "measured",
+     "description": "Per-clique projection snapshots: the authoritative current node and edge state, plus DuckDB-compacted parquet adjacency.",
+     "evidence_role": "observation",
+     "modality": "property_graph",
+     "upstream": "commandagi-kg",
+     "upstream_confidence": "established"
+    },
+    "graph/log": {
+     "derivation": "measured",
+     "description": "The full event log by sequence -- history, provenance and causal chain. This is the derivation record, not a second copy of the state.",
+     "evidence_role": "observation",
+     "modality": "event_log",
+     "upstream": "commandagi-kg",
+     "upstream_confidence": "established"
+    },
+    "test": {
+     "derivation": "measured",
+     "description": "Pipeline test fixtures.",
+     "evidence_role": "observation",
+     "modality": "fixtures",
+     "upstream": "commandagi-kg",
+     "upstream_confidence": "established"
+    }
+   },
+   "tags": [
+    "internal",
+    "property-graph",
+    "ltm"
+   ],
+   "title": "CommandAGI knowledge graph (cold tier)",
+   "upstream_release": "unresolved"
+  },
+  "commandagi-kg-dev": {
+   "access": {
+    "class": "internal",
+    "dua_required": false,
+    "modes": [
+     "dump"
+    ],
+    "notes": "Produced by the CommandAGI stack; pulled from its own R2 buckets with an account token. Not public."
+   },
+   "attribution_confidence": "established",
+   "description": "The development stack's cold bucket. A near-empty graph beside a real one.",
+   "id": "commandagi-kg-dev",
+   "license": {
+    "commercial_use": "prohibited",
+    "name": "Internal -- CommandAGI. No redistribution.",
+    "redistribution": "prohibited"
+   },
+   "lifecycle": "active",
+   "notes": "Registered as its own source rather than folded into commandagi-kg so that a count taken over 'the CommandAGI graph' cannot silently include a dev stack. A control that shares a name with its treatment is how the two come to drift together.",
+   "priority": "p2",
+   "provider": {
+    "name": "CommandAGI"
+   },
+   "streams": {
+    "_dev-bucket": {
+     "derivation": "measured",
+     "description": "Dev cold-tier export.",
+     "evidence_role": "observation",
+     "modality": "property_graph",
+     "upstream": "commandagi-kg-dev",
+     "upstream_confidence": "established"
+    }
+   },
+   "tags": [
+    "internal",
+    "control"
+   ],
+   "title": "CommandAGI knowledge graph (dev stack, cold tier)",
+   "upstream_release": "unresolved"
+  },
+  "courtlistener": {
+   "access": {
+    "class": "public",
+    "dua_required": false,
+    "modes": [
+     "dump"
+    ]
+   },
+   "attribution_confidence": "hypothesis",
+   "description": "US court opinions and the citation network between them.",
+   "homepage": "https://www.courtlistener.com",
+   "id": "courtlistener",
+   "license": {
+    "commercial_use": "unresolved",
+    "name": "US court opinions are public domain; CourtListener's own metadata is separately licensed and has not been established",
+    "redistribution": "unresolved"
+   },
+   "lifecycle": "active",
+   "notes": "**Attribution is a hypothesis.** The staged parquet uses the id namespace `kg:clop:`, which is consistent with CourtListener opinion ids, and the table shape (a `cites-precedent` citation map) matches. The pull recorded no upstream release, so this card asserts the hypothesis and marks it as one rather than quietly becoming the provenance of everything derived from it.",
+   "priority": "p1",
+   "streams": {
+    "caselaw": {
+     "derivation": "measured",
+     "description": "Opinion-to-opinion citation map.",
+     "evidence_role": "observation",
+     "modality": "citation_graph",
+     "upstream": "courtlistener",
+     "upstream_confidence": "hypothesis"
+    }
+   },
+   "tags": [
+    "law",
+    "citation"
+   ],
+   "title": "CourtListener (hypothesis)",
+   "upstream_release": "unresolved"
+  },
+  "cskg": {
+   "access": {
+    "class": "public",
+    "dua_required": false,
+    "modes": [
+     "dump"
+    ]
+   },
+   "attribution_confidence": "established",
+   "description": "The consolidated commonsense graph over ConceptNet 5.7, WordNet 3.0, ATOMIC, FrameNet, Roget, Visual Genome and Wikidata-CS. Already vendored here in a narrow projection; this is the fuller staged cut.",
+   "homepage": "https://github.com/usc-isi-i2/cskg",
+   "id": "cskg",
+   "license": {
+    "commercial_use": "permitted",
+    "name": "Creative Commons Attribution-ShareAlike 4.0",
+    "redistribution": "share_alike",
+    "spdx": "CC-BY-SA-4.0"
+   },
+   "lifecycle": "active",
+   "notes": "**The vendored copy in symbolic_ai_kg/data/ is a selectional projection, not this.** It collapses concepts by lemma, reads only selected relations and maps them into a small local relation set. Calling that projection 'CSKG' is the same class of error as calling a slice a result, and it is renamed cskg_selectional_v1 for exactly that reason. CSKG is itself a composite of seven upstreams, so an assertion ingested both directly and through CSKG is ONE observation seen twice -- see the double-counting test.",
+   "priority": "p0",
+   "streams": {
+    "cskg": {
+     "derivation": "measured",
+     "description": "The consolidated edge table.",
+     "evidence_role": "observation",
+     "modality": "commonsense_graph",
+     "upstream": "cskg",
+     "upstream_confidence": "established"
+    }
+   },
+   "tags": [
+    "commonsense",
+    "composite"
+   ],
+   "title": "CSKG (Commonsense Knowledge Graph)",
+   "upstream_release": "unresolved"
+  },
+  "fec": {
+   "access": {
+    "class": "public",
+    "dua_required": false,
+    "modes": [
+     "dump"
+    ]
+   },
+   "attribution_confidence": "established",
+   "description": "Campaign contribution records and the committees and donors behind them.",
+   "homepage": "https://www.fec.gov/data/",
+   "id": "fec",
+   "license": {
+    "commercial_use": "permitted",
+    "name": "US Government work (17 U.S.C. 105)",
+    "redistribution": "permitted"
+   },
+   "lifecycle": "active",
+   "priority": "p2",
+   "streams": {
+    "fec": {
+     "derivation": "measured",
+     "description": "Contributions and entities.",
+     "evidence_role": "observation",
+     "modality": "transactions",
+     "upstream": "fec",
+     "upstream_confidence": "established"
+    }
+   },
+   "tags": [
+    "government",
+    "politics"
+   ],
+   "title": "US Federal Election Commission",
+   "upstream_release": "unresolved"
+  },
+  "gdelt": {
+   "access": {
+    "class": "public",
+    "dua_required": false,
+    "modes": [
+     "dump"
+    ]
+   },
+   "attribution_confidence": "established",
+   "description": "Global event records and actor tables extracted from world news, with country and name resolution. The staged cut is several overlapping windows.",
+   "homepage": "https://www.gdeltproject.org",
+   "id": "gdelt",
+   "license": {
+    "commercial_use": "unresolved",
+    "name": "GDELT Project terms of use (free use with attribution)",
+    "redistribution": "attribution_only"
+   },
+   "lifecycle": "active",
+   "notes": "The windows OVERLAP (7/14/30/60 day cuts taken on different dates). Pooling them without deduplicating by event id double-counts the intersection, and the intersection is the majority of the smaller windows. This is recorded here rather than in a downstream script because the next reader will not know.",
+   "priority": "p1",
+   "streams": {
+    "gdelt": {
+     "derivation": "measured",
+     "description": "Recent event windows.",
+     "evidence_role": "observation",
+     "modality": "event_stream",
+     "upstream": "gdelt",
+     "upstream_confidence": "established"
+    },
+    "gdelt/country": {
+     "derivation": "measured",
+     "description": "Country-resolved events and actors.",
+     "evidence_role": "observation",
+     "modality": "event_stream",
+     "upstream": "gdelt",
+     "upstream_confidence": "established"
+    },
+    "gdelt/name": {
+     "derivation": "measured",
+     "description": "Name-resolved actors.",
+     "evidence_role": "observation",
+     "modality": "entity_mentions",
+     "upstream": "gdelt",
+     "upstream_confidence": "established"
+    }
+   },
+   "tags": [
+    "events",
+    "news",
+    "temporal"
+   ],
+   "title": "GDELT Project",
+   "upstream_release": "unresolved"
+  },
+  "geonames": {
+   "access": {
+    "class": "public",
+    "dua_required": false,
+    "modes": [
+     "dump"
+    ]
+   },
+   "attribution_confidence": "established",
+   "description": "Multilingual place identities with coordinates, feature codes, country info and Wikipedia links. The first geo.place source in this repo.",
+   "homepage": "https://www.geonames.org",
+   "id": "geonames",
+   "license": {
+    "commercial_use": "permitted",
+    "name": "Creative Commons Attribution 4.0",
+    "redistribution": "attribution_only",
+    "spdx": "CC-BY-4.0"
+   },
+   "lifecycle": "active",
+   "priority": "p1",
+   "streams": {
+    "geonames": {
+     "derivation": "measured",
+     "description": "Place nodes, code bridges, country info and Wikipedia links.",
+     "evidence_role": "observation",
+     "modality": "gazetteer",
+     "profiles": [
+      "geo.place",
+      "core.identity"
+     ],
+     "upstream": "geonames",
+     "upstream_confidence": "established"
+    }
+   },
+   "tags": [
+    "geo",
+    "gazetteer"
+   ],
+   "title": "GeoNames",
+   "upstream_release": "unresolved"
+  },
+  "gh-archive": {
+   "access": {
+    "class": "public",
+    "dua_required": false,
+    "modes": [
+     "dump"
+    ]
+   },
+   "attribution_confidence": "established",
+   "description": "The public GitHub event stream, archived hourly. Used here for the software dependency and collaboration network.",
+   "homepage": "https://www.gharchive.org",
+   "id": "gh-archive",
+   "license": {
+    "commercial_use": "unresolved",
+    "name": "GH Archive publishes freely; the underlying events are GitHub's",
+    "redistribution": "unresolved"
+   },
+   "lifecycle": "active",
+   "notes": "Redistribution unresolved: GH Archive itself publishes freely, but the events are GitHub's and their terms have not been read by anyone here.",
+   "priority": "p2",
+   "streams": {
+    "gharchive": {
+     "derivation": "measured",
+     "description": "Daily event partitions.",
+     "evidence_role": "observation",
+     "modality": "event_stream",
+     "upstream": "gh-archive",
+     "upstream_confidence": "established"
+    }
+   },
+   "tags": [
+    "software",
+    "events"
+   ],
+   "title": "GH Archive",
+   "upstream_release": "unresolved"
+  },
+  "gleif": {
+   "access": {
+    "class": "public",
+    "dua_required": false,
+    "modes": [
+     "dump"
+    ]
+   },
+   "attribution_confidence": "established",
+   "description": "Legal entity identifiers and the parent/child relationships between legal entities. The authoritative ownership backbone for finance.",
+   "homepage": "https://www.gleif.org",
+   "id": "gleif",
+   "license": {
+    "commercial_use": "permitted",
+    "name": "CC0 1.0 Universal",
+    "redistribution": "permitted",
+    "spdx": "CC0-1.0"
+   },
+   "lifecycle": "active",
+   "priority": "p1",
+   "streams": {
+    "gleif": {
+     "derivation": "measured",
+     "description": "LEI2 entity records and relationship records.",
+     "evidence_role": "observation",
+     "modality": "entity_graph",
+     "profiles": [
+      "core.identity"
+     ],
+     "upstream": "gleif",
+     "upstream_confidence": "established"
+    }
+   },
+   "tags": [
+    "finance",
+    "ownership",
+    "entity"
+   ],
+   "title": "GLEIF (Global Legal Entity Identifier Foundation)",
+   "upstream_release": "unresolved"
+  },
+  "gutenberg": {
+   "access": {
+    "class": "public",
+    "dua_required": false,
+    "modes": [
+     "dump"
+    ]
+   },
+   "attribution_confidence": "established",
+   "description": "Catalogue metadata for the Project Gutenberg corpus: works, authors, subjects. The texts themselves are not in this pull.",
+   "homepage": "https://www.gutenberg.org",
+   "id": "gutenberg",
+   "license": {
+    "commercial_use": "unresolved",
+    "name": "Project Gutenberg terms; catalogue feeds offered for free use",
+    "redistribution": "unresolved"
+   },
+   "lifecycle": "active",
+   "notes": "Redistribution is recorded as unresolved rather than permitted. The catalogue feeds are offered for free use and the underlying texts are public domain in the US, but Project Gutenberg's trademark terms are not an SPDX licence and nobody here has established what they permit for a derived corpus. Unresolved poisons the licence closure on purpose; that is the safe direction.",
+   "priority": "p2",
+   "streams": {
+    "gutenberg": {
+     "derivation": "measured",
+     "description": "Catalogue nodes and rows.",
+     "evidence_role": "observation",
+     "modality": "bibliographic",
+     "upstream": "gutenberg",
+     "upstream_confidence": "established"
+    }
+   },
+   "tags": [
+    "literature",
+    "bibliographic"
+   ],
+   "title": "Project Gutenberg catalog",
+   "upstream_release": "unresolved"
+  },
+  "openalex": {
+   "access": {
+    "class": "public",
+    "dua_required": false,
+    "modes": [
+     "dump"
+    ]
+   },
+   "attribution_confidence": "established",
+   "description": "An open index of scholarly works, authors, institutions, sources, topics and funders, and the citation graph over them. Used here as a large, genuinely open relation network with real entity identity -- the property the vendored WordNet projection does not have.",
+   "homepage": "https://openalex.org",
+   "id": "openalex",
+   "license": {
+    "commercial_use": "permitted",
+    "name": "CC0 1.0 Universal",
+    "redistribution": "permitted",
+    "spdx": "CC0-1.0"
+   },
+   "lifecycle": "active",
+   "priority": "p0",
+   "provider": {
+    "name": "OurResearch"
+   },
+   "streams": {
+    "openalex": {
+     "derivation": "measured",
+     "description": "Citation and authorship edges plus work nodes, as partitioned parquet.",
+     "evidence_role": "observation",
+     "modality": "citation_graph",
+     "upstream": "openalex",
+     "upstream_confidence": "established"
+    }
+   },
+   "tags": [
+    "scholarly",
+    "citation",
+    "entity"
+   ],
+   "title": "OpenAlex",
+   "upstream_release": "unresolved"
+  },
+  "openflights": {
+   "access": {
+    "class": "public",
+    "dua_required": false,
+    "modes": [
+     "dump"
+    ]
+   },
+   "attribution_confidence": "established",
+   "description": "Airports, airlines and the route network between them. Small, and the cleanest available example of a genuinely cyclic relation_network -- which is the topology the world IR exists to represent and the flow DAG refuses.",
+   "homepage": "https://openflights.org/data.html",
+   "id": "openflights",
+   "license": {
+    "commercial_use": "permitted",
+    "name": "Open Database License 1.0",
+    "redistribution": "share_alike",
+    "spdx": "ODbL-1.0"
+   },
+   "lifecycle": "active",
+   "priority": "p2",
+   "streams": {
+    "openflights": {
+     "derivation": "measured",
+     "description": "Airport, airline and route tables.",
+     "evidence_role": "observation",
+     "modality": "transport_network",
+     "profiles": [
+      "geo.network",
+      "geo.place"
+     ],
+     "upstream": "openflights",
+     "upstream_confidence": "established"
+    }
+   },
+   "tags": [
+    "geo",
+    "network",
+    "cyclic"
+   ],
+   "title": "OpenFlights",
+   "upstream_release": "unresolved"
+  },
+  "patentsview": {
+   "access": {
+    "class": "public",
+    "dua_required": false,
+    "modes": [
+     "dump"
+    ]
+   },
+   "attribution_confidence": "hypothesis",
+   "description": "US patent grants and applications with their citation network, CPC classification, inventors, assignees and WIPO fields.",
+   "homepage": "https://patentsview.org",
+   "id": "patentsview",
+   "license": {
+    "commercial_use": "unresolved",
+    "name": "PatentsView publishes under CC-BY-4.0 IF the attribution holds; not established for this pull",
+    "redistribution": "unresolved"
+   },
+   "lifecycle": "active",
+   "notes": "Seven staged directories, one probable upstream. Namespaces observed throughout are `kg:patent:`, `kg:assignee:` and `kg:inventor:`, and the table shapes match PatentsView's published ones -- but no upstream release was recorded, so both the attribution and the licence stay unresolved. If the attribution is later established, the licence becomes CC-BY-4.0 and the closure over every derived artifact loosens; until then it does not.",
+   "priority": "p1",
+   "streams": {
+    "appcite": {
+     "derivation": "measured",
+     "description": "Application-to-patent citations.",
+     "evidence_role": "observation",
+     "modality": "citation_graph",
+     "upstream": "patentsview",
+     "upstream_confidence": "hypothesis"
+    },
+    "assignee": {
+     "derivation": "measured",
+     "description": "Patent-to-assignee links.",
+     "evidence_role": "observation",
+     "modality": "entity_links",
+     "upstream": "patentsview",
+     "upstream_confidence": "hypothesis"
+    },
+    "cite": {
+     "derivation": "measured",
+     "description": "Granted-patent citations.",
+     "evidence_role": "observation",
+     "modality": "citation_graph",
+     "upstream": "patentsview",
+     "upstream_confidence": "hypothesis"
+    },
+    "cpc": {
+     "derivation": "measured",
+     "description": "CPC classification assignments.",
+     "evidence_role": "observation",
+     "modality": "classification",
+     "upstream": "patentsview",
+     "upstream_confidence": "hypothesis"
+    },
+    "inventor": {
+     "derivation": "measured",
+     "description": "Patent-to-inventor links.",
+     "evidence_role": "observation",
+     "modality": "entity_links",
+     "upstream": "patentsview",
+     "upstream_confidence": "hypothesis"
+    },
+    "patents": {
+     "derivation": "measured",
+     "description": "Patent nodes.",
+     "evidence_role": "observation",
+     "modality": "entity_nodes",
+     "upstream": "patentsview",
+     "upstream_confidence": "hypothesis"
+    },
+    "wipo": {
+     "derivation": "measured",
+     "description": "WIPO technology field assignments.",
+     "evidence_role": "observation",
+     "modality": "classification",
+     "upstream": "patentsview",
+     "upstream_confidence": "hypothesis"
+    }
+   },
+   "tags": [
+    "patents",
+    "citation",
+    "classification"
+   ],
+   "title": "PatentsView (hypothesis)",
+   "upstream_release": "unresolved"
+  },
+  "sec-edgar": {
+   "access": {
+    "class": "public",
+    "dua_required": false,
+    "modes": [
+     "dump",
+     "api"
+    ]
+   },
+   "attribution_confidence": "hypothesis",
+   "description": "US Securities and Exchange Commission filings: 13F institutional holdings, insider transactions, financial reports, and the CIK-to-name bridge.",
+   "homepage": "https://www.sec.gov/edgar",
+   "id": "sec-edgar",
+   "license": {
+    "commercial_use": "permitted",
+    "name": "US Government work (17 U.S.C. 105); SEC asks for a declared user agent and fair request rates",
+    "redistribution": "permitted"
+   },
+   "lifecycle": "active",
+   "notes": "`finance/13f` and `finance/insider` OVERLAP `sec13f` and `sec_insider` in subject and partly in date range. They are kept as separate streams rather than merged because two overlapping windows pooled without a marker double-count the intersection, and the manifest is the only place that will remember.",
+   "priority": "p1",
+   "streams": {
+    "entity/sec": {
+     "derivation": "measured",
+     "description": "CIK-to-name bridge.",
+     "evidence_role": "observation",
+     "modality": "entity_nodes",
+     "upstream": "sec-edgar",
+     "upstream_confidence": "established"
+    },
+    "finance/13f": {
+     "derivation": "measured",
+     "description": "A second 13F cut over a different date window.",
+     "evidence_role": "observation",
+     "modality": "holdings",
+     "upstream": "sec-edgar",
+     "upstream_confidence": "established"
+    },
+    "finance/insider": {
+     "derivation": "measured",
+     "description": "A second insider cut over a different date window.",
+     "evidence_role": "observation",
+     "modality": "transactions",
+     "upstream": "sec-edgar",
+     "upstream_confidence": "established"
+    },
+    "sec13f": {
+     "derivation": "measured",
+     "description": "13F institutional holdings.",
+     "evidence_role": "observation",
+     "modality": "holdings",
+     "upstream": "sec-edgar",
+     "upstream_confidence": "established"
+    },
+    "sec_fin": {
+     "derivation": "measured",
+     "description": "Financial reports.",
+     "evidence_role": "observation",
+     "modality": "financials",
+     "upstream": "sec-edgar",
+     "upstream_confidence": "established"
+    },
+    "sec_insider": {
+     "derivation": "measured",
+     "description": "Insider transactions.",
+     "evidence_role": "observation",
+     "modality": "transactions",
+     "upstream": "sec-edgar",
+     "upstream_confidence": "established"
+    }
+   },
+   "tags": [
+    "finance",
+    "filings",
+    "temporal"
+   ],
+   "title": "SEC EDGAR",
+   "upstream_release": "unresolved"
+  },
+  "senate-lda": {
+   "access": {
+    "class": "public",
+    "dua_required": false,
+    "modes": [
+     "dump"
+    ]
+   },
+   "attribution_confidence": "hypothesis",
+   "description": "Federal lobbying disclosure filings and the entities in them.",
+   "homepage": "https://lda.senate.gov",
+   "id": "senate-lda",
+   "license": {
+    "commercial_use": "unresolved",
+    "name": "US Government work if filed with the Senate LDA; a redistributor's terms if not",
+    "redistribution": "unresolved"
+   },
+   "lifecycle": "active",
+   "notes": "Unresolved between the Senate LDA filings themselves and a redistributor of them. The two carry different terms.",
+   "priority": "p2",
+   "streams": {
+    "lobbying": {
+     "derivation": "measured",
+     "description": "Disclosures and entities.",
+     "evidence_role": "observation",
+     "modality": "filings",
+     "upstream": "senate-lda",
+     "upstream_confidence": "hypothesis"
+    }
+   },
+   "tags": [
+    "government",
+    "politics"
+   ],
+   "title": "Lobbying disclosures (upstream unresolved)",
+   "upstream_release": "unresolved"
+  },
+  "stackexchange": {
+   "access": {
+    "class": "public",
+    "dua_required": false,
+    "modes": [
+     "dump"
+    ]
+   },
+   "attribution_confidence": "established",
+   "description": "Post link graphs across Stack Exchange sites. A question-answer relation network with human-authored 'these two are related/duplicate' edges, which is an unusual and useful supervision signal for alignment.",
+   "homepage": "https://archive.org/details/stackexchange",
+   "id": "stackexchange",
+   "license": {
+    "commercial_use": "permitted",
+    "name": "Creative Commons Attribution-ShareAlike 4.0",
+    "redistribution": "share_alike",
+    "spdx": "CC-BY-SA-4.0"
+   },
+   "lifecycle": "active",
+   "notes": "Share-alike. Anything derived from this inherits share_alike through the licence closure, which is computed and not authored -- see symbolic_ai_core/source/license.py.",
+   "priority": "p1",
+   "streams": {
+    "stackexchange": {
+     "derivation": "measured",
+     "description": "Per-site post link edges.",
+     "evidence_role": "observation",
+     "modality": "link_graph",
+     "upstream": "stackexchange",
+     "upstream_confidence": "established"
+    }
+   },
+   "tags": [
+    "qa",
+    "link-graph"
+   ],
+   "title": "Stack Exchange data dumps",
+   "upstream_release": "unresolved"
+  },
+  "usaspending": {
+   "access": {
+    "class": "public",
+    "dua_required": false,
+    "modes": [
+     "dump"
+    ]
+   },
+   "attribution_confidence": "established",
+   "description": "US federal contract and award records with recipient entities.",
+   "homepage": "https://www.usaspending.gov",
+   "id": "usaspending",
+   "license": {
+    "commercial_use": "permitted",
+    "name": "US Government work (17 U.S.C. 105)",
+    "redistribution": "permitted"
+   },
+   "lifecycle": "active",
+   "priority": "p2",
+   "streams": {
+    "usaspending": {
+     "derivation": "measured",
+     "description": "Contract awards and recipient entities.",
+     "evidence_role": "observation",
+     "modality": "transactions",
+     "upstream": "usaspending",
+     "upstream_confidence": "established"
+    }
+   },
+   "tags": [
+    "government",
+    "spending"
+   ],
+   "title": "USAspending.gov",
+   "upstream_release": "unresolved"
+  },
+  "wikidata": {
+   "access": {
+    "class": "public",
+    "dua_required": false,
+    "modes": [
+     "dump",
+     "sparql",
+     "api"
+    ]
+   },
+   "attribution_confidence": "established",
+   "description": "The general-purpose entity backbone: qualified, referenced, temporally scoped statements over tens of millions of identities, with cross-source id bridges. This is the source most likely to carry the alignment claims the federation layer needs, because it already publishes them.",
+   "homepage": "https://www.wikidata.org",
+   "id": "wikidata",
+   "license": {
+    "commercial_use": "permitted",
+    "name": "CC0 1.0 Universal",
+    "redistribution": "permitted",
+    "spdx": "CC0-1.0"
+   },
+   "lifecycle": "active",
+   "notes": "The staged cut holds a 12M-entity core and a fuller backbone. Both are projections; neither is the full dump, and a count taken over them is a count over the projection.",
+   "priority": "p0",
+   "provider": {
+    "name": "Wikimedia Foundation"
+   },
+   "streams": {
+    "wikidata": {
+     "derivation": "measured",
+     "description": "Entity backbone and cross-source id bridges.",
+     "evidence_role": "observation",
+     "modality": "entity_graph",
+     "profiles": [
+      "core.identity",
+      "core.type"
+     ],
+     "upstream": "wikidata",
+     "upstream_confidence": "established"
+    }
+   },
+   "tags": [
+    "entity",
+    "backbone"
+   ],
+   "title": "Wikidata",
+   "upstream_release": "unresolved"
+  }
+ },
+ "vocab": "sha256:158cd5117d06ba87034cea9ba4b45415b0f8242608b88d9761f627e8281393dd"
+}
