@@ -20,7 +20,7 @@ from __future__ import annotations
 from typing import Sequence
 
 from symbolic_ai_core.data.curriculum import Episode
-from symbolic_ai_core.data.graph import Graph
+from symbolic_ai_core.data.term_graph import TermGraph
 
 from ...base import Parser, register
 from ...floors import fit_floor
@@ -34,7 +34,7 @@ class PriorParser(Parser):
     SELECT = "bracket_f1"
 
     def __init__(self) -> None:
-        self._graph = Graph()
+        self._graph = TermGraph()
         self._source = ""
 
     def fit(self, episodes: Sequence[Episode]) -> None:
@@ -42,7 +42,7 @@ class PriorParser(Parser):
         self._graph = floor.predict(self.SELECT)
         self._source = floor.sources.get(self.SELECT, "")
 
-    def parse(self, text: str) -> Graph:
+    def parse(self, text: str) -> TermGraph:
         return self._graph
 
     def n_parameters(self) -> int:

@@ -31,7 +31,7 @@ from symbolic_ai_atomspace import (AtomSpace, DERIVED_RULES, E, G, S, V,
                                    parse_atoms, print_atom, term_atom, unify,
                                    view_to_atomspace)
 from symbolic_ai_core.data import curriculum as C
-from symbolic_ai_core.data.graph import NODE_TYPES
+from symbolic_ai_core.data.term_graph import NODE_TYPES
 
 #: Types the collator writes and the generator never does.
 COLLATOR_ONLY = {"pad", "mask", "text"}
@@ -70,7 +70,7 @@ def test_the_corpus_is_the_whole_curriculum(corpus):
 
 
 def test_the_round_trip_is_the_identity_on_every_graph_of_all_179_lessons(corpus):
-    """``Graph -> atomspace -> Graph``, on every graph, on every field.
+    """``TermGraph -> atomspace -> TermGraph``, on every graph, on every field.
 
     ``to_dict`` is compared rather than the object, so ``depth`` is included —
     and ``depth`` is *recomputed* by the decoder rather than stored, which makes
@@ -144,7 +144,7 @@ def test_the_metta_source_reparses_into_the_same_space(corpus):
 
 
 def test_the_round_trip_survives_the_source_as_well_as_the_objects(corpus):
-    """Graph -> space -> MeTTa text -> space -> Graph, on the whole corpus."""
+    """TermGraph -> space -> MeTTa text -> space -> TermGraph, on the whole corpus."""
     bad: list[str] = []
     for ep in corpus:
         text = graph_to_atomspace(ep.graph).to_metta()

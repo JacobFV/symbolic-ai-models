@@ -18,7 +18,7 @@ the generator was vendored into :mod:`symbolic_ai_data`.
 Two digests are taken per lesson rather than one, because they fail differently:
 
 * ``raw`` hashes the generator's own ``structured()`` dict, so it moves if the
-  term changes in any way at all, including parts this repo's :class:`Graph`
+  term changes in any way at all, including parts this repo's :class:`TermGraph`
   discards;
 * the per-language digests hash the whole :class:`Episode` — prompt, answer,
   choices, instance id, tags and the converted graph — so they move if either

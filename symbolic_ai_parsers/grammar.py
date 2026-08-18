@@ -55,7 +55,7 @@ import re
 from dataclasses import dataclass, field
 from typing import Iterable, Sequence
 
-from symbolic_ai_core.data.graph import Graph
+from symbolic_ai_core.data.term_graph import TermGraph
 
 from .treebank import ClauseSample, Segment, Treebank
 
@@ -249,7 +249,7 @@ class Grammar:
         return len(self.rules) + len(self.arg_logp)
 
 
-def clause_graph(g: Graph, parent: int, slot: int, rule: Rule,
+def clause_graph(g: TermGraph, parent: int, slot: int, rule: Rule,
                  tokens: Sequence[str], start: int) -> None:
     """Write one derived clause into ``g`` as a predicate and its arguments."""
     node = g.add(rule.head, rule.node_type, parent, slot)
@@ -263,7 +263,7 @@ def clause_graph(g: Graph, parent: int, slot: int, rule: Rule,
 
 def assemble(blocks_of: Sequence[tuple[str, Sequence[Segment]]],
              parsed: dict[int, list[tuple[Sequence[str], list[Derivation]]]],
-             field_label) -> Graph:
+             field_label) -> TermGraph:
     """Build the record scaffolding and hang the parsed clauses under it.
 
     The scaffolding is **not** parsed and is not claimed to be: the treebank
@@ -272,7 +272,7 @@ def assemble(blocks_of: Sequence[tuple[str, Sequence[Segment]]],
     list is the grammar's work. Where the ceiling on these parsers comes from is
     therefore visible in the code rather than inferred from the scores.
     """
-    g = Graph()
+    g = TermGraph()
     root = g.add("", "record", -1, 0)
     for b, (header, _segs) in enumerate(blocks_of):
         derivs = parsed.get(b) or []

@@ -26,7 +26,7 @@ decidable without asking Lean to believe anything about the curriculum.
 
 from __future__ import annotations
 
-from symbolic_ai_core.data.graph import Graph
+from symbolic_ai_core.data.term_graph import TermGraph
 
 from .elaborate import Elaboration, elaborate
 from .expr import App, Const, Expr, Lit, MVar, Pi, Sort, spine
@@ -76,7 +76,7 @@ def _render(e: Expr, ctx: MetaCtx, arities: set[tuple[str, int]]) -> str:
     return "Unit"                                     # pragma: no cover
 
 
-def lean_source(g: Graph, *, name: str = "episode") -> str:
+def lean_source(g: TermGraph, *, name: str = "episode") -> str:
     """The episode's signature, plus the metavariables it left open, as Lean."""
     elab: Elaboration = elaborate(g, [], mode="open")
     ctx = elab.ctx

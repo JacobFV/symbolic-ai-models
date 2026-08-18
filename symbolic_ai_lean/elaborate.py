@@ -82,7 +82,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Iterable, Literal, Sequence
 
-from symbolic_ai_core.data.graph import Graph
+from symbolic_ai_core.data.term_graph import TermGraph
 
 from .expr import App, Const, Expr, Lit, MVar, Pi, Sort, apps, arrow
 from .kernel import MetaCtx, unify, whnf
@@ -122,7 +122,7 @@ _MAX_ROUNDS = 8
 class Elaboration:
     """The solved state of one episode's visible term."""
 
-    graph: Graph
+    graph: TermGraph
     hidden: frozenset[int]
     ctx: MetaCtx
     #: ``T[i]`` — the type of node ``i``, as an ``Expr`` (usually a metavariable).
@@ -257,7 +257,7 @@ def _is_pi(e: Expr, ctx: MetaCtx) -> bool:
 # ---------------------------------------------------------------------------
 # building the elaboration
 # ---------------------------------------------------------------------------
-def elaborate(g: Graph, hidden: Iterable[int] = (), *,
+def elaborate(g: TermGraph, hidden: Iterable[int] = (), *,
               mode: Mode = "open") -> Elaboration:
     """Solve the visible term's types. Never reads a hidden node's label."""
     hidden = frozenset(int(i) for i in hidden)
@@ -298,7 +298,7 @@ def elaborate(g: Graph, hidden: Iterable[int] = (), *,
     return elab
 
 
-def _solve(g: Graph, hidden: frozenset[int], children: list[list[int]],
+def _solve(g: TermGraph, hidden: frozenset[int], children: list[list[int]],
            ctx: MetaCtx, T: list[Expr], decl: dict[str, Expr],
            name_meta: dict[int, MVar], demoted: set[str],
            untyped: set[int]) -> tuple[str | None, int | None]:

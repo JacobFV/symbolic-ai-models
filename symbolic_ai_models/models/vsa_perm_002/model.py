@@ -329,7 +329,7 @@ class VSAReach(VSAModel):
 
     def _role_key(self, view: GraphView, node: int) -> tuple:
         """The four atom indices a node's role is the product of."""
-        from symbolic_ai_core.data.graph import TYPE_TO_ID
+        from symbolic_ai_core.data.term_graph import TYPE_TO_ID
         parent = view.parent[node]
         ptype = (view.types[parent] or "mask") if parent >= 0 else "ROOT"
         return (TYPE_TO_ID.get(ptype, 0) % 32, min(view.slot[node], 11),

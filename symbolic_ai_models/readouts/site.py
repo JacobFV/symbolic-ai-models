@@ -90,7 +90,7 @@ from typing import Any, Sequence
 import torch
 
 from symbolic_ai_core.data.curriculum import Episode
-from symbolic_ai_core.data.graph import Graph
+from symbolic_ai_core.data.term_graph import TermGraph
 from symbolic_ai_core.data.tokenizer import SymbolTokenizer, split_words
 from symbolic_ai_core.floors import Totals, ratio
 from symbolic_ai_core.readout import SITE, HasChannels, Readout, best_floor, register
@@ -176,7 +176,7 @@ def words_at_position(reading: Reading, t: int,
     return frozenset(w.lower() for w in reading.words[lo:hi])
 
 
-def site_targets(graph: Graph, reading: Reading
+def site_targets(graph: TermGraph, reading: Reading
                  ) -> dict[int, tuple[int, str]]:
     """``{position: (the site's position, the site's word)}`` for one sequence.
 

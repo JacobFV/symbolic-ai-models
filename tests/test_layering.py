@@ -105,7 +105,7 @@ MOVED = [
     ("symbolic_ai_models.data.batch", "symbolic_ai_core.data.batch"),
     ("symbolic_ai_models.data.curriculum", "symbolic_ai_core.data.curriculum"),
     ("symbolic_ai_models.data.fingerprint", "symbolic_ai_core.data.fingerprint"),
-    ("symbolic_ai_models.data.graph", "symbolic_ai_core.data.graph"),
+    ("symbolic_ai_models.data.graph", "symbolic_ai_core.data.term_graph"),
     ("symbolic_ai_models.data.sampler", "symbolic_ai_core.data.sampler"),
     ("symbolic_ai_models.data.tokenizer", "symbolic_ai_core.data.tokenizer"),
     ("symbolic_ai_models.asymptotics", "symbolic_ai_core.asymptotics"),
@@ -118,12 +118,12 @@ MOVED = [
 
 def test_the_pre_split_import_paths_still_resolve_to_the_moved_objects():
     """The old paths are re-export shims now. They are not decoration:
-    `symbolic_ai_agents` on the `omegaclaw` branch imports `Episode`, `Graph`,
+    `symbolic_ai_agents` on the `omegaclaw` branch imports `Episode`, `TermGraph`,
     `SymbolTokenizer`, `collate_graph`, `Totals`, `lift` and `CalibrationReport`
     from them in twenty places, and a merge that silently lost that would look
     green — a modify/delete conflict resolves toward the delete without a word.
 
-    Identity, not equality: a shim that rebound a *copy* of `Graph` would pass an
+    Identity, not equality: a shim that rebound a *copy* of `TermGraph` would pass an
     equality check and then fail every `isinstance` downstream.
     """
     from importlib import import_module

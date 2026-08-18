@@ -48,7 +48,7 @@ import zlib
 from typing import Sequence
 
 from symbolic_ai_core.data.curriculum import Episode
-from symbolic_ai_core.data.graph import Graph
+from symbolic_ai_core.data.term_graph import TermGraph
 
 from ...base import Parser
 from ...features import words_of
@@ -130,13 +130,13 @@ class PolyParser(Parser):
         self.known_conds = frozenset(self.grammar.cond_logp)
 
     # ---- parsing --------------------------------------------------------
-    def parse(self, text: str) -> Graph:
+    def parse(self, text: str) -> TermGraph:
         return self.parse_in(text, None)
 
-    def parse_in(self, text: str, cond: str | None) -> Graph:
+    def parse_in(self, text: str, cond: str | None) -> TermGraph:
         g = self.grammar
         if not g.rules:
-            return Graph()
+            return TermGraph()
         novel = self.condition != "none" and (cond is None
                                               or cond not in self.known_conds)
         words = words_v2 if self.segment == "v2" else words_of
@@ -148,7 +148,7 @@ class PolyParser(Parser):
                 by_block.setdefault(seg.block, []).append((seg.tokens, ds))
         return assemble([(h, ()) for h, _ in blks], by_block, _field_label)
 
-    def parse_episode(self, ep: Episode) -> Graph:
+    def parse_episode(self, ep: Episode) -> TermGraph:
         return self.parse_in(ep.prompt, self.cond_of(ep.language, ep.instance_id))
 
     def decode(self, tokens: Sequence[str], cond: str | None, novel: bool

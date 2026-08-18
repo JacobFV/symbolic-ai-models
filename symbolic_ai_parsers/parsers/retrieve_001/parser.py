@@ -22,7 +22,7 @@ from __future__ import annotations
 from typing import Sequence
 
 from symbolic_ai_core.data.curriculum import Episode
-from symbolic_ai_core.data.graph import Graph
+from symbolic_ai_core.data.term_graph import TermGraph
 
 from ...base import Parser, register
 from ...retrieval import WordIndex
@@ -35,7 +35,7 @@ class RetrieveParser(Parser):
 
     def __init__(self) -> None:
         self._index = WordIndex()
-        self._graphs: list[Graph] = []
+        self._graphs: list[TermGraph] = []
         self._lessons: list[str] = []
         self.last_lesson: str = ""
 
@@ -45,11 +45,11 @@ class RetrieveParser(Parser):
         self._graphs = [ep.graph for ep in eps]
         self._lessons = [ep.lesson_id for ep in eps]
 
-    def parse(self, text: str) -> Graph:
+    def parse(self, text: str) -> TermGraph:
         i = self._index.query(text)
         if i < 0:
             self.last_lesson = ""
-            return Graph()
+            return TermGraph()
         self.last_lesson = self._lessons[i]
         return self._graphs[i]
 

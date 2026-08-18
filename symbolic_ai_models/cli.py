@@ -454,7 +454,7 @@ def cmd_cost(args: argparse.Namespace) -> int:
     price = Price(usd_per_core_hour=args.usd_per_core_hour,
                   latency_budget_ms=args.latency_budget_ms)
     # The component this repo does not have. Best exact parse recovery here is
-    # 0.016, so any system that became useful would have bought `text -> Graph`
+    # 0.016, so any system that became useful would have bought `text -> TermGraph`
     # from somewhere, and its price is part of the answer's price. Passing it in
     # is how that stops being invisible.
     extra = []
@@ -612,7 +612,7 @@ def build_parser() -> argparse.ArgumentParser:
                         "NOT QUOTABLE")
     k.add_argument("--parser-usd-per-mtok", dest="parser_usd_per_mtok",
                    type=float, default=None,
-                   help="price the text -> Graph component this repo does not "
+                   help="price the text -> TermGraph component this repo does not "
                         "have; e.g. 0.30 for a neural semantic parser")
     k.add_argument("--parser-usd-per-btok", dest="parser_usd_per_btok",
                    type=float, default=None,

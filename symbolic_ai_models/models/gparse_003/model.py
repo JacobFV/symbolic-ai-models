@@ -79,7 +79,7 @@ import math
 from typing import Sequence
 
 from symbolic_ai_core.data.curriculum import Episode
-from symbolic_ai_core.data.graph import STRUCTURAL, Graph
+from symbolic_ai_core.data.term_graph import STRUCTURAL, TermGraph
 from symbolic_ai_core.data.tokenizer import SymbolTokenizer, split_words, word_spans
 from ..base import ModelConfig
 from ..registry import register
@@ -124,7 +124,7 @@ def _norm(text: str) -> tuple[str, ...]:
     return tuple(p.lower() for p in split_words(text))
 
 
-def _children(g: Graph) -> list[list[int]]:
+def _children(g: TermGraph) -> list[list[int]]:
     kids: list[list[int]] = [[] for _ in range(len(g))]
     for i, p in enumerate(g.parent):
         if 0 <= p < len(g):
@@ -132,7 +132,7 @@ def _children(g: Graph) -> list[list[int]]:
     return kids
 
 
-def _multiplicity(g: Graph) -> list[int]:
+def _multiplicity(g: TermGraph) -> list[int]:
     """How many nodes of this parse carry the same symbol as each node.
 
     The one feature that makes this reasoner more than a slot lookup. In
@@ -151,7 +151,7 @@ def _multiplicity(g: Graph) -> list[int]:
     return [min(counts.get(k, 0), 3) for k in keys]
 
 
-def _features(g: Graph, kids: list[list[int]], mult: list[int], i: int, *,
+def _features(g: TermGraph, kids: list[list[int]], mult: list[int], i: int, *,
               lexical: bool = True) -> tuple[tuple, ...]:
     """Everything the scorer may know about node ``i``. Never its own symbol.
 

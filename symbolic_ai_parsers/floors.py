@@ -32,7 +32,7 @@ from dataclasses import dataclass, field
 from typing import Sequence
 
 from symbolic_ai_core.data.curriculum import Episode
-from symbolic_ai_core.data.graph import Graph
+from symbolic_ai_core.data.term_graph import TermGraph
 
 from .scoring import METRICS, Scores, macro_scores, score_graph
 
@@ -43,14 +43,14 @@ __all__ = ["ConstantFloor", "fit_floor"]
 class ConstantFloor:
     """One text-blind constant graph per metric, chosen on training episodes."""
 
-    graphs: dict[str, Graph] = field(default_factory=dict)
+    graphs: dict[str, TermGraph] = field(default_factory=dict)
     #: which training episode each constant came from, for the write-up
     sources: dict[str, str] = field(default_factory=dict)
     #: the training score of each constant, so eval-vs-train drift is visible
     train_scores: dict[str, float] = field(default_factory=dict)
 
-    def predict(self, metric: str) -> Graph:
-        return self.graphs.get(metric, Graph())
+    def predict(self, metric: str) -> TermGraph:
+        return self.graphs.get(metric, TermGraph())
 
     def evaluate(self, episodes: Sequence[Episode]) -> dict[str, float]:
         """Score each metric's constant on ``episodes``. Different constants, so

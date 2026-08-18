@@ -56,7 +56,7 @@ from typing import Iterable, Sequence
 import numpy as np
 
 from symbolic_ai_core.data.curriculum import Episode, generate, lesson_ids
-from symbolic_ai_core.data.graph import Graph
+from symbolic_ai_core.data.term_graph import TermGraph
 
 from .elaborate import STRUCTURAL_TYPES, Elaboration, Mode, elaborate
 
@@ -70,16 +70,16 @@ __all__ = ["GateResult", "Hole", "holes_of", "run_gate", "truncate",
 HELD_OUT_SEED0 = 500
 
 
-def truncate(g: Graph, n: int) -> Graph:
-    """The first ``n`` nodes. Valid because ``graph_from_json`` is breadth-first,
+def truncate(g: TermGraph, n: int) -> TermGraph:
+    """The first ``n`` nodes. Valid because ``term_graph_from_json`` is breadth-first,
     so every parent precedes its children and a prefix is a tree."""
     if n >= len(g):
         return g
-    return Graph(labels=g.labels[:n], types=g.types[:n], parent=g.parent[:n],
+    return TermGraph(labels=g.labels[:n], types=g.types[:n], parent=g.parent[:n],
                  slot=g.slot[:n], depth=g.depth[:n])
 
 
-def mask_nodes(g: Graph, rng: np.random.Generator, mask_rate: float) -> list[int]:
+def mask_nodes(g: TermGraph, rng: np.random.Generator, mask_rate: float) -> list[int]:
     """The same rule ``collate_graph`` uses, so the holes are the ones a model
     faces: an independent draw per node, and at least one question per graph."""
     n = len(g)
@@ -119,7 +119,7 @@ def arity_accepts(elab: Elaboration, i: int, label: str) -> bool:
     return False
 
 
-def holes_of(g: Graph, hidden: Sequence[int]) -> list[int]:
+def holes_of(g: TermGraph, hidden: Sequence[int]) -> list[int]:
     """Masked nodes that carry a symbol — the ones the copy head is scored on.
 
     ``collate_graph`` also drops out-of-vocabulary labels from ``label_acc``,

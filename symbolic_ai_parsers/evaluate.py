@@ -118,8 +118,8 @@ def evaluate_parser(parser: Parser, episodes: Sequence[Episode],
             # A parser that raises must still be scored on that episode.
             # Dropping it would silently exclude exactly the inputs it cannot
             # handle and report the rest as if they were the whole set.
-            from symbolic_ai_core.data.graph import Graph
-            pred = Graph()
+            from symbolic_ai_core.data.term_graph import TermGraph
+            pred = TermGraph()
         rows.append(score_graph(pred, ep.graph))
         got = getattr(parser, "last_lesson", None)
         if got is not None:

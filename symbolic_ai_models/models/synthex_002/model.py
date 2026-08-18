@@ -220,7 +220,7 @@ class SynthexCurated(SynthexClassModel):
 
     def _assign_classes(self, episodes: Sequence[Episode],
                         tok: SymbolTokenizer) -> dict[int, int]:
-        from symbolic_ai_core.data.graph import TYPE_TO_ID
+        from symbolic_ai_core.data.term_graph import TYPE_TO_ID
         # A symbol's class is the type it most often carries in training. Ties
         # break by type id so the assignment does not depend on dict order.
         seen: dict[int, collections.Counter] = collections.defaultdict(

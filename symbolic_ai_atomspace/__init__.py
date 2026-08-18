@@ -2,12 +2,12 @@
 
 The third seam of the repo, opened in
 ``notes/decisions/2026-08-14-the-ir-is-a-knob.md``. ``symbolic_ai_parsers`` made
-*text -> Graph* a parameter and ``symbolic_ai_core.readout`` made *Graph ->
+*text -> TermGraph* a parameter and ``symbolic_ai_core.readout`` made *TermGraph ->
 scored prediction* one; both hold the middle term fixed. This package varies it.
 
-An IR earns the name by supplying three things: ``Graph -> IR`` so the
+An IR earns the name by supplying three things: ``TermGraph -> IR`` so the
 curriculum's exact unannotated ground truth transfers, **native operations** the
-flat arrays cannot express, and ``IR -> Graph`` so every existing floor, readout
+flat arrays cannot express, and ``IR -> TermGraph`` so every existing floor, readout
 and published number still applies. Here the native operation is **pattern
 matching and rewriting** over a hypergraph of atoms.
 

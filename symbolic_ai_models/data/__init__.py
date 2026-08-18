@@ -1,6 +1,6 @@
 """Deprecated. The episode types moved to :mod:`symbolic_ai_core.data`.
 
-``Episode``, ``Graph``, ``SymbolTokenizer`` and the batch/curriculum plumbing are
+``Episode``, ``TermGraph``, ``SymbolTokenizer`` and the batch/curriculum plumbing are
 shared by every package here — 24 of the 25 cross-package imports were one of
 those three types — so they now live in ``symbolic_ai_core`` and this package
 holds re-export shims at the old paths.

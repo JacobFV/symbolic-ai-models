@@ -50,7 +50,7 @@ from dataclasses import dataclass, field
 from typing import Callable, Iterator, Sequence
 
 from symbolic_ai_core.data.curriculum import Episode
-from symbolic_ai_core.data.graph import Graph
+from symbolic_ai_core.data.term_graph import TermGraph
 
 from .features import fold
 from .features import words_of
@@ -150,7 +150,7 @@ def segments(text: str, words: Splitter = words_of) -> list[Segment]:
     return out
 
 
-def _clause_nodes(g: Graph) -> Iterator[tuple[int, str, list[tuple[int, str]]]]:
+def _clause_nodes(g: TermGraph) -> Iterator[tuple[int, str, list[tuple[int, str]]]]:
     """``(index, head, [(slot, label)])`` for nodes whose children are leaves."""
     kids: dict[int, list[int]] = collections.defaultdict(list)
     for i, p in enumerate(g.parent):
@@ -243,7 +243,7 @@ class Treebank:
 
     @staticmethod
     def _sample(node: tuple[int, str, list[tuple[int, str]]], seg: Segment,
-                lowered: tuple[str, ...], g: Graph) -> ClauseSample | None:
+                lowered: tuple[str, ...], g: TermGraph) -> ClauseSample | None:
         idx, head, args = node
         taken: set[int] = set()
         arg_slots: list[tuple[int, int]] = []

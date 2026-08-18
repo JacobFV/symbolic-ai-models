@@ -22,7 +22,7 @@ from __future__ import annotations
 
 from symbolic_ai_core.data.batch import SymbolicBatch, collate_graph, collate_text
 from symbolic_ai_core.data.curriculum import Episode, build_split, generate, resolve_lessons
-from symbolic_ai_core.data.graph import Graph, graph_from_json
+from symbolic_ai_core.data.term_graph import TermGraph, term_graph_from_json
 from symbolic_ai_core.data.tokenizer import SymbolTokenizer
 from .models import Model, ModelConfig, NeuralModel, RuleBasedModel, build, model_names
 from .prefix import PrefixParser, TextView, audit_prefix_parser, build_prefix_parser
@@ -34,8 +34,8 @@ __version__ = "0.1.0"
 __all__ = [
     "__version__",
     # data
-    "Episode", "Graph", "SymbolicBatch", "SymbolTokenizer",
-    "generate", "build_split", "resolve_lessons", "graph_from_json",
+    "Episode", "TermGraph", "SymbolicBatch", "SymbolTokenizer",
+    "generate", "build_split", "resolve_lessons", "term_graph_from_json",
     "collate_text", "collate_graph",
     # models
     "Model", "NeuralModel", "RuleBasedModel", "ModelConfig", "build", "model_names",

@@ -40,7 +40,7 @@ import torch
 from symbolic_ai_core.data.batch import (IGNORE, answer_nodes, choose_hidden,
                                          collate_graph)
 from symbolic_ai_core.data.curriculum import Episode
-from symbolic_ai_core.data.graph import STRUCTURAL, TYPE_TO_ID
+from symbolic_ai_core.data.term_graph import STRUCTURAL, TYPE_TO_ID
 from symbolic_ai_core.data.tokenizer import SymbolTokenizer
 from ..models.base import ModelOutput
 from .base import Task, TaskOutput, Totals, empirical_floor, ratio, score_block

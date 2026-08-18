@@ -1,6 +1,6 @@
 """``legacy-001``: the existing parser layer, lifted into the harder codomain.
 
-``symbolic_ai_models.parsers`` produces a ``ParseResult``, not a ``Graph``, and
+``symbolic_ai_models.parsers`` produces a ``ParseResult``, not a ``TermGraph``, and
 the two are not interchangeable — see :mod:`symbolic_ai_parsers.base` for why
 this package supersedes rather than wraps it. But one field of a ``ParseResult``
 *does* determine a structure without anything being invented: ``facts``, a list
@@ -20,7 +20,7 @@ expectation is measured.
 
 from __future__ import annotations
 
-from symbolic_ai_core.data.graph import Graph
+from symbolic_ai_core.data.term_graph import TermGraph
 from symbolic_ai_models.parsers import build as build_legacy
 
 from ...base import Parser, register
@@ -36,8 +36,8 @@ class LegacyFactsParser(Parser):
     def __init__(self) -> None:
         self._inner = build_legacy("regex")
 
-    def parse(self, text: str) -> Graph:
-        g = Graph()
+    def parse(self, text: str) -> TermGraph:
+        g = TermGraph()
         root = g.add("", "record", -1, 0)
         f = g.add("facts", "field", root, 0)
         lst = g.add("", "list", f, 0)

@@ -33,7 +33,7 @@ import numpy as np
 import torch
 
 from .curriculum import Episode
-from .graph import STRUCTURAL, TYPE_TO_ID, Graph
+from .term_graph import STRUCTURAL, TYPE_TO_ID, TermGraph
 from .tokenizer import SymbolTokenizer
 
 __all__ = ["SymbolicBatch", "RELATIONS", "N_RELATIONS", "MAX_SLOT",
@@ -114,7 +114,7 @@ class SymbolicBatch:
 # ---------------------------------------------------------------------------
 # relations
 # ---------------------------------------------------------------------------
-def relation_matrix(g: Graph, n: int,
+def relation_matrix(g: TermGraph, n: int,
                     hidden: Sequence[int] | None = None) -> np.ndarray:
     """``[n, n]`` relation ids for the first ``n`` nodes of ``g``.
 
@@ -205,7 +205,7 @@ def relation_matrix(g: Graph, n: int,
 MASK_MODES = ("scatter", "subtree", "answer", "answer_one")
 
 
-def _children(g: Graph, n: int) -> dict[int, list[int]]:
+def _children(g: TermGraph, n: int) -> dict[int, list[int]]:
     kids: dict[int, list[int]] = {}
     for i in range(n):
         p = g.parent[i]
@@ -229,7 +229,7 @@ def _subtrees(n: int, kids: dict[int, list[int]]) -> list[set[int]]:
     return out
 
 
-def answer_nodes(g: Graph, n: int, answer: str | None) -> list[int]:
+def answer_nodes(g: TermGraph, n: int, answer: str | None) -> list[int]:
     """Which of the first ``n`` nodes carry the episode's answer as their label.
 
     Exact string equality after stripping, and structural types excluded because
@@ -249,7 +249,7 @@ def answer_nodes(g: Graph, n: int, answer: str | None) -> list[int]:
             and g.types[i] not in STRUCTURAL]
 
 
-def choose_hidden(g: Graph, n: int, rng: np.random.Generator, *,
+def choose_hidden(g: TermGraph, n: int, rng: np.random.Generator, *,
                   mask_rate: float = 0.15, mode: str = "scatter",
                   answer: str | None = None) -> np.ndarray:
     """Which nodes this draw hides. One function, so the floor cannot diverge.
@@ -279,7 +279,7 @@ def choose_hidden(g: Graph, n: int, rng: np.random.Generator, *,
     raise ValueError(f"unknown mask mode {mode!r}; have {list(MASK_MODES)}")
 
 
-def _subtree_hidden(g: Graph, n: int, rng: np.random.Generator,
+def _subtree_hidden(g: TermGraph, n: int, rng: np.random.Generator,
                     mask_rate: float) -> np.ndarray:
     """Whole constituents, drawn until ``mask_rate`` of the nodes are hidden.
 

@@ -18,7 +18,7 @@ import sys
 import pytest
 
 from symbolic_ai_core.data.curriculum import generate
-from symbolic_ai_core.data.graph import Graph
+from symbolic_ai_core.data.term_graph import TermGraph
 from symbolic_ai_parsers import (METRICS, REGISTRY, build, fit_floor, get,
                                  parser_names, score_graph)
 from symbolic_ai_parsers.align import align, canonical, children_of, content_align
@@ -136,10 +136,10 @@ def test_an_unrelated_graph_does_not_score_perfectly(train):
     assert score_graph(a, b).exact == 0.0
 
 
-def _renumber(g: Graph) -> Graph:
+def _renumber(g: TermGraph) -> TermGraph:
     """The same tree, emitted depth-first instead of breadth-first."""
     kids = children_of(g)
-    out = Graph()
+    out = TermGraph()
 
     def walk(old: int, parent: int, slot: int) -> None:
         new = out.add(g.labels[old], g.types[old], parent, slot)
@@ -186,7 +186,7 @@ def test_the_tree_alignment_cannot_be_used_to_score_attachment(train):
 def test_the_content_alignment_can_be_used_to_score_attachment(train):
     """A graph with the right nodes in the wrong places must lose UAS."""
     g = train[0].graph
-    flat = Graph()
+    flat = TermGraph()
     root = flat.add(g.labels[0], g.types[0], -1, 0)
     for i in range(1, len(g)):                  # every node hung off the root
         flat.add(g.labels[i], g.types[i], root, 0)
@@ -242,7 +242,7 @@ def test_every_parser_returns_a_graph_in_every_language(fitted, evals):
         for lang in LANGUAGES:
             for ep in evals[lang][:3]:
                 g = parser.parse(ep.prompt)
-                assert isinstance(g, Graph)
+                assert isinstance(g, TermGraph)
                 assert len(g.labels) == len(g.types) == len(g.parent) == len(g.slot)
                 if len(g):
                     assert g.parent[0] < 0
@@ -251,7 +251,7 @@ def test_every_parser_returns_a_graph_in_every_language(fitted, evals):
 def test_every_parser_survives_degenerate_input(fitted):
     for name, parser in fitted.items():
         for text in ["", "\n\n", "?", "   ", "a" * 4000, "沒有\n  - 一"]:
-            assert isinstance(parser.parse(text), Graph), name
+            assert isinstance(parser.parse(text), TermGraph), name
 
 
 def test_no_parser_scores_below_zero_or_above_one(fitted, evals):

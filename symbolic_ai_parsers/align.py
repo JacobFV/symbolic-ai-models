@@ -45,12 +45,12 @@ from __future__ import annotations
 
 from typing import Sequence
 
-from symbolic_ai_core.data.graph import Graph
+from symbolic_ai_core.data.term_graph import TermGraph
 
 __all__ = ["children_of", "canonical", "align", "content_align"]
 
 
-def children_of(g: Graph) -> list[list[int]]:
+def children_of(g: TermGraph) -> list[list[int]]:
     """``node -> its children, in index order`` (which is slot order)."""
     kids: list[list[int]] = [[] for _ in range(len(g))]
     for i, p in enumerate(g.parent):
@@ -59,11 +59,11 @@ def children_of(g: Graph) -> list[list[int]]:
     return kids
 
 
-def roots_of(g: Graph) -> list[int]:
+def roots_of(g: TermGraph) -> list[int]:
     return [i for i, p in enumerate(g.parent) if p < 0 or p >= len(g)]
 
 
-def canonical(g: Graph) -> Graph:
+def canonical(g: TermGraph) -> TermGraph:
     """Renumber breadth-first, so every score is about the tree and not the
     order somebody happened to emit it in.
 
@@ -80,7 +80,7 @@ def canonical(g: Graph) -> Graph:
     shrink the prediction and quietly raise its precision.
     """
     kids = children_of(g)
-    out = Graph()
+    out = TermGraph()
     seen = [False] * len(g)
     queue: list[tuple[int, int, int]] = [(r, -1, k)
                                          for k, r in enumerate(roots_of(g))]
@@ -134,7 +134,7 @@ def _seq_align(pa: Sequence[int], ga: Sequence[int],
     return dp[0][0], pairs
 
 
-def align(pred: Graph, gold: Graph) -> dict[int, int]:
+def align(pred: TermGraph, gold: TermGraph) -> dict[int, int]:
     """``predicted node -> gold node``, under the top-down mapping above.
 
     An empty prediction, or one with no root, aligns nothing rather than
@@ -176,7 +176,7 @@ def align(pred: Graph, gold: Graph) -> dict[int, int]:
     return mapping
 
 
-def content_align(pred: Graph, gold: Graph) -> dict[int, int]:
+def content_align(pred: TermGraph, gold: TermGraph) -> dict[int, int]:
     """``predicted node -> gold node``, by *content*, ignoring structure entirely.
 
     The k-th node with key ``(label, type)`` in the prediction is the k-th node

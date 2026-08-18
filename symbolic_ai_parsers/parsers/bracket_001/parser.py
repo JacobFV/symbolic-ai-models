@@ -25,7 +25,7 @@ from __future__ import annotations
 
 import re
 
-from symbolic_ai_core.data.graph import Graph
+from symbolic_ai_core.data.term_graph import TermGraph
 
 from ...base import Parser, register
 from ...features import normalise
@@ -50,8 +50,8 @@ def _atom_type(token: str) -> str:
 class BracketParser(Parser):
     """Layout to record; first word of an item is guessed to be its head."""
 
-    def parse(self, text: str) -> Graph:
-        g = Graph()
+    def parse(self, text: str) -> TermGraph:
+        g = TermGraph()
         root = g.add("", "record", -1, 0)
         for slot, (header, items) in enumerate(_blocks(normalise(text))):
             if len(g) >= MAX_NODES:
@@ -59,7 +59,7 @@ class BracketParser(Parser):
             self._emit_block(g, root, slot, header, items)
         return g
 
-    def _emit_block(self, g: Graph, root: int, slot: int, header: str,
+    def _emit_block(self, g: TermGraph, root: int, slot: int, header: str,
                     items: list[str]) -> None:
         name = slug(header)
         if not name and not items:

@@ -47,7 +47,7 @@ import torch
 
 from symbolic_ai_core.data.batch import SymbolicBatch
 from symbolic_ai_core.data.curriculum import Episode
-from symbolic_ai_core.data.graph import NODE_TYPES, TYPE_TO_ID
+from symbolic_ai_core.data.term_graph import NODE_TYPES, TYPE_TO_ID
 from symbolic_ai_core.data.tokenizer import SymbolTokenizer
 from symbolic_ai_core.graphview import (ABSTAIN, GraphView, Votes,
                                         node_context as _node_context)
@@ -110,7 +110,7 @@ class RuleBasedModel(Model):
         # The same idea one surface over. `self.parser` reads text into a
         # `ParseResult` -- word classes and brackets -- which is a claim about
         # categories. `self.text_parser` reads *prefixes* of the text into
-        # `Graph`s, which is the codomain the masked-node task already uses, so
+        # `TermGraph`s, which is the codomain the masked-node task already uses, so
         # a reasoner written against the term graph can be pointed at the text
         # without being rewritten. See :mod:`symbolic_ai_models.prefix`, which
         # also carries the leak argument for the oracle that can sit here.

@@ -63,7 +63,7 @@ from __future__ import annotations
 from typing import Sequence
 
 from symbolic_ai_core.data.curriculum import Episode
-from symbolic_ai_core.data.graph import Graph
+from symbolic_ai_core.data.term_graph import TermGraph
 
 from ...base import Parser
 from ...features import words_of
@@ -101,11 +101,11 @@ class TemplateParser(Parser):
             self._lex = Lexicon.from_episodes(self._episodes)
 
     # ---- parsing -------------------------------------------------------
-    def parse(self, text: str) -> Graph:
+    def parse(self, text: str) -> TermGraph:
         i = self._index.query(text)
         if i < 0:
             self.last_lesson = ""
-            return Graph()
+            return TermGraph()
         ex = self._episodes[i]
         self.last_lesson = ex.lesson_id
         return refill(ex.graph, text, self._lex.words_for(ex.lesson_id),
@@ -119,8 +119,8 @@ class TemplateParser(Parser):
                 f"({self._lex.size():,} frame words)")
 
 
-def refill(template: Graph, text: str, frame_words: frozenset[str],
-            frame_labels: frozenset[str]) -> Graph:
+def refill(template: TermGraph, text: str, frame_words: frozenset[str],
+            frame_labels: frozenset[str]) -> TermGraph:
     """Copy ``template``, replacing its content labels with this text's.
 
     Order of first appearance on both sides. When the two lists are different
@@ -147,6 +147,6 @@ def refill(template: Graph, text: str, frame_words: frozenset[str],
     sub = dict(zip(slots, fills))
     if not sub:
         return template
-    out = Graph.from_dict(template.to_dict())
+    out = TermGraph.from_dict(template.to_dict())
     out.labels = [sub.get(l, l) for l in out.labels]
     return out

@@ -22,7 +22,7 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any, Iterator, Sequence
 
-from .graph import Graph, graph_from_json
+from .term_graph import TermGraph, term_graph_from_json
 
 __all__ = ["Episode", "lesson_ids", "resolve_lessons", "generate", "write_jsonl",
            "read_jsonl", "build_split"]
@@ -39,7 +39,7 @@ class Episode:
     prompt: str
     answer: str
     choices: list[str]
-    graph: Graph
+    graph: TermGraph
     tags: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
@@ -50,7 +50,7 @@ class Episode:
     @classmethod
     def from_dict(cls, d: dict[str, Any]) -> "Episode":
         d = dict(d)
-        d["graph"] = Graph.from_dict(d["graph"])
+        d["graph"] = TermGraph.from_dict(d["graph"])
         return cls(**d)
 
     @property
@@ -369,7 +369,7 @@ def generate(lessons: Sequence[str], *, n: int, seed0: int = 0,
                 lesson_id=lid, seed=seed, instance_id=ex.instance_id,
                 language=ex.language, prompt=ex.prompt, answer=ex.answer,
                 choices=list(ex.choices),
-                graph=graph_from_json(st["observation"], max_nodes=max_nodes),
+                graph=term_graph_from_json(st["observation"], max_nodes=max_nodes),
                 tags=list(ex.metadata.get("tags") or []),
             )
 

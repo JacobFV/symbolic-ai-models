@@ -1,4 +1,4 @@
-"""A parser is ``str -> Graph``. That is the whole interface.
+"""A parser is ``str -> TermGraph``. That is the whole interface.
 
 Why a second parser package
 ---------------------------
@@ -13,14 +13,14 @@ without ever committing to a structure.
 
 This package asks the other question. ``langcurriculum`` renders every episode
 from a typed term and hands the term over, so for every string there is exactly
-one right answer of type :class:`~symbolic_ai_core.data.graph.Graph`, with no
+one right answer of type :class:`~symbolic_ai_core.data.term_graph.TermGraph`, with no
 annotator and an unbounded supply of fresh episodes. A parser here has to
 produce that object: the nodes, their types, their labels, and who each node's
 parent is. Nothing partial, nothing optional.
 
 **So this package supersedes the old one rather than reusing or wrapping it**,
 for the objective — the two layers have different codomains and different
-metrics, and a ``ParseResult`` cannot be turned into a ``Graph`` without
+metrics, and a ``ParseResult`` cannot be turned into a ``TermGraph`` without
 inventing the structure it declined to commit to. The old layer is not deleted
 and its reasoners keep using it. One bridge is provided and registered as a
 control: :mod:`symbolic_ai_parsers.parsers.legacy` lifts the ``facts`` field of
@@ -45,7 +45,7 @@ from __future__ import annotations
 from typing import Any, Callable, Sequence, TypeVar
 
 from symbolic_ai_core.data.curriculum import Episode
-from symbolic_ai_core.data.graph import Graph
+from symbolic_ai_core.data.term_graph import TermGraph
 from symbolic_ai_core.registry import VersionedRegistry, base_name
 
 __all__ = ["Parser", "register", "get", "build", "parser_names", "base_name",
@@ -53,7 +53,7 @@ __all__ = ["Parser", "register", "get", "build", "parser_names", "base_name",
 
 
 class Parser:
-    """Fit on training episodes; map a string to a :class:`Graph`.
+    """Fit on training episodes; map a string to a :class:`TermGraph`.
 
     ``parse`` is the whole contract. ``fit`` is where a parser is allowed to see
     supervision, and it sees *episodes* — both surfaces of the same seed — so a
@@ -72,7 +72,7 @@ class Parser:
     def fit(self, episodes: Sequence[Episode]) -> None:
         """Learn from training episodes. Hand-written parsers do nothing here."""
 
-    def parse(self, text: str) -> Graph:
+    def parse(self, text: str) -> TermGraph:
         raise NotImplementedError
 
     def n_parameters(self) -> int:

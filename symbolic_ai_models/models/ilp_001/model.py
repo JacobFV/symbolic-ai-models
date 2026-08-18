@@ -39,7 +39,7 @@ from dataclasses import dataclass
 from typing import Any, Iterator, Sequence
 
 from symbolic_ai_core.data.curriculum import Episode
-from symbolic_ai_core.data.graph import TYPE_TO_ID
+from symbolic_ai_core.data.term_graph import TYPE_TO_ID
 from symbolic_ai_core.data.tokenizer import SymbolTokenizer
 from ..base import ModelConfig
 from ..registry import register

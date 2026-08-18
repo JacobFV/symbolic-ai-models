@@ -18,7 +18,7 @@ from __future__ import annotations
 import pytest
 
 from symbolic_ai_core.data.curriculum import generate, lesson_ids
-from symbolic_ai_core.data.graph import NODE_TYPES, Graph
+from symbolic_ai_core.data.term_graph import NODE_TYPES, TermGraph
 from symbolic_ai_lean.expr import Const, Lit, pretty
 from symbolic_ai_lean.translate import expr_to_graph, graph_to_expr
 
@@ -57,7 +57,7 @@ ADVERSARIAL = ["", " ", "_", "__init__", "a_b", "Term.pred", "(", ")", '"',
 
 @pytest.mark.parametrize("label", ADVERSARIAL)
 def test_a_label_survives_the_round_trip_whatever_it_says(label):
-    g = Graph()
+    g = TermGraph()
     root = g.add(label, "pred", -1, 0)
     g.add(label, "ident", root, 0)
     g.add("", "list", root, 1)
@@ -67,23 +67,23 @@ def test_a_label_survives_the_round_trip_whatever_it_says(label):
 @pytest.mark.parametrize("type_", [t for t in NODE_TYPES])
 def test_every_node_type_in_the_alphabet_round_trips(type_):
     """On the alphabet of node types, not on the ones a fixture drew."""
-    g = Graph()
+    g = TermGraph()
     root = g.add("head", "pred", -1, 0)
     g.add("x", type_, root, 0)
     assert expr_to_graph(graph_to_expr(g)).to_dict() == g.to_dict()
 
 
 def test_a_structural_node_that_acquired_a_label_still_round_trips():
-    """`Graph.add` is public and nothing stops a label on a `list`. Emitting the
+    """`TermGraph.add` is public and nothing stops a label on a `list`. Emitting the
     label conditionally would make the encoding lossy exactly here."""
-    g = Graph()
+    g = TermGraph()
     root = g.add("surprise", "list", -1, 0)
     g.add("x", "ident", root, 0)
     assert expr_to_graph(graph_to_expr(g)).to_dict() == g.to_dict()
 
 
 def test_a_deep_chain_does_not_recurse_off_the_stack():
-    g = Graph()
+    g = TermGraph()
     parent = g.add("root", "pred", -1, 0)
     for _ in range(400):
         parent = g.add("x", "pred", parent, 0)
@@ -92,7 +92,7 @@ def test_a_deep_chain_does_not_recurse_off_the_stack():
 
 def test_an_empty_graph_is_refused_rather_than_silently_encoded():
     with pytest.raises(ValueError):
-        graph_to_expr(Graph())
+        graph_to_expr(TermGraph())
 
 
 def test_a_non_term_expression_is_refused():

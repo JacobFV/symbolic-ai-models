@@ -164,7 +164,7 @@ def test_superposing_the_atoms_counts_agreeing_coordinates(fixtures, cfg):
 
 
 def _atom_key(view, node) -> tuple:
-    from symbolic_ai_core.data.graph import TYPE_TO_ID
+    from symbolic_ai_core.data.term_graph import TYPE_TO_ID
     parent = view.parent[node]
     ptype = (view.types[parent] or "mask") if parent >= 0 else "ROOT"
     return (TYPE_TO_ID.get(ptype, 0) % 32, min(view.slot[node], 11),

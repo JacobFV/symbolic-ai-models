@@ -96,7 +96,7 @@ import collections
 from dataclasses import dataclass, field
 from typing import Any, Iterable, Sequence
 
-from symbolic_ai_core.data.graph import Graph
+from symbolic_ai_core.data.term_graph import TermGraph
 
 from .align import align, canonical, children_of, content_align
 
@@ -127,7 +127,7 @@ def _multiset_f1(a: collections.Counter, b: collections.Counter) -> float:
     return _f1(common, sum(a.values()), sum(b.values()))
 
 
-def _yield_of(g: Graph, kids: Sequence[Sequence[int]]) -> list[tuple[str, ...]]:
+def _yield_of(g: TermGraph, kids: Sequence[Sequence[int]]) -> list[tuple[str, ...]]:
     """Leaf labels under every node, in index order. Iterative, so a pathological
     depth cannot blow the stack in the middle of an evaluation."""
     out: list[tuple[str, ...]] = [()] * len(g)
@@ -142,7 +142,7 @@ def _yield_of(g: Graph, kids: Sequence[Sequence[int]]) -> list[tuple[str, ...]]:
     return out
 
 
-def brackets(g: Graph) -> collections.Counter:
+def brackets(g: TermGraph) -> collections.Counter:
     """``(type, label, yield)`` for every non-leaf node. The span/label score's
     unit, and computed without reference to any other graph."""
     kids = children_of(g)
@@ -151,17 +151,17 @@ def brackets(g: Graph) -> collections.Counter:
         (g.types[i], g.labels[i], ys[i]) for i in range(len(g)) if kids[i])
 
 
-def label_bag(g: Graph) -> collections.Counter:
+def label_bag(g: TermGraph) -> collections.Counter:
     """Multiset of non-empty node labels. Structure ignored on purpose."""
     return collections.Counter(l for l in g.labels if l)
 
 
-def _name(g: Graph, i: int) -> str:
+def _name(g: TermGraph, i: int) -> str:
     """How a node is written in a triple: ``label:type``, or just the type."""
     return f"{g.labels[i]}:{g.types[i]}" if g.labels[i] else g.types[i]
 
 
-def edges(g: Graph) -> collections.Counter:
+def edges(g: TermGraph) -> collections.Counter:
     """``(parent, slot, child)`` for every edge. Smatch's triple set.
 
     Smatch needs a hill-climbing search over variable bindings because AMR nodes
@@ -173,7 +173,7 @@ def edges(g: Graph) -> collections.Counter:
         for i in range(len(g)) if 0 <= g.parent[i] < len(g))
 
 
-def paths(g: Graph) -> collections.Counter:
+def paths(g: TermGraph) -> collections.Counter:
     """Root-to-node paths of ``label:type``. Lineage, at every depth."""
     out: list[tuple[str, ...]] = [()] * len(g)
     bag: collections.Counter = collections.Counter()
@@ -184,7 +184,7 @@ def paths(g: Graph) -> collections.Counter:
     return bag
 
 
-def wl_bag(g: Graph, rounds: int = 2) -> collections.Counter:
+def wl_bag(g: TermGraph, rounds: int = 2) -> collections.Counter:
     """Weisfeiler-Lehman subtree kernel: refined labels from every round.
 
     Round 0 is the node's own ``label:type``; each further round replaces it
@@ -233,7 +233,7 @@ class Scores:
         return dict(self.__dict__)
 
 
-def score_graph(pred: Graph, gold: Graph) -> Scores:
+def score_graph(pred: TermGraph, gold: TermGraph) -> Scores:
     """Score one predicted graph against the term the text was generated from."""
     n_gold = len(gold)
     if not n_gold:

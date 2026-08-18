@@ -1,4 +1,4 @@
-"""Parsers, in the only sense that admits an exact score: ``str -> Graph``.
+"""Parsers, in the only sense that admits an exact score: ``str -> TermGraph``.
 
 ``langcurriculum`` renders every episode from a typed term and hands the term
 over, so text and structure come out of one seed and the mapping between them is

@@ -112,7 +112,7 @@ import collections
 from typing import Any, Sequence
 
 from symbolic_ai_core.data.curriculum import Episode
-from symbolic_ai_core.data.graph import NODE_TYPES, STRUCTURAL, TYPE_TO_ID
+from symbolic_ai_core.data.term_graph import NODE_TYPES, STRUCTURAL, TYPE_TO_ID
 from symbolic_ai_core.data.tokenizer import SymbolTokenizer
 from ..base import ModelConfig
 from ..frontier_001.model import FrontierModel

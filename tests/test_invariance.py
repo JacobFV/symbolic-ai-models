@@ -55,7 +55,7 @@ def test_the_renaming_is_a_derangement(fitted):
 
 
 def test_renaming_moves_both_surfaces_together(fitted):
-    """Graph and prose must agree afterwards, or the test measures a mismatch."""
+    """TermGraph and prose must agree afterwards, or the test measures a mismatch."""
     _, evaluation, renamed, _, renaming = fitted
     for before, after in zip(evaluation, renamed):
         assert after.graph.labels == [renaming.apply(l) if l else l

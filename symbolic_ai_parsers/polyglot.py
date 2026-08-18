@@ -63,7 +63,7 @@ from typing import Any, Sequence
 import numpy as np
 
 from symbolic_ai_core.data.curriculum import Episode, generate, resolve_lessons
-from symbolic_ai_core.data.graph import Graph
+from symbolic_ai_core.data.term_graph import TermGraph
 
 from .base import Parser, build
 from .evaluate import EVAL_SEED0
@@ -176,7 +176,7 @@ def evaluate_on(parser: Parser, episodes: Sequence[Episode]) -> dict[str, float]
         try:
             pred = conditioned(ep) if conditioned else parser.parse(ep.prompt)
         except Exception:
-            pred = Graph()
+            pred = TermGraph()
         rows.append(score_graph(pred, ep.graph))
     m = macro_scores(rows, lessons)
     out = {k: m[k] for k in METRICS}

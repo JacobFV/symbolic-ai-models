@@ -35,7 +35,7 @@ import torch
 torch.set_num_threads(4)
 
 from symbolic_ai_core.data.batch import IGNORE
-from symbolic_ai_core.data.graph import NODE_TYPES
+from symbolic_ai_core.data.term_graph import NODE_TYPES
 from symbolic_ai_core.data.sampler import batches
 from symbolic_ai_models.tasks import make_task
 from symbolic_ai_models.train import load_data, load_run

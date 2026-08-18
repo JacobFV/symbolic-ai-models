@@ -172,12 +172,12 @@ def test_conditioning_reads_metadata_and_never_the_graph(multi):
     must use the language and the instance id and nothing else."""
     import dataclasses
 
-    from symbolic_ai_core.data.graph import Graph
+    from symbolic_ai_core.data.term_graph import TermGraph
 
     p = build("polycky-002")
     p.fit(multi)
     ep = multi[0]
-    blanked = dataclasses.replace(ep, graph=Graph(), answer="", choices=[])
+    blanked = dataclasses.replace(ep, graph=TermGraph(), answer="", choices=[])
     assert p.parse_episode(ep).to_dict() == p.parse_episode(blanked).to_dict()
 
 

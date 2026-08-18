@@ -129,10 +129,10 @@ def test_the_order_representation_reads_order_and_not_vocabulary():
     """A synthetic pair of "languages" that differ only in linearisation must
     come out at opposite ends of a relation, and two that differ only in which
     words they use must not."""
-    from symbolic_ai_core.data.graph import Graph
+    from symbolic_ai_core.data.term_graph import TermGraph
 
     def episode(prompt, lang):
-        g = Graph()
+        g = TermGraph()
         root = g.add("give", "pred", -1, 0)
         g.add("alpha", "ident", root, 0)
         g.add("beta", "ident", root, 1)

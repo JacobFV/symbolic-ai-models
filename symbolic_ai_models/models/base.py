@@ -44,7 +44,7 @@ import torch.nn.functional as F
 
 from symbolic_ai_core.data.batch import N_RELATIONS, SymbolicBatch
 from symbolic_ai_core.data.curriculum import Episode
-from symbolic_ai_core.data.graph import NODE_TYPES
+from symbolic_ai_core.data.term_graph import NODE_TYPES
 
 if TYPE_CHECKING:                     # avoids a cycle: tasks imports ModelOutput
     from symbolic_ai_core.data.tokenizer import SymbolTokenizer
@@ -90,7 +90,7 @@ class ModelConfig:
     d_ff: int = 1024
     dropout: float = 0.1
     max_len: int = 1024
-    #: Graph truncation, which is *not* `max_len`. Models were passing the text
+    #: TermGraph truncation, which is *not* `max_len`. Models were passing the text
     #: length as the node cap, so they fitted on graphs cut at 520 nodes and
     #: were evaluated on graphs cut at 128 — different data, and four times the
     #: work for the half of it that was thrown away.

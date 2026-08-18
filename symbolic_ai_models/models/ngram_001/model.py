@@ -20,7 +20,7 @@ import collections
 from typing import Sequence
 
 from symbolic_ai_core.data.curriculum import Episode
-from symbolic_ai_core.data.graph import TYPE_TO_ID
+from symbolic_ai_core.data.term_graph import TYPE_TO_ID
 from symbolic_ai_core.data.tokenizer import SymbolTokenizer
 from ..base import ModelConfig
 from ..registry import register
@@ -71,7 +71,7 @@ class NGramModel(RuleBasedModel):
 
         self._learn_classes(episodes, tok)
 
-        # Graph contexts are counted on *masked* views, so the keys recorded
+        # TermGraph contexts are counted on *masked* views, so the keys recorded
         # here are keys that will still resolve at evaluation time.
         for view, targets in self.training_views(episodes, tok,
                                                  max_nodes=self.cfg.max_nodes):

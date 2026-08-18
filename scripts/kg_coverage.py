@@ -121,7 +121,7 @@ def static_pass(lessons, seeds):
                 st = L.structured(s)
                 if any(w in vocab for w in str(st["answer"]).replace("_", " ").split()):
                     ah += 1
-                g = C.graph_from_json(st["observation"], max_nodes=512)
+                g = C.term_graph_from_json(st["observation"], max_nodes=512)
                 for lab in g.labels:
                     nn += 1
                     nh += any(w in vocab for w in str(lab).replace("_", " ").split())

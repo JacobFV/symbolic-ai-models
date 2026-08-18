@@ -2,11 +2,11 @@
 
 Three packages in this repo evaluate different things against the same
 curriculum — ``symbolic_ai_models`` (models), ``symbolic_ai_parsers``
-(``str -> Graph``), and ``symbolic_ai_agents`` on the ``omegaclaw`` branch — and
+(``str -> TermGraph``), and ``symbolic_ai_agents`` on the ``omegaclaw`` branch — and
 they were sharing that machinery by importing it out of ``symbolic_ai_models``.
 That made the models package three things wearing one name, and it made the
 sibling packages depend on the models package for types that have nothing to do
-with models: 24 of the 25 cross-package imports were ``Episode``, ``Graph`` and
+with models: 24 of the 25 cross-package imports were ``Episode``, ``TermGraph`` and
 ``SymbolTokenizer``.
 
 Why not fold this into ``symbolic_ai_data``

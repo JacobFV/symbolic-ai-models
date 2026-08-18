@@ -13,7 +13,7 @@ import pytest
 from symbolic_ai_core.data.batch import (REL, collate_graph, collate_text,
                                            relation_matrix)
 from symbolic_ai_core.data.curriculum import Episode, generate, resolve_lessons
-from symbolic_ai_core.data.graph import TYPE_TO_ID, Graph, graph_from_json
+from symbolic_ai_core.data.term_graph import TYPE_TO_ID, TermGraph, term_graph_from_json
 from symbolic_ai_core.data.tokenizer import SymbolTokenizer
 
 LESSONS = ["unification", "symbol_grounding", "context_free_language"]
@@ -36,7 +36,7 @@ def test_graph_is_a_tree_in_preorder(episodes):
 
 def test_named_fields_become_labelled_nodes():
     """A record's field names are nodes, so they can be masked and predicted."""
-    g = graph_from_json({"t": "record", "fields": {
+    g = term_graph_from_json({"t": "record", "fields": {
         "query": {"t": "ident", "v": "x"},
         "scene": {"t": "list", "items": [{"t": "ident", "v": "o1"}]}}})
     fields = {g.labels[i] for i, t in enumerate(g.types) if t == "field"}
@@ -45,7 +45,7 @@ def test_named_fields_become_labelled_nodes():
 
 def test_strings_are_exploded_into_symbols():
     """A bracket string is structure, not one opaque leaf."""
-    g = graph_from_json({"t": "str", "v": "(())"})
+    g = term_graph_from_json({"t": "str", "v": "(())"})
     assert len(g) == 5                       # the str node plus four brackets
     assert [g.labels[i] for i in range(1, 5)] == ["(", "(", ")", ")"]
     assert all(g.types[i] == "char" for i in range(1, 5))
@@ -60,19 +60,19 @@ def test_traversal_is_bounded_breadth_first():
     deep = {"t": "record", "fields": {
         c: {"t": "list", "items": [{"t": "ident", "v": f"{c}{i}"} for i in range(20)]}
         for c in "abcde"}}
-    g = graph_from_json(deep, max_nodes=12)
+    g = term_graph_from_json(deep, max_nodes=12)
     assert len(g) == 12
     assert {g.labels[i] for i, t in enumerate(g.types) if t == "field"} == set("abcde")
 
 
 def test_graph_round_trips_through_json(episodes):
     for ep in episodes:
-        assert Graph.from_dict(ep.graph.to_dict()).to_dict() == ep.graph.to_dict()
+        assert TermGraph.from_dict(ep.graph.to_dict()).to_dict() == ep.graph.to_dict()
 
 
 # ---- relations ------------------------------------------------------------
 def test_relation_matrix_records_slots_and_coreference():
-    g = Graph()
+    g = TermGraph()
     root = g.add("f", "pred", -1, 0)
     a = g.add("x", "ident", root, 0)
     b = g.add("x", "ident", root, 1)
@@ -89,7 +89,7 @@ def test_relation_matrix_records_slots_and_coreference():
 
 def test_coreference_keys_on_the_label_string():
     """Two nodes with the same invented name are related even out of vocabulary."""
-    g = Graph()
+    g = TermGraph()
     g.add("f", "pred", -1, 0)
     g.add("zz9", "ident", 0, 0)
     g.add("g", "pred", 0, 1)
@@ -99,7 +99,7 @@ def test_coreference_keys_on_the_label_string():
 
 
 def test_unlabelled_nodes_are_never_coreferent():
-    g = Graph()
+    g = TermGraph()
     g.add("", "list", -1, 0)
     g.add("", "list", 0, 0)
     g.add("", "list", 0, 1)
@@ -174,7 +174,7 @@ def test_masking_withholds_the_coreference_edges_of_hidden_nodes():
     Structural edges are kept — those are facts about the tree, not about the
     hidden symbol.
     """
-    g = Graph()
+    g = TermGraph()
     g.add("f", "pred", -1, 0)
     g.add("x", "ident", 0, 0)
     g.add("g", "pred", 0, 1)
@@ -242,7 +242,7 @@ def test_target_source_points_at_a_visible_node_with_the_same_label():
 
     from symbolic_ai_core.data.batch import IGNORE, collate_graph
     from symbolic_ai_core.data.curriculum import generate, lesson_ids
-    from symbolic_ai_core.data.graph import STRUCTURAL, TYPE_TO_ID
+    from symbolic_ai_core.data.term_graph import STRUCTURAL, TYPE_TO_ID
     from symbolic_ai_models.train import TrainConfig, build_tokenizer
 
     eps = list(generate(lesson_ids()[:6], n=6))

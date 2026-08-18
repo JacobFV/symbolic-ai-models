@@ -20,7 +20,7 @@ from __future__ import annotations
 import pytest
 
 from symbolic_ai_core.data.curriculum import generate, lesson_ids
-from symbolic_ai_core.data.graph import Graph
+from symbolic_ai_core.data.term_graph import TermGraph
 from symbolic_ai_lean.elaborate import elaborate
 from symbolic_ai_lean.expr import pretty
 
@@ -32,14 +32,14 @@ def episodes():
     return list(generate(lesson_ids()[:24], n=1, seed0=500))
 
 
-def _holes(g: Graph) -> list[int]:
+def _holes(g: TermGraph) -> list[int]:
     """A deterministic spread of holes: every seventh symbol-bearing node."""
     cand = [i for i in range(len(g))
             if g.labels[i] and g.types[i] not in ("list", "tuple", "record", "nil")]
     return cand[::7][:12]
 
 
-def _all_verdicts(g: Graph, hidden, mode):
+def _all_verdicts(g: TermGraph, hidden, mode):
     e = elaborate(g, hidden, mode=mode)
     return {(i, c): e.verdict(i, c)
             for i in hidden for c in e.candidate_labels(i)}
@@ -55,7 +55,7 @@ def test_verdicts_are_invariant_under_a_consistent_renaming(episodes, mode):
             continue
         symbols = sorted({l for l in g.labels if l})
         rename = {s: f"sym{k:04d}" for k, s in enumerate(symbols)}
-        renamed = Graph(labels=[rename.get(l, l) for l in g.labels],
+        renamed = TermGraph(labels=[rename.get(l, l) for l in g.labels],
                         types=list(g.types), parent=list(g.parent),
                         slot=list(g.slot), depth=list(g.depth))
         a = _all_verdicts(g, hidden, mode)
@@ -72,7 +72,7 @@ def test_no_verdict_depends_on_the_hidden_answer(episodes, mode):
         hidden = _holes(g)
         if not hidden:
             continue
-        tampered = Graph(labels=[("ZZZ_tampered" if i in hidden else l)
+        tampered = TermGraph(labels=[("ZZZ_tampered" if i in hidden else l)
                                  for i, l in enumerate(g.labels)],
                          types=list(g.types), parent=list(g.parent),
                          slot=list(g.slot), depth=list(g.depth))
@@ -115,9 +115,9 @@ def test_candidate_order_does_not_change_any_verdict(episodes, mode):
 
 
 # --------------------------------------------------- what the kernel refuses
-def _binary_pred_graph() -> tuple[Graph, int]:
+def _binary_pred_graph() -> tuple[TermGraph, int]:
     """``(likes alice bob)`` twice over, with the second ``alice`` masked."""
-    g = Graph()
+    g = TermGraph()
     r = g.add("", "list", -1, 0)
     p1 = g.add("likes", "pred", r, 0)
     g.add("alice", "ident", p1, 0)
@@ -149,7 +149,7 @@ def test_a_leaf_cannot_fill_a_two_argument_hole():
 
 
 def test_a_numeral_cannot_fill_a_position_pinned_to_a_predicate():
-    g = Graph()
+    g = TermGraph()
     r = g.add("holds", "pred", -1, 0)
     g.add("2", "num", r, 0)
     inner = g.add("p", "pred", r, 1)
@@ -162,7 +162,7 @@ def test_a_numeral_cannot_fill_a_position_pinned_to_a_predicate():
 
 
 def test_a_field_name_cannot_repeat_inside_one_record():
-    g = Graph()
+    g = TermGraph()
     r = g.add("", "record", -1, 0)
     f1 = g.add("query", "field", r, 0)
     g.add("x", "ident", f1, 0)
@@ -175,7 +175,7 @@ def test_a_field_name_cannot_repeat_inside_one_record():
 
 
 def test_an_undeclared_symbol_is_possible_open_and_an_error_declared():
-    g = Graph()
+    g = TermGraph()
     r = g.add("", "record", -1, 0)
     f = g.add("roster", "field", r, 0)
     hole = g.add("alice", "ident", f, 0)
@@ -190,7 +190,7 @@ def test_a_symbol_the_elaborator_gave_up_on_is_possible_in_every_mode():
     rejection. Measured: turning it into one cut 221 of the 232 gold answers
     the `declared` arm lost, which would have read as a fact about the
     curriculum rather than about one branch."""
-    g = Graph()
+    g = TermGraph()
     r = g.add("", "list", -1, 0)
     p = g.add("push", "pred", r, 0)             # `push` as a binary predicate
     g.add("a", "ident", p, 0)

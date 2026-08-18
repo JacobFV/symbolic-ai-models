@@ -15,7 +15,7 @@ so it cannot double-count — and it is reproduced here by making atoms frozen
 value objects.
 
 It is also, and this was measured rather than assumed, exactly what makes
-``Graph -> atomspace`` non-invertible if you encode a term as its own nested
+``TermGraph -> atomspace`` non-invertible if you encode a term as its own nested
 expression. A curriculum graph is a tree of **occurrences**; an atomspace is a
 set of **values**; and two sibling leaves labelled ``a`` collapse into one atom
 the moment the encoding forgets where they sat. See

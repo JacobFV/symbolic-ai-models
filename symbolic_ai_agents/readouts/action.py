@@ -171,7 +171,7 @@ def _normalise(weights: Mapping[str, float]) -> dict[str, float]:
 @register("action-001", channel=SYMBOL, prefix="action",
           doc="The graph emission read as a choice among an environment's actions.")
 class ActionReadout(Readout):
-    """Graph votes in, a preference over legal action strings out.
+    """TermGraph votes in, a preference over legal action strings out.
 
     ``channel`` is an instance attribute here rather than the class attribute
     :func:`~symbolic_ai_core.readout.register` sets, and deliberately so: the

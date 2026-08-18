@@ -80,7 +80,7 @@ import numpy as np
 
 from symbolic_ai_core.calibration import MassCalibrator, ScoreCalibrator
 from symbolic_ai_core.data.curriculum import Episode
-from symbolic_ai_core.data.graph import TYPE_TO_ID
+from symbolic_ai_core.data.term_graph import TYPE_TO_ID
 from symbolic_ai_core.data.tokenizer import SymbolTokenizer
 from ..base import ModelConfig
 from ..corefer_001.model import _pair_features, _type_keys

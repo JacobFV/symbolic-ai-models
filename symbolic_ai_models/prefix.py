@@ -15,7 +15,7 @@ the parser; swapping the reasoner under a fixed parser measures the reasoner.
 The seam
 --------
 
-:class:`PrefixParser` is ``ids -> one Graph per position``. Two implementations
+:class:`PrefixParser` is ``ids -> one TermGraph per position``. Two implementations
 matter and they answer to the same interface:
 
 * :class:`TextPrefix` adapts any parser registered in ``symbolic_ai_parsers``
@@ -33,7 +33,7 @@ matter and they answer to the same interface:
 Why the oracle is not a ``symbolic_ai_parsers.Parser``
 ------------------------------------------------------
 
-Because it is not a parser. That package's contract is ``str -> Graph`` and the
+Because it is not a parser. That package's contract is ``str -> TermGraph`` and the
 oracle cannot honour it — it needs the answer key. Registering it there would
 put a by-construction perfect row in a scoreboard next to rows that had to work
 for theirs. The protocol is still *reused* rather than duplicated: real parsers
@@ -99,7 +99,7 @@ import collections
 from typing import Callable, Sequence
 
 from symbolic_ai_core.data.curriculum import Episode
-from symbolic_ai_core.data.graph import Graph
+from symbolic_ai_core.data.term_graph import TermGraph
 from symbolic_ai_core.data.tokenizer import (SPECIALS, SymbolTokenizer,
                                              split_words, word_spans)
 
@@ -108,7 +108,7 @@ __all__ = ["PrefixParser", "NullPrefix", "FlatPrefix", "TextPrefix",
            "prefix_parser_names", "audit_prefix_parser"]
 
 #: Shared and never mutated: a parse of nothing.
-EMPTY = Graph()
+EMPTY = TermGraph()
 
 _NEVER = 1 << 30
 
@@ -214,17 +214,17 @@ class TextView:
     once.
     """
 
-    def __init__(self, reading: Reading, at: Callable[[int], Graph]) -> None:
+    def __init__(self, reading: Reading, at: Callable[[int], TermGraph]) -> None:
         self.reading = reading
         self.ids = reading.ids
         self.tok = reading.tok
         self._at = at
-        self._cache: dict[int, Graph] = {}
+        self._cache: dict[int, TermGraph] = {}
 
     def __len__(self) -> int:
         return len(self.ids)
 
-    def graph(self, t: int) -> Graph:
+    def graph(self, t: int) -> TermGraph:
         """The structure recoverable from ``ids[:t+1]``, and nothing later."""
         g = self._cache.get(t)
         if g is None:
@@ -256,7 +256,7 @@ class PrefixParser:
         """Learn from training episodes. A written-down parser does nothing."""
 
     def begin(self, ids: Sequence[int], tok: SymbolTokenizer,
-              truth: Graph | None = None) -> TextView:
+              truth: TermGraph | None = None) -> TextView:
         raise NotImplementedError
 
     def n_parameters(self) -> int:
@@ -290,13 +290,13 @@ class FlatPrefix(PrefixParser):
 
     def begin(self, ids, tok, truth=None) -> TextView:
         reading = Reading(ids, tok)
-        cache: dict[int, Graph] = {}
+        cache: dict[int, TermGraph] = {}
 
-        def at(t: int) -> Graph:
+        def at(t: int) -> TermGraph:
             k = reading.n_complete_words(t)
             g = cache.get(k)
             if g is None:
-                g = Graph()
+                g = TermGraph()
                 root = g.add("", "list", -1, 0)
                 for s, w in enumerate(reading.words[:k]):
                     g.add(w, "token", root, min(s, 8))
@@ -329,9 +329,9 @@ class TextPrefix(PrefixParser):
 
     def begin(self, ids, tok, truth=None) -> TextView:
         reading = Reading(ids, tok)
-        cache: dict[int, Graph] = {}
+        cache: dict[int, TermGraph] = {}
 
-        def at(t: int) -> Graph:
+        def at(t: int) -> TermGraph:
             c = reading.clen[t]
             g = cache.get(c)
             if g is None:
@@ -359,9 +359,9 @@ class OraclePrefix(PrefixParser):
             return TextView(reading, lambda t: EMPTY)
 
         state: dict[str, object] = {}
-        cache: dict[int, Graph] = {}
+        cache: dict[int, TermGraph] = {}
 
-        def at(t: int) -> Graph:
+        def at(t: int) -> TermGraph:
             ready = state.get("ready")
             if ready is None:
                 ready = state["ready"] = availability(truth, reading.words)
@@ -374,7 +374,7 @@ class OraclePrefix(PrefixParser):
         return TextView(reading, at)
 
 
-def availability(g: Graph, words: Sequence[str]) -> list[int]:
+def availability(g: TermGraph, words: Sequence[str]) -> list[int]:
     """``node -> how many words must be read before it may be revealed``.
 
     The ``r``-th node carrying a symbol waits for the ``r``-th occurrence of
@@ -426,7 +426,7 @@ def availability(g: Graph, words: Sequence[str]) -> list[int]:
     return need
 
 
-def restrict(g: Graph, need: Sequence[int], k: int) -> Graph:
+def restrict(g: TermGraph, need: Sequence[int], k: int) -> TermGraph:
     """The subgraph readable after ``k`` words, re-attached and renumbered.
 
     A kept node whose parent is not kept takes its nearest kept ancestor, so the
@@ -439,7 +439,7 @@ def restrict(g: Graph, need: Sequence[int], k: int) -> Graph:
     if not keep:
         return EMPTY
     kept = set(keep)
-    out = Graph()
+    out = TermGraph()
     new: dict[int, int] = {}
     slots: collections.Counter = collections.Counter()
     for i in keep:                       # index order is pre-order: parents first

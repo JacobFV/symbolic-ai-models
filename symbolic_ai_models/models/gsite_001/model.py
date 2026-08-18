@@ -77,7 +77,7 @@ import collections
 from typing import Sequence
 
 from symbolic_ai_core.data.curriculum import Episode
-from symbolic_ai_core.data.graph import Graph
+from symbolic_ai_core.data.term_graph import TermGraph
 from symbolic_ai_core.data.tokenizer import SymbolTokenizer, split_words
 from symbolic_ai_core.graphview import Votes
 
@@ -178,7 +178,7 @@ class GraphSiteLM(RuleBasedModel):
 
     # ---- the reasoner --------------------------------------------------
     @staticmethod
-    def _node_for(g: Graph, lower: Sequence[str], k: int) -> int:
+    def _node_for(g: TermGraph, lower: Sequence[str], k: int) -> int:
         """Which node of ``g`` the word ending at ``lower[k - 1]`` realises.
 
         By **mention rank**, which is the convention the prefix restriction
@@ -229,7 +229,7 @@ class GraphSiteLM(RuleBasedModel):
             # rather than at every word is a factor of six on a 320-token
             # sequence for answers that are all None.
             return None
-        g: Graph = view.graph(t)
+        g: TermGraph = view.graph(t)
         if not len(g):
             return None
 

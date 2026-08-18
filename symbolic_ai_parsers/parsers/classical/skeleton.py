@@ -27,7 +27,7 @@ from __future__ import annotations
 from typing import Sequence
 
 from symbolic_ai_core.data.curriculum import Episode
-from symbolic_ai_core.data.graph import Graph
+from symbolic_ai_core.data.term_graph import TermGraph
 
 from ...base import Parser
 from ...features import words_of
@@ -58,9 +58,9 @@ class ClassicalParser(Parser):
         raise NotImplementedError
 
     # ---- shared pipeline ------------------------------------------------
-    def parse(self, text: str) -> Graph:
+    def parse(self, text: str) -> TermGraph:
         if not self.grammar.rules:
-            return Graph()
+            return TermGraph()
         blks = blocks(text)
         by_block: dict[int, list[tuple[Sequence[str], list[Derivation]]]] = {}
         for seg in segments(text):

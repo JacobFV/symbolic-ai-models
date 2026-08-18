@@ -2,8 +2,8 @@
 
 The ladder's last rung was "render and score exact-match end to end". The
 renderer takes the generator's own term object, not this repo's flattened
-:class:`~symbolic_ai_core.data.graph.Graph`, so a real end-to-end render needs an
-inverse of ``graph_from_json`` — real work with its own correctness burden.
+:class:`~symbolic_ai_core.data.term_graph.TermGraph`, so a real end-to-end render needs an
+inverse of ``term_graph_from_json`` — real work with its own correctness burden.
 
 **The inequality this script was first written under was the wrong way round.**
 It said ``exact_match <= graph exact-match`` "because the render is a
@@ -60,7 +60,7 @@ import torch
 torch.set_num_threads(4)
 
 from symbolic_ai_core.data.batch import IGNORE
-from symbolic_ai_core.data.graph import NODE_TYPES
+from symbolic_ai_core.data.term_graph import NODE_TYPES
 from symbolic_ai_core.data.sampler import batches
 # The prompt-leak audit's own splitter, imported rather than copied: whether a
 # symbol "appears in the prompt" has to mean the same thing in both places.

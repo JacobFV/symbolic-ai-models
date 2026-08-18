@@ -32,7 +32,7 @@ import torch
 
 from symbolic_ai_core.data.batch import collate_text, text_batch
 from symbolic_ai_core.data.curriculum import generate
-from symbolic_ai_core.data.graph import Graph
+from symbolic_ai_core.data.term_graph import TermGraph
 from symbolic_ai_core.data.tokenizer import split_words
 from symbolic_ai_models.models import ModelConfig, build, model_names
 from symbolic_ai_models.models.registry import get
@@ -146,7 +146,7 @@ def test_the_oracle_grows_and_never_shrinks(fixtures):
 
 def test_a_symbol_absent_from_the_text_is_never_revealed(fixtures):
     """The availability rule, stated directly on a graph and a word list."""
-    g = Graph()
+    g = TermGraph()
     root = g.add("", "record", -1, 0)
     g.add("alice", "ident", root, 0)
     g.add("alice", "ident", root, 1)
@@ -260,13 +260,13 @@ def test_the_symbol_free_ablation_really_is_symbol_free():
                                                             _features,
                                                             _multiplicity)
 
-    g = Graph()
+    g = TermGraph()
     root = g.add("", "record", -1, 0)
     pred = g.add("parent", "pred", root, 0)
     g.add("alice", "ident", pred, 0)
     g.add("bob", "ident", pred, 1)
 
-    renamed = Graph.from_dict(g.to_dict())
+    renamed = TermGraph.from_dict(g.to_dict())
     swap = {"parent": "zz0", "alice": "zz1", "bob": "zz2"}
     renamed.labels = [swap.get(l, l) for l in renamed.labels]
 

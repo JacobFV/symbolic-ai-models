@@ -45,7 +45,7 @@ a visible carrier shares the query's exact role tuple          0.140
 
 A diffusion kernel puts its mass on hop 1. The answer is **never** at hop 1 —
 the tree alternates functor and argument nodes, so a label-carrying node is
-always an even number of hops from another one. Graph *proximity* is not merely
+always an even number of hops from another one. TermGraph *proximity* is not merely
 uninformative here, it is pointed at exactly the wrong nodes. Raw retrieval
 accuracy, arg-max over the Gram with no gate and no back-off, on the same slice:
 
@@ -555,7 +555,7 @@ class VSASum(VSAAtomRoles):
     embedding_name = "random atoms, superposed"
 
     def _role_matrix(self, view: GraphView) -> np.ndarray:
-        from symbolic_ai_core.data.graph import TYPE_TO_ID
+        from symbolic_ai_core.data.term_graph import TYPE_TO_ID
         out = np.zeros((len(view), self._d), dtype=np.float32)
         for j in range(len(view)):
             parent = view.parent[j]

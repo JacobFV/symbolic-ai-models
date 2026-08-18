@@ -1,4 +1,4 @@
-"""``Graph -> AtomSpace -> Graph``, and the reason it is not the obvious map.
+"""``TermGraph -> AtomSpace -> TermGraph``, and the reason it is not the obvious map.
 
 The obvious map is the one the pre-registration wrote down: a term node with
 children becomes an ``Expression`` whose head is its label and whose tail is its
@@ -6,7 +6,7 @@ slots, a leaf becomes a ``Symbol``, and the node type rides as ``(: label
 type)``. **It is not invertible, and it fails for two separate reasons**, both
 of which are properties of an atomspace rather than accidents of this encoder:
 
-1. **Atoms are unique by content.** A ``Graph`` is a tree of *occurrences*; an
+1. **Atoms are unique by content.** A ``TermGraph`` is a tree of *occurrences*; an
    ``AtomSpace`` is a set of *values*. Two sibling leaves both labelled ``a``
    are two nodes and one atom, so the arity of their parent is not recoverable.
    Measured on this curriculum in
@@ -26,8 +26,8 @@ carry::
     (child n1 0 n3)      n3 is the child of n1 in slot 0
     (root n0)            the node with no parent
 
-``depth`` is not stored: it is a function of ``parent`` that ``Graph.add``
-computes, so storing it would let a space hold a graph that ``Graph`` itself
+``depth`` is not stored: it is a function of ``parent`` that ``TermGraph.add``
+computes, so storing it would let a space hold a graph that ``TermGraph`` itself
 cannot represent. The decoder recomputes it, and the round trip asserts on the
 recomputed value, which is a strictly stronger check.
 
@@ -39,7 +39,7 @@ is opaque and the ordering is *data*. A decoder that read the digits would pass
 this module's tests and break the moment an occurrence was named anything else —
 which is precisely what a conformance oracle emitting its own names would do.
 
-What the space can express that ``Graph`` cannot
+What the space can express that ``TermGraph`` cannot
 -------------------------------------------------
 Everything above is a faithful re-encoding, and a faithful re-encoding is a
 rename. The native operations are in :mod:`symbolic_ai_atomspace.metta` and
@@ -53,7 +53,7 @@ from __future__ import annotations
 
 from typing import Sequence
 
-from symbolic_ai_core.data.graph import Graph
+from symbolic_ai_core.data.term_graph import TermGraph
 from symbolic_ai_core.graphview import GraphView
 
 from .atoms import Atom, E, G, S, Symbol, V
@@ -76,7 +76,7 @@ LABEL = S("label")
 CHILD = S("child")
 ROOT = S("root")
 #: Marks a node the reader is being asked to predict. Only ever in a space built
-#: from a :class:`GraphView`; a ``Graph`` has no hidden nodes.
+#: from a :class:`GraphView`; a ``TermGraph`` has no hidden nodes.
 HIDDEN = S("hidden")
 
 #: The type an occurrence carries when its true type is hidden. A distinct
@@ -92,9 +92,9 @@ def occurrence(i: int) -> Symbol:
 
 
 # ---------------------------------------------------------------------------
-# Graph -> AtomSpace
+# TermGraph -> AtomSpace
 # ---------------------------------------------------------------------------
-def graph_to_atomspace(graph: Graph, space: AtomSpace | None = None) -> AtomSpace:
+def graph_to_atomspace(graph: TermGraph, space: AtomSpace | None = None) -> AtomSpace:
     """Every node of ``graph`` as five relations. Lossless; see the module doc."""
     space = space if space is not None else AtomSpace()
     for i in range(len(graph)):
@@ -110,7 +110,7 @@ def graph_to_atomspace(graph: Graph, space: AtomSpace | None = None) -> AtomSpac
     return space
 
 
-def atomspace_to_graph(space: AtomSpace) -> Graph:
+def atomspace_to_graph(space: AtomSpace) -> TermGraph:
     """The inverse. ``depth`` is recomputed from ``parent``, never read back.
 
     Raises rather than guesses. A space missing a node's type or label is not a
@@ -123,7 +123,7 @@ def atomspace_to_graph(space: AtomSpace) -> Graph:
         idx = b["i"]
         index[b["id"]] = int(getattr(idx, "value", -1))
     if not index:
-        return Graph()
+        return TermGraph()
 
     n = len(index)
     if sorted(index.values()) != list(range(n)):
@@ -154,12 +154,12 @@ def atomspace_to_graph(space: AtomSpace) -> Graph:
         if types[i] is None or labels[i] is None:
             raise ValueError(f"occurrence {i} has no type or no label atom")
 
-    out = Graph()
+    out = TermGraph()
     for i in range(n):
-        # `Graph.add` derives `depth` from the parent it is handed, so a
+        # `TermGraph.add` derives `depth` from the parent it is handed, so a
         # pre-order build recomputes the whole depth array. Nodes are added in
         # index order, and a parent is always at a lower index in a graph
-        # `graph_from_json` produced -- which the check below enforces rather
+        # `term_graph_from_json` produced -- which the check below enforces rather
         # than assumes, since a space is not obliged to have come from one.
         if parent[i] >= i:
             raise ValueError(f"occurrence {i} has a parent at or after it")
@@ -203,7 +203,7 @@ def view_to_atomspace(view: GraphView, space: AtomSpace | None = None) -> AtomSp
 # ---------------------------------------------------------------------------
 # the content view, used only to measure what content addressing would cost
 # ---------------------------------------------------------------------------
-def term_atom(graph: Graph, root: int = 0) -> Atom:
+def term_atom(graph: TermGraph, root: int = 0) -> Atom:
     """The subtree at ``root`` as a nested expression — the *content* of a node.
 
     This is the encoding the pre-registration proposed and this module rejects.
@@ -249,6 +249,6 @@ def derived_space(view: GraphView, *, max_atoms: int = 20_000) -> AtomSpace:
     return space
 
 
-def spaces_for(graphs: Sequence[Graph]) -> list[AtomSpace]:
+def spaces_for(graphs: Sequence[TermGraph]) -> list[AtomSpace]:
     """Convenience for the round-trip test; no cleverness."""
     return [graph_to_atomspace(g) for g in graphs]
