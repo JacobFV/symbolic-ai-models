@@ -18,6 +18,7 @@ from dataclasses import replace
 from typing import Any, Iterable
 
 from symbolic_ai_core.artifact.value import Provenance
+from symbolic_ai_core.runtime.estimate import PowerLawCost
 from symbolic_ai_core.world import (Claim, EntityRef, WorldDelta, WorldSnapshot)
 
 from ..abi import (Discard, KernelCost, KernelManifest, KernelRequest,
@@ -40,8 +41,31 @@ MANIFEST = KernelManifest(
     # closed-world assumption behind it is exactly the thing another kernel may
     # have grounds to reject.
     authority={"derived_fact": "propose"},
+    cost_estimator=lambda facts=0, **_: estimate_cost(facts),
     doc="Semi-naive fixed point with stratified negation, over the relational "
         "projection of a world.")
+
+
+#: Fitted on measured closures of the GLEIF ownership relation, 250 to 124,460
+#: edges. **Read the exponent as a local slope, not a complexity class.** Fitted
+#: over the small end it comes out near 1.04, because fixed overhead dominates
+#: there; over the whole range it is 1.33; the large end alone behaves like
+#: 1.56. Extrapolating the small-end fit under-predicts the full corpus by 7x
+#: -- and orders every pair correctly anyway, which is why `Calibration`
+#: reports error and ordering separately.
+DATALOG_COST = PowerLawCost(a=1.55e-6, b=1.33, n=10)
+
+
+def estimate_cost(facts: int) -> KernelCost:
+    """What this kernel will cost on a world of ``facts`` relations.
+
+    Systematically **low** beyond the fitted range, and saying so here rather
+    than leaving a caller to discover it. Use it to *order* candidate plans,
+    not to budget one.
+    """
+    if facts <= 0:
+        return KernelCost(cpu_ns=0)
+    return KernelCost(cpu_ns=int(DATALOG_COST(facts) * 1e9))
 
 
 class DatalogKernel:
