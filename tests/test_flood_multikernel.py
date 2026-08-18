@@ -404,8 +404,22 @@ def test_cheap_and_incapable_is_not_a_point_on_the_cost_curve(cases):
     full_acc, full_usd = arm()
     cut_acc, cut_usd = arm(ignore_bridge_limits=True)
 
-    assert cut_usd < full_usd, "the cheap arm was not actually cheaper"
+    # The precondition is asserted STRUCTURALLY, not by timing. An earlier
+    # version used `cut_usd < full_usd`, which is true and small enough that CPU
+    # measurement under load inverts it -- it passed alone and failed in a full
+    # run. The ablation skipping solver work is countable and does not move.
+    calls = [outs["load_report"].value["n_smt_calls"]
+             for outs in (solve(c.world, ctx=Context())[1] for c in cases)]
+    cut_calls = [outs["load_report"].value["n_smt_calls"]
+                 for outs in (solve(c.world, ctx=Context(),
+                                    ignore_bridge_limits=True)[1]
+                              for c in cases)]
+    assert sum(cut_calls) <= sum(calls), "the ablation did not skip any work"
     assert cut_acc < full_acc
+
+    # This one IS robust to timing: the cheap arm's lift is ~5.8x smaller, and
+    # it still runs datalog and ASP, so its cost cannot fall by the factor that
+    # would be needed to win.
     assert (cut_usd / max(cut_acc - floor, 1e-9)) > (full_usd / (full_acc - floor)), (
         "the cheaper arm won on $/solved-above-floor, which would make the "
         "north star reward incapability")
