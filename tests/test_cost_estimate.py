@@ -122,3 +122,45 @@ class TestTheManifestActuallyCarriesOne:
         """124,460 edges measured at 5,109.8 ms."""
         from symbolic_ai_kernels.datalog.kernel import estimate_cost
         assert 0.5 < estimate_cost(124_460).cpu_ns / 1e9 / 5.1098 < 2.0
+
+
+class TestOrderability:
+    """Whether a router may use an estimate at all, which is not accuracy."""
+
+    def test_a_wildly_inaccurate_but_monotone_estimate_is_orderable(self):
+        """Datalog: 71.3% median error, bias 0.30x, ordering 1.000."""
+        c = Calibration(n=5, median_rel_error=0.713, p90_rel_error=0.858,
+                        ordering=1.0, bias=0.30)
+        assert c.orderable
+
+    def test_an_accurate_but_non_monotone_estimate_is_not(self):
+        """SMT across the 3-SAT phase transition: unbiased, ordering 0.667."""
+        c = Calibration(n=12, median_rel_error=0.30, p90_rel_error=0.67,
+                        ordering=0.667, bias=1.0)
+        assert not c.orderable
+        assert "NOT orderable" in c.summary()
+
+    def test_the_threshold_is_named_rather_than_inlined(self):
+        assert Calibration.ORDERABLE == 0.90
+
+    def test_a_perfect_estimate_is_orderable(self):
+        m = fit_power_law(_obs(0.5, 1.5, (10, 20, 40)))
+        assert m.calibrate(_obs(0.5, 1.5, (15, 30, 60))).orderable
+
+
+class TestSMTDeclaresItCannotBeEstimatedBySize:
+    def test_the_smt_kernel_says_so_explicitly(self):
+        """A kernel whose cost is not ordered by size must say so, or a
+        planner will read a small instance and conclude a larger one is
+        worse. Measured: 2,250 clauses solved >=7,892x faster than 1,491."""
+        from symbolic_ai_kernels.smt.kernel import COST_IS_SIZE_ORDERABLE
+        assert COST_IS_SIZE_ORDERABLE is False
+
+    def test_it_offers_no_estimator(self):
+        """Offering one would be worse than offering none."""
+        from symbolic_ai_kernels.smt.kernel import MANIFEST
+        assert MANIFEST.cost_estimator is None
+
+    def test_datalog_by_contrast_does_offer_one(self):
+        from symbolic_ai_kernels.datalog.kernel import MANIFEST
+        assert MANIFEST.cost_estimator is not None

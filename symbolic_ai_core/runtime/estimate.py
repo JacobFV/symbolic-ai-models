@@ -54,9 +54,29 @@ class Calibration:
     ordering: float
     bias: float
 
+    #: Below this, a size estimate cannot be used to choose between plans.
+    #: 0.90 is a judgement, not a measurement: datalog scores 1.000 and SMT
+    #: across the 3-SAT phase transition scores 0.667, and nothing measured so
+    #: far lands between 0.70 and 1.00, so the threshold is not yet load
+    #: bearing and should be revisited when something does.
+    ORDERABLE = 0.90
+
+    @property
+    def orderable(self) -> bool:
+        """Whether a router may use this estimate to pick between plans.
+
+        The property that decides it, and it is not accuracy. A cost model
+        fitted on small datalog runs is 7x low at full scale and orders every
+        pair correctly; an SMT estimate can be unbiased and still order two
+        thirds of pairs, because a 2,250-clause instance away from the phase
+        transition solves 7,892x faster than a 1,491-clause instance on it.
+        """
+        return self.ordering >= self.ORDERABLE
+
     def summary(self) -> str:
         return (f"n={self.n}: median {self.median_rel_error:.1%}, "
-                f"p90 {self.p90_rel_error:.1%}, ordering {self.ordering:.3f}, "
+                f"p90 {self.p90_rel_error:.1%}, ordering {self.ordering:.3f}"
+                f"{'' if self.orderable else ' (NOT orderable)'}, "
                 f"bias {self.bias:+.2f}x")
 
 

@@ -40,6 +40,28 @@ from .units import UnitError
 
 __all__ = ["SmtKernel", "SMT"]
 
+#: **Size does not order this kernel's cost, and no estimator is offered.**
+#: Measured over random 3-SAT with z3, median of five instances per cell:
+#:
+#: ===========  =========  ==============
+#: clauses      ratio      median
+#: ===========  =========  ==============
+#: 1,491        4.26       >15,000 ms (all five censored at the cap)
+#: 2,250        15.0       1.9 ms
+#: 5,250        15.0       6.0 ms
+#: ===========  =========  ==============
+#:
+#: A problem 1.5x larger solved at least 7,892x faster. Size ordered cost on
+#: 0.667 of pairs, against 1.000 for datalog, because difficulty here is a
+#: property of *structure* -- distance from the satisfiability phase
+#: transition -- and not of size.
+#:
+#: So the honest interface for this kernel is not an estimate. It is a
+#: **budget**: give it a timeout, treat exhaustion as an outcome rather than
+#: an error, and never let a planner conclude from a small instance that a
+#: larger one costs more.
+COST_IS_SIZE_ORDERABLE = False
+
 MANIFEST = KernelManifest(
     id="smt@1",
     requires=("core.quantity",),
