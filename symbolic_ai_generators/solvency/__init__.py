@@ -15,6 +15,6 @@ is short, and the answer is the flattering one.
 
 from __future__ import annotations
 
-from .world import SolvencyCase, decide, generate
+from .world import CORRUPTIONS, SolvencyCase, corrupt, decide, generate
 
-__all__ = ["SolvencyCase", "generate", "decide"]
+__all__ = ["SolvencyCase", "generate", "decide", "corrupt", "CORRUPTIONS"]

@@ -128,3 +128,75 @@ def decide(case: SolvencyCase, *, as_of: str) -> tuple[bool, float, bool]:
             continue
         total += max(seen, key=lambda p: p[1])[0]
     return total >= case.threshold, round(total, 2), complete
+
+
+# ---------------------------------------------------------------------------
+# controlled corruption, to ask whether the flood task's mechanism transfers
+# ---------------------------------------------------------------------------
+CORRUPTIONS = ("drop_owns", "drop_filing", "misread_value", "drop_period",
+               "drop_publication_date")
+
+
+def corrupt(case: "SolvencyCase", *, seed: int, rate: float,
+            kind: str) -> WorldSnapshot:
+    """Damage one channel of the world, leaving the others intact.
+
+    The flood task's finding was that a pipeline's fragility sits in the facts
+    that define the answer's **domain** rather than in the ones that constrain
+    it, and that recall errors therefore hurt more than precision errors. This
+    is the same knob on a structurally different task, so the claim can be tested
+    rather than generalised by assertion.
+
+    * ``drop_owns`` removes a member from the consolidation -- a domain deletion.
+    * ``drop_filing`` removes one vintage -- domain if it was the only one, a
+      recall error either way.
+    * ``misread_value`` keeps every filing and corrupts the number -- precision.
+    * ``drop_period`` / ``drop_publication_date`` strip a time, which the
+      economy projection discards by name.
+    """
+    if kind not in CORRUPTIONS:
+        raise ValueError(f"unknown corruption {kind!r}; have {CORRUPTIONS}")
+    r = random.Random(int.from_bytes(
+        hashlib.blake2b(f"corrupt|{seed}|{rate}|{kind}".encode(),
+                        digest_size=8).digest(), "big"))
+    out = []
+    for c in case.world.claims:
+        if kind == "drop_owns" and c.predicate == "owns" and r.random() < rate:
+            continue
+        if c.predicate != "revenue":
+            out.append(c)
+            continue
+        if kind == "drop_filing" and r.random() < rate:
+            continue
+        if kind == "misread_value" and r.random() < rate:
+            q = c.roles["value"]
+            out.append(_replace_claim(c, value=Quantity(
+                max(1.0, round(q.value * _slip(r), 2)), q.unit, q.stderr)))
+            continue
+        if kind == "drop_period" and r.random() < rate:
+            out.append(_replace_claim(c, valid_time=Interval()))
+            continue
+        if kind == "drop_publication_date" and r.random() < rate:
+            out.append(_replace_claim(c, transaction_time=Interval()))
+            continue
+        out.append(c)
+    return WorldSnapshot(entities=case.world.entities, claims=tuple(out),
+                         alignments=case.world.alignments)
+
+
+def _slip(r: random.Random) -> float:
+    """A misreading: a digit slip, a units confusion, or a percentage error.
+
+    Digit-level rather than Gaussian, because that is what a reader of a filing
+    actually gets wrong.
+    """
+    return r.choice((0.1, 10.0, 0.9, 1.1, 0.75, 1.25))
+
+
+def _replace_claim(c: Claim, **kw: Any) -> Claim:
+    from dataclasses import replace as _r
+    if "value" in kw:
+        roles = dict(c.roles)
+        roles["value"] = kw.pop("value")
+        kw["roles"] = roles
+    return _r(c, **kw)

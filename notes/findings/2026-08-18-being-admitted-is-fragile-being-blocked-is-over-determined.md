@@ -121,6 +121,14 @@ about conjunctions with no redundancy, which is not specific to bridges — then
 1. **Recall on entity and attribute mentions is worth more than precision on
    numbers.** A reader that hedges a number is far less damaging than one that
    drops the sentence naming the thing.
+
+   > **Bounded later the same day.** The solvency task reproduces this ratio
+   > exactly (1.74× against flood's 1.76×) — but only at a *moderate decision
+   > margin*, and the ordering **inverts to 0.11×** at a large one, because a
+   > missing term is a bounded additive error while a misreading is unbounded and
+   > multiplicative. See
+   > `2026-08-18-recall-beats-precision-only-in-the-middle.md`. The claim above
+   > holds in the regime the flood task occupies and was generalised too far.
 2. **A reader whose errors skew permissive is safer than one whose errors skew
    conservative**, at equal error rate. That is the opposite of the usual
    engineering instinct, and it is a property of the *task's* asymmetry, not of

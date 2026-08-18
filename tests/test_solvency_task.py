@@ -106,3 +106,63 @@ def test_a_figure_not_yet_filed_is_absent_rather_than_zero():
                                     "period": "2026Q1", "of": [c.group]}))
     assert r.claims == (), "the kernel invented a total from nothing"
     assert r.artifacts["coverage"][0]["reported"] == 0
+
+
+# --- does the flood task's mechanism transfer? ---------------------------
+def _answer(world, case):
+    r = K.run(K.project(world, KernelRequest()),
+              KernelRequest(params={"as_of": case.decision_date,
+                                    "period": "2026Q1", "of": [case.group]}))
+    return bool(r.claims) and r.claims[0].roles["value"].value >= case.threshold
+
+
+def _errors(slack, kind, n=250, rate=0.20):
+    from symbolic_ai_generators.solvency import corrupt
+
+    wrong = 0
+    for i in range(n):
+        c = generate(i)
+        base = c.meta["first_total"]
+        far = base * (1 - slack) if c.threshold <= base else base * (1 + slack)
+        c = replace(c, threshold=round(far, 2))
+        truth = decide(c, as_of=c.decision_date)[0]
+        wrong += _answer(corrupt(c, seed=i, rate=rate, kind=kind), c) != truth
+    return wrong / n
+
+
+def test_recall_beats_precision_only_in_the_middle_slack_regime():
+    """The flood finding, bounded.
+
+    On the flood task, dropping a fact hurt ~1.76x more than misreading one, and
+    I generalised that to "the fragility is in domain membership, not constraint
+    values". Here the same comparison depends entirely on the decision margin:
+
+      slack 0.25 -> drop 0.138, misread 0.079, ratio 1.74  (flood's regime)
+      slack 1.00 -> drop 0.006, misread 0.052, ratio 0.11  (inverted)
+
+    Missing a term is a bounded additive error of about 1/n of the total.
+    Misreading one is unbounded and multiplicative. Which dominates is set by the
+    margin, not by the kind of fact.
+    """
+    tight_drop, tight_mis = _errors(0.25, "drop_filing"), _errors(0.25, "misread_value")
+    loose_drop, loose_mis = _errors(1.00, "drop_filing"), _errors(1.00, "misread_value")
+
+    assert tight_drop > tight_mis, (
+        f"at moderate slack recall did not beat precision "
+        f"({tight_drop:.3f} vs {tight_mis:.3f})")
+    assert loose_mis > loose_drop, (
+        f"at large slack precision did not beat recall "
+        f"({loose_mis:.3f} vs {loose_drop:.3f}); the ordering is supposed to "
+        f"invert, and if it does not the mechanism is wrong")
+    assert loose_drop < tight_drop / 3, (
+        "dropping a term did not become harmless as the margin grew")
+
+
+def test_a_tight_covenant_makes_every_error_flip_it():
+    """The other end: with no margin the two channels converge, because
+    everything is binding."""
+    d0, m0 = _errors(0.0, "drop_filing"), _errors(0.0, "misread_value")
+    assert d0 > 0.25 and m0 > 0.2
+    assert d0 / m0 < 1.6, (
+        "at zero slack the two channels should be close; a large gap would mean "
+        "something other than the margin is driving it")
