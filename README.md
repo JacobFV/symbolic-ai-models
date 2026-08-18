@@ -562,7 +562,12 @@ symbolic-ai-models/
                           #   a citation because the bytes state no datum and the
                           #   geo kernel refuses a place without one
   symbolic_ai_tasks/      # tasks over bytes this repo did NOT author, where the
-    ultimate_parent.py    #   difficulty is whatever it is. GLEIF ownership
+    company_key.py        #   difficulty is whatever it is. Name -> canonical
+                          #   key: picked to show the symbolic side LOSING at the
+                          #   low-context end, and it reached the ceiling --
+                          #   0.9998 held out against a measured 1.0. The 0.05
+                          #   gap from my hand-written rule was effort
+    ultimate_parent.py    #   GLEIF ownership
                           #   closure: 0.9785 by FUSING direct edges with other
                           #   entities' filed ultimates, against a swept 0.9005
                           #   (naive floor 0.7503 overstates the lift 3.6x).
