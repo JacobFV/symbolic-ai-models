@@ -13,6 +13,8 @@ this source as carrying nothing — see
 
 from __future__ import annotations
 
+import collections
+import math
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -21,7 +23,9 @@ from typing import Any, Iterator, Mapping, Sequence
 from symbolic_ai_core.world import Entity, Facet, WorldSnapshot
 
 __all__ = ["AdapterResult", "OPENFLIGHTS_CRS", "load_airports", "load_routes",
-           "parse_body", "CONSUMED_KEYS"]
+           "parse_body", "CONSUMED_KEYS", "OpenflightsIntegrityError",
+           "MERGED_IATA_NODES", "detect_merged_iata_nodes",
+           "check_iata_merges"]
 
 #: Asserted, not measured. Openflights' published documentation gives airport
 #: coordinates as decimal degrees on WGS84; no field in the parquet says so.
@@ -72,6 +76,180 @@ def parse_body(body: str | None) -> dict[str, str]:
     return out
 
 
+class OpenflightsIntegrityError(RuntimeError):
+    """A row carries two airports' fields, and it is not one this repo knows.
+
+    Raised rather than repaired, dropped or counted. A silent repair is how a
+    broken component reads as a working one, and this defect was invisible to
+    every guard the corpus already had -- including ``airport_country``'s
+    ground-truth anchor, which reads the same corrupted half it is scored
+    against and therefore scores 1.0 over it.
+    """
+
+
+#: ``kg:iata:*`` nodes in the 2026-08-15 snapshot whose body carries one
+#: airport's ``label``/``icao``/``lat``/``lon`` and a *different* airport's
+#: ``city``/``country``, because openflights merged two airports that share an
+#: IATA code. ``kg:iata:AMN`` is Gratiot Community Airport (``KAMN``, Michigan)
+#: wearing ``city=Kamloops country=Canada``.
+#:
+#: Reached twice by instruments sharing no input: a cross-source join against
+#: geonames (``scripts/two_source_country_conflict.py``) and, from openflights
+#: alone, ICAO-prefix purity conjoined with coordinate displacement
+#: (``scripts/openflights_iata_merge_audit.py``). Both give exactly these seven.
+#:
+#: They are **not** removed or corrected on load. Every published
+#: ``airport_country`` number was measured with them in, and cleaning them
+#: would silently redefine those numbers -- the measured effect is +0.0021 on
+#: the 1-NN headline and +0.0009 on the swept floor, both inside the tolerance
+#: those numbers are quoted to.
+MERGED_IATA_NODES = frozenset({
+    "kg:iata:AMN", "kg:iata:BPE", "kg:iata:EMP", "kg:iata:LND",
+    "kg:iata:OCN", "kg:iata:OEL", "kg:iata:TZR",
+})
+
+#: Rows the first instrument flags and the second clears. Khrabrovo really is
+#: in Kaliningrad and Kaliningrad really is Russia; ``UM*`` is a Soviet-era
+#: prefix shared with Belarus, so its purity is an artefact of carrying only
+#: seven airports. Named here so a later reader can see it was adjudicated
+#: rather than never noticed.
+SCREEN_DECLINED_BENIGN = frozenset({"kg:iata:KGD"})
+
+#: Other airports the ICAO prefix must carry before its unanimity means
+#: anything. Kaieteur sits on ``PK*`` with three and would otherwise flag.
+MIN_PREFIX_SUPPORT = 4
+
+#: Airports the asserted country must itself have. Below it, "no airport of
+#: this country is nearby" is vacuous -- twelve of the rows a bare
+#: leave-one-out rule flags are the only airport in their territory.
+MIN_COUNTRY_SUPPORT = 4
+
+#: How much closer the coordinates must be to the prefix country's nearest
+#: airport than to the asserted country's. **Fitted, on a thin margin**: the
+#: seven merges run 3.4 to 940 and Kaliningrad sits at 2.2.
+MIN_DISPLACEMENT_RATIO = 3.0
+
+_EARTH_R_KM = 6371.0088
+
+
+def _great_circle_km(a: tuple[float, float], b: tuple[float, float]) -> float:
+    la1, lo1 = math.radians(a[0]), math.radians(a[1])
+    la2, lo2 = math.radians(b[0]), math.radians(b[1])
+    h = (math.sin((la2 - la1) / 2) ** 2
+         + math.cos(la1) * math.cos(la2) * math.sin((lo2 - lo1) / 2) ** 2)
+    return 2 * _EARTH_R_KM * math.asin(min(1.0, math.sqrt(h)))
+
+
+def detect_merged_iata_nodes(
+        rows: Mapping[str, tuple[Mapping[str, str], tuple[float, float]]]
+) -> tuple[frozenset[str], frozenset[str]]:
+    """Which rows carry two airports, and which rows the test could speak about.
+
+    ``rows`` maps node id to its parsed body and its ``(lat, lon)``. Returns
+    ``(detected, eligible)``. **Both** halves matter: a detector that reports
+    an empty set because nothing was eligible is indistinguishable from a clean
+    corpus, and the caller has to be able to tell those apart.
+
+    Two instruments must agree, because neither is usable alone:
+
+    1. *ICAO-prefix purity.* The first two letters of an ICAO location
+       indicator are allocated by region, so the other airports on a prefix
+       are a self-declared check on this one. Leave-one-out: at least
+       :data:`MIN_PREFIX_SUPPORT` others, **none** asserting this row's
+       country, and **all** asserting one single other country. Without the
+       unanimity requirement this fires on 24 of 5,995 rows and 17 are
+       dependencies -- Jersey on ``EG*``, Christmas Island on ``YP*`` -- a 71%
+       false-positive rate, because a territory sits on a prefix its
+       administering state shares.
+    2. *Coordinate displacement.* The coordinates must be
+       :data:`MIN_DISPLACEMENT_RATIO` times closer to the prefix country's
+       nearest airport than to the asserted country's. Alone this cannot tell
+       a merge from a remote airport: Easter Island is 3,568 km from another
+       Chilean airport and is not a defect.
+
+    The country is read from the body's ``country`` **name**, not from an ISO
+    code, because the airports table is all this sees -- and the two are
+    interchangeable here: 223 name strings map to 223 ISO codes with no
+    collisions in the held snapshot.
+    """
+    usable = {nid: (kv, pos) for nid, (kv, pos) in rows.items()
+              if kv.get("country") and len((kv.get("icao") or "").strip()) == 4}
+    by_country: dict[str, list[str]] = collections.defaultdict(list)
+    prefix: dict[str, collections.Counter] = collections.defaultdict(
+        collections.Counter)
+    for nid, (kv, _) in usable.items():
+        by_country[kv["country"]].append(nid)
+        prefix[kv["icao"].strip()[:2]][kv["country"]] += 1
+
+    def nearest(nid: str, country: str) -> float:
+        here = usable[nid][1]
+        return min((_great_circle_km(here, usable[b][1])
+                    for b in by_country.get(country, ()) if b != nid),
+                   default=math.inf)
+
+    detected: set[str] = set()
+    eligible: set[str] = set()
+    for nid, (kv, _) in usable.items():
+        others = collections.Counter(prefix[kv["icao"].strip()[:2]])
+        others[kv["country"]] -= 1
+        others = +others
+        support = sum(others.values())
+        if support < MIN_PREFIX_SUPPORT:
+            continue
+        if len(by_country[kv["country"]]) < MIN_COUNTRY_SUPPORT:
+            continue
+        eligible.add(nid)
+        if others.get(kv["country"], 0):
+            continue
+        top, count = others.most_common(1)[0]
+        if count != support:
+            continue
+        d_here = nearest(nid, kv["country"])
+        d_prefix = nearest(nid, top)
+        if d_prefix <= 0.0:
+            continue
+        if d_here / d_prefix >= MIN_DISPLACEMENT_RATIO:
+            detected.add(nid)
+    return frozenset(detected), frozenset(eligible)
+
+
+def check_iata_merges(
+        rows: Mapping[str, tuple[Mapping[str, str], tuple[float, float]]]
+) -> frozenset[str]:
+    """Refuse to hand back a corpus whose contamination is not the known one.
+
+    Two ways to fail, and both are loud:
+
+    * a row trips the detector that :data:`MERGED_IATA_NODES` does not name --
+      the snapshot has contamination nobody has looked at;
+    * a row :data:`MERGED_IATA_NODES` names is present and *eligible* and does
+      not trip -- either the snapshot was fixed or the detector drifted, and
+      either way the manifest is now a lie about the bytes.
+
+    Restricting the second check to *eligible* rows is what makes this correct
+    under a partial load: a detector cannot speak about a row whose ICAO prefix
+    is not in front of it, and a guard that fires on its own blindness would be
+    noise rather than a signal.
+    """
+    detected, eligible = detect_merged_iata_nodes(rows)
+    unknown = detected - MERGED_IATA_NODES
+    if unknown:
+        raise OpenflightsIntegrityError(
+            f"{len(unknown)} openflights row(s) carry a country that contradicts "
+            f"their own ICAO prefix and coordinates, and are not in "
+            f"MERGED_IATA_NODES: {sorted(unknown)}. Adjudicate them with "
+            f"scripts/openflights_iata_merge_audit.py before using this "
+            f"snapshot -- do not widen the manifest to silence this.")
+    stale = (MERGED_IATA_NODES & eligible) - detected
+    if stale:
+        raise OpenflightsIntegrityError(
+            f"MERGED_IATA_NODES names {sorted(stale)} as merged, but the "
+            f"detector no longer flags them in bytes it can see. The snapshot "
+            f"changed or the detector drifted; every airport_country number was "
+            f"measured with these rows in, so re-audit before editing either.")
+    return detected
+
+
 @dataclass
 class AdapterResult:
     """What came through, and what did not."""
@@ -107,9 +285,18 @@ def _rows(base: Path, stem: str, columns: Sequence[str]) -> Iterator[dict]:
 
 
 def load_airports(base: Path, *, limit: int | None = None) -> AdapterResult:
-    """Airport nodes with coordinates, as ``geo.place`` entities."""
+    """Airport nodes with coordinates, as ``geo.place`` entities.
+
+    Every admitted row is checked by :func:`check_iata_merges` before the
+    snapshot is handed back, because openflights merges airports that share an
+    IATA code and the merged rows are indistinguishable from clean ones at the
+    row level. The known seven load **unchanged** -- the check refuses an
+    *unrecognised* contamination, it does not repair a recognised one, so no
+    number measured over this adapter moves.
+    """
     res = AdapterResult(world=WorldSnapshot())
     entities: list[Entity] = []
+    seen: dict[str, tuple[dict[str, str], tuple[float, float]]] = {}
     for row in _rows(base, "airports", ("id", "label", "kind", "body")):
         res.rows += 1
         if limit is not None and res.admitted >= limit:
@@ -137,7 +324,9 @@ def load_airports(base: Path, *, limit: int | None = None) -> AdapterResult:
                 "core.identity", {"label": row.get("label") or row["id"],
                                   "country": kv["country"]})
         entities.append(Entity(id=row["id"], facets=facets))
+        seen[row["id"]] = (kv, (lat, lon))
         res.admitted += 1
+    check_iata_merges(seen)
     res.world = WorldSnapshot(entities={e.id: e for e in entities})
     return res
 
