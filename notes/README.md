@@ -23,6 +23,20 @@ impossible and the directory listing chronological.
 | `findings/` | one measured result, with its floor, control and refutation status | after a sweep, not after a scratch script |
 | `questions/` | one idea, hunch or open question — **the parking lot** | the moment it is noticed, whether or not anyone will chase it |
 | `decisions/` | one choice and the reasoning, including what was rejected | when a design fork is taken, *before* the work |
+| `lessons/` | one **mechanism** that produces wrong claims — the mistake, what it cost, and the guard | after a wrong reading is caught, whatever caught it |
+
+### `lessons/` records mechanisms, not claims
+
+`RESEARCH_LOG.md` has a "believed and false" table listing claims that died.
+This directory lists the **mechanisms that killed them**, which is the reusable
+half: a claim is wrong once, and a mechanism keeps producing wrong claims until
+something structural stops it. Twenty-nine entries so far, covering slice
+inversions, silent-property failures, and the substrate decisions that outweigh
+every model.
+
+Read these first when arriving cold, and write one whenever a wrong reading is
+caught — including when it was caught by reading the code rather than by a test,
+which is how the most recent one was found.
 
 ### `questions/` is a parking lot, and capture must stay cheap
 
