@@ -1,0 +1,125 @@
+{
+  "config": {
+    "model": "frontier-pointsoft",
+    "tasks": [
+      "node"
+    ],
+    "task_weights": {
+      "node": 1.0
+    },
+    "data": null,
+    "lessons": "all",
+    "n_train": 20,
+    "n_eval": 4,
+    "eval_seed0": 500000,
+    "language": "english",
+    "languages": "",
+    "curriculum": "base",
+    "max_len": 320,
+    "max_nodes": 128,
+    "mask_rate": 0.15,
+    "type_weight": 0.5,
+    "vocab_size": 8192,
+    "label_vocab_fraction": 0.3,
+    "d_model": 96,
+    "n_layers": 3,
+    "n_heads": 4,
+    "d_ff": 256,
+    "dropout": 0.1,
+    "extra": {
+      "max_voters": 24
+    },
+    "steps": 2000,
+    "batch_size": 16,
+    "lr": 0.0003,
+    "min_lr_ratio": 0.1,
+    "warmup": 100,
+    "weight_decay": 0.01,
+    "grad_clip": 1.0,
+    "eval_every": 250,
+    "log_every": 50,
+    "seed": 0,
+    "resume": false,
+    "device": "cpu",
+    "amp": true,
+    "out": "/home/brandonin/Documents/symbolic-ai-models/runs/rsi/frontier-pointsoft_max_voters=24_"
+  },
+  "model_config": {
+    "vocab_size": 8192,
+    "d_model": 96,
+    "n_layers": 3,
+    "n_heads": 4,
+    "d_ff": 256,
+    "dropout": 0.1,
+    "max_len": 328,
+    "max_nodes": 128,
+    "extra": {
+      "max_voters": 24
+    }
+  },
+  "model": "frontier-pointsoft",
+  "family": "rule-based",
+  "steps": 0,
+  "parameters": 167185,
+  "n_train": 3580,
+  "n_eval": 716,
+  "vocab_size": 8192,
+  "floors": {
+    "node": {
+      "type_acc": 0.8629199016815575,
+      "type_bits": 2.3240699140957304,
+      "type_n": 51262.0,
+      "label_acc": 0.1424216442793179,
+      "label_bits": 9.353242370636956,
+      "label_n": 41988.0,
+      "copy_acc": 0.2638989942221271,
+      "rsymbol_acc": 0.1424216442793179,
+      "rsymbol_bits": 9.353242370636956,
+      "rsymbol_n": 41988.0,
+      "rnode_acc": 0.2638989942221271
+    }
+  },
+  "temperature": 1.1,
+  "final": {
+    "node": {
+      "label_acc": 0.4376195943360123,
+      "label_bits": 6.392497583787246,
+      "label_n": 5226.0,
+      "type_acc": 0.8760200878844947,
+      "type_bits": 0.8367352469438075,
+      "type_n": 6372.0,
+      "label_coverage": 0.82015065913371,
+      "copy_ceiling": 0.7091465748182166,
+      "copy_censored": 504.0,
+      "rsymbol_acc": 0.4376195943360123,
+      "rsymbol_bits": 6.392497583787246,
+      "rsymbol_n": 5226.0,
+      "label_floor": 0.1424216442793179,
+      "label_lift": 0.34422271514609204,
+      "type_floor": 0.8629199016815575,
+      "type_lift": 0.09556592359968206,
+      "rsymbol_floor": 0.1424216442793179,
+      "rsymbol_lift": 0.34422271514609204,
+      "label_floor_bits": 9.353242370636956,
+      "label_bits_lift": 0.3165474248956176,
+      "type_floor_bits": 2.3240699140957304,
+      "type_bits_lift": 0.6399698469185804,
+      "rsymbol_floor_bits": 9.353242370636956,
+      "rsymbol_bits_lift": 0.3165474248956176
+    }
+  },
+  "seconds": 101.55738019943237,
+  "device": "cpu",
+  "renaming": {
+    "label_acc": 0.43876585364341736,
+    "renamed_label_acc": 0.2600795030593872,
+    "drop": 0.17868635058403015,
+    "symbols": 2076.0
+  },
+  "masking": {
+    "mask_mode": "scatter",
+    "mask_rate": 0.15,
+    "fit_mask_rate": 0.15,
+    "fit_mask_mode": "scatter"
+  }
+}
