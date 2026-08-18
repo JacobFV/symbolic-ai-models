@@ -41,31 +41,44 @@ nodes over one substrate rather than different definitions of "AI".
 | streaming | `symbolic_ai_core/data/{key,case,dataset,stream}.py` | address space, not a list |
 | federation | `catalog/`, `manifests/`, `ontology/`, `symbolic_ai_core/source/` | 19 sources, 14 GB under `$SYMBOLIC_AI_DATA` |
 | fusion | `symbolic_ai_core/runtime/fusion.py` | property-specific; default keeps the mixture |
-| kernels | `symbolic_ai_kernels/{datalog,asp,smt}/` | tiers 1-3; ASP and SMT optional, refusing loudly |
-| first task | `symbolic_ai_generators/flood/` | **1.000 vs a brute-force oracle, floor 0.440** |
+| kernels | `symbolic_ai_kernels/{datalog,asp,smt,lean,egraph}/` | tiers 1-5; ASP and SMT optional, refusing loudly |
+| routing | `symbolic_ai_core/flow/router.py` | router != chooser; lossless escalation, saving audited from the trace |
+| recipes | `manifests/datasets/`, `symbolic_ai_core/data/recipe.py` | address spaces, coverage carried with the data |
+| first task | `symbolic_ai_generators/flood/` | **1.000 vs a brute-force oracle, floor 0.440, $2.07e-8/solved above floor** |
 
 `notes/findings/2026-08-18-three-kernels-solve-a-task-none-of-them-can.md` has
 the numbers, the seven floors and the three ablations.
 
+### Done since, with the number each produced
+
+1. **A parser in front of the flood task.** A template reader, and the fidelity
+   curve: the pipeline crosses its floor at ~1 claim in 6 lost, so it needs
+   >=90% per-claim recall. Precision errors are *milder* than recall errors, and
+   the fragility is in domain membership rather than constraint values.
+2. **Kernels priced.** cpu_ns and wall_ns separately; the flow trace separates
+   self-priced nodes from CPU floors. First capability price: **$2.07e-8 per
+   solved episode above floor**.
+3. **Lean as the verifier** (tier 4). 100% recall on role confusion, datalog 0%
+   -- and 0% to 11.7% of those were consequential, depending on the injection.
+4. **Recipes and a generic `knowledge_source`.** Which found that WordNet
+   populates two of the essay generator's eight sections *nowhere*.
+5. **Routing.** Lossless escalation saves 4.5%; the 3.4x cheaper arm is 1.7x
+   worse on $/solved-above-floor. And the metric has a **perverse regime** far
+   above the floor -- `ledger_table` now detects it.
+6. **e-graphs** (tier 5). Correct, and 116x short of break-even here.
+
 ### Next, in order
 
-1. **A parser in front of the flood task.** The one thing the finding
-   deliberately did not do: run the same pipeline from the *report* instead of
-   the world. That is the number that prices the capability, because the
-   parser's cost enters the ledger -- and on 0.016 exact recovery it will be
-   low, which is the point.
-2. **Price the kernels.** Every node currently reports `unpriced`. Until they
-   report a cost, `$ / solved episode above floor` cannot be computed for
-   anything the substrate does.
-3. **Lean as the verifier** (tier 4). The exploratory reasoner need not be
-   sound; the verifier must be. `symbolic_ai_lean/` already has a native kernel
-   and a `Graph <-> Expr` translation to build the projection from.
-4. **Dataset recipes and a generic `knowledge_source`,** so the KG essay
-   generator stops assuming WordNet and any source with the right capabilities
-   can replace it.
-5. **Learned routing.** Router nodes, a cost model, and `utility/$` as the
-   objective -- the thing the whole cost argument was for.
-6. **e-graphs** (tier 5), and the first specialised world kernel (rigid body).
+1. **Rigid body** (tier 6), and with it the first non-trivial **fusion rule**:
+   two kernels claiming the same `pose` must combine by inverse variance rather
+   than last-writer-wins. That is the phase-11 gate.
+2. **A learned gate**, scored on the *constrained* objective -- cheapest arm
+   above an accuracy bar, not the raw ratio.
+3. **A composed knowledge source** (WordNet taxonomy + CSKG properties), which
+   would be the first corpus filling seven of eight sections and the first place
+   the composite double-count guard goes live. Measured at gaining a section on
+   17% of topics, so worth doing and not worth doing next.
+4. **Geo and economy kernels**, the other tier-6 entries.
 
 ### What the substrate must not become
 
