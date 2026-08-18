@@ -84,8 +84,8 @@ class DatalogKernel:
         derived = model - prog.facts
         return self._result(projection, derived, ns, extra={"full": True})
 
-    def run_delta(self, projection: Projection,
-                  delta: WorldDelta) -> KernelResult:
+    def run_delta(self, projection: Projection, delta: WorldDelta, *,
+                  known: set[Fact] | None = None) -> KernelResult:
         """Consequences of a ``WorldDelta`` only. ``projection`` is not modified.
 
         The delta is **projected through the same P_K** rather than handed over
@@ -94,6 +94,14 @@ class DatalogKernel:
         role the projection would have discarded is discarded here too. Passing
         raw tuples would let a fact about an entity nobody projected slip in as a
         bare string, which reads as an answer and is not one.
+
+        ``known`` is the base model, which the caller is expected to hold across
+        deltas — that is the entire point of an incremental kernel. **When it is
+        not supplied this method computes it, and the reported cost includes
+        doing so**, with ``base_recomputed`` set in the diagnostics. An earlier
+        version timed only the incremental step while silently recomputing the
+        base underneath it, which made an O(model) call report an O(delta)
+        price: exactly the kind of number this repo has had to retract before.
         """
         prog: DatalogProgram = projection.program
         sub = WorldSnapshot(
@@ -108,11 +116,17 @@ class DatalogKernel:
                   "roles": {**projection.meta.get("roles", {}),
                             **dproj.meta.get("roles", {})}})
         new_facts = dproj.program.facts - prog.facts
-        known = evaluate(prog.program, prog.facts)
-        (added, full), ns = timed(
-            lambda: add_facts_report(prog.program, known, new_facts))
+        base_recomputed = known is None
+
+        def work():
+            base = (evaluate(prog.program, prog.facts) if base_recomputed
+                    else known)
+            return add_facts_report(prog.program, base, new_facts)
+
+        (added, full), ns = timed(work)
         return self._result(extended, added, ns,
                             extra={"recomputed_from_scratch": full,
+                                   "base_recomputed": base_recomputed,
                                    "new_facts": len(new_facts)})
 
     # ---- shared -------------------------------------------------------

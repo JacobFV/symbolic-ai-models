@@ -341,3 +341,46 @@ def test_the_manifest_says_it_does_not_adjudicate():
     m = get_kernel("datalog@1").manifest
     assert m.authority["derived_fact"] == "propose"
     assert m.incremental and m.runtime == "native" and m.dependencies == ()
+
+
+def test_run_delta_prices_the_base_evaluation_it_performs():
+    """The reported cost must cover the work actually done.
+
+    An earlier version timed only the incremental step while recomputing the
+    base model underneath it in the same call, so an O(model) invocation
+    reported an O(delta) price -- measured at 5.3 ms against 213.7 ms of real
+    work on a 120-node chain, a 40x understatement.
+    """
+    from symbolic_ai_core.world import Entity, WorldDelta
+    from symbolic_ai_kernels.datalog import evaluate
+
+    n = 120
+    w = WorldSnapshot(
+        entities={f"e{i}": Entity(f"e{i}") for i in range(n)},
+        claims=tuple(Claim("par", {"a": EntityRef(f"e{i}"),
+                                   "b": EntityRef(f"e{i+1}")})
+                     for i in range(n - 1)))
+    k = get_kernel("datalog@1")
+    rules = [Rule(Atom("anc", (X, Y)), (Literal(Atom("par", (X, Y))),)),
+             Rule(Atom("anc", (X, Z)), (Literal(Atom("par", (X, Y))),
+                                        Literal(Atom("anc", (Y, Z)))))]
+    p = k.project(w, KernelRequest(params={"rules": rules}))
+    delta = WorldDelta(entities=(Entity("x9"),),
+                       claims=(Claim("par", {"a": EntityRef("x9"),
+                                             "b": EntityRef("e0")}),))
+
+    cold = k.run_delta(p, delta)
+    warm = k.run_delta(p, delta,
+                       known=evaluate(p.program.program, p.program.facts))
+
+    assert cold.diagnostics["base_recomputed"] is True
+    assert warm.diagnostics["base_recomputed"] is False
+    assert cold.cost.cpu_ns > 5 * warm.cost.cpu_ns, (
+        "recomputing the base model cost the same as not recomputing it, so "
+        "the price is not covering the work")
+    def facts(result):
+        return {(c.predicate, tuple(sorted((k, v.id) for k, v in c.roles.items())))
+                for c in result.claims}
+
+    assert facts(cold) == facts(warm), (
+        "the cached path and the recomputing path disagreed about the answer")
