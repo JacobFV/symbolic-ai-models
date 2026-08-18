@@ -191,3 +191,54 @@ def test_generation_is_a_pure_function_of_its_seed():
 def test_the_oracle_is_not_degenerate(cases):
     sizes = {len(c.answer) for c in cases}
     assert len(sizes) >= 3, f"the answer takes only {sizes}; no signal"
+
+
+# --- the reader, and what fidelity the pipeline needs ---------------------
+def test_the_template_reader_recovers_the_world_exactly(cases):
+    """Everything the fidelity curve says rests on p=0 being lossless."""
+    from symbolic_ai_generators.flood.read import read_report
+
+    for c in cases:
+        got, _, _ = solve(read_report(c.report))
+        assert tuple(got) == tuple(c.answer), c.seed
+
+
+def test_dropping_a_domain_fact_hurts_more_than_dropping_a_constraint(cases):
+    """The prediction that failed, pinned. Constraints are often non-binding;
+    a vehicle whose mass went missing can no longer be named at all."""
+    from symbolic_ai_generators.flood.read import corrupt, read_report
+
+    worlds = [read_report(c.report) for c in cases]
+
+    def acc(kind):
+        hit = 0
+        for i, (c, w) in enumerate(zip(cases, worlds)):
+            try:
+                got, _, _ = solve(corrupt(w, seed=i, rate=0.35, kinds=[kind]))
+            except Exception:
+                got = ()
+            hit += tuple(got) == tuple(c.answer)
+        return hit / len(cases)
+
+    domain = min(acc("mass"), acc("capacity"))
+    constraint = min(acc("flooded"), acc("load_limit"))
+    assert domain < constraint, (
+        f"domain facts {domain:.2f} were not more damaging than constraints "
+        f"{constraint:.2f}; the mechanism in the finding does not hold here")
+
+
+def test_the_pipeline_degrades_to_the_trivial_floor_and_not_below(cases):
+    from symbolic_ai_generators.flood.read import corrupt, read_report
+
+    worlds = [read_report(c.report) for c in cases]
+    hit = 0
+    for i, (c, w) in enumerate(zip(cases, worlds)):
+        try:
+            got, _, _ = solve(corrupt(w, seed=i, rate=0.9))
+        except Exception:
+            got = ()
+        hit += tuple(got) == tuple(c.answer)
+    trivial = sum(c.answer == () for c in cases) / len(cases)
+    assert hit / len(cases) <= trivial + 0.1, (
+        "heavy corruption scored above the always-none floor, so the "
+        "corruption is doing something other than removing information")
