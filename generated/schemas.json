@@ -1,0 +1,878 @@
+{
+  "note": "Measured from held bytes, not authored. Regenerate with `symbolic-ai sources --rebuild-schemas`; it needs the data root present and will refuse to write a partial audit.",
+  "schema": "sai.schemas@1",
+  "snapshots": {
+    "cfpb@commandagi-r2-2026-08-15": {
+      "declared": [],
+      "discarded": [],
+      "held": [
+        "core.identity",
+        "core.quantity",
+        "core.type",
+        "logic.proposition"
+      ],
+      "lossy": false,
+      "retained": [],
+      "schema": {
+        "columns": [
+          [
+            "id",
+            "label",
+            "kind"
+          ],
+          [
+            "source_id",
+            "target_id",
+            "kind",
+            "value"
+          ]
+        ],
+        "fields": [
+          "identity",
+          "relation",
+          "value"
+        ],
+        "files_read": 2,
+        "generic": false,
+        "profiles": [
+          "core.identity",
+          "core.quantity",
+          "core.type",
+          "logic.proposition"
+        ],
+        "rows": 1342,
+        "snapshot": "cfpb@commandagi-r2-2026-08-15",
+        "source": "cfpb",
+        "unreadable": 0
+      }
+    },
+    "commandagi-kg-dev@commandagi-r2-2026-08-15": {
+      "declared": [],
+      "discarded": [],
+      "held": [
+        "core.identity",
+        "core.time",
+        "core.type",
+        "logic.proposition"
+      ],
+      "lossy": false,
+      "retained": [],
+      "schema": {
+        "columns": [
+          [
+            "id",
+            "label",
+            "kind",
+            "modality",
+            "visibility",
+            "source_url",
+            "activation",
+            "updated_at",
+            "graph_id"
+          ],
+          [
+            "source_id",
+            "target_id",
+            "kind",
+            "weight",
+            "visibility",
+            "props",
+            "graph_id"
+          ]
+        ],
+        "fields": [
+          "identity",
+          "relation",
+          "time"
+        ],
+        "files_read": 10,
+        "generic": false,
+        "profiles": [
+          "core.identity",
+          "core.time",
+          "core.type",
+          "logic.proposition"
+        ],
+        "rows": 1555042,
+        "snapshot": "commandagi-kg-dev@commandagi-r2-2026-08-15",
+        "source": "commandagi-kg-dev",
+        "unreadable": 0
+      }
+    },
+    "commandagi-kg@commandagi-r2-2026-08-15": {
+      "declared": [],
+      "discarded": [],
+      "held": [
+        "core.identity",
+        "core.time",
+        "core.type",
+        "logic.proposition"
+      ],
+      "lossy": false,
+      "retained": [],
+      "schema": {
+        "columns": [
+          [
+            "id",
+            "label"
+          ],
+          [
+            "id",
+            "label",
+            "body",
+            "kind",
+            "modality",
+            "visibility",
+            "owner_id",
+            "project_id",
+            "source_url",
+            "origin_event_id",
+            "activation",
+            "updated_at",
+            "graph_id"
+          ],
+          [
+            "id",
+            "label",
+            "kind",
+            "modality",
+            "visibility",
+            "source_url",
+            "activation",
+            "updated_at",
+            "graph_id"
+          ],
+          [
+            "source_id",
+            "target_id",
+            "kind"
+          ],
+          [
+            "source_id",
+            "target_id",
+            "kind",
+            "weight",
+            "visibility",
+            "props",
+            "graph_id"
+          ]
+        ],
+        "fields": [
+          "identity",
+          "relation",
+          "time"
+        ],
+        "files_read": 33,
+        "generic": false,
+        "profiles": [
+          "core.identity",
+          "core.time",
+          "core.type",
+          "logic.proposition"
+        ],
+        "rows": 14222127,
+        "snapshot": "commandagi-kg@commandagi-r2-2026-08-15",
+        "source": "commandagi-kg",
+        "unreadable": 0
+      }
+    },
+    "courtlistener@commandagi-r2-2026-08-15": {
+      "declared": [],
+      "discarded": [],
+      "held": [
+        "core.identity",
+        "core.type",
+        "logic.proposition"
+      ],
+      "lossy": false,
+      "retained": [],
+      "schema": {
+        "columns": [
+          [
+            "source_id",
+            "target_id",
+            "kind"
+          ]
+        ],
+        "fields": [
+          "identity",
+          "relation"
+        ],
+        "files_read": 2,
+        "generic": true,
+        "profiles": [
+          "core.identity",
+          "core.type",
+          "logic.proposition"
+        ],
+        "rows": 76959991,
+        "snapshot": "courtlistener@commandagi-r2-2026-08-15",
+        "source": "courtlistener",
+        "unreadable": 0
+      }
+    },
+    "cskg@commandagi-r2-2026-08-15": {
+      "declared": [],
+      "discarded": [],
+      "held": [
+        "core.identity",
+        "core.type",
+        "logic.proposition"
+      ],
+      "lossy": false,
+      "retained": [],
+      "schema": {
+        "columns": [
+          [
+            "source_id",
+            "target_id",
+            "kind"
+          ]
+        ],
+        "fields": [
+          "identity",
+          "relation"
+        ],
+        "files_read": 1,
+        "generic": true,
+        "profiles": [
+          "core.identity",
+          "core.type",
+          "logic.proposition"
+        ],
+        "rows": 3975177,
+        "snapshot": "cskg@commandagi-r2-2026-08-15",
+        "source": "cskg",
+        "unreadable": 0
+      }
+    },
+    "fec@commandagi-r2-2026-08-15": {
+      "declared": [],
+      "discarded": [],
+      "held": [
+        "core.identity",
+        "core.quantity",
+        "core.type",
+        "logic.proposition"
+      ],
+      "lossy": false,
+      "retained": [],
+      "schema": {
+        "columns": [
+          [
+            "id",
+            "label",
+            "kind"
+          ],
+          [
+            "source_id",
+            "target_id",
+            "kind",
+            "value"
+          ]
+        ],
+        "fields": [
+          "identity",
+          "relation",
+          "value"
+        ],
+        "files_read": 2,
+        "generic": false,
+        "profiles": [
+          "core.identity",
+          "core.quantity",
+          "core.type",
+          "logic.proposition"
+        ],
+        "rows": 902704,
+        "snapshot": "fec@commandagi-r2-2026-08-15",
+        "source": "fec",
+        "unreadable": 0
+      }
+    },
+    "gdelt@commandagi-r2-2026-08-15": {
+      "declared": [],
+      "discarded": [],
+      "held": [
+        "core.identity",
+        "core.type",
+        "logic.proposition"
+      ],
+      "lossy": false,
+      "retained": [],
+      "schema": {
+        "columns": [
+          [
+            "id",
+            "label",
+            "kind",
+            "body",
+            "source_url"
+          ],
+          [
+            "source_id",
+            "target_id",
+            "kind"
+          ]
+        ],
+        "fields": [
+          "identity",
+          "relation"
+        ],
+        "files_read": 24,
+        "generic": true,
+        "profiles": [
+          "core.identity",
+          "core.type",
+          "logic.proposition"
+        ],
+        "rows": 39180391,
+        "snapshot": "gdelt@commandagi-r2-2026-08-15",
+        "source": "gdelt",
+        "unreadable": 0
+      }
+    },
+    "geonames@commandagi-r2-2026-08-15": {
+      "declared": [
+        "core.identity",
+        "geo.place"
+      ],
+      "discarded": [
+        "geo.place"
+      ],
+      "held": [
+        "core.identity",
+        "core.type",
+        "logic.proposition"
+      ],
+      "lossy": true,
+      "retained": [
+        "core.identity"
+      ],
+      "schema": {
+        "columns": [
+          [
+            "id",
+            "label",
+            "kind",
+            "body",
+            "source_url"
+          ],
+          [
+            "source_id",
+            "target_id",
+            "kind"
+          ]
+        ],
+        "fields": [
+          "identity",
+          "relation"
+        ],
+        "files_read": 7,
+        "generic": true,
+        "profiles": [
+          "core.identity",
+          "core.type",
+          "logic.proposition"
+        ],
+        "rows": 29361187,
+        "snapshot": "geonames@commandagi-r2-2026-08-15",
+        "source": "geonames",
+        "unreadable": 0
+      }
+    },
+    "gh-archive@commandagi-r2-2026-08-15": {
+      "declared": [],
+      "discarded": [],
+      "held": [
+        "core.identity",
+        "core.type",
+        "logic.proposition"
+      ],
+      "lossy": false,
+      "retained": [],
+      "schema": {
+        "columns": [
+          [
+            "source_id",
+            "target_id",
+            "kind"
+          ]
+        ],
+        "fields": [
+          "identity",
+          "relation"
+        ],
+        "files_read": 5,
+        "generic": true,
+        "profiles": [
+          "core.identity",
+          "core.type",
+          "logic.proposition"
+        ],
+        "rows": 7730712,
+        "snapshot": "gh-archive@commandagi-r2-2026-08-15",
+        "source": "gh-archive",
+        "unreadable": 0
+      }
+    },
+    "gleif@commandagi-r2-2026-08-15": {
+      "declared": [
+        "core.identity"
+      ],
+      "discarded": [],
+      "held": [
+        "core.identity",
+        "core.type",
+        "logic.proposition"
+      ],
+      "lossy": false,
+      "retained": [
+        "core.identity"
+      ],
+      "schema": {
+        "columns": [
+          [
+            "id",
+            "kind",
+            "label",
+            "body",
+            "source_url"
+          ],
+          [
+            "source_id",
+            "target_id",
+            "kind"
+          ]
+        ],
+        "fields": [
+          "identity",
+          "relation"
+        ],
+        "files_read": 2,
+        "generic": false,
+        "profiles": [
+          "core.identity",
+          "core.type",
+          "logic.proposition"
+        ],
+        "rows": 3825302,
+        "snapshot": "gleif@commandagi-r2-2026-08-15",
+        "source": "gleif",
+        "unreadable": 0
+      }
+    },
+    "gutenberg@commandagi-r2-2026-08-15": {
+      "declared": [],
+      "discarded": [],
+      "held": [
+        "core.identity",
+        "core.type",
+        "logic.proposition"
+      ],
+      "lossy": false,
+      "retained": [],
+      "schema": {
+        "columns": [
+          [
+            "id",
+            "label",
+            "kind",
+            "body",
+            "source_url"
+          ],
+          [
+            "source_id",
+            "target_id",
+            "kind"
+          ]
+        ],
+        "fields": [
+          "identity",
+          "relation"
+        ],
+        "files_read": 2,
+        "generic": true,
+        "profiles": [
+          "core.identity",
+          "core.type",
+          "logic.proposition"
+        ],
+        "rows": 614315,
+        "snapshot": "gutenberg@commandagi-r2-2026-08-15",
+        "source": "gutenberg",
+        "unreadable": 0
+      }
+    },
+    "openalex@commandagi-r2-2026-08-15": {
+      "declared": [],
+      "discarded": [],
+      "held": [
+        "core.identity",
+        "core.quantity",
+        "core.type",
+        "logic.proposition"
+      ],
+      "lossy": false,
+      "retained": [],
+      "schema": {
+        "columns": [
+          [
+            "id",
+            "label",
+            "kind",
+            "body",
+            "source_url"
+          ],
+          [
+            "source_id",
+            "target_id",
+            "kind"
+          ],
+          [
+            "source_id",
+            "target_id",
+            "kind",
+            "value"
+          ]
+        ],
+        "fields": [
+          "identity",
+          "relation",
+          "value"
+        ],
+        "files_read": 23,
+        "generic": false,
+        "profiles": [
+          "core.identity",
+          "core.quantity",
+          "core.type",
+          "logic.proposition"
+        ],
+        "rows": 430532739,
+        "snapshot": "openalex@commandagi-r2-2026-08-15",
+        "source": "openalex",
+        "unreadable": 0
+      }
+    },
+    "openflights@commandagi-r2-2026-08-15": {
+      "declared": [
+        "geo.network",
+        "geo.place"
+      ],
+      "discarded": [
+        "geo.network",
+        "geo.place"
+      ],
+      "held": [
+        "core.identity",
+        "core.type",
+        "logic.proposition"
+      ],
+      "lossy": true,
+      "retained": [],
+      "schema": {
+        "columns": [
+          [
+            "id",
+            "label",
+            "kind",
+            "body",
+            "source_url"
+          ],
+          [
+            "source_id",
+            "target_id",
+            "kind"
+          ]
+        ],
+        "fields": [
+          "identity",
+          "relation"
+        ],
+        "files_read": 4,
+        "generic": true,
+        "profiles": [
+          "core.identity",
+          "core.type",
+          "logic.proposition"
+        ],
+        "rows": 86187,
+        "snapshot": "openflights@commandagi-r2-2026-08-15",
+        "source": "openflights",
+        "unreadable": 0
+      }
+    },
+    "patentsview@commandagi-r2-2026-08-15": {
+      "declared": [],
+      "discarded": [],
+      "held": [
+        "core.identity",
+        "core.type",
+        "logic.proposition"
+      ],
+      "lossy": false,
+      "retained": [],
+      "schema": {
+        "columns": [
+          [
+            "id",
+            "kind",
+            "label",
+            "body",
+            "source_url"
+          ],
+          [
+            "source_id",
+            "target_id",
+            "kind"
+          ]
+        ],
+        "fields": [
+          "identity",
+          "relation"
+        ],
+        "files_read": 14,
+        "generic": false,
+        "profiles": [
+          "core.identity",
+          "core.type",
+          "logic.proposition"
+        ],
+        "rows": 327428631,
+        "snapshot": "patentsview@commandagi-r2-2026-08-15",
+        "source": "patentsview",
+        "unreadable": 0
+      }
+    },
+    "sec-edgar@commandagi-r2-2026-08-15": {
+      "declared": [],
+      "discarded": [],
+      "held": [
+        "core.identity",
+        "core.quantity",
+        "core.type",
+        "logic.proposition"
+      ],
+      "lossy": false,
+      "retained": [],
+      "schema": {
+        "columns": [
+          [
+            "id",
+            "label",
+            "kind",
+            "body",
+            "source_url"
+          ],
+          [
+            "id",
+            "label",
+            "kind",
+            "same_as"
+          ],
+          [
+            "source_id",
+            "target_id",
+            "kind"
+          ],
+          [
+            "source_id",
+            "target_id",
+            "kind",
+            "value"
+          ]
+        ],
+        "fields": [
+          "identity",
+          "relation",
+          "value"
+        ],
+        "files_read": 9,
+        "generic": false,
+        "profiles": [
+          "core.identity",
+          "core.quantity",
+          "core.type",
+          "logic.proposition"
+        ],
+        "rows": 12225879,
+        "snapshot": "sec-edgar@commandagi-r2-2026-08-15",
+        "source": "sec-edgar",
+        "unreadable": 0
+      }
+    },
+    "senate-lda@commandagi-r2-2026-08-15": {
+      "declared": [],
+      "discarded": [],
+      "held": [
+        "core.identity",
+        "core.quantity",
+        "core.type",
+        "logic.proposition"
+      ],
+      "lossy": false,
+      "retained": [],
+      "schema": {
+        "columns": [
+          [
+            "id",
+            "label",
+            "kind",
+            "same_as"
+          ],
+          [
+            "source_id",
+            "target_id",
+            "kind",
+            "value"
+          ]
+        ],
+        "fields": [
+          "identity",
+          "relation",
+          "value"
+        ],
+        "files_read": 2,
+        "generic": false,
+        "profiles": [
+          "core.identity",
+          "core.quantity",
+          "core.type",
+          "logic.proposition"
+        ],
+        "rows": 49903,
+        "snapshot": "senate-lda@commandagi-r2-2026-08-15",
+        "source": "senate-lda",
+        "unreadable": 0
+      }
+    },
+    "stackexchange@commandagi-r2-2026-08-15": {
+      "declared": [],
+      "discarded": [],
+      "held": [
+        "core.identity",
+        "core.type",
+        "logic.proposition"
+      ],
+      "lossy": false,
+      "retained": [],
+      "schema": {
+        "columns": [
+          [
+            "source_id",
+            "target_id",
+            "kind"
+          ]
+        ],
+        "fields": [
+          "identity",
+          "relation"
+        ],
+        "files_read": 29,
+        "generic": true,
+        "profiles": [
+          "core.identity",
+          "core.type",
+          "logic.proposition"
+        ],
+        "rows": 7969958,
+        "snapshot": "stackexchange@commandagi-r2-2026-08-15",
+        "source": "stackexchange",
+        "unreadable": 0
+      }
+    },
+    "usaspending@commandagi-r2-2026-08-15": {
+      "declared": [],
+      "discarded": [],
+      "held": [
+        "core.identity",
+        "core.quantity",
+        "core.type",
+        "logic.proposition"
+      ],
+      "lossy": false,
+      "retained": [],
+      "schema": {
+        "columns": [
+          [
+            "id",
+            "label",
+            "kind",
+            "same_as"
+          ],
+          [
+            "source_id",
+            "target_id",
+            "kind",
+            "value"
+          ]
+        ],
+        "fields": [
+          "identity",
+          "relation",
+          "value"
+        ],
+        "files_read": 2,
+        "generic": false,
+        "profiles": [
+          "core.identity",
+          "core.quantity",
+          "core.type",
+          "logic.proposition"
+        ],
+        "rows": 12981,
+        "snapshot": "usaspending@commandagi-r2-2026-08-15",
+        "source": "usaspending",
+        "unreadable": 0
+      }
+    },
+    "wikidata@commandagi-r2-2026-08-15": {
+      "declared": [
+        "core.identity",
+        "core.type"
+      ],
+      "discarded": [],
+      "held": [
+        "core.identity",
+        "core.type",
+        "logic.proposition"
+      ],
+      "lossy": false,
+      "retained": [
+        "core.identity",
+        "core.type"
+      ],
+      "schema": {
+        "columns": [
+          [
+            "source_id",
+            "target_id",
+            "kind"
+          ]
+        ],
+        "fields": [
+          "identity",
+          "relation"
+        ],
+        "files_read": 7,
+        "generic": true,
+        "profiles": [
+          "core.identity",
+          "core.type",
+          "logic.proposition"
+        ],
+        "rows": 259773342,
+        "snapshot": "wikidata@commandagi-r2-2026-08-15",
+        "source": "wikidata",
+        "unreadable": 0
+      }
+    }
+  },
+  "totals": {
+    "generic": 9,
+    "lossy": 2,
+    "rows_sampled": 1216407910,
+    "snapshots": 19
+  }
+}

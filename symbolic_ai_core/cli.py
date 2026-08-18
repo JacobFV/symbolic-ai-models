@@ -43,6 +43,30 @@ def _sources(args) -> int:
               f"{'yes' if r['held'] else 'no':<5} "
               f"{int(r['bytes']) / 2**30:>7.2f}")
 
+    if getattr(args, "schemas", False) or getattr(args, "rebuild_schemas", False):
+        from .source.columns import schemas_path
+        import json
+        path = schemas_path()
+        if getattr(args, "rebuild_schemas", False):
+            from .source.columns import write_schemas
+            print(f"\nre-measuring held bytes -> {write_schemas()}")
+        if not path.exists():
+            print("\nno schema audit on disk; run with --rebuild-schemas "
+                  "on a machine that holds the snapshots")
+            return 0
+        doc = json.loads(path.read_text())
+        t = doc["totals"]
+        print(f"\nheld-byte audit: {t['snapshots']} snapshots, "
+              f"{t['rows_sampled']:,} rows, {t['generic']} carrying nothing "
+              f"but graph structure, {t['lossy']} lossy at ingest")
+        print(f"\n{'source':<18} {'profiles the held columns can populate':<44} "
+              f"discarded at ingest")
+        for entry in sorted(doc["snapshots"].values(),
+                            key=lambda e: e["schema"]["source"]):
+            print(f"{entry['schema']['source']:<18} "
+                  f"{','.join(entry['held'])[:43]:<44} "
+                  f"{','.join(entry['discarded']) or '-'}")
+
     arts = reg.artifacts()
     if arts:
         print(f"\n{len(arts)} artifacts:")
@@ -192,6 +216,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     sub = ap.add_subparsers(dest="cmd", required=True)
 
     p = sub.add_parser("sources", help="what this repo knows and what it holds")
+    p.add_argument("--schemas", action="store_true",
+                   help="what the held columns can actually populate")
+    p.add_argument("--rebuild-schemas", action="store_true",
+                   help="re-measure the held bytes (implies --schemas)")
     p.set_defaults(fn=_sources)
 
     p = sub.add_parser("kernels", help="registered kernels and their toolchains")
