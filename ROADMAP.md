@@ -3,7 +3,84 @@
 State for autonomous continuation. Read `git log --oneline | head -20` first;
 this file says what the work *is*, the log says how far it got.
 
-## Open: the IR is the third seam, and two lines are running against it
+## Open: the substrate. This repo is now a typed world-program runtime.
+
+**Read `notes/decisions/2026-08-18-flow-is-a-dag-the-world-is-not.md` and
+`notes/decisions/2026-08-18-the-kernel-stack-is-a-set-of-projections.md` before
+anything below.** They are the argument; this is the state.
+
+The pivot, decided 2026-08-18: from *model zoo + language benchmark* to
+
+```
+arbitrary inputs -> typed world IR -> cost-aware multi-kernel computation
+                 -> arbitrary useful outputs
+```
+
+with language, logic, physics, geography and economics as **overlapping views
+over one world**. Next-token prediction, paragraph completion, missing parse
+nodes, scene prediction, theorem proving and planning become different output
+nodes over one substrate rather than different definitions of "AI".
+
+### The two invariants everything rests on
+
+- **The flow graph is a DAG; the world is not.** A road network, an economy and
+  a social graph are cyclic. Recurrence lives inside `flow.fold@1`, so the outer
+  graph stays compilable and cacheable.
+- **A kernel projects, and the projection declares what it discarded.** No
+  universal inference language. `P_K: World -> L_K` returns a discard record;
+  `check_entitlement` refuses a claim about anything the projection never
+  covered.
+
+### Built and green
+
+| layer | where | state |
+|---|---|---|
+| artifact | `symbolic_ai_core/artifact/` | immutable, content-addressed, absent != zero |
+| world IR | `symbolic_ai_core/world/` | n-ary nested claims, two times, alignments not merges |
+| flow DAG | `symbolic_ai_core/flow/` | typed ports, cycle refusal, structural cache, `fold` |
+| streaming | `symbolic_ai_core/data/{key,case,dataset,stream}.py` | address space, not a list |
+| federation | `catalog/`, `manifests/`, `ontology/`, `symbolic_ai_core/source/` | 19 sources, 14 GB under `$SYMBOLIC_AI_DATA` |
+| fusion | `symbolic_ai_core/runtime/fusion.py` | property-specific; default keeps the mixture |
+| kernels | `symbolic_ai_kernels/{datalog,asp,smt}/` | tiers 1-3; ASP and SMT optional, refusing loudly |
+| first task | `symbolic_ai_generators/flood/` | **1.000 vs a brute-force oracle, floor 0.440** |
+
+`notes/findings/2026-08-18-three-kernels-solve-a-task-none-of-them-can.md` has
+the numbers, the seven floors and the three ablations.
+
+### Next, in order
+
+1. **A parser in front of the flood task.** The one thing the finding
+   deliberately did not do: run the same pipeline from the *report* instead of
+   the world. That is the number that prices the capability, because the
+   parser's cost enters the ledger -- and on 0.016 exact recovery it will be
+   low, which is the point.
+2. **Price the kernels.** Every node currently reports `unpriced`. Until they
+   report a cost, `$ / solved episode above floor` cannot be computed for
+   anything the substrate does.
+3. **Lean as the verifier** (tier 4). The exploratory reasoner need not be
+   sound; the verifier must be. `symbolic_ai_lean/` already has a native kernel
+   and a `Graph <-> Expr` translation to build the projection from.
+4. **Dataset recipes and a generic `knowledge_source`,** so the KG essay
+   generator stops assuming WordNet and any source with the right capabilities
+   can replace it.
+5. **Learned routing.** Router nodes, a cost model, and `utility/$` as the
+   objective -- the thing the whole cost argument was for.
+6. **e-graphs** (tier 5), and the first specialised world kernel (rigid body).
+
+### What the substrate must not become
+
+The failure mode with a name: the universal layer stops being small. If `core`
+grows to hundreds of types because every kernel needed one more thing in the
+middle, the factoring was wrong and the complexity should have stayed in the
+kernels and the source adapters. Countable: `symbolic_ai_core` growing faster
+than `symbolic_ai_kernels` and the source adapters combined.
+
+The second: projections becoming where all the complexity went. If `P_K` for
+two kernels is longer than either kernel, the world IR is at the wrong altitude.
+
+---
+
+## Closed-ish: the IR is the third seam, and two lines ran against it
 
 `text -> Graph` is a parameter (the parsers package) and `Graph -> scored
 prediction` is a parameter (the readout). Both hold the **middle term fixed**.
