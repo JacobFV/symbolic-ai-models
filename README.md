@@ -557,6 +557,9 @@ symbolic-ai-models/
     agents/               #   random, shortcut, context (floors); recall, careful
     train.py trace.py     #   rollouts; trajectories, for reading, not a metric
   symbolic_ai_generators/ # latent worlds, rendered into several surfaces
+    solvency/             #   a covenant test over REVISED filings -- the two
+                          #   times, and the second task, structurally opposite
+                          #   to flood: one boolean, no search
     flood/                #   flood logistics: a CYCLIC road network, posted
                           #   bridge limits, and an answer no paragraph states.
                           #   Three kernels reach 1.000 against a brute-force
@@ -587,6 +590,10 @@ symbolic-ai-models/
       project.py kernel.py#   kernel and the first with a clock. Returns poses
                           #   with honest error bars, which is what makes
                           #   inverse-variance fusion possible
+    economy/              #   tier 6 (native): consolidated aggregates AS KNOWN
+      project.py kernel.py#   ON A DATE. Refuses to default as_of to now, which
+                          #   is the look-ahead bias every optimistic backtest
+                          #   is made of
     geo/                  #   tier 6 (native): geodesy on a stated datum.
       geodesy.py          #   Vincenty on WGS84, NaN on the antipodal case
       project.py kernel.py#   rather than a silent spherical substitute; a

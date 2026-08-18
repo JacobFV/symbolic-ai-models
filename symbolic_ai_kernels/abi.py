@@ -258,6 +258,7 @@ KERNEL_MODULES: dict[str, str] = {
     "egraph@1": "symbolic_ai_kernels.egraph",
     "rigid@1": "symbolic_ai_kernels.rigid",
     "geo@1": "symbolic_ai_kernels.geo",
+    "economy@1": "symbolic_ai_kernels.economy",
 }
 
 
