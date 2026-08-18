@@ -15,9 +15,10 @@ from .airport_country import (FLOOR_NAME, AirportCountryTask, evaluate,
 
 from .company_key import CompanyKeyTask
 from .cross_source_alignment import AlignmentResult, Candidate
+from .range_limited_routing import RangeNetwork
 from .ultimate_parent import UltimateParentTask
 
 __all__ = ["AirportCountryTask", "load_task", "evaluate", "predict_knn",
            "predict_modal", "predict_anchor", "FLOOR_NAME",
            "UltimateParentTask", "CompanyKeyTask", "AlignmentResult",
-           "Candidate"]
+           "Candidate", "RangeNetwork"]

@@ -562,6 +562,11 @@ symbolic-ai-models/
                           #   a citation because the bytes state no datum and the
                           #   geo kernel refuses a place without one
   symbolic_ai_tasks/      # tasks over bytes this repo did NOT author, where the
+    range_limited_routing.py # geo x graph, the first POWERED composition:
+                          #   the single-kernel answer is right 14% of the time,
+                          #   and a 0.05% metric error becomes a 0.43% answer
+                          #   error -- amplified 1.6x to 44x by the topology,
+                          #   which no per-kernel tolerance can express
     cross_source_alignment.py # SEC filers to GLEIF: 14.7% of matched names
                           #   are AMBIGUOUS and 51% of those span jurisdictions,
                           #   so alignment-not-merge is load-bearing. The
