@@ -579,6 +579,14 @@ symbolic-ai-models/
       project.py kernel.py#   in the stack. Typechecks each claim against the
                           #   world's own entity types -- catches the role
                           #   confusion the untyped kernels cannot see
+    egraph/               #   tier 5 (native): equality saturation and
+      egraph.py           #   cost-model extraction. Correct, and measured 116x
+      constraints.py      #   short of break-even on the one workload it was
+      kernel.py           #   pointed at -- the finding ships with the code
+    rigid/                #   tier 6 (native): the first specialised WORLD
+      project.py kernel.py#   kernel and the first with a clock. Returns poses
+                          #   with honest error bars, which is what makes
+                          #   inverse-variance fusion possible
   symbolic_ai_atomspace/  # 005: the IR as a knob -- match and rewrite over atoms
   symbolic_ai_lean/       # 006: the IR as a knob -- a kernel that can *refuse*
     expr.py kernel.py     #   native, total, fuel-bounded; Lean 4's Expr, subset

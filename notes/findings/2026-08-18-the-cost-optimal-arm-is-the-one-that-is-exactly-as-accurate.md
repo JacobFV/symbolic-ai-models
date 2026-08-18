@@ -86,10 +86,17 @@ a diagnostic, not a deployable arm.
 
 - **The gate never firing**, which would make losslessness true for the wrong
   reason. It fires 15.3%, asserted by test.
-- **The router costing more than it saves.** It does — on a *cheap* branch.
-  Measured at about −4e-12 USD when the gated branch is two identity ops, and
-  asserted as a test in both directions, because "route everything" is the
-  obvious wrong lesson to take from a positive result.
+- **The router costing more than it saves.** On a *cheap* branch it buys
+  essentially nothing, which is the guard against "route everything".
+  **Correction, added after the fact:** the first version of that check asserted
+  the *sign* of the difference, from a measured −4e-12 USD. That assertion
+  passed inside its own file and failed 8 times out of 8 when run alone —
+  process warm-up is far larger than the effect. Asserting the sign of a
+  difference smaller than the measurement noise is not a test. The check now
+  asserts the robust property instead: the gate is itself a priced node, and the
+  saving is bounded by the cost of the identity op it skipped. The *direction*
+  of the effect on a trivially cheap branch is not measurable here and this note
+  should not be read as having measured it.
 - **The floor moving.** 0.440 is the strongest of the seven floors from the
   earlier flood finding, and every arm here is scored against the same one.
 

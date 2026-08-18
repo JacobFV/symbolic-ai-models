@@ -135,18 +135,43 @@ def test_routing_report_computes_the_saving_from_the_traces():
     assert rep["decisions"][0]["chosen"] == ["cheap"]
 
 
-def test_routing_a_trivially_cheap_branch_is_a_NET_LOSS():
-    """The guard against routing everything. A gate is itself a node, and when
-    what it gates costs less than the gate, the saving is negative -- measured
-    here at about -4e-12 USD on two identity ops. Routing pays in proportion to
-    what is downstream of it, and nothing else."""
+def test_routing_a_trivially_cheap_branch_buys_essentially_nothing():
+    """The guard against routing everything: a gate is itself a node, so when
+    what it gates costs about what the gate costs, there is nothing to win.
+
+    **This deliberately does not assert the sign of the saving.** An earlier
+    version did -- `usd_saved <= 0`, from a measured -4e-12 USD -- and it passed
+    inside its own file and failed 8/8 when run alone, because the difference is
+    far smaller than process warm-up. Asserting the sign of a difference smaller
+    than the measurement noise is not a test; it is a coin flip with a
+    docstring.
+
+    What is robust is the magnitude: whatever the sign, the saving is bounded by
+    the cost of the node that was skipped, and that node is an identity op.
+    """
     _, base = evaluate(graph("all"), ctx=Context())
     _, routed = evaluate(graph("test_first_only"), ctx=Context())
     rep = routing_report(base, routed)
     assert rep["routed"]["skipped"] == ["exact"]
-    assert rep["usd_saved"] <= 0, (
-        "routing two identity ops came out ahead; either the gate became free "
-        "or the measurement is not measuring the gate")
+
+    gate = next(r for r in routed.trace.runs if r.node == "r")
+    assert gate.cost_usd is not None and gate.cost_usd > 0, (
+        "the router node cost nothing, so there is nothing for it to fail to "
+        "pay back")
+    assert abs(rep["usd_saved"]) < 10 * gate.cost_usd, (
+        "routing an identity op moved the total by more than ten times the "
+        "gate's own cost, which would mean the saving is not coming from the "
+        "skipped branch")
+
+
+def test_routing_an_expensive_branch_is_a_clear_win():
+    """The contrast, and the one whose sign IS above the noise."""
+    _, base = evaluate(costly_graph("all"), ctx=Context())
+    _, routed = evaluate(costly_graph("test_first_only"), ctx=Context())
+    rep = routing_report(base, routed)
+    assert rep["usd_saved"] > 0
+    assert rep["usd_saved_share"] > 0.5, (
+        "skipping the only expensive node saved less than half the total")
 
 
 def test_the_report_says_how_much_of_the_total_is_only_a_cpu_floor():

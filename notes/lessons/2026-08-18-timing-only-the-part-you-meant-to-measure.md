@@ -68,3 +68,25 @@ Concretely, in this repo:
 - `tests/test_datalog_kernel.py::test_run_delta_prices_the_base_evaluation_it_performs`
   asserts the cold path costs at least 5× the warm one, which is a property no
   amount of correct output would have revealed.
+
+## The same mechanism, one week later, in a test
+
+`test_routing_a_trivially_cheap_branch_is_a_NET_LOSS` asserted `usd_saved <= 0`
+from a measured **−4e-12 USD**. It passed inside its own file and failed **8
+times out of 8** when run alone, because process warm-up moves the first
+`evaluate` call by far more than 4 picodollars.
+
+The claim was true in the sense that mattered — routing something cheaper than
+the gate cannot pay — and untestable in the form it was written. **Asserting the
+sign of a difference smaller than the measurement noise is not a test; it is a
+coin flip with a docstring.** It also *hid* rather than revealed, because passing
+in-file made it look like a property that held.
+
+The guard: when a test asserts a comparison of two measurements, first ask
+whether the effect is larger than the run-to-run variation of the instrument.
+If it is not, assert a **magnitude bound** or a **structural** property instead —
+here, that the router is a priced node and the saving is bounded by the cost of
+what it skipped. Both are true regardless of warm-up.
+
+And run the test alone at least once. A timing assertion that only holds in the
+company of other tests is one that will fail in CI on a quiet machine.
