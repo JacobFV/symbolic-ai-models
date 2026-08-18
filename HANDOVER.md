@@ -1,4 +1,4 @@
-# Handover — 2026-08-18
+# Handover — 2026-08-18 (second revision, after the certificate arm)
 
 For the next agent picking this repo up cold. `ROADMAP.md` says what the work
 *is*; `CLAUDE.md` says how to work here; this says **where the live edge is, what
@@ -17,13 +17,22 @@ The programme pivoted on 2026-08-18 from *model zoo + language curriculum* to a
 **typed world-program runtime over real federated data**. The curriculum is a
 development harness, not the benchmark. The live frontier is:
 
-> **GLEIF + SEC fusion: computing with disagreements that no source is entitled
-> to settle, and pricing that capability against a language model.**
+> **Maintaining an answer instead of re-deriving it: what an answer actually
+> depends on, how much smaller that is than what the computation read, and what
+> the difference is worth per corpus update.**
 
-Two sources, 19 catalogued, 14 GB under `$SYMBOLIC_AI_DATA`, and one property —
-"who ultimately owns this company" — where the data contradicts itself in a way
-that is real, filed, and not synthetic. Everything below was measured on those
-bytes.
+That is a move from the previous revision's frontier ("computing with
+disagreements no source is entitled to settle"), which is not abandoned but is
+no longer where the open questions are. The move happened because the
+certificate arm found that the *only* claim of ours that survived a realistic
+opponent — naming what an answer rests on — is worth **0.3x to 1.0x** the way
+the previous handover proposed building it, and **13,987x** built differently.
+
+The corpus that made it measurable is new: **two filed SEC 13F snapshots**,
+December 2025 and the quarter after, 2,282,570 → 2,360,678 holdings edges,
+333,014 positions closed and 411,122 opened, 8,425 filings. It is the first real
+corpus *update* this repo has had, as against a corpus. Everything in §3b was
+measured on those bytes and nothing in it is injected.
 
 ## 2. What is built
 
@@ -35,11 +44,13 @@ bytes.
 | `additive_bounds`, `Bounds` | same | exact, attained extremes for a sum of independent per-subject terms, in linear time |
 | `exposure`, `rank_by_exposure` | same | what a conflict costs *before* enumerating it |
 | `AmbiguityExplosion.read` | same | a refusal that **names the conflicts the query depends on** |
+| `certify`, `revalidate`, `RecordingStore` | `symbolic_ai_core/runtime/certificate.py` | the same recording trick over **facts** rather than conflicts: run a computation once against a mapping that remembers, and its dependency set is the answer. Works on an arbitrary computation, including one that shells out to clingo |
 | the tasks | `symbolic_ai_tasks/` | `ultimate_parent`, `company_key`, `cross_source_alignment`, `airport_country`, `range_limited_routing` |
 | the experiments | `scripts/gleif_scoped_ambiguity.py`, `gleif_ambiguity_ladder.py`, `alignment_bounds.py`, `ambiguity_advantage.py`, `retrieval_rounds.py`, `gleif_fund_exposure.py` | every number in §3 |
 
-Tests: `tests/test_ambiguity.py` (38), `tests/test_fusion.py`. Full suite
-**3,354 passed, 10 skipped** as of this handover.
+Tests: `tests/test_ambiguity.py` (38), `tests/test_fusion.py`,
+`tests/test_certificate.py` (17). Full suite **3,371 passed, 10 skipped** as of
+this revision, run at its end.
 
 ## 3. Measured. Do not re-derive these.
 
@@ -93,24 +104,100 @@ length p50 2 / max 10, amplification **1.0x**. Exposure spans **1 to 3,848**
 inside one relation, so the cost of a conflict is a property of *the node*, not
 the graph. The route network is the opposite (amplification 8.3x–44x).
 
+## 3b. Measured on the 13F update. The certificate arm.
+
+Four findings, in the order they were run, each correcting the one before it.
+Scripts: `cert_maintenance_13f.py`, `cert_freshness_13f.py`,
+`cert_dependency_size.py`, `cert_bound_asymmetry.py`, `cert_witness_path.py`.
+
+**Per quarter, a read-set certificate is worth nothing, and often less.** Four
+query classes spanning four orders of magnitude of compute cost, all certified
+by one generic mechanism with no per-query rule:
+
+| query class | read set | compute/answer | speedup | survive | **advantage** |
+|---|---:|---:|---:|---:|---:|
+| `holder_count(S)` | 1 | 748 ns | 0.6x | 33.0% | **0.3x** |
+| `is_widely_held(S,100)` | 1 | 739 ns | 0.7x | 33.0% | **0.3x** |
+| `portfolio_overlap` | 2 | 6,048 ns | 3.7x | 0.4% | **0.6x** |
+| `min_filers_covering(12)` | 12 | 6,745,104 ns | **1,582.6x** | **0.0%** | **1.0x** |
+
+Speedup and survival are **anticorrelated** — the read set that makes a
+certificate cheap to check is the one that makes it likely to be hit — and they
+cancel to ~1.0x. A query-supplied **stability margin** survives 93.6% against the
+read set's 33.0%, and that is the rung the recording mechanism cannot produce.
+
+**Per filing it is worth 37x to 1,342x**, and the quarterly row is the far end
+of that curve, not the value of the mechanism. 8,425 filings, 89.3 keys each
+(0.185% of the corpus). The whole-quarter endpoint reproduces the table above
+(0.36 / 0.71 / 1.00 against 0.3 / 0.6 / 1.0), so the two experiments agree.
+
+**The ceiling, verified on both axes independently:**
+
+```
+advantage = min( compute/check , 1/P_hit ),    P_hit ~ r x keys_per_update / total_keys
+```
+
+Sweeping `r` 1→48 with the kernel fixed: 364.8x → 11.7x, meeting the `1/P`
+prediction at 11.3x. Sweeping kernel cost over six orders of magnitude with `r`
+pinned at 1: the advantage rises and then **saturates at that sample's ceiling**,
+269.7x measured against 269.5x predicted. **Cost decides only whether the ceiling
+is reached; dependency size is the ceiling.**
+
+**And the recorded read set is not the dependency.** On shortest co-holding path
+the BFS read 1,328.6 keys where the claim depends on 0.5 — an over-approximation
+of **6,591x**. Once the certificate is minimal, the **complete answer** `= d`
+(not a bound) is maintained at **13,987x**:
+
+| certificate | dependency | P(hit)/filing | advantage |
+|---|---:|---:|---:|
+| witness (the path's edges) | 2.5 edges | 0.0034% | 29,182x |
+| optimality — **recorded** frontier | 1,328.6 keys | 30.6067% | **3.3x** |
+| optimality — **hand-derived minimal** | 0.5 keys | 0.0046% | 21,534x |
+| **full answer** (witness + minimal) | — | 0.0071% | **13,987x** |
+
+Set cover's 95x witness/optimality gap **survives** this attack because its
+optimality read set genuinely *is* the dependency; shortest path's does not.
+Whether a recorded read set is tight is a property of the **problem**, and
+nothing in the mechanism tells you which case you are in. A second agent
+measured the same over-reading independently on the route network the same day
+at **66x**.
+
+Anchors, all of which had to be zero and were: 15,300 answers recomputed on the
+new snapshot with **0 false survivals** on every rung; 300/300 cover witnesses
+well-formed; 222/300 path witnesses intact with **0** failing to chain.
+
+**The opponent throughout** re-derives every answer per update, which is what an
+LM or retrieval agent must do and is emphatically **not** what a database would
+do. Against incremental view maintenance (DBSP, differential dataflow) these
+advantages would be far smaller and possibly inverted. What survives that
+comparison is narrow and should be stated narrowly: this gets delta-proportional
+maintenance for an **arbitrary computation including an external solver**, with
+no per-query delta rule.
+
 ## 4. Believed, not measured. Do not inherit as fact.
 
 Recorded deliberately, with mechanisms, so a later contradiction is a finding
 rather than a surprise.
 
-- **Scoping buys little on a dense graph.** Predicted, not run, and the decision
-  not to run it is in
-  `notes/decisions/2026-08-18-drop-the-dense-graph-arm-and-measure-the-dependency-instead.md`.
-  Expected: large read sets, frequent refusal, `additive_bounds` inapplicable to
-  shortest path, set propagation asked constantly. **If you find otherwise,
-  that is publishable.**
-- **openflights and geonames may both carry a country for the same place**,
-  which would be the first genuine *two-source property* conflict in the corpus
-  — three findings in a row have said the corpus has none.
-  `notes/questions/2026-08-18-the-same-three-mechanisms-on-a-dense-graph-and-a-real-cross-source-property-conflict.md`
+Both of the previous revision's parked predictions have now been **run, and
+both fell** — see §5. What is parked now:
+
+- **A corpus that mostly *shrinks* inverts the witness asymmetry.** The witness
+  is monotone under additions and dies on deletion; 13F opened 411,122 against
+  333,014 closed. On a shrinking corpus the witness should be the fragile half
+  and the optimality claim the stable one. Cheap and unrun.
+- **Most kernels here have a witness available and discard it.** The ASP kernel
+  holds the model and returns only claims; the cover experiment had to
+  re-extract the picked filers by hand. Confidence ~0.7, from reading the code.
+- **The minimal path certificate is derived only for hops ≤ 2**, which is every
+  case in that sample because the co-holding graph is nearly complete. On a
+  graph with real diameter the minimal optimality set is the ball of radius
+  `d−1`, which grows, and the 1.4x could open back up. **That is the experiment
+  that would break the newest finding**, and it is the one to run first if you
+  want to attack it.
 - **The ~5e7 constant is a measurement, not a law.** It is the ratio of a fact
   in a kernel to a fact in a prompt, on one corpus whose facts are 20-character
-  identifiers. A corpus of prose facts should move it.
+  identifiers. A corpus of prose facts should move it. Still unrun.
 
 ## 5. Corrected this session. Do not quote the dead versions.
 
@@ -120,6 +207,10 @@ rather than a surprise.
 | "a retriever can only guess what the answer depends on" (mine, same day) | **wrong.** An ideal retriever certifies determinacy in **≤4 rounds**, zero misses. What survives: it has no **stopping rule** — at its natural stop it is silently wrong on **1.128%** of the world — and it over-fetches **46x** |
 | "ambiguity does not propagate in this graph, 1.0x" | true of the 251 conflicts that occurred, false of the graph: the same conflicts on the highest-exposure nodes would contaminate **102x** more |
 | "alternatives retained not collapsed" | held only inside the process until `to_dict` was fixed; retention died at the artifact boundary |
+| "scoping buys little on a dense graph" (parked prediction) | **false on the filed-real mixture**: read p50 1, max 8, **0 refusals** in 250 queries, anchor 179/179. What breaks is **wall time** — 48.3 ms/query against GLEIF's 2.8 µs, 17,000x — and the governing variable is `conflict rate x read footprint`, not topology. GLEIF's 2.8 µs was a property of a two-fact query, never of a forest |
+| "the corpus has no genuine two-source property conflict" (three findings) | **false**: four airports where openflights and geonames disagree on country and the disagreement survives ICAO agreement, name agreement and a self-incoherence filter — EUN, SMW, VIL (Western Sahara) and PRN (Kosovo). Broadest defensible count 8 |
+| "make dependency-certification a substrate-wide contract" (this handover's own §7 item 1, previous revision) | the **lower-value half** of the right idea. Every kernel reporting its read set is worth **0.3x–1.0x** per quarter, and the read set over-reads the actual dependency by up to **6,591x**. What pays is a **witness** plus a **minimal** dependency, and neither is producible by the generic mechanism |
+| "the lever is the logical form of the claim" (mine, two hours later) | **wrong.** The lever is the *true dependency* of the claim. The 95x NP/coNP gap on set cover is real; the 8,932x version of it on shortest path collapses to **1.4x** once the optimality certificate is hand-derived, and the rest was the BFS over-reading |
 
 ## 6. Blocked, and it needs a human
 
@@ -136,32 +227,39 @@ assumption is what put four earlier rows out of quotation.
 
 ## 7. What to do next
 
-Ordered, with the reason. This is a recommendation from the evidence, not a
-queue of tickets — `CLAUDE.md` is explicit that the better experiment beats the
-next item, and says so about itself.
+Ordered, with the reason. A recommendation from the evidence, not a queue —
+`CLAUDE.md` is explicit that the better experiment beats the next item, and the
+previous revision's §7 item 1 is in the corrections table above, so this section
+has a demonstrated failure rate.
 
-1. **Make dependency-certification a substrate-wide contract.** Only
-   `possible_answers_scoped` reports what it read. Generalise it so every kernel
-   and flow node returns the facts it consumed, and "here is the answer, here is
-   everything it rests on, and nothing else mattered" becomes a first-class
-   artifact. *Why this first:* it is the only claim of ours that survived contact
-   with a realistic opponent — the 46x over-fetch and the missing stopping rule
-   are both this. `check_entitlement` in `symbolic_ai_kernels/abi.py` is the
-   nearest existing shape to copy.
-2. **Then find where the certificate is worth money.** A corpus with deep,
-   private dependencies: the **3.8M-row 13F holdings graph**
-   (`data/sources/sec-edgar/.../finance/13f/`) is the candidate. Portfolio
-   questions depend on hundreds of facts, so a 46x over-fetch is not a rounding
-   error and a wrong stopping point is a wrong answer. GLEIF ownership is close
-   to exhausted for this line — chain p50 is 2.
-3. **Keep attacking our own published numbers.** Two of the last three findings
-   corrected an earlier headline of ours, at a cost of hours each. That is
-   currently the highest-yield activity in the repo.
+1. **Break the newest finding on a graph with real diameter.** The minimal path
+   certificate is derived only for hops ≤ 2 and the co-holding graph is nearly
+   complete, so the 13,987x has never met a deep path. On a graph with diameter
+   the minimal optimality set is the ball of radius `d−1` and it grows — the
+   route network is on disk, has amplification 8.3x–44x, and has just been
+   instrumented by `scripts/dense_graph_scoping.py`. *Why first:* it is the
+   cheapest experiment that could retract this session's headline, and two of
+   the last four findings retracted an earlier headline of ours.
+2. **Put a `witness` on `KernelResult`.** The 95x and the 13,987x are both
+   currently properties of one script. `symbolic_ai_kernels/abi.py` already has
+   the right shape (`check_entitlement` is the nearest analogue) and the ASP
+   kernel already holds the model it throws away. The contract to ship is
+   narrower than "report your read set": *return a witness where your answer has
+   one, a minimal dependency where you can derive one, and say plainly where you
+   cannot* — because a read set that reads like a dependency is worse than no
+   certificate, being 6,591x wrong and looking right.
+3. **Re-price the ~5e7 constant on a prose corpus.** It is the last load-bearing
+   number in the cost argument that has never been attacked, gutenberg and
+   stackexchange are both on disk, and the mechanism (facts here are
+   20-character identifiers) predicts it should move.
+4. **The shrinking-corpus inversion.** One arm, and it is the falsifier for the
+   witness asymmetry rather than another confirmation of it.
 
-**What not to do:** more kernels (the data says stop at eight, `ROADMAP.md`);
-more query classes on GLEIF ownership; any further cost row against a
-hypothetical opponent; and any experiment whose write-up you could draft first
-(`CLAUDE.md`, "Do not re-run to confirm").
+**What not to do:** more kernels (the data says stop at eight); more query
+classes on GLEIF ownership; any further cost row against a hypothetical
+opponent; any experiment whose write-up you could draft first; and — new this
+revision — **any certificate work that reports a read set without asking whether
+it is the dependency.** That question is now the whole of it.
 
 ## 8. Traps that cost time this session
 
@@ -181,13 +279,34 @@ hypothetical opponent; and any experiment whose write-up you could draft first
 - **Python buffers stdout when piped.** Use `python -u` or you will watch an
   empty file for ten minutes and conclude the job is hung.
 
+- **Backticks inside `git commit -m "..."` are command substitution.** A merge
+  message this session lost the word `exposure` to it: bash printed "command not
+  found", substituted empty, and committed successfully. Use a *quoted* heredoc,
+  `<<'EOF'`. Lesson note:
+  `notes/lessons/2026-08-18-backticks-in-a-git-commit-m-string-silently-delete-the-word.md`.
+- **An anchor that fails 300/300 is probably the anchor.** Mine compared twelve
+  witness edges against `k`, which is four to nine distinct *filers*. The
+  mechanism under test was correct throughout, and the reflex on a total failure
+  is to distrust the older, better-tested half.
+- **A row that reports its neighbour's number to the digit is a bug, not a
+  coincidence.** The full-answer certificate matched the minimal one at exactly
+  116 because the witness is keyed on edges, the optimality set on adjacencies,
+  and I replayed their union against the adjacency stream alone. Same shape as
+  the trap two entries above it in this list.
+- **The certificate results are stated against an LM-shaped opponent that
+  re-derives everything.** They are not claims against a database. If you quote
+  13,987x without that sentence you have published something this repo does not
+  believe.
+
 ## 9. Verify the checkout in two minutes
 
 ```bash
-uv run pytest tests/test_ambiguity.py tests/test_fusion.py      # 74 pass, <1s
-uv run python scripts/gleif_scoped_ambiguity.py                 # ~1 min, both mixtures
-uv run python scripts/ambiguity_advantage.py                    # ~1 min, the cost table
-uv run pytest tests/                                            # 3,354 pass, ~11 min
+uv run pytest tests/test_ambiguity.py tests/test_fusion.py \
+              tests/test_certificate.py                         # 91 pass, <1s
+uv run python -u scripts/gleif_scoped_ambiguity.py              # ~1 min, both mixtures
+uv run python -u scripts/ambiguity_advantage.py                 # ~1 min, the cost table
+uv run python -u scripts/cert_witness_path.py                   # ~3 min, the newest headline
+uv run pytest tests/                                            # 3,371 pass, ~10 min
 ```
 
 If `data/sources/gleif/...` is absent, every script above dies at load and
