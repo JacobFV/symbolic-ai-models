@@ -122,6 +122,18 @@ def test_an_unpriced_kernel_reports_none_not_zero():
         "written after")
 
 
+def test_cpu_and_wall_are_recorded_separately():
+    """Money is charged for cores held; usability is decided by elapsed time. A
+    kernel blocking on a subprocess is cheap and unusable at once."""
+    from symbolic_ai_kernels import KernelCost
+    from symbolic_ai_kernels.abi import price_cpu_ns
+
+    c = KernelCost(cpu_ns=1_000_000, wall_ns=50_000_000)
+    assert c.cpu_ns != c.wall_ns
+    assert price_cpu_ns(3_600 * 10 ** 9) == pytest.approx(0.02), (
+        "one core-hour should cost the price sheet's core-hour rate")
+
+
 # --- the world is not mutated --------------------------------------------
 def test_a_kernel_cannot_mutate_the_world_it_projects():
     w = WorldSnapshot(

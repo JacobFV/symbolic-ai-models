@@ -39,7 +39,7 @@ from symbolic_ai_core.world import Claim, WorldDelta, WorldSnapshot
 from symbolic_ai_core.world.profile import check_profiles
 
 __all__ = ["SEMANTICS", "AUTHORITY", "Discard", "Projection", "KernelCost",
-           "KERNEL_MODULES", "kernel_ids",
+           "KERNEL_MODULES", "kernel_ids", "price_cpu_ns",
            "KernelRequest", "KernelResult", "KernelManifest", "Kernel",
            "KernelUnavailable", "KERNELS", "register_kernel", "get_kernel",
            "check_entitlement", "timed"]
@@ -119,15 +119,23 @@ class KernelCost:
     distinction is the one this repo spent months without — a throughput number
     read as a capability price — and it is why the flow trace counts unpriced
     nodes separately.
+
+    ``cpu_ns`` and ``wall_ns`` are both recorded and are **not** the same
+    number. Money is charged for cores held, so the price comes from ``cpu_ns``;
+    usability is decided by ``wall_ns``, and a kernel that blocks on a
+    subprocess is cheap and unusable at once. Reporting one and calling it the
+    other is how a latency problem becomes invisible in a cost table.
     """
 
     cpu_ns: int = 0
+    wall_ns: int = 0
     bytes_read: int = 0
     bytes_written: int = 0
     usd: float | None = None
 
     def to_dict(self) -> dict[str, Any]:
-        return {"cpu_ns": self.cpu_ns, "bytes_read": self.bytes_read,
+        return {"cpu_ns": self.cpu_ns, "wall_ns": self.wall_ns,
+                "bytes_read": self.bytes_read,
                 "bytes_written": self.bytes_written, "usd": self.usd}
 
 
@@ -299,7 +307,29 @@ def check_entitlement(projection: Projection, claims: Iterable[Claim]) -> None:
             f"discarded is not a claim this kernel is entitled to make.")
 
 
-def timed(fn: Callable[[], Any]) -> tuple[Any, int]:
-    t0 = time.perf_counter_ns()
+def price_cpu_ns(cpu_ns: int, *, usd_per_core_hour: float | None = None
+                 ) -> float:
+    """CPU nanoseconds -> USD, at the repo's stated price sheet.
+
+    The rate comes from :mod:`symbolic_ai_core.cost`, which is the only place a
+    monetary input lives, because quoting a cost without quoting the price sheet
+    it came from is the same error as quoting an accuracy without its floor.
+    """
+    from symbolic_ai_core.cost import DEFAULT_USD_PER_CORE_HOUR
+    rate = (DEFAULT_USD_PER_CORE_HOUR if usd_per_core_hour is None
+            else usd_per_core_hour)
+    return cpu_ns * rate / 3600.0 / 1e9
+
+
+def timed(fn: Callable[[], Any]) -> tuple[Any, tuple[int, int]]:
+    """Run ``fn``, returning ``(result, (cpu_ns, wall_ns))``.
+
+    Two clocks, because they answer different questions and this repo has
+    already been burned by a throughput number standing in for a price.
+    ``process_time_ns`` counts CPU actually burned by this process;
+    ``perf_counter_ns`` counts elapsed time, including anything spent waiting on
+    a solver in another process.
+    """
+    c0, w0 = time.process_time_ns(), time.perf_counter_ns()
     out = fn()
-    return out, time.perf_counter_ns() - t0
+    return out, (time.process_time_ns() - c0, time.perf_counter_ns() - w0)

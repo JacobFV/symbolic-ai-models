@@ -146,12 +146,31 @@ def test_the_deciding_facts_are_in_different_paragraphs(cases):
 
 
 # --- honesty of the trace -------------------------------------------------
-def test_the_trace_reports_every_node_as_unpriced_rather_than_free(cases):
+def test_the_trace_prices_every_node_and_says_how(cases):
     _, _, ctx = solve(cases[0].world, ctx=Context())
     assert len(ctx.trace.runs) == 6
-    assert ctx.trace.total_usd == 0.0
-    assert ctx.trace.unpriced == 6, (
-        "a node that reported no cost was counted as free")
+    assert ctx.trace.total_usd > 0.0
+    assert ctx.trace.unpriced == 0
+    # The three kernel-bearing nodes price themselves from the kernels they ran;
+    # the three plumbing nodes carry only a CPU floor, and the trace says which
+    # is which so a total can never quietly mix them.
+    assert ctx.trace.cpu_only == 3
+    self_priced = {r.node for r in ctx.trace.runs if r.priced_from == "node"}
+    assert self_priced == {"reach", "routes", "loads"}
+
+
+def test_cpu_and_wall_are_recorded_separately_per_node(cases):
+    _, _, ctx = solve(cases[0].world, ctx=Context())
+    assert all(r.cpu_ns > 0 and r.wall_ns > 0
+               for r in ctx.trace.runs if not r.skipped and not r.cached)
+
+
+def test_pricing_can_be_turned_off_for_self_reported_costs_only(cases):
+    ctx = Context(price_cpu=False)
+    solve(cases[0].world, ctx=ctx)
+    assert ctx.trace.unpriced == 3, (
+        "with CPU pricing off, the plumbing nodes must read as unpriced rather "
+        "than free")
 
 
 def test_re_running_the_same_case_hits_the_cache(cases):

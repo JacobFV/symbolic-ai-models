@@ -233,7 +233,9 @@ def test_a_disabled_node_makes_its_downstream_absent_rather_than_failing():
     assert all(r.skipped for r in ctx.trace.runs if r.node in ("d", "e"))
 
 
-def test_the_trace_counts_unpriced_nodes_rather_than_calling_them_free():
+def test_a_node_that_prices_itself_is_distinguished_from_one_that_did_not():
+    """Both get a number; only one of them is a price. The CPU figure is a
+    FLOOR -- a node holding an API call spent money the evaluator cannot see."""
     g = FlowGraph(nodes=(const_node("src", 1),
                          Node(id="p", op="test.add_one@1",
                               inputs={"in": Binding("src", "out")}),
@@ -241,6 +243,20 @@ def test_the_trace_counts_unpriced_nodes_rather_than_calling_them_free():
                               inputs={"in": Binding("p", "out")})),
                   outputs={"out": Binding("u", "out")})
     _, ctx = evaluate(g)
+    assert ctx.trace.unpriced == 0
+    assert ctx.trace.cpu_only == 2, "a CPU floor was reported as a real price"
+    assert ctx.trace.total_usd > 0.5
+    assert {r.node for r in ctx.trace.runs if r.priced_from == "node"} == {"p"}
+
+
+def test_with_cpu_pricing_off_an_unpriced_node_says_so():
+    g = FlowGraph(nodes=(const_node("src", 1),
+                         Node(id="p", op="test.add_one@1",
+                              inputs={"in": Binding("src", "out")}),
+                         Node(id="u", op="test.double@1",
+                              inputs={"in": Binding("p", "out")})),
+                  outputs={"out": Binding("u", "out")})
+    _, ctx = evaluate(g, ctx=Context(price_cpu=False))
     assert ctx.trace.total_usd == 0.5
     assert ctx.trace.unpriced == 2, "a node that reported nothing read as free"
 

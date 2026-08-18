@@ -28,7 +28,7 @@ from symbolic_ai_core.world import Claim, EntityRef, WorldDelta, WorldSnapshot
 
 from ..abi import (KernelCost, KernelManifest, KernelRequest, KernelResult,
                    KernelUnavailable, Projection, check_entitlement,
-                   register_kernel, timed)
+                   price_cpu_ns, register_kernel, timed)
 from .project import AspProgram, project_world
 
 __all__ = ["AspKernel", "ASP"]
@@ -116,7 +116,7 @@ class AspKernel:
                          "PROJECTION, not about the world -- "
                          f"{len(projection.discarded)} things were discarded "
                          "before the solver saw it."),
-                cost=KernelCost(cpu_ns=ns),
+                cost=_cost(ns),
                 diagnostics={"satisfiable": False,
                              "discarded": len(projection.discarded)})
 
@@ -132,7 +132,7 @@ class AspKernel:
             # set would be a choice the caller never made and cannot see.
             delta=WorldDelta(claims=claims) if unique else WorldDelta(),
             artifacts={"models": [self._readable(projection, m) for m in models]},
-            cost=KernelCost(cpu_ns=ns),
+            cost=_cost(ns),
             diagnostics={"satisfiable": True, "n_models": len(models),
                          "unique": unique, "truncated": truncated,
                          "max_models": max_models,
@@ -167,6 +167,14 @@ class AspKernel:
             pred = prog.mangler.read(name)
             out.append(f"{pred}({', '.join(args)})" if args else pred)
         return out
+
+
+def _cost(ns: tuple[int, int]) -> KernelCost:
+    """clingo runs in-process here, so cpu and wall track each other closely.
+    Both are recorded anyway: a container-hosted solver would not, and a cost
+    table that only ever saw one of them would not notice."""
+    cpu, wall = ns
+    return KernelCost(cpu_ns=cpu, wall_ns=wall, usd=price_cpu_ns(cpu))
 
 
 def _term(sym) -> str:

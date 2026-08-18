@@ -57,14 +57,19 @@ class NodeRun:
     inputs: dict[str, str] = field(default_factory=dict)
     outputs: dict[str, str] = field(default_factory=dict)
     wall_ns: int = 0
+    cpu_ns: int = 0
     cost_usd: float | None = None
+    #: ``"node"`` when the op priced itself, ``"cpu"`` when only this
+    #: evaluator's CPU measurement is behind the number, ``None`` when neither.
+    priced_from: str | None = None
     note: str = ""
 
     def to_dict(self) -> dict[str, Any]:
         return {"node": self.node, "op": self.op, "cached": self.cached,
                 "skipped": self.skipped, "inputs": self.inputs,
                 "outputs": self.outputs, "wall_ns": self.wall_ns,
-                "cost_usd": self.cost_usd, "note": self.note}
+                "cpu_ns": self.cpu_ns, "cost_usd": self.cost_usd,
+                "priced_from": self.priced_from, "note": self.note}
 
 
 @dataclass
@@ -75,8 +80,21 @@ class Trace:
 
     @property
     def unpriced(self) -> int:
-        """Nodes that reported no cost. **Not the same as nodes that were free.**"""
-        return sum(1 for r in self.runs if r.cost_usd is None and not r.skipped)
+        """Nodes carrying no price at all. **Not the same as nodes that were free.**"""
+        return sum(1 for r in self.runs
+                   if r.cost_usd is None and not r.skipped and not r.cached)
+
+    @property
+    def cpu_only(self) -> int:
+        """Nodes priced *only* from this machine's CPU time.
+
+        A warning rather than an error. A node that held an API call, a GPU or a
+        paid licence spent money this evaluator cannot see, and its CPU price is
+        a floor on what it cost, not the cost. Reporting the two together in one
+        total without saying which is which is how "our part is free" gets
+        published.
+        """
+        return sum(1 for r in self.runs if r.priced_from == "cpu")
 
     @property
     def total_usd(self) -> float:
@@ -84,7 +102,8 @@ class Trace:
 
     def to_dict(self) -> dict[str, Any]:
         return {"runs": [r.to_dict() for r in self.runs],
-                "unpriced": self.unpriced, "total_usd": self.total_usd}
+                "unpriced": self.unpriced, "cpu_only": self.cpu_only,
+                "total_usd": self.total_usd}
 
 
 @dataclass
@@ -103,6 +122,12 @@ class Context:
     env: dict[str, Any] = field(default_factory=dict)
     use_cache: bool = True
     cost_usd: float | None = None      #: a node sets this to price itself
+    #: Price every node that did not price itself from the CPU it burned, at the
+    #: repo's stated core-hour rate. On by default, because the alternative is a
+    #: total that silently omits every plumbing node -- and off is available for
+    #: a caller who wants only self-reported costs.
+    price_cpu: bool = True
+    usd_per_core_hour: float | None = None
 
 
 def _check_port(port: Port, art: Artifact, *, where: str) -> None:
@@ -125,6 +150,13 @@ def _check_port(port: Port, art: Artifact, *, where: str) -> None:
         if missing:
             raise FlowError(f"{where}: port requires profile(s) {missing}; the "
                             f"artifact carries {list(art.profiles)}")
+
+
+def _cpu_usd(cpu_ns: int, ctx: "Context") -> float:
+    from ..cost import DEFAULT_USD_PER_CORE_HOUR
+    rate = (DEFAULT_USD_PER_CORE_HOUR if ctx.usd_per_core_hour is None
+            else ctx.usd_per_core_hour)
+    return cpu_ns * rate / 3600.0 / 1e9
 
 
 def evaluate(graph: FlowGraph | CompiledFlow, *, ctx: Context | None = None,
@@ -174,18 +206,26 @@ def evaluate(graph: FlowGraph | CompiledFlow, *, ctx: Context | None = None,
             continue
 
         ctx.cost_usd = None
-        t0 = time.perf_counter_ns()
+        c0, t0 = time.process_time_ns(), time.perf_counter_ns()
         raw = defn.fn(inputs, node.params, ctx)
         wall = time.perf_counter_ns() - t0
+        cpu = time.process_time_ns() - c0
         outs = _finish(defn, node_id, raw, input_ids, ctx)
         produced[node_id] = outs
         out_ids = {k: ctx.store.put(v) for k, v in outs.items()}
         if ctx.use_cache and defn.pure:
             ctx.cache[key] = out_ids
+        # Self-reported price wins; otherwise the CPU this node burned is a
+        # FLOOR on what it cost, and `priced_from` says which of the two the
+        # number is, so a total can never quietly mix them.
+        priced_from = "node" if ctx.cost_usd is not None else (
+            "cpu" if ctx.price_cpu else None)
+        cost = (ctx.cost_usd if ctx.cost_usd is not None
+                else (_cpu_usd(cpu, ctx) if ctx.price_cpu else None))
         ctx.trace.runs.append(NodeRun(node=node_id, op=node.op, cached=False,
                                       skipped=False, inputs=input_ids,
-                                      outputs=out_ids, wall_ns=wall,
-                                      cost_usd=ctx.cost_usd))
+                                      outputs=out_ids, wall_ns=wall, cpu_ns=cpu,
+                                      cost_usd=cost, priced_from=priced_from))
 
     return ({name: produced[b.node][b.port]
              for name, b in flow.outputs_of()}, ctx)

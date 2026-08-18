@@ -234,7 +234,10 @@ def test_the_kernel_returns_derived_facts_not_the_whole_model():
     assert {c.predicate for c in r.claims} == {"ancestor"}, (
         "the input facts came back as if the kernel had derived them")
     assert r.diagnostics["derived"] == len(r.claims)
-    assert r.cost.cpu_ns > 0 and r.cost.usd is None
+    assert r.cost.cpu_ns > 0 and r.cost.wall_ns > 0
+    assert r.cost.usd is not None and r.cost.usd > 0, (
+        "the kernel did not price itself, so every ledger above it "
+        "would read it as free")
 
 
 def test_a_derived_predicate_gets_positional_roles_unless_named():

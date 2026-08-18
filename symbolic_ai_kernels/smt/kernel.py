@@ -34,7 +34,7 @@ from symbolic_ai_core.world import (Claim, EntityRef, Quantity, WorldDelta,
 
 from ..abi import (KernelCost, KernelManifest, KernelRequest, KernelResult,
                    KernelUnavailable, Projection, check_entitlement,
-                   register_kernel, timed)
+                   price_cpu_ns, register_kernel, timed)
 from .project import SmtProgram, Variable, project_world, unit_of
 from .units import UnitError
 
@@ -118,14 +118,14 @@ class SmtKernel:
                          f"That is a statement about the PROJECTION -- "
                          f"{len(projection.discarded)} things were discarded "
                          f"before the solver saw the problem."),
-                cost=KernelCost(cpu_ns=ns),
+                cost=_cost(ns),
                 diagnostics={"satisfiable": False,
                              "discarded": len(projection.discarded)})
         if check == z3.unknown:                               # pragma: no cover
             return KernelResult(
                 kernel=self.manifest.id,
                 refused=f"z3 returned unknown: {solver.reason_unknown()}",
-                cost=KernelCost(cpu_ns=ns))
+                cost=_cost(ns))
 
         model = solver.model()
         claims = tuple(self._claims(projection, prog, model))
@@ -137,7 +137,7 @@ class SmtKernel:
             delta=WorldDelta(),
             artifacts={"model": {k: str(model[z[k]]) for k in sorted(z)
                                  if model[z[k]] is not None}},
-            cost=KernelCost(cpu_ns=ns),
+            cost=_cost(ns),
             diagnostics={"satisfiable": True, "n_variables": len(prog.variables),
                          "n_constraints": len(prog.constraints),
                          "discarded": len(projection.discarded),
@@ -162,6 +162,11 @@ class SmtKernel:
                     producer=self.manifest.id,
                     method="SMT witness; one satisfying assignment, not a "
                            "measurement"))
+
+
+def _cost(ns: tuple[int, int]) -> KernelCost:
+    cpu, wall = ns
+    return KernelCost(cpu_ns=cpu, wall_ns=wall, usd=price_cpu_ns(cpu))
 
 
 def _as_float(raw) -> float:

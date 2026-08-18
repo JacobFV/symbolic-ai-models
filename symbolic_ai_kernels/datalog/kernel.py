@@ -21,8 +21,8 @@ from symbolic_ai_core.artifact.value import Provenance
 from symbolic_ai_core.world import (Claim, EntityRef, WorldDelta, WorldSnapshot)
 
 from ..abi import (Discard, KernelCost, KernelManifest, KernelRequest,
-                   KernelResult, Projection, check_entitlement, register_kernel,
-                   timed)
+                   KernelResult, Projection, check_entitlement, price_cpu_ns,
+                   register_kernel, timed)
 from .engine import Fact, Program, Rule, add_facts_report, evaluate
 from .project import DatalogProgram, project_world, rule_from_dict
 
@@ -116,8 +116,8 @@ class DatalogKernel:
                                    "new_facts": len(new_facts)})
 
     # ---- shared -------------------------------------------------------
-    def _result(self, projection: Projection, facts: set[Fact], ns: int,
-                extra: dict[str, Any]) -> KernelResult:
+    def _result(self, projection: Projection, facts: set[Fact],
+                ns: tuple[int, int], extra: dict[str, Any]) -> KernelResult:
         roles = projection.meta.get("roles", {})
         claims = tuple(_fact_to_claim(f, roles, projection) for f in sorted(facts))
         check_entitlement(projection, claims)
@@ -128,7 +128,7 @@ class DatalogKernel:
             diagnostics={"derived": len(facts),
                          "discarded": len(projection.discarded),
                          "semantics": list(projection.semantics), **extra},
-            cost=KernelCost(cpu_ns=ns))
+            cost=_cost(ns))
 
 
 def _request_rules(request: KernelRequest) -> list[Rule]:
@@ -162,3 +162,8 @@ def _fact_to_claim(fact: Fact, roles: dict[str, list[str]],
 
 
 DATALOG = register_kernel(DatalogKernel())
+
+
+def _cost(ns: tuple[int, int]) -> KernelCost:
+    cpu, wall = ns
+    return KernelCost(cpu_ns=cpu, wall_ns=wall, usd=price_cpu_ns(cpu))

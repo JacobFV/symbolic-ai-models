@@ -1,5 +1,5 @@
 ---
-title: Three kernels solve a flood-logistics task at 1.000; the strongest floor is 0.440 and every single-kernel ablation is worse
+title: Three kernels solve a flood-logistics task at 1.000 for $2.15e-8 per solved episode above a 0.440 floor
 date: 2026-08-18
 author: lead
 status: provisional
@@ -111,10 +111,31 @@ is untouched here. This is a finding about the reasoning substrate, and reading
 it as a language result would be exactly the confound the corpus critique
 already caught once.
 
-**Nothing is priced.** The trace reports 6 nodes and `total_usd = 0.0` with
-`unpriced = 6`, which is the distinction the trace was built to make — no kernel
-prices itself yet. Wall clock is ~7 ms per case for the whole three-kernel
-pipeline on one core, which is an input to a cost number and is not one.
+**It is now priced, and this is the repo's first capability price.** Added
+after the agreement number, once every kernel reported its own measured CPU:
+
+| | |
+|---|---|
+| accuracy | 1.000 |
+| strongest floor | 0.440 |
+| lift | 0.560 |
+| mean cost per episode | $1.20 × 10⁻⁸ |
+| **$ per solved episode above floor** | **$2.15 × 10⁻⁸** |
+| solved-above-floor per dollar | 46,600,000 |
+| mean CPU | 5.5 ms | 
+| mean wall | 5.5 ms |
+
+At the repo's stated price sheet of $0.02 per core-hour, which is an *input* and
+not a finding. Three of the six nodes price themselves from the kernels they
+ran; the other three carry only a CPU floor and the trace says so
+(`cpu_only = 3`), because a node holding an API call would have spent money the
+evaluator cannot see and its CPU figure would be a lower bound rather than a
+price.
+
+Read this number for exactly what it prices: **reasoning given a world.** It is
+not a language capability price, because no parser is in the ledger — see
+above — and putting one there is the next arm precisely because it is the term
+that will dominate.
 
 **The world is small.** Six regions, three vehicles, five bridges. The brute
 force oracle is exponential and only tractable at this size, which is precisely
