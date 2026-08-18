@@ -132,11 +132,24 @@ measurements support:
    comparing against a language model currently assumes equal accuracy and is
    stamped `NOT QUOTABLE` for it. This is the one open thread that needs
    external paid API access and so has not been run.
-0c. **The advantage is a variable, so map it.** 1,500,000x on shortest path
-   (233k tokens of graph must be *given* to the model), ~6,750x on
-   country-from-coordinate (a coordinate must be given). Two points on the same
-   corpus and substrate. A third and fourth would turn a pair of anecdotes into
-   the curve that says where this substrate is worth building.
+0c. ~~**The advantage is a variable, so map it.**~~ **Answered, and the answer
+   changes what may be quoted.** It is a variable, but not of the task. Priced
+   against an opponent given *only what the query depends on* — measurable for
+   the first time now that the read set is — four GLEIF query classes spanning
+   **five orders of magnitude** of published advantage land within **1.2x** of
+   each other at ~**5e7**. What was being measured before was mostly the
+   framing: **99,738x** of the point query's 5.01e12 was handing the model the
+   whole graph. And a workload of *one* query, ingest included, is **271x**,
+   not 5e7.
+
+   So an advantage figure now has to say which of three factors it reports:
+   a constant ~5e7 (a fact in a kernel against a fact in a prompt), how much
+   irrelevant context the alternative was handed (up to 1e5), and how many
+   queries the ingest is amortised over (up to 2e5). These rows are also the
+   first that are **not** stamped NOT QUOTABLE, because input-tokens-only at
+   published rates is a *lower bound* on the opponent and needs no
+   equal-accuracy assumption.
+   See `notes/findings/2026-08-18-the-advantage-curve-was-mostly-the-framing-and-what-is-left-is-a-constant.md`.
 
 Carried over, still worth doing:
 

@@ -115,6 +115,22 @@ work rather than the guard on the work. Concretely, stop doing these:
   resolves, not one per measurement inside it.
 - **Census and audit passes that produce no new capability.** Counting what is
   registered versus scored is not progress; building the next model is.
+- **An experiment whose result you have already written down.** Standing
+  instruction from the user, 2026-08-18: *"if you expect scoping to buy nothing,
+  then don't pursue it. Note your decision and move on."* If you can state the
+  outcome and the mechanism in advance and you believe it, the experiment's
+  information content is already in the note — so **write the prediction down as
+  a prediction, say plainly that you are not running it and why, and spend the
+  time on something whose answer you do not have.** This is not a licence to
+  skip experiments that are merely *likely* to confirm; the rule fires when you
+  find yourself proposing a run whose write-up you could draft first. The
+  parked prediction is still useful: if something later contradicts it, that
+  contradiction is the finding.
+
+  The corollary that makes it safe: **a prediction you decline to run is
+  recorded, never quietly assumed.** It goes in `notes/questions/` or a decision
+  note with the mechanism spelled out, so a later session can see what was
+  believed and on what basis, rather than inheriting it as fact.
 
 The trade being made explicitly: we will publish some things that turn out
 wrong, and we will find out because the next experiment contradicts them, not
