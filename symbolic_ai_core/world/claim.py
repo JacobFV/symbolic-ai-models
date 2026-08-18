@@ -155,7 +155,8 @@ class Claim:
             provenance=Provenance(
                 producer=p.get("producer", ""), inputs=tuple(p.get("inputs") or ()),
                 source=p.get("source", ""), source_version=p.get("source_version", ""),
-                license=p.get("license", ""), method=p.get("method", "")),
+                license=p.get("license", ""), method=p.get("method", ""),
+                derivation=p.get("derivation", "")),
         )
 
 

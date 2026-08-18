@@ -90,3 +90,45 @@ def test_a_file_store_round_trips(tmp_path):
     assert back.provenance.license == "CC0-1.0"
     assert back.valid_time.start == "2026-01-01"
     assert list(s) == [aid]
+
+
+def test_every_provenance_field_survives_a_round_trip():
+    """`derivation` was added to `to_dict` and not to `from_dict`, so it
+    serialised and came back empty -- the same add-one-side asymmetry as every
+    other contract found this week, in my own change, caught by one test.
+
+    Written over `dataclasses.fields` rather than a hand-listed set, so the
+    next field added is covered without anyone remembering to cover it.
+    """
+    import dataclasses
+
+    from symbolic_ai_core.world import Claim
+    from symbolic_ai_core.artifact.value import Provenance
+
+    filled = {}
+    for f in dataclasses.fields(Provenance):
+        filled[f.name] = (("a", "b") if f.type == "tuple[str, ...]"
+                          else f"{f.name}-value")
+    prov = Provenance(**filled)
+    back = Claim.from_dict(Claim("p", provenance=prov).to_dict()).provenance
+    for f in dataclasses.fields(Provenance):
+        assert getattr(back, f.name) == getattr(prov, f.name), (
+            f"Provenance.{f.name} did not survive a round trip: it is in "
+            "to_dict and missing from from_dict")
+
+
+def test_every_provenance_field_survives_a_world_round_trip():
+    """The same asymmetry existed twice -- claim.py and snapshot.py each
+    rebuild a Provenance by hand."""
+    import dataclasses
+
+    from symbolic_ai_core.world import Claim, WorldSnapshot
+    from symbolic_ai_core.artifact.value import Provenance
+
+    filled = {f.name: (("a",) if f.type == "tuple[str, ...]" else f"{f.name}-v")
+              for f in dataclasses.fields(Provenance)}
+    w = WorldSnapshot(claims=(Claim("p", provenance=Provenance(**filled)),))
+    back = WorldSnapshot.from_dict(w.to_dict()).claims[0].provenance
+    for f in dataclasses.fields(Provenance):
+        assert getattr(back, f.name) == filled[f.name], (
+            f"Provenance.{f.name} lost in the WorldSnapshot round trip")

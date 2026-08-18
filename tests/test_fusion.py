@@ -282,3 +282,73 @@ class TestPreferMeasured:
         g = group_claims([_owner("x", "same", "measured", "a"),
                           _owner("x", "same", "measured", "b")])[0]
         assert prefer_measured(g).roles["parent"].id == "same"
+
+
+# --- retention has to survive leaving the process ---------------------------
+import json as _json
+
+from symbolic_ai_core.runtime.fusion import FusionResult, fuse
+
+
+def _rival(entity: str, parent: str, producer: str):
+    return _owner(entity, parent, "measured", producer)
+
+
+class TestAlternativesSurviveSerialisation:
+    def test_fuse_already_retains_a_mixture_in_memory(self):
+        """Recorded because I claimed otherwise: `fuse` catches FusionError
+        and keeps the group whole. Calling a rule directly bypasses that, which
+        is what made it look missing."""
+        register_subject_roles("ultimate_parent", ("of",))
+        res = fuse([_rival("x", "P1", "a"), _rival("x", "P2", "b")],
+                   rules={"ultimate_parent": prefer_measured})
+        assert res.resolved == () and len(res.unresolved) == 1
+        assert not res.settled
+        assert {c.roles["parent"].id for c in res.unresolved[0].claims} == {
+            "P1", "P2"}
+
+    def test_the_competing_claims_survive_to_dict(self):
+        """The real gap: the old shape carried a count and a producer list, so
+        a node reading a fused artifact learned that two sources disagreed and
+        could not recover what either said. Every flow node exchanges
+        artifacts, so retention held only inside one process."""
+        register_subject_roles("ultimate_parent", ("of",))
+        res = fuse([_rival("x", "P1", "a"), _rival("x", "P2", "b")],
+                   rules={"ultimate_parent": prefer_measured})
+        d = res.to_dict()["unresolved"][0]
+        assert "claims" in d and len(d["claims"]) == 2
+
+    def test_a_json_round_trip_keeps_both_and_their_provenance(self):
+        register_subject_roles("ultimate_parent", ("of",))
+        res = fuse([_rival("x", "P1", "gleif:chain"),
+                    _rival("x", "P2", "gleif:filed")],
+                   rules={"ultimate_parent": prefer_measured})
+        back = FusionResult.from_dict(_json.loads(_json.dumps(res.to_dict())))
+        got = back.unresolved[0].claims
+        assert {c.roles["parent"].id for c in got} == {"P1", "P2"}
+        assert {c.provenance.producer for c in got} == {"gleif:chain",
+                                                        "gleif:filed"}
+        assert all(c.provenance.derivation == "measured" for c in got)
+
+    def test_a_truncated_mixture_is_refused_not_accepted(self):
+        """A shortened claims list with an intact count is how a mixture
+        silently becomes a smaller mixture, and a reader could not tell."""
+        register_subject_roles("ultimate_parent", ("of",))
+        res = fuse([_rival("x", "P1", "a"), _rival("x", "P2", "b")],
+                   rules={"ultimate_parent": prefer_measured})
+        d = res.to_dict()
+        d["unresolved"][0]["claims"] = d["unresolved"][0]["claims"][:1]
+        with pytest.raises(FusionError, match="lost members in transit"):
+            FusionResult.from_dict(d)
+
+    def test_resolved_and_vetoed_round_trip_too(self):
+        register_subject_roles("ultimate_parent", ("of",))
+        res = fuse([_owner("y", "same", "measured", "a"),
+                    _owner("y", "same", "measured", "b")],
+                   rules={"ultimate_parent": prefer_measured})
+        back = FusionResult.from_dict(res.to_dict())
+        assert len(back.resolved) == 1
+        assert back.resolved[0].roles["parent"].id == "same"
+
+    def test_an_empty_result_round_trips(self):
+        assert FusionResult.from_dict(FusionResult().to_dict()).settled

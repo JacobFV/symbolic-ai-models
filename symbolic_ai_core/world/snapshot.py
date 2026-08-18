@@ -115,7 +115,8 @@ class WorldSnapshot:
                     inputs=tuple(p.get("inputs") or ()),
                     source=p.get("source", ""),
                     source_version=p.get("source_version", ""),
-                    license=p.get("license", ""), method=p.get("method", ""))))
+                    license=p.get("license", ""), method=p.get("method", ""),
+                derivation=p.get("derivation", ""))))
         return cls(
             entities={k: Entity.from_dict(v)
                       for k, v in (d.get("entities") or {}).items()},

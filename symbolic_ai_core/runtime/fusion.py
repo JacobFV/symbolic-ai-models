@@ -88,14 +88,52 @@ class FusionResult:
         return not self.unresolved
 
     def to_dict(self) -> dict[str, Any]:
+        """Serialise, **including the competing claims themselves**.
+
+        Retention was real in memory and lost here: the old shape carried a
+        count and a producer list, so a node reading a fused artifact learned
+        that two sources had disagreed and could not recover *what either said*.
+        Every flow node exchanges artifacts, so "alternatives retained not
+        collapsed" held only until the result left the process that computed it.
+
+        The count stays alongside, because it is what a reader scans, and it
+        must agree with the list -- :meth:`from_dict` checks that rather than
+        trusting it.
+        """
         return {"resolved": [c.to_dict() for c in self.resolved],
                 "unresolved": [{"predicate": g.predicate,
                                 "subject": list(g.subject),
                                 "n": len(g.claims),
-                                "producers": list(g.producers())}
+                                "producers": list(g.producers()),
+                                "claims": [c.to_dict() for c in g.claims]}
                                for g in self.unresolved],
                 "vetoed": [c.to_dict() for c in self.vetoed],
                 "notes": list(self.notes)}
+
+    @classmethod
+    def from_dict(cls, d: Mapping[str, Any]) -> "FusionResult":
+        """Rebuild, refusing a document whose count and alternatives disagree.
+
+        A truncated ``claims`` list with an intact ``n`` is how a mixture
+        silently becomes a smaller mixture, and the reader would have no way to
+        tell -- so this is checked rather than assumed.
+        """
+        groups = []
+        for g in d.get("unresolved", ()):
+            claims = tuple(Claim.from_dict(c) for c in g.get("claims", ()))
+            if "n" in g and int(g["n"]) != len(claims):
+                raise FusionError(
+                    f"{g.get('predicate')!r} on {g.get('subject')}: the "
+                    f"document says {g['n']} competing claims and carries "
+                    f"{len(claims)}. A mixture that lost members in transit is "
+                    "indistinguishable from a smaller mixture.")
+            groups.append(ClaimGroup(str(g.get("predicate", "")),
+                                     tuple(g.get("subject", ())), claims))
+        return cls(
+            resolved=tuple(Claim.from_dict(c) for c in d.get("resolved", ())),
+            unresolved=tuple(groups),
+            vetoed=tuple(Claim.from_dict(c) for c in d.get("vetoed", ())),
+            notes=tuple(d.get("notes", ())))
 
 
 #: ``predicate -> (group) -> Claim``. Deliberately empty of defaults.
