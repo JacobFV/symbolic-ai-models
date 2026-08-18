@@ -32,7 +32,8 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.wheel]
 only-include = ["symbolic_ai_core", "symbolic_ai_models", "symbolic_ai_parsers",
                 "symbolic_ai_data", "symbolic_ai_atomspace", "symbolic_ai_lean",
-                "symbolic_ai_kg", "symbolic_ai_kernels"]
+                "symbolic_ai_kg", "symbolic_ai_kernels",
+                "symbolic_ai_generators"]
 
 [dependency-groups]
 dev = [

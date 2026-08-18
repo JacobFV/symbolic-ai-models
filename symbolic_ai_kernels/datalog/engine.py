@@ -54,6 +54,9 @@ class Var:
     def __repr__(self) -> str:
         return self.name.upper()
 
+    def to_dict(self) -> dict[str, str]:
+        return {"var": self.name}
+
 
 Term = "Var | str"
 Fact = tuple  # (predicate, *constants)
@@ -87,6 +90,14 @@ class Atom:
             raise ValueError(f"{self} is not ground")
         return (self.pred, *self.terms)
 
+    def to_dict(self) -> dict:
+        """The JSON form ``rule_from_dict`` reads. Rules travel as node
+        parameters, and a parameter that cannot be serialised cannot be hashed
+        into a cache key or opened in an editor."""
+        return {"pred": self.pred,
+                "terms": [t.to_dict() if isinstance(t, Var) else {"const": t}
+                          for t in self.terms]}
+
     def __repr__(self) -> str:
         return f"{self.pred}({', '.join(map(repr, self.terms))})"
 
@@ -95,6 +106,12 @@ class Atom:
 class Literal:
     atom: Atom
     negated: bool = False
+
+    def to_dict(self) -> dict:
+        d = self.atom.to_dict()
+        if self.negated:
+            d["negated"] = True
+        return d
 
     def __repr__(self) -> str:
         return ("not " if self.negated else "") + repr(self.atom)
@@ -117,6 +134,10 @@ class Rule:
                 f"or under negation. A variable that no positive body literal "
                 f"binds ranges over every constant that will ever exist, so the "
                 f"rule has no finite meaning.")
+
+    def to_dict(self) -> dict:
+        return {"head": self.head.to_dict(),
+                "body": [l.to_dict() for l in self.body]}
 
     def __repr__(self) -> str:
         body = ", ".join(map(repr, self.body))

@@ -556,6 +556,12 @@ symbolic-ai-models/
     envs/                 #   choice, retry, repair, probe
     agents/               #   random, shortcut, context (floors); recall, careful
     train.py trace.py     #   rollouts; trajectories, for reading, not a metric
+  symbolic_ai_generators/ # latent worlds, rendered into several surfaces
+    flood/                #   flood logistics: a CYCLIC road network, posted
+                          #   bridge limits, and an answer no paragraph states.
+                          #   Three kernels reach 1.000 against a brute-force
+                          #   oracle; the strongest floor is 0.440 and every
+                          #   single-kernel ablation is worse
   symbolic_ai_kernels/    # specialised reasoners behind one narrow contract.
     abi.py                #   P_K: world -> kernel language, DECLARING what it
                           #   discarded; R_K: result -> WorldDelta. No universal
