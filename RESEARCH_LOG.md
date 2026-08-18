@@ -29,6 +29,69 @@ so the answers are exact and unannotated.
 Nineteen models, two families. Rule-based ones are the subject; six neural ones
 exist as a control and are off by default.
 
+## The substrate carries a task no single kernel can, at $2.15e-8 per solved episode above floor
+
+**Status: provisional, 2026-08-18 — measured, ablated against three controls,
+floored against seven baselines, checked against an oracle that shares no code
+with it, and not yet challenged by anyone who did not write it.**
+
+This is a different *kind* of row from everything below it. Every other number
+in this file is a model on the 179-lesson curriculum. This one is the first
+number produced by the substrate the repo pivoted to on 2026-08-18 — a typed
+world-program runtime, in which language, logic, physics and geography are
+overlapping views over one world rather than separate apps.
+
+The task (`symbolic_ai_generators/flood/`): a generated flood-logistics world.
+Six regions wired as a **ring plus chords**, so the road network is genuinely
+cyclic; flooding closes one or two regions; two thirds of the links carry a
+posted bridge limit as a `Quantity` in kg; three trucks with unladen masses and
+capacities; a demand site needing a stated mass. **Which vehicles can deliver?**
+A vehicle qualifies with the capacity and *some* route whose every bridge admits
+its laden mass — and the shortest route is frequently the one with the weak
+bridge.
+
+One flow DAG, six nodes, three kernels, two couplings. Datalog computes the
+reachability closure over the cyclic network; ASP builds its completion space
+from datalog's *derived* facts and enumerates candidate routes; SMT checks the
+laden mass against the bridge limits, which are exactly the claims the
+relational projection **discards** — its discard record says so, with the
+reason *"a Quantity carries a unit; datalog is untyped and projecting it would
+drop the unit"*. ASP literally cannot see the numbers it would need.
+
+200 seeds, against a brute-force oracle whose source is asserted by test to
+contain no reference to clingo, z3, datalog, `get_kernel` or `evaluate`:
+
+| arm | agreement |
+|---|---|
+| **full flow (datalog + ASP + SMT)** | **1.000** |
+| ablation: ignore flooding (no datalog) | 0.690 |
+| ablation: ignore bridge limits (no SMT) | 0.535 |
+| ablation: first route only | 0.855 |
+| floor: capacity ≥ demand and laden ≤ **max** limit | **0.440** |
+| floor: capacity ≥ demand only | 0.410 |
+| floor: always none | 0.350 |
+| floor: always all | 0.315 |
+| floor: lightest vehicle only | 0.135 |
+
+**Lift +0.560 over the strongest of seven floors. Every ablation is strictly
+worse, so no kernel is decorative**, and removing SMT costs the most, which is
+the right ordering — the load arithmetic is the part nothing else can do at all.
+
+Priced, at the stated sheet of $0.02/core-hour:
+
+    mean cost per episode     $1.20e-08
+    $/solved above floor      $2.15e-08      (46.6M per dollar)
+    mean cpu / wall           5.5 ms / 5.5 ms
+
+**What it prices is reasoning given a world, not language.** No parser is in the
+ledger. The report exists so the task has a natural-language surface and so the
+oracle reading is free by construction; turning that report back into the world
+is the problem this repo measures at 0.016 exact recovery, and it is untouched
+here. Reading this as a language result would be the corpus confound again.
+
+Full write-up, including the seven floors and the two predictions that missed:
+`notes/findings/2026-08-18-three-kernels-solve-a-task-none-of-them-can.md`.
+
 ## The channel is walked: 0.989 against a 1.000 lookup floor, control at chance
 
 **Status: provisional, 2026-08-17 — measured, controlled, mechanism logged, not
