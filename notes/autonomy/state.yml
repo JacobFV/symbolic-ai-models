@@ -60,6 +60,12 @@ measured:
   - claim: "The corpus does contain a genuine two-source property conflict after all: four airports (EUN, SMW, VIL on Western Sahara; PRN on Kosovo) where openflights and geonames disagree on country, surviving ICAO and name agreement."
     evidence: notes/findings/2026-08-18-the-corpus-does-contain-a-two-source-property-conflict-four-airports.md
     commit: 9b327e8
+  - claim: "An existential claim's minimal dependency is the size of its witness (linear in the answer); its universal complement's is the excluded search space (grows with the ball). On the route network: 2.0x apart at d=2, 146x at d=6, 874x at d=10 where optimality is 32% of the corpus. On 13F's co-holding graph, which has no diameter, 0.2x."
+    evidence: notes/findings/2026-08-18-a-witness-grows-linearly-and-its-complement-grows-with-the-ball.md
+    commit: cf0f02f
+  - claim: "Seven openflights IATA nodes are two airports each. Blast radius: airport_country 0.117% of nodes but 0.234% of ANSWERS -- a merged node is also a neighbour, so counting dirty nodes understates damage by 2x. range_limited_routing 0. Nothing published moves: 1-NN 0.9078 -> 0.9098."
+    evidence: notes/findings/2026-08-18-seven-iata-nodes-are-two-airports-each-and-it-moves-the-headline-by-0-0021.md
+    commit: HEAD
   - claim: "Scoping survives a dense graph. On the filed-real routing mixture: read p50 1, max 8, 0 refusals in 250 queries, anchor 179/179. What breaks is wall time -- 48.3 ms/query against GLEIF's 2.8 us -- and the governing variable is conflict rate x read footprint, not topology."
     evidence: notes/findings/2026-08-18-scoping-survives-a-dense-graph-and-what-breaks-is-wall-time-not-refusal.md
     commit: 2b8443d
@@ -136,6 +142,12 @@ last_cycle:
     further 95x. Both scouts contradicted a recorded prediction: the corpus DOES
     have a two-source property conflict (four airports), and scoping DOES
     survive a dense graph (wall time breaks first, not refusal).
+  belief_update_final: >
+    Four versions of the certificate claim in one day, three of them corrected
+    by the next experiment. The keeper: logical form decides the growth rate of
+    a claim's minimal dependency, and the instance decides whether you have gone
+    far enough along it to notice. Build witnesses; refuse to fake minimality
+    for universal claims.
   belief_update: >
     HANDOVER item 1 was the lower-value half of the right idea. Making every
     kernel report its read set buys 0.3x-1.0x. What pays is the logical form of
@@ -144,7 +156,13 @@ last_cycle:
 
 next:
   preferred_action: witness-on-kernelresult
+  why: >
+    Three measurements now agree that a kernel should return a WITNESS and
+    should not pretend to return a minimal dependency for a universal claim.
+    The 95x and the 13,987x are currently properties of two scripts.
+    symbolic_ai_kernels/abi.py has the right shape already (check_entitlement)
+    and the ASP kernel holds the model it throws away.
   alternatives:
-    - shrinking-corpus-inverts-the-asymmetry
-    - audit-the-eight-kernels-for-discarded-witnesses
+    - hub-labelling-as-a-cheaper-optimality-certificate   # the real refuter for the newest finding
     - reprice-the-5e7-constant-on-a-prose-corpus
+    - shrinking-corpus-inverts-the-asymmetry

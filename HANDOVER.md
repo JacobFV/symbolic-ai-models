@@ -162,6 +162,32 @@ nothing in the mechanism tells you which case you are in. A second agent
 measured the same over-reading independently on the route network the same day
 at **66x**.
 
+**And the 13,987x is an artefact of the instance.** The route network at a
+2,000 km limit has a real diameter (hops p50 6), and the minimal optimality
+dependency — computed meet-in-the-middle, the strongest honest version — grows
+with the ball while the witness grows linearly:
+
+| d | witness | minimal optimality | ratio | % of graph |
+|---:|---:|---:|---:|---:|
+| 2 | 2 | 4 | 2.0x | 0.01% |
+| 4 | 4 | 152 | 38.0x | 0.56% |
+| 6 | 6 | 876 | **146.0x** | 3.21% |
+| 10 | 10 | 8,745 | **874.5x** | **32.08%** |
+
+Overall 148x against 13F's 0.2x; control, the `d <= 2` pairs, median 3 edges and
+comparable to 13F. So **the settled statement, after four corrections in one
+day**, is:
+
+> An existential claim's minimal dependency is the size of its **witness**,
+> which grows linearly in the answer. Its universal complement's is the size of
+> the **search space that has to be excluded**, which grows with the ball.
+> Logical form decides the growth *rate*; the instance decides whether you have
+> gone far enough along it to notice.
+
+The bound/answer asymmetry is therefore the **general** case and the 13,987x the
+special one — which makes the set-cover note closer to right than the note that
+corrected it, for a reason neither had.
+
 Anchors, all of which had to be zero and were: 15,300 answers recomputed on the
 new snapshot with **0 false survivals** on every rung; 300/300 cover witnesses
 well-formed; 222/300 path witnesses intact with **0** failing to chain.
@@ -232,14 +258,9 @@ Ordered, with the reason. A recommendation from the evidence, not a queue —
 previous revision's §7 item 1 is in the corrections table above, so this section
 has a demonstrated failure rate.
 
-1. **Break the newest finding on a graph with real diameter.** The minimal path
-   certificate is derived only for hops ≤ 2 and the co-holding graph is nearly
-   complete, so the 13,987x has never met a deep path. On a graph with diameter
-   the minimal optimality set is the ball of radius `d−1` and it grows — the
-   route network is on disk, has amplification 8.3x–44x, and has just been
-   instrumented by `scripts/dense_graph_scoping.py`. *Why first:* it is the
-   cheapest experiment that could retract this session's headline, and two of
-   the last four findings retracted an earlier headline of ours.
+1. ~~Break the newest finding on a graph with real diameter.~~ **Done, and it
+   broke** — `scripts/cert_diameter.py`, §3b above. Left here so the next reader
+   sees that this section's first item has now been right once and wrong once.
 2. **Put a `witness` on `KernelResult`.** The 95x and the 13,987x are both
    currently properties of one script. `symbolic_ai_kernels/abi.py` already has
    the right shape (`check_entitlement` is the nearest analogue) and the ASP
@@ -248,11 +269,16 @@ has a demonstrated failure rate.
    one, a minimal dependency where you can derive one, and say plainly where you
    cannot* — because a read set that reads like a dependency is worse than no
    certificate, being 6,591x wrong and looking right.
-3. **Re-price the ~5e7 constant on a prose corpus.** It is the last load-bearing
+3. **Try hub labelling as a cheaper optimality certificate.** The newest finding's
+   own refuter: meet-in-the-middle may not be optimal, and 2-hop covers /
+   hub-labelling schemes are a real literature built for exactly "certify a
+   shortest-path distance cheaply". If one stays small at `d = 10`, the whole
+   witness/complement asymmetry weakens and item 2's contract changes.
+4. **Re-price the ~5e7 constant on a prose corpus.** It is the last load-bearing
    number in the cost argument that has never been attacked, gutenberg and
    stackexchange are both on disk, and the mechanism (facts here are
    20-character identifiers) predicts it should move.
-4. **The shrinking-corpus inversion.** One arm, and it is the falsifier for the
+5. **The shrinking-corpus inversion.** One arm, and it is the falsifier for the
    witness asymmetry rather than another confirmation of it.
 
 **What not to do:** more kernels (the data says stop at eight); more query
