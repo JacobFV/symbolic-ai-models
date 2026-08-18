@@ -343,3 +343,69 @@ def test_being_admitted_is_less_redundant_than_being_blocked(cases):
     assert statistics.median(viable) <= statistics.median(blocking), (
         "a qualifying vehicle had more redundancy than a blocked one, so the "
         "conservative-worse-than-permissive result has no mechanism")
+
+
+# --- routing: what skipping the solvers is worth --------------------------
+def test_the_gate_is_lossless(cases):
+    """Both gates are provably sufficient, so routing must not change a single
+    answer. The first version of this test failed at 39/300 and found a real
+    bug: the cheap arm defaulted `reachable=True` and answered on unreachable
+    worlds."""
+    for c in cases:
+        base, _, _ = solve(c.world, ctx=Context())
+        routed, _, _ = solve(c.world, ctx=Context(), routed=True)
+        assert base == routed, c.seed
+
+
+def test_the_gate_actually_fires_sometimes(cases):
+    """A gate that never fires is lossless for the wrong reason."""
+    fired = sum(solve(c.world, ctx=Context(), routed=True)[1]["decision"]
+                .value["chosen"] == ["cheap"] for c in cases)
+    assert fired > 0, "the escalation never took the cheap arm"
+
+
+def test_the_skipped_branch_carries_the_reason(cases):
+    """A router's decision belongs in the trace, not in a predicate somewhere."""
+    for c in cases:
+        _, outs, ctx = solve(c.world, ctx=Context(), routed=True)
+        chosen = outs["decision"].value["chosen"]
+        skipped = {r.node for r in ctx.trace.runs if r.skipped}
+        if chosen == ["cheap"]:
+            assert {"routes", "loads"} <= skipped
+        else:
+            assert "cheap" in skipped
+        assert all(r.note for r in ctx.trace.runs if r.skipped)
+
+
+def test_routing_never_costs_more_than_it_saves(cases):
+    """The gate is arithmetic over facts already on the table. If it were not
+    cheaper than what it gates, routing would be a loss."""
+    base = sum(solve(c.world, ctx=Context())[2].trace.total_usd for c in cases)
+    routed = sum(solve(c.world, ctx=Context(), routed=True)[2].trace.total_usd
+                 for c in cases)
+    assert routed < base
+
+
+def test_cheap_and_incapable_is_not_a_point_on_the_cost_curve(cases):
+    """The measured form of the argument symbolic_ai_core/cost.py was written
+    after: a cost saving that costs capability is a LOSS on $/solved-above-floor,
+    however large the saving."""
+    floor = 0.440
+
+    def arm(**kw):
+        hit = usd = 0.0
+        for c in cases:
+            ans, _, ctx = solve(c.world, ctx=Context(), **kw)
+            hit += tuple(ans) == tuple(c.answer)
+            usd += ctx.trace.total_usd
+        acc = hit / len(cases)
+        return acc, usd / len(cases)
+
+    full_acc, full_usd = arm()
+    cut_acc, cut_usd = arm(ignore_bridge_limits=True)
+
+    assert cut_usd < full_usd, "the cheap arm was not actually cheaper"
+    assert cut_acc < full_acc
+    assert (cut_usd / max(cut_acc - floor, 1e-9)) > (full_usd / (full_acc - floor)), (
+        "the cheaper arm won on $/solved-above-floor, which would make the "
+        "north star reward incapability")

@@ -18,11 +18,74 @@ from symbolic_ai_kernels import flow_ops as _kernel_ops      # kernel.run@1
 from symbolic_ai_kernels.flow_ops import world_artifact
 
 from . import ops as _flood_ops                              # flood.check_loads@1
+from . import routing as _flood_routing                      # the gate policy
 from .world import reach_rules
+
+assert _flood_routing
 
 assert _flow_ops and _kernel_ops and _flood_ops
 
-__all__ = ["build_flow", "solve"]
+__all__ = ["build_flow", "build_routed_flow", "solve"]
+
+
+def build_routed_flow(world: WorldSnapshot, *, max_routes: int = 32
+                      ) -> FlowGraph:
+    """The same task, with the expensive path gated by two lossless checks.
+
+    Escalation, in the architecture note's sense: the cheap arm answers when it
+    is *provably* sufficient, and the solvers run otherwise. The gate itself is
+    arithmetic over facts already on the table -- it has to be cheaper than the
+    thing it is deciding whether to run, or routing costs more than it saves.
+
+    Both branches produce a `claim_set`, and `flow.choose@1` takes the first
+    present one in a named order. The unselected branch's nodes are skipped with
+    the gate's reason in the trace, which is what makes the saving auditable
+    rather than asserted.
+    """
+    from .ops import ROUTE_PROGRAM
+
+    return FlowGraph(nodes=(
+        Node(id="world", op="flow.const@1",
+             params={"artifact": world_artifact(world)}),
+        Node(id="reach", op="kernel.run@1",
+             params={"kernel": "datalog@1",
+                     "request": {"rules": reach_rules(),
+                                 "role_names": {"open": ["a", "b"],
+                                                "reach": ["a", "b"]}}},
+             inputs={"world": Binding("world", "out")}),
+        Node(id="world2", op="world.apply_delta@1",
+             inputs={"world": Binding("world", "out"),
+                     "delta": Binding("reach", "delta")}),
+
+        Node(id="gate", op="flow.route@1",
+             params={"branches": ["full", "cheap"], "policy": "flood_escalate"},
+             inputs={"in": Binding("world2", "world"),
+                     "aux": Binding("reach", "claims")}),
+
+        # the expensive arm
+        Node(id="routes", op="kernel.run@1",
+             params={"kernel": "asp@1",
+                     "request": {"program": ROUTE_PROGRAM,
+                                 "max_models": max_routes}},
+             inputs={"world": Binding("gate", "a")}),
+        Node(id="loads", op="flood.check_loads@1",
+             inputs={"world": Binding("gate", "a"),
+                     "routes": Binding("routes", "report")}),
+
+        # the cheap arm
+        Node(id="cheap", op="flood.capacity_only@1",
+             inputs={"world": Binding("gate", "b")}),
+
+        Node(id="answer", op="flow.choose@1",
+             params={"order": ["a", "b"]},
+             inputs={"a": Binding("loads", "claims"),
+                     "b": Binding("cheap", "claims")}),
+    ), outputs={
+        "loads": Binding("answer", "out"),
+        "picked": Binding("answer", "picked"),
+        "decision": Binding("gate", "decision"),
+        "reach": Binding("reach", "claims"),
+    })
 
 
 def build_flow(world: WorldSnapshot, *, max_routes: int = 32,
@@ -97,11 +160,12 @@ def build_flow(world: WorldSnapshot, *, max_routes: int = 32,
 
 
 def solve(world: WorldSnapshot, *, max_routes: int = 32,
-          ctx: Context | None = None, **ablations: bool
-          ) -> tuple[tuple[str, ...], dict[str, Any], Context]:
+          ctx: Context | None = None, routed: bool = False,
+          **ablations: bool) -> tuple[tuple[str, ...], dict[str, Any], Context]:
     """Run the graph and read the answer out. ``(vehicles, outputs, context)``."""
-    outs, ctx = evaluate(build_flow(world, max_routes=max_routes, **ablations),
-                         ctx=ctx or Context())
+    graph = (build_routed_flow(world, max_routes=max_routes) if routed
+             else build_flow(world, max_routes=max_routes, **ablations))
+    outs, ctx = evaluate(graph, ctx=ctx or Context())
     can = tuple(sorted(
         c["roles"]["vehicle"]["entity"]
         for c in outs["loads"].value["claims"]

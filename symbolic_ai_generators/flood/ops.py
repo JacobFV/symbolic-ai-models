@@ -215,3 +215,113 @@ CHECK_LOADS = register_op(OpDef(
     # is attributable to nothing.
     doc="Ask SMT whether each vehicle's laden mass clears every bridge on some "
         "candidate route."))
+
+
+# ---------------------------------------------------------------------------
+# routing: skip what cannot change the answer
+# ---------------------------------------------------------------------------
+def _qualifying_laden(world: WorldSnapshot) -> list[float]:
+    """Laden mass of every vehicle whose capacity clears the demand."""
+    fleet, demand = _fleet(world), _demand(world)
+    if demand is None:
+        return []
+    return [q["mass"].value + demand.value for q in fleet.values()
+            if q["capacity"].value >= demand.value]
+
+
+def needs_the_solvers(world: WorldSnapshot, reach: Iterable[Any]) -> tuple[bool, str]:
+    """Whether the expensive path can still change the answer.
+
+    Two gates, and both are **provably lossless** rather than heuristic — which
+    is the only kind of routing worth doing before there is a utility model to
+    trade against:
+
+    * the demand site is not reachable from the depot, so no vehicle can serve
+      it whatever the loads are;
+    * every capacity-qualifying vehicle's laden mass clears the *lightest*
+      posted limit, so no bridge can bind and the answer is capacity alone.
+
+    Both are arithmetic over facts already on the table. Neither needs a solver,
+    and that is the point: the cheap check has to be cheaper than the thing it
+    is deciding whether to run, or routing costs more than it saves.
+    """
+    depot = next((c.roles["where"].id for c in world.claims
+                  if c.predicate == "depot"), None)
+    site = next((c.roles["where"].id for c in world.claims
+                 if c.predicate == "needs"), None)
+    reachable = {(c.roles.get("a"), c.roles.get("b")) for c in reach
+                 if getattr(c, "predicate", "") == "reach"}
+    pairs = {(getattr(a, "id", a), getattr(b, "id", b)) for a, b in reachable}
+    if depot is not None and site is not None and (depot, site) not in pairs:
+        return False, ("the demand site is not reachable from the depot, so no "
+                       "vehicle can serve it whatever the loads are")
+
+    limits = _limits(world)
+    laden = _qualifying_laden(world)
+    if limits and laden and max(laden) <= min(limits.values()):
+        return False, (f"every qualifying vehicle's laden mass "
+                       f"({max(laden):g} kg) clears the lightest posted limit "
+                       f"({min(limits.values()):g} kg), so no bridge can bind")
+    return True, ""
+
+
+def _demand_is_reachable(world: WorldSnapshot) -> bool:
+    """Whether datalog's derived closure connects the depot to the demand site.
+
+    Reads the `reach` claims already applied to this world rather than
+    recomputing them: a cheap arm that redid the closure would not be cheap.
+    """
+    depot = next((c.roles["where"].id for c in world.claims
+                  if c.predicate == "depot"), None)
+    site = next((c.roles["where"].id for c in world.claims
+                 if c.predicate == "needs"), None)
+    if depot is None or site is None:
+        return False
+    for c in world.claims:
+        if c.predicate != "reach":
+            continue
+        a, b = c.roles.get("a"), c.roles.get("b")
+        if getattr(a, "id", a) == depot and getattr(b, "id", b) == site:
+            return True
+    return False
+
+
+def _capacity_only(inputs: Mapping[str, Artifact], params: Mapping[str, Any],
+                   ctx) -> dict[str, Artifact]:
+    """The cheap answer: capacity against demand, no routing and no loads.
+
+    Correct **only** where :func:`needs_the_solvers` said the expensive path
+    could not change it. Used unconditionally it scores 0.410 against a 0.440
+    floor -- below it, which is the whole content of "cheap-and-incapable is not
+    a point on the cost curve".
+    """
+    world = read_world(inputs["world"])
+    fleet, demand = _fleet(world), _demand(world)
+    # Reachability is read from the world this node was handed, NOT from a
+    # parameter. The first version took `params.get("reachable", True)`, the
+    # node carried no params, and so the cheap arm answered "capacity clears it"
+    # on every unreachable world -- 39 wrong answers in 300, on a path whose
+    # docstring called itself provably lossless. The gate binds this input to
+    # the post-datalog world, so the `reach` claims are already here; asking for
+    # them is both correct and free.
+    reachable = _demand_is_reachable(world)
+    claims = []
+    for vid, q in sorted(fleet.items()):
+        ok = reachable and demand is not None and \
+            q["capacity"].value >= demand.value
+        claims.append(Claim(
+            "can_serve", {"vehicle": EntityRef(vid)},
+            polarity="positive" if ok else "negative", modality="asserted",
+            provenance=Provenance(
+                producer="flood.capacity_only@1",
+                method="capacity against demand; no routing, no load check")))
+    return {"claims": claims_artifact(claims, "flood.capacity_only@1"),
+            "report": Artifact(type="json", value={"cheap": True,
+                                                   "reachable": reachable})}
+
+
+CAPACITY_ONLY = register_op(OpDef(
+    id="flood.capacity_only@1", fn=_capacity_only, family="kernel",
+    inputs=(Port("world", "world_snapshot"),),
+    outputs=(Port("claims", "claim_set"), Port("report", "json")),
+    doc="Capacity against demand alone. The cheap arm of the escalation."))
