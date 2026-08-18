@@ -105,6 +105,61 @@ statement is that the accuracy comparison is **unmeasured**. If the LLM reaches
 symbolic method is simply worse at the task. That is a live possibility and I am
 not going to write it out of the finding.
 
+## Correction, twenty minutes later: the floor was 0.58 too low
+
+The last section of this note said a stronger floor would cut the margin and
+that this repo *"has been burned by a too-low floor before"*. It was, again, by
+this note. Sweeping a lat/lon grid floor — the modal country of a cell, leave
+one-out — gives:
+
+| grid | floor | 1-NN margin over it |
+|---|---|---|
+| 30 deg (~3330 km) | 0.4832 | +0.4246 |
+| 20 deg | 0.5633 | +0.3445 |
+| 10 deg | 0.7224 | +0.1854 |
+| **5 deg (~555 km)** | **0.7888** | **+0.1189** |
+| 2 deg | 0.7168 | +0.1910 |
+| 1 deg | 0.4711 | +0.4367 |
+| 0.5 deg | 0.3053 | +0.6025 |
+
+**The strongest floor is 0.7888, not 0.2087, and the lift shrinks 5.88x** —
+from +0.699 to +0.119. The corrected ledger:
+
+| system | $/solved-above-floor | note |
+|---|---|---|
+| 1-NN geodesic, weak floor | $8.50e-09 | **what I published. Wrong.** |
+| 1-NN geodesic, strong floor | **$4.99e-08** | corrected |
+| LLM $1/Mtok, strong floor, assumed equal accuracy | $3.36e-04 | NOT QUOTABLE |
+
+The **ratio survives unchanged at ~6,750x**, because both rows share the floor;
+the absolute price per solved-above-floor was 5.9x too flattering. So the claim
+about the *shape* of the symbolic advantage stands and the headline number does
+not.
+
+And the geo kernel's precision is worth **+0.119 over dividing the globe into
+555 km boxes**, not +0.699 over guessing "US". That is the honest value of
+geodesy on this task and it is a much smaller number than the one I committed.
+
+### The floor is not monotone in resolution, which I did not predict
+
+Predicted 1 deg ~0.88; measured **0.4711**. The floor *peaks* at 5 degrees and
+then collapses. The mechanism is sparsity, not resolution: at 1 degree **77% of
+cells hold a single airport**, so leave-one-out empties the cell and the floor
+falls back to the global mode.
+
+| grid | cells | median occupancy | singleton cells |
+|---|---|---|---|
+| 10 deg | 299 | 11 | 11% |
+| 5 deg | 837 | 4 | 20% |
+| 2 deg | 2,639 | 2 | 48% |
+| 1 deg | 4,410 | 1 | 77% |
+| 0.5 deg | 5,386 | 1 | 91% |
+
+**A finer floor is a sparser floor, not a sharper one.** The strongest floor is
+the coarsest one that still has neighbours in it. A floor audit that only tried
+the finest resolution available would have reported 0.3053 and made the method
+look four times better than it is.
+
 ## What would refute it
 
 - Measuring the LLM's actual accuracy. Not done; it is the obvious next step and

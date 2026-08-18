@@ -9,6 +9,9 @@ import pytest
 from symbolic_ai_core.source import SourceRegistry, data_root
 from symbolic_ai_tasks import (AirportCountryTask, evaluate, load_task,
                                predict_anchor, predict_knn, predict_modal)
+from symbolic_ai_tasks.airport_country import (STRONGEST_FLOOR,
+                                               STRONGEST_FLOOR_DEG,
+                                               predict_grid)
 
 
 def _toy() -> AirportCountryTask:
@@ -91,3 +94,45 @@ class TestAgainstTheRealTask:
         rng.shuffle(shuf)
         moved = {a: task.pos[b] for a, b in zip(ids, shuf)}
         assert evaluate(task, predict_knn(task, 1, pos=moved)) < task.floor()
+
+
+class TestTheFloorAudit:
+    def test_a_cell_with_neighbours_votes(self):
+        pos = {f"a{i}": (0.1 * i, 0.1 * i) for i in range(4)}
+        truth = {"a0": "X", "a1": "X", "a2": "X", "a3": "Y"}
+        t = AirportCountryTask(pos=pos, truth=truth, body_country={})
+        assert predict_grid(t, 5.0)["a3"] == "X"
+
+    def test_an_emptied_cell_falls_back_to_the_global_mode(self):
+        """Leave-one-out on a singleton cell leaves nothing to vote."""
+        pos = {"a": (0.0, 0.0), "b": (0.1, 0.1), "far": (80.0, 170.0)}
+        truth = {"a": "X", "b": "X", "far": "Y"}
+        t = AirportCountryTask(pos=pos, truth=truth, body_country={})
+        assert predict_grid(t, 1.0)["far"] == "X"
+
+
+@pytest.mark.skipif(not data_root().exists(), reason="snapshots not held here")
+class TestTheFloorAgainstRealData:
+    @staticmethod
+    @pytest.fixture(scope="class")
+    def task():
+        base = next(s for s in SourceRegistry().snapshots().values()
+                    if s.source == "openflights").resolve(data_root())
+        return load_task(base)
+
+    def test_the_strong_floor_is_far_above_the_modal_one(self, task):
+        """0.7888 against 0.2087. Quoting a lift against the modal floor
+        overstates it by 5.9x."""
+        assert evaluate(task, predict_grid(task, STRONGEST_FLOOR_DEG)) == \
+            pytest.approx(STRONGEST_FLOOR, abs=2e-3)
+
+    def test_the_method_still_beats_the_strong_floor(self, task):
+        assert evaluate(task, predict_knn(task, 1)) > STRONGEST_FLOOR
+
+    def test_the_floor_is_not_monotone_in_resolution(self, task):
+        """The finding worth keeping: a finer grid is a *sparser* floor, not a
+        sharper one, because leave-one-out empties singleton cells. If this
+        ever becomes monotone the sweep was wrong somewhere."""
+        five = evaluate(task, predict_grid(task, 5.0))
+        one = evaluate(task, predict_grid(task, 1.0))
+        assert one < five

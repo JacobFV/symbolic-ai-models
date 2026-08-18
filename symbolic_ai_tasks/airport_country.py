@@ -140,3 +140,42 @@ def predict_knn(task: AirportCountryTask, k: int = 1, *,
 
 def evaluate(task: AirportCountryTask, pred: Mapping[str, str]) -> float:
     return sum(pred.get(a) == task.truth[a] for a in task.ids) / len(task.ids)
+
+
+def predict_grid(task: AirportCountryTask, deg: float = 5.0) -> dict[str, str]:
+    """A stronger floor: the modal country of a lat/lon cell.
+
+    The point of this floor is that it is a *crude version of the same
+    capability*. The modal-country floor (0.2087) asks only "does the method
+    know anything at all"; this one asks "does geodesic precision buy anything
+    over dividing the globe into boxes", which is the question that can
+    actually embarrass the geo kernel.
+
+    Leave-one-out for the same reason as :func:`predict_knn`, and it is what
+    makes the floor **non-monotone in resolution**: at 1 degree, 77% of cells
+    hold a single airport, so leaving it out empties the cell and the floor
+    falls back to the global mode. A finer grid is a sparser floor, not a
+    sharper one, and the strongest floor is the coarsest grid that still has
+    neighbours in it — 5 degrees, ~555 km, scoring 0.7888.
+    """
+    glob = collections.Counter(task.truth.values()).most_common(1)[0][0]
+    cells: dict[tuple[int, int], collections.Counter] = \
+        collections.defaultdict(collections.Counter)
+    for a in task.ids:
+        la, lo = task.pos[a]
+        cells[(math.floor(la / deg), math.floor(lo / deg))][task.truth[a]] += 1
+    out = {}
+    for a in task.ids:
+        la, lo = task.pos[a]
+        c = cells[(math.floor(la / deg), math.floor(lo / deg))].copy()
+        c[task.truth[a]] -= 1
+        c = +c
+        out[a] = c.most_common(1)[0][0] if c else glob
+    return out
+
+
+#: The strongest floor measured over a resolution sweep, and the resolution
+#: that produced it. Quoting a lift against ``AirportCountryTask.floor()``
+#: overstates it by 5.9x.
+STRONGEST_FLOOR = 0.7888
+STRONGEST_FLOOR_DEG = 5.0
