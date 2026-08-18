@@ -562,7 +562,12 @@ symbolic-ai-models/
                           #   a citation because the bytes state no datum and the
                           #   geo kernel refuses a place without one
   symbolic_ai_tasks/      # tasks over bytes this repo did NOT author, where the
-    company_key.py        #   difficulty is whatever it is. Name -> canonical
+    cross_source_alignment.py # SEC filers to GLEIF: 14.7% of matched names
+                          #   are AMBIGUOUS and 51% of those span jurisdictions,
+                          #   so alignment-not-merge is load-bearing. The
+                          #   downstream composition is unpowered at n=3 --
+                          #   only 3.7% of GLEIF carries ownership edges
+    company_key.py        #   Name -> canonical
                           #   key: picked to show the symbolic side LOSING at the
                           #   low-context end, and it reached the ceiling --
                           #   0.9998 held out against a measured 1.0. The 0.05

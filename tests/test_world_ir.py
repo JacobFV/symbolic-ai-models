@@ -120,8 +120,30 @@ def test_source_native_ids_survive():
 
 
 def test_an_alignment_within_one_namespace_is_refused():
-    with pytest.raises(ValueError, match="share a namespace"):
+    with pytest.raises(ValueError, match="are both in"):
         Alignment("wd:Q144", "wd:Q145", relation="close_match")
+
+
+def test_a_shared_vendor_prefix_is_not_a_shared_namespace():
+    """The bug real bytes found. This repo's own corpus writes
+    `kg:sec:cik:320193` and `kg:lei:2138...`; splitting on the first colon
+    called both "kg" and refused every genuine cross-source alignment in 3.3
+    million entities."""
+    a = Alignment("kg:sec:cik:320193", "kg:lei:HWUPKR0MPOU8FGXBT394")
+    assert a.relation == "possibly_same"
+
+
+def test_the_same_source_under_a_vendor_prefix_is_still_refused():
+    with pytest.raises(ValueError, match="are both in"):
+        Alignment("kg:sec:cik:1", "kg:sec:cik:2")
+
+
+def test_a_stated_source_overrides_the_guess():
+    """Reading an id is guessing; the caller usually knows better."""
+    with pytest.raises(ValueError, match="are both in"):
+        Alignment("a:1", "b:2", left_source="same", right_source="same")
+    ok = Alignment("kg:x:1", "kg:x:2", left_source="sec", right_source="gleif")
+    assert ok.left_source == "sec"
 
 
 def test_an_alignment_relation_is_a_closed_vocabulary():

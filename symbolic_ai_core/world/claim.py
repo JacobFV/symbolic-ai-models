@@ -176,16 +176,44 @@ class Alignment:
     method: str = ""
     evidence: tuple[str, ...] = ()
     provenance: Provenance = field(default_factory=Provenance)
+    #: The sources the two ids belong to, when the caller knows them. Stating
+    #: them is always better than the fallback below, which is a guess.
+    left_source: str = ""
+    right_source: str = ""
+
+    def _namespace(self, ident: str, stated: str) -> str:
+        """Which source an id belongs to.
+
+        Prefer what the caller stated. The fallback reads the id, and reading
+        an id is **guessing**: it worked for ``wn:dog.n.01`` and failed the
+        first time real bytes arrived, because this repo's own corpus writes
+        ``kg:sec:cik:320193`` and ``kg:lei:2138…`` — a shared vendor prefix and
+        then the source. Splitting on the first colon called both ``kg`` and
+        refused every genuine cross-source alignment in 3.3 million entities.
+
+        So the fallback takes the first *two* segments when there are three or
+        more, which fits both shapes, and is documented as a heuristic rather
+        than trusted as identity. ``filesystem location is never identity``
+        has a sibling: **a string prefix is never identity either.**
+        """
+        if stated:
+            return stated
+        parts = ident.split(":")
+        return ":".join(parts[:2]) if len(parts) >= 3 else parts[0]
 
     def __post_init__(self) -> None:
         if self.relation not in ALIGNMENT_RELATIONS:
             raise ValueError(f"alignment relation {self.relation!r} not in "
                              f"{ALIGNMENT_RELATIONS}")
-        if self.left.split(":", 1)[0] == self.right.split(":", 1)[0]:
+        left_ns = self._namespace(self.left, self.left_source)
+        right_ns = self._namespace(self.right, self.right_source)
+        if left_ns == right_ns:
             raise ValueError(
-                f"{self.left} and {self.right} share a namespace: an alignment "
-                "relates identities from *different* sources, and one within a "
-                "source is a statement about that source's own modelling")
+                f"{self.left} and {self.right} are both in {left_ns!r}: an "
+                "alignment relates identities from *different* sources, and "
+                "one within a source is a statement about that source's own "
+                "modelling. If the namespaces were inferred wrongly, state "
+                "left_source and right_source explicitly")
 
     def as_claim(self) -> Claim:
         return Claim(predicate=self.relation,
