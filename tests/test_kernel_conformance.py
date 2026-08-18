@@ -109,3 +109,52 @@ class TestKnownGaps:
         implementation rather than by deletion."""
         gaps = {k for k, (_, why, _) in CONFORMANCE.items() if why == NOT_YET}
         assert gaps == {"lean@1", "egraph@1"}
+
+
+class TestTheGenericNodeCarriesWhatANodeAuthorNeeds:
+    """`_kernel_run` is the node every task uses to invoke a kernel, so a
+    field missing there is missing from every task that will ever be written.
+    """
+
+    @staticmethod
+    def _run(budget_ns=None):
+        from symbolic_ai_core.artifact.value import Artifact
+        from symbolic_ai_generators.scheduling.ops import build_program
+        from symbolic_ai_generators.scheduling.world import generate
+        from symbolic_ai_kernels.flow_ops import _kernel_run
+
+        class _Ctx:
+            cost_usd = None
+
+        case = generate(7, n_jobs=10, n_machines=3)
+        prog, _ = build_program(case.world)
+        return _kernel_run(
+            {"world": Artifact(type="json", value=case.world.to_dict())},
+            {"kernel": "asp@1",
+             "request": {"program": prog, "max_models": 1},
+             "budget_ns": budget_ns}, _Ctx())
+
+    def test_the_report_names_the_outcome(self):
+        """Without this a downstream node can only string-match `refused`,
+        which is how two generators came to assert infeasibility from a
+        timeout."""
+        rep = self._run()["report"].value
+        assert rep["outcome"] in OUTCOMES
+        assert isinstance(rep["settled"], bool)
+
+    def test_a_budget_reaches_the_kernel(self):
+        """The parameter existed nowhere in the flow layer, so no task could
+        budget a kernel call at all."""
+        import inspect
+
+        from symbolic_ai_kernels.flow_ops import _kernel_run
+        src = inspect.getsource(_kernel_run)
+        assert "budget_ns" in src and "budget_usd" in src
+
+    def test_claims_are_whatever_the_kernel_returned_and_nothing_more(self):
+        """The generic node cannot fabricate: it passes `result.claims`
+        through, and a kernel that settles nothing returns none."""
+        out = self._run()
+        rep = out["report"].value
+        if not rep["settled"]:
+            assert out["claims"].value["claims"] == []

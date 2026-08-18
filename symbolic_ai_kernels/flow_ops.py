@@ -67,7 +67,9 @@ def _kernel_run(inputs: Mapping[str, Artifact], params: Mapping[str, Any],
         raise KernelUnavailable(f"{params['kernel']}: {why}")
     world = read_world(inputs["world"])
     request = KernelRequest(goal=params.get("goal"),
-                            params=dict(params.get("request") or {}))
+                            params=dict(params.get("request") or {}),
+                            budget_ns=params.get("budget_ns"),
+                            budget_usd=params.get("budget_usd"))
     projection = kernel.project(world, request)
     result = kernel.run(projection, request)
     ctx.cost_usd = result.cost.usd
@@ -78,6 +80,12 @@ def _kernel_run(inputs: Mapping[str, Artifact], params: Mapping[str, Any],
         "projection": Artifact(type="projection", value=projection.to_dict()),
         "report": Artifact(type="json", value={
             "kernel": result.kernel, "refused": result.refused,
+            # Without these a downstream node can only string-match `refused`,
+            # which is how two generators came to assert "infeasible" from a
+            # timeout. `settled` is the field a node should branch on before
+            # it manufactures a negative claim from an absent positive one.
+            "outcome": result.classification,
+            "settled": result.conclusive,
             "diagnostics": dict(result.diagnostics),
             "cost": result.cost.to_dict(),
             "artifacts": {k: v for k, v in result.artifacts.items()}}),

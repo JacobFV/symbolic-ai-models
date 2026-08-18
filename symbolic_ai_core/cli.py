@@ -192,7 +192,17 @@ def _margin(args) -> int:
             program, _ = build_program(w)
             request = KernelRequest(params={"program": program,
                                             "max_models": 1})
-            return asp.run(asp.project(w, request), request).ok
+            r = asp.run(asp.project(w, request), request)
+            if not r.conclusive:
+                # `.ok` alone reports an unfinished search as infeasible, and
+                # returning None would be read as falsy by the binary search
+                # that calls this -- a corrupted margin rather than a crash.
+                # Nothing here passes a budget, so this is unreachable today
+                # and is a guard against the day something does.
+                raise RuntimeError(
+                    f"the scheduling search did not settle ({r.classification}); "
+                    "a margin cannot be profiled from an undecided case")
+            return r.ok
 
         tasks["scheduling"] = (
             [sched(s, slack=args.slack).world for s in range(args.n)],
