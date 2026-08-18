@@ -19,20 +19,20 @@ mission:
 
 frontier:
   current_question: >
-    Under a real filed corpus update, does a dependency certificate let us prove
-    which cached answers survive -- and is the surviving fraction large enough
-    to be worth anything? Sub-question, believed to be the actual finding: the
-    *granularity* of the certificate decides whether it buys anything at all.
+    Where else does an answer split into a half that has a witness and a half
+    that does not -- and can a kernel be made to report the witness? The
+    certificate ceiling is set by the LOGICAL FORM of the claim, and three
+    results in this repo now say the cheap half of a problem is the useful half.
   why_it_matters: >
-    It converts "the certificate is nice bookkeeping" into a priced capability an
-    LM/retrieval opponent structurally cannot have: it cannot certify that an
-    answer did not depend on a changed fact, so it re-answers everything.
+    It is the only lever measured to move the ceiling by two orders of magnitude,
+    and it is a capability an LM has no analogue of: it cannot hand you a
+    witness whose continued existence you can check for 30 nanoseconds.
   current_bottleneck: >
-    Only `possible_answers_scoped` reports a read set, and it reports reads over
-    *conflicts*, not over facts. There is no substrate-wide read-set object.
+    Kernels return claims and a delta; none of them returns a witness. The ASP
+    kernel already has the model in hand and throws it away.
   expected_unlock: >
-    A `ReadSet`/certificate contract makes incremental maintenance measurable,
-    and makes "cost proportional to the delta, not the corpus" a number.
+    A witness field on KernelResult makes the 95x available to every solver
+    answer in the repo rather than to one script.
 
 measured:
   - claim: "A query pays for the conflicts it reads; 4,992 conflicts cost <=1 read per query."
@@ -51,23 +51,37 @@ measured:
     evidence: data/sources/sec-edgar/commandagi-r2-2026-08-15/sec13f/
     commit: 9dd6970
 
+  - claim: "A read-set dependency certificate is worth 0.3x-1.0x per quarter and 37x-1,342x per filing on SEC 13F; its ceiling is 1/P_hit with P_hit ~ r * keys_per_update / total_keys, so dependency size is the ceiling and compute cost only decides whether it is reached."
+    evidence: notes/findings/2026-08-18-the-certificate-is-worth-nothing-per-quarter-and-1342x-per-filing.md
+    commit: 2000e97
+  - claim: "An optimum splits into an existential half with a 12-edge witness (P_hit 0.0300%, 3,309x) and a universal half that must read the complement (P_hit 2.8589%, 35.0x). 95x, and it buys a maintained bound rather than a maintained answer."
+    evidence: notes/findings/2026-08-18-an-optimum-is-two-claims-and-one-of-them-is-95x-cheaper-to-keep.md
+    commit: 7a0423b
+  - claim: "The corpus does contain a genuine two-source property conflict after all: four airports (EUN, SMW, VIL on Western Sahara; PRN on Kosovo) where openflights and geonames disagree on country, surviving ICAO and name agreement."
+    evidence: notes/findings/2026-08-18-the-corpus-does-contain-a-two-source-property-conflict-four-airports.md
+    commit: 9b327e8
+  - claim: "Scoping survives a dense graph. On the filed-real routing mixture: read p50 1, max 8, 0 refusals in 250 queries, anchor 179/179. What breaks is wall time -- 48.3 ms/query against GLEIF's 2.8 us -- and the governing variable is conflict rate x read footprint, not topology."
+    evidence: notes/findings/2026-08-18-scoping-survives-a-dense-graph-and-what-breaks-is-wall-time-not-refusal.md
+    commit: 2b8443d
+
 beliefs:
-  - claim: "An assertion-level certificate is worthless under a refiling corpus: 13F refiles every position each quarter, so every read fact is superseded."
+  - claim: "The certificate results are stated against an opponent that re-derives everything per update. Against incremental view maintenance (DBSP, differential dataflow) the advantage would be far smaller and possibly inverted."
     confidence: 0.85
-    basis: "13F filings restate the full portfolio; the snapshots carry no assertion ids, only (filer, security) triples."
-    falsifier: "assertion-level survival materially above 0%"
-  - claim: "A read-set certificate (invalidate if any read fact changed) is sound but nearly worthless for aggregate queries, because argmax reads the whole portfolio and portfolios churn."
+    basis: "IVM maintains the answer at delta cost instead of re-deriving it; the numbers here carry no claim against a database"
+    falsifier: "an IVM system that cannot maintain an answer produced by an external solver with no per-query delta rule"
+  - claim: "A corpus that mostly SHRINKS inverts the witness asymmetry: the witness becomes the fragile half and the optimality claim the stable one."
+    confidence: 0.8
+    basis: "the witness is monotone under additions and dies on deletion; 13F opened 411,122 against 333,014 closed"
+    falsifier: "measured on a shrinking corpus and the asymmetry does not invert"
+    note: "cheap and unrun. Recorded rather than assumed."
+  - claim: "Most kernels in this repo have a witness available and discard it. The ASP kernel holds the model and returns only claims."
     confidence: 0.7
-    basis: "reading every row to prove nothing is bigger means one changed row kills the certificate"
-    falsifier: "read-set survival on top-holding queries above ~25%"
-  - claim: "A validity-condition certificate (the answer survives while no other position exceeds v) survives most updates and costs O(delta), not O(corpus)."
-    confidence: 0.6
-    basis: "top positions are sticky quarter to quarter"
-    falsifier: "validity-condition survival within 2x of read-set survival"
-  - claim: "This is adjacent to incremental view maintenance (DBSP, differential dataflow) and the novelty is not the maintenance -- it is that the certificate is produced by a general recording mechanism across heterogeneous kernels, and that it is priced against an opponent with no such object."
+    basis: "read of symbolic_ai_kernels/asp/kernel.py; the cover script had to re-extract picked filers by hand"
+    falsifier: "auditing the eight kernels and finding the answers are mostly not existential"
+  - claim: "airport_country's published accuracy is not quotable as it stands, because its ground truth IS openflights' in-country edge -- one side of the very disagreement it is scored against -- and openflights merges distinct airports sharing an IATA code."
     confidence: 0.75
-    basis: "prior art is large and well known; the repo must not reinvent it and call it new"
-    falsifier: "an existing system already emits cross-kernel dependency certificates priced this way"
+    basis: "reported by the two-source conflict arm; blast radius under audit"
+    falsifier: "the audit finds the contaminated nodes never appear in the task's instances"
 
 unknowns:
   - question: "Do openflights and geonames both carry a country for the same place, and do they disagree?"
@@ -111,10 +125,26 @@ research_debt:
     reason_to_revisit: "If accuracy is ever measured and the symbolic side is not perfect, every ratio moves."
 
 last_cycle:
-  action: "Cold start under the autonomous mandate: oriented, installed the scheduler, found the real 13F delta."
-  result: "Two filed 13F snapshots on disk; the maintenance experiment is well-founded."
-  belief_update: "none yet"
+  action: >
+    Built the dependency-certificate substrate and priced it on the first real
+    corpus delta this repo has (two filed SEC 13F snapshots); ran two scouting
+    arms in parallel worktrees.
+  result: >
+    Four findings. The read-set certificate is worth 0.3x-1.0x per quarter and
+    37x-1,342x per filing; its ceiling is dependency size, not compute cost;
+    splitting an optimum into a witness half and an optimality half is worth a
+    further 95x. Both scouts contradicted a recorded prediction: the corpus DOES
+    have a two-source property conflict (four airports), and scoping DOES
+    survive a dense graph (wall time breaks first, not refusal).
+  belief_update: >
+    HANDOVER item 1 was the lower-value half of the right idea. Making every
+    kernel report its read set buys 0.3x-1.0x. What pays is the logical form of
+    the claim: report a WITNESS where the answer has one. Three results in this
+    repo now say the cheap half of a problem is the useful half.
 
 next:
-  preferred_action: cert-maintenance-13f
-  alternatives: [two-source-property-conflict, dense-graph-scoping]
+  preferred_action: witness-on-kernelresult
+  alternatives:
+    - shrinking-corpus-inverts-the-asymmetry
+    - audit-the-eight-kernels-for-discarded-witnesses
+    - reprice-the-5e7-constant-on-a-prose-corpus
