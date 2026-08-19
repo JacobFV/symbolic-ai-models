@@ -217,8 +217,12 @@ measured gain ratio of **16.0** against a predicted **5.45**.
 
 1. ~~**Entity resolution as a given.**~~ **Done, and it buys nothing** — 1.2% of
    candidate pairs are the same entity. Entity **typing** helps a little (the
-   ranker's largest single gain, 0.535 → 0.638) and the missing primitive is
-   **relation** typing: current versus former, parent versus sibling versus child.
+   ranker's largest single gain, 0.535 → 0.638). ~~The missing primitive is
+   relation typing.~~ **Corrected by the residual taxonomy:** 51% of the errors
+   are **non-organisations** and direction errors are essentially absent, so the
+   lever is the **typer's recall** — it rejects *BBC* and *Bertelsmann* — plus
+   more ownership patterns. Two of the remaining errors are evaluation defects, so
+   the 0.696 ceiling is itself slightly low.
 2. **A second real genre.** Every correction to the shared components came from
    *adding a genre*, never from thinking harder: the cue list was 85% false
    positives on real English and needed three passes, each surfacing a different
