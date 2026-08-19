@@ -1,5 +1,14 @@
 """A larger parent corpus, to test whether distant supervision is data-starved.
 
+**Superseded by `scripts/fetch_wikipedia_parents_batched.py`.** This asks for one
+entity and one intro per request -- about 4,900 requests for 2,400 candidates --
+and reached 49 articles in several hours behind Wikimedia's 429s. The batched
+version does the same job in about 170 requests by sending 50 entities and 20
+extracts at a time, which is the documented way to ask and gentler on the service
+than the version that was being throttled. Kept because the long-backoff `_get`
+below is the right shape for any endpoint that has no batch form, and because a
+superseded script is a record of what was tried.
+
 `scripts/fetch_wikipedia_parents.py` built the 168-article corpus every published
 real-text number is measured on, and **that file is not touched here** -- this
 writes a separate one, because overwriting it would silently redefine
@@ -24,7 +33,32 @@ import json
 import time
 from pathlib import Path
 
+import urllib.request
+
+import scripts.fetch_wikipedia_parents as W
 from scripts.fetch_wikipedia_parents import entity, intro, labels, parents, qids
+
+#: The original `_get` retries five times over 45 seconds, which is not enough
+#: for a 429 -- the first search request exhausted it. Wikimedia asks clients to
+#: back off rather than to keep asking, so this waits minutes, not seconds, and
+#: gives up honestly rather than hammering.
+def _get(url: str, tries: int = 8) -> bytes:
+    import time as _t
+    for i in range(tries):
+        req = urllib.request.Request(
+            url, headers={"User-Agent": W.UA, "Accept": "application/json"})
+        try:
+            with urllib.request.urlopen(req, timeout=90) as r:
+                return r.read()
+        except Exception as e:
+            wait = min(600, 15 * 2 ** i)
+            print(f"   {type(e).__name__} {e}; waiting {wait}s "
+                  f"(attempt {i + 1}/{tries})", flush=True)
+            _t.sleep(wait)
+    raise RuntimeError(f"gave up on {url[:90]} after {tries} attempts")
+
+
+W._get = _get
 
 OUT = Path("data/artifacts/wikipedia_parents_scale.jsonl")
 WANT = 2400
