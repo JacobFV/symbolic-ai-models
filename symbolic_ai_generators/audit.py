@@ -319,3 +319,44 @@ def collision_cost(cases, observations, solve, *, registries=None,
         out[kinds] = {"cost": 1.0 - (sum(ok) / len(ok)) if ok else 0.0,
                       "n": len(ok), "permutable": permutable}
     return out
+
+
+def deletion_dependency(cases, solve, kind: str, *, world_of=None) -> float:
+    """P(the answer changes | one claim of ``kind`` is removed).
+
+    The companion to `collision_cost`, and **not the same number**. They answer
+    different questions and were once confused for each other:
+
+    - `collision_cost` permutes predicates between kinds that look alike in
+      text. It is the cost of not being able to **type** a sentence.
+    - this deletes one claim. It is the cost of a claim being **spurious or
+      missing**.
+
+    ``bridge_on``/``link`` has collision cost **0.000** -- their role signatures
+    differ, so nothing is permutable -- while link *deletion* dependency is
+    **0.138**. The two agreed at "low" by accident, and the accident was briefly
+    read as a prediction.
+
+    Which one applies depends on the perturbation being carried. A reader that
+    may have **invented** a claim is carrying deletions; a reader that cannot
+    **type** a sentence is carrying permutations. Measured 2026-08-19: carrying
+    deletions of a 0.138-dependency kind gave up nothing, carrying reassignments
+    of a 0.467-dependency kind decided 0.067. Solvency's ``owns`` is 0.000 --
+    every member is recoverable from its own filing, so ownership is inert.
+    """
+    from dataclasses import replace
+
+    out = []
+    for case in cases:
+        world = world_of(case) if world_of else case.world
+        base = solve(world)[0]
+        idx = [i for i, c in enumerate(world.claims) if c.predicate == kind]
+        if not idx:
+            continue
+        hits = []
+        for i in idx:
+            trimmed = replace(world, claims=tuple(
+                c for j, c in enumerate(world.claims) if j != i))
+            hits.append(solve(trimmed)[0] != base)
+        out.append(sum(hits) / len(hits))
+    return sum(out) / len(out) if out else 0.0

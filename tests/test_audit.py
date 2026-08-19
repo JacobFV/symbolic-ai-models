@@ -177,3 +177,51 @@ def test_prose_is_off_by_default() -> None:
     a = audit_surface(_flood())
     assert a.prose_signatures == {}
     assert a.prose_collisions == {}
+
+
+def test_deletion_dependency_is_not_collision_cost() -> None:
+    """They answer different questions and were once confused for each other.
+
+    ``bridge_on``/``link`` has collision cost 0.000 because the role signatures
+    differ so nothing is permutable, while deleting a link changes the answer
+    0.138 of the time. Low for different reasons.
+    """
+    from symbolic_ai_generators.audit import collision_cost, deletion_dependency
+    from symbolic_ai_generators.flood.flow import solve
+    from symbolic_ai_generators.flood.read_surface import VALUE_REGISTRY
+
+    cases = _flood_cases(12)
+    costs = collision_cost(cases, _flood(12), solve, registries=VALUE_REGISTRY)
+    assert costs[frozenset({"bridge_on", "link"})]["permutable"] == 0
+
+    dep = deletion_dependency(cases, solve, "link")
+    assert 0.0 < dep < 0.4, dep
+
+
+def test_a_kind_the_answer_ignores_reads_zero() -> None:
+    """Solvency's ownership is inert: every member is recoverable from its own
+    filing, so dropping an owns sentence cannot move the verdict.
+
+    Measured through the reader, because that is where it matters -- a reader
+    that lost the owns claims would still answer correctly. An earlier version
+    of this test asserted ``decide(case) == decide(case)`` and reproduced its own
+    definition, which is the failure mode ``notes/lessons/`` already names.
+    """
+    from symbolic_ai_generators.solvency import generate
+    from symbolic_ai_generators.solvency.read_surface import (decide_reading,
+                                                              read_signature)
+    from symbolic_ai_generators.solvency.surface import render_observation
+
+    moved = 0
+    checked = 0
+    for seed in range(12):
+        obs = render_observation(generate(seed), variants=4)
+        full = decide_reading(read_signature(obs.text))
+        for span in obs.spans:
+            if span.claim is None or span.kind != "owns":
+                continue
+            checked += 1
+            text = obs.text[:span.start] + obs.text[span.end:]
+            moved += decide_reading(read_signature(text)) != full
+    assert checked > 20, checked
+    assert moved == 0, f"{moved}/{checked} owns deletions moved the verdict"

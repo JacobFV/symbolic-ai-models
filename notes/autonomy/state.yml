@@ -65,10 +65,21 @@ measured:
     depot+flooded+needs, which predicts free vs vacuous exactly. That is a
     SECOND USE for the instrument -- collision cost forecasts whether
     emit-rather-than-collapse will be usable, offline and before any reader.
-    Corrected statement: CARRIED AMBIGUITY IS CHEAP EXACTLY WHEN THE AMBIGUOUS
-    KIND HAS LOW COLLISION COST. Rests on two points in one domain, which is the
-    same weakness that sank version one -- scheduling and solvency both audit at
-    zero collisions and cannot test it.
+    CORRECTED TWICE. "Cheap when COLLISION COST is low" was also wrong:
+    collision cost measures PERMUTATION between kinds and is 0.000 for
+    bridge_on/link because their ROLE SIGNATURES DIFFER, while what that policy
+    carries is a SPURIOUS CLAIM explored by DELETION. Two quantities, both low
+    for unrelated reasons, coincidence read as prediction.
+    The controlling variable is DEPENDENCY UNDER THE PERTURBATION BEING CARRIED:
+    flood link deletion 0.138 (carried free), flood role reassignment 0.467
+    (carried vacuous), solvency owns deletion 0.000 (inert -- every member is
+    recoverable from its own filing). Separation 3.4x. Note roles are NOT always
+    load-bearing as I claimed: 0.467, not 1.0.
+    STILL NOT ESTABLISHED: any functional form. Two real carrying measurements
+    only. Same thinness that sank versions one and two, stated up front.
+    GUARD: collision_cost and deletion_dependency sit beside each other in
+    audit.py documenting that they are NOT the same number, with a test
+    asserting both.
   - "GROUNDED" MEANS CONSISTENT WITH WHAT WAS READ, NOT TRUE. ungrounded()
     builds its admissible edges from the routes the flow computed FROM THE READ
     WORLD, so a route over a claim the reader INVENTED is self-consistent and
