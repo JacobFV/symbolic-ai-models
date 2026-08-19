@@ -1,6 +1,53 @@
 # Working memory. Guides the present; it does not reproduce the project history.
 # History lives in RESEARCH_LOG.md, notes/findings/, predictions.jsonl, git log.
 
+# CRITICAL PATH, set by the user 2026-08-19 after a dependency-graph reading of
+# the repo. Supersedes the ordering of the frame below, which it keeps as its
+# deepest hypothesis.
+critical_path: >
+  THE SYMBOLIC MIDDLE IS NO LONGER THE GATING PROBLEM. The shortest route to a
+  GPT-2-ish experience is
+    scalable learned language boundary -> existing world/flow substrate
+    -> small learned language boundary
+  and milestone D (hybrid experience) is much closer than E (raw LM perplexity),
+  because D reuses almost everything here and E mostly cannot.
+
+  Execution order given: (1) one generic Reader/ReadResult ABI and a
+  reader.run@1 flow op, migrating a flood reader behind it with behaviour
+  unchanged; (2) finish the streaming training boundary so FitContext stops
+  requiring a Sequence[Episode]; (3) ONE shared learned reader over the three
+  aligned generated domains, with span/entity/predicate/role/value/reference
+  heads, trained on hard distractors, paraphrase, packing and arrangement --
+  not three neural readers; (4) entity resolution as an external given;
+  (5) a multi-relation real-text dataset with compositional queries, plus a
+  second genre; (6) query-critical reconstruction made first-class;
+  (7) a generic ResponsePlan and a small learned decoder, with autoregressive
+  cache infrastructure; (8) an interactive end-to-end harness against an actual
+  GPT-2 baseline comparing task success, explanation fidelity, latency and
+  capability/$; (9) only then decide whether raw perplexity is worth pursuing,
+  as a separate baseline branch.
+
+  NOT ON THE CRITICAL PATH, explicitly: more kernels; improving flood's solver;
+  more certification; ontology generalisation; correcting every historical score
+  for honest distractors; and exact term-tree parsing -- the oracle-parser
+  experiment (0.387 answer accuracy, +0.08 over deployed variants) is strong
+  evidence against putting parse recovery at the centre.
+
+  ALREADY ANSWERED BY THIS SESSION, so do not re-queue:
+  - step 6's discriminating question. Claim recall, precision and symmetric
+    difference rank a correct answer ahead of a wrong one at AUC 0.506 / 0.473 /
+    0.506 -- CHANCE -- against 0.946 for critical error mass, with one direction
+    EXACT (zero mass => correct, 82/82). Critical-claim recall does predict
+    end-to-end success far better than global F1, and the reader should be
+    trained toward it.
+  - step 4's premise, partly. Entity resolution supplied as a given buys nothing
+    here: only 1.2% of candidate pairs are the same entity, entity-level
+    corroboration is WORSE than string-level (0.701 vs 0.722) and same-QID
+    agreement is worse than string agreement (0.545 vs 0.597). Entity TYPING
+    helps; entity RESOLUTION does not, on this task.
+  - step 5, in a first form. 168 intros -> three relations -> one world ->
+    parent JOIN country, an answer stated in no sentence, at F1 0.138.
+
 # STRATEGIC FRAME, set by the user 2026-08-19 after the reading session. This
 # outranks the task list and reorganises the next stretch.
 central_question: >
