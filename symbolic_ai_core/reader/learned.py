@@ -61,7 +61,8 @@ from symbolic_ai_core.world import Claim, EntityRef, Quantity
 from .abi import Alignment, Factor, Mention, ReadResult
 
 __all__ = ["LearnedSpanReader", "Unit", "Token", "segment", "tokenize",
-           "shape", "supervise"]
+           "shape", "supervise", "Lexicon", "LexiconMentions",
+           "CapitalisedMentions"]
 
 NONE = "∅"          #: the label for a unit that realises no claim
 
@@ -265,7 +266,7 @@ class Perceptron:
                 w[y] = total / max(1, self._t)
 
 
-def _unit_features(u: Unit, lex: "Lexicon") -> list[str]:
+def _unit_features(u: Unit, ments: Sequence[Token]) -> list[str]:
     """Abstracted n-grams plus the signature.
 
     Every token that names something becomes ``<E>``/``<N>``/``<D>``, so the
@@ -275,10 +276,14 @@ def _unit_features(u: Unit, lex: "Lexicon") -> list[str]:
     """
     abst: list[str] = []
     ne = nn = nd = 0
+    inside = {i for m in ments for i in range(m.start, m.end)}
+    starts = {m.start for m in ments}
     for t in u.tokens:
-        if lex.is_entity(t):
+        if t.start in starts:
             abst.append("<E>")
             ne += 1
+        elif t.start in inside:
+            continue                      # the rest of a multi-word name
         elif t.kind == "num":
             abst.append("<N>")
             nn += 1
@@ -366,6 +371,65 @@ class _Ranker:
 # the induced lexicon
 # --------------------------------------------------------------------------
 
+class LexiconMentions:
+    """Mentions are whatever the induced lexicon calls a name.
+
+    Right for corpora whose entities are identifiers. Wrong for English prose,
+    where a name is `Ministry of Communications` -- three tokens, one of them
+    lowercase, and no shape to generalise.
+    """
+
+    def __init__(self, lex: "Lexicon") -> None:
+        self.lex = lex
+
+    def find(self, u: Unit) -> list[Token]:
+        return [t for t in u.tokens if self.lex.is_entity(t)]
+
+
+class CapitalisedMentions:
+    """Runs of capitalised words, joined across lowercase connectives.
+
+    Knowledge of English, not of any domain -- the same category as the
+    tokenizer and the date formats. A capitalised run is the cheapest honest
+    proposer for prose, and it is deliberately over-generous: the ranker decides
+    which proposal fills which role, and a proposer that missed the answer would
+    put a ceiling on the reader that no amount of fitting could lift.
+    """
+
+    JOIN = frozenset({"of", "the", "and", "for", "de", "van", "von", "du",
+                      "da", "di", "la", "le", "el", "&"})
+
+    def __init__(self, *, sentence_initial: bool = False) -> None:
+        #: A sentence's first word is capitalised because it is first. Dropping
+        #: it loses every name that opens a sentence, so it is KEPT and the
+        #: cost is paid in false proposals rather than in missed answers.
+        self.sentence_initial = sentence_initial
+
+    def find(self, u: Unit) -> list[Token]:
+        out: list[Token] = []
+        run: list[Token] = []
+
+        def flush() -> None:
+            while run and run[-1].text.lower() in self.JOIN:
+                run.pop()
+            if run:
+                out.append(Token(u.text[run[0].start - u.start:
+                                        run[-1].end - u.start],
+                                 run[0].start, run[-1].end))
+            run.clear()
+
+        for t in u.tokens:
+            cap = t.kind == "word" and t.text[:1].isupper()
+            if cap:
+                run.append(t)
+            elif run and t.text.lower() in self.JOIN:
+                run.append(t)
+            else:
+                flush()
+        flush()
+        return out
+
+
 @dataclass
 class Lexicon:
     """What counts as a name, learned rather than declared.
@@ -444,7 +508,8 @@ class LearnedSpanReader:
     """`text -> ReadResult`, with every domain fact induced from alignments."""
 
     def __init__(self, id: str = "learned.span@1", *, epochs: int = 8,
-                 weights: Mapping[str, float] | None = None) -> None:
+                 weights: Mapping[str, float] | None = None,
+                 mentions: Any = None) -> None:
         """``weights`` maps a predicate to its downstream sensitivity.
 
         Measured by intervention, not by correlation --
@@ -460,6 +525,7 @@ class LearnedSpanReader:
         self.id = id
         self.epochs = epochs
         self.weights = dict(weights or {})
+        self.mentions = mentions
         self.lex = Lexicon()
         self.clf = Perceptron()
         self.rankers: dict[str, _Ranker] = defaultdict(_Ranker)
@@ -471,7 +537,9 @@ class LearnedSpanReader:
     # -- fitting ---------------------------------------------------------
     def fit(self, docs: Sequence[Sequence[Unit]]) -> "LearnedSpanReader":
         units = [u for d in docs for u in d]
-        self.lex = Lexicon.induce(units)
+        if self.mentions is None:
+            self.lex = Lexicon.induce(units)
+            self.mentions = LexiconMentions(self.lex)
         self._induce_specs(docs)
         self._fit_classifier(docs)
         self._fit_rankers(units)   # noqa: E501 - rankers are per-unit
@@ -489,7 +557,12 @@ class LearnedSpanReader:
         tx_seen: dict[str, Counter] = defaultdict(Counter)
         latent: dict[tuple[str, str], list[int]] = defaultdict(list)
         for doc in docs:
-            in_doc = {t.text for u in doc for t in u.tokens}
+            # Built from PROPOSED MENTIONS, not raw tokens. `Ministry of
+            # Communications` is never one token, so a token-level test says it
+            # appears nowhere and every such role is minted a fresh identity --
+            # which is why the first real-prose run scored 0.000 exact against
+            # 0.149 lenient: the answers were skolems, not names.
+            in_doc = {t.text for u in doc for t in self.mentions.find(u)}
             for u in doc:
                 c = u.claim
                 if c is None:
@@ -502,7 +575,8 @@ class LearnedSpanReader:
             if c is None:
                 continue
             units_seen[c.predicate] += 1
-            surface = {t.text for t in u.tokens}
+            surface = {t.text for t in self.mentions.find(u)}
+            surface |= {t.text for t in u.tokens}
             iso = {_iso(t.text) for t in u.tokens if t.kind == "date"}
             for role, v in c.roles.items():
                 if isinstance(v, EntityRef):
@@ -548,7 +622,7 @@ class LearnedSpanReader:
                 self.tx_role[pred] = "date"
 
     def _fit_classifier(self, docs: Sequence[Sequence[Unit]]) -> None:
-        data = [(_unit_features(u, self.lex),
+        data = [(_unit_features(u, self.mentions.find(u)),
                  u.claim.predicate if u.claim is not None else NONE)
                 for d in docs for u in d]
         self.clf.labels = sorted({y for _, y in data})
@@ -577,7 +651,7 @@ class LearnedSpanReader:
             if c is None:
                 continue
             for spec in self.specs.get(c.predicate, []):
-                cands = self._candidates(u, spec)
+                cands = self._candidates(u, spec)   # noqa: E501
                 if len(cands) < 2:
                     continue
                 gold = _gold_index(cands, c.roles.get(spec.role))
@@ -600,7 +674,7 @@ class LearnedSpanReader:
     # -- reading ---------------------------------------------------------
     def _candidates(self, u: Unit, spec: _RoleSpec) -> list[Token]:
         if spec.filler == "entity":
-            return [t for t in u.tokens if self.lex.is_entity(t)]
+            return self.mentions.find(u)
         if spec.filler == "quantity":
             return [t for t in u.tokens if t.kind == "num"]
         return [t for t in u.tokens if t.text.lower() in spec.vocab]
@@ -620,8 +694,8 @@ class LearnedSpanReader:
         # avoid. Cost here is a lexicon lookup per token, not a parse.
         recent: list[str] = []          #: every mention, in order of reading
         for prior in context:
-            recent.extend(t.text for t in tokenize(prior)
-                          if self.lex.is_entity(t))
+            for pu in _units(prior):
+                recent.extend(t.text for t in self.mentions.find(pu))
         units = _units(text)
         claims: list[Claim] = []
         belief: dict[int, float] = {}
@@ -631,12 +705,12 @@ class LearnedSpanReader:
         unresolved: list[str] = []
         for u in units:
             here: list[str] = []
-            for t in u.tokens:
-                if self.lex.is_entity(t):
-                    mentions.append(Mention(t.start, t.end, t.text,
-                                            entities=(t.text,), belief=(1.0,)))
-                    here.append(t.text)
-            feats = _unit_features(u, self.lex)
+            found = self.mentions.find(u)
+            for t in found:
+                mentions.append(Mention(t.start, t.end, t.text,
+                                        entities=(t.text,), belief=(1.0,)))
+                here.append(t.text)
+            feats = _unit_features(u, found)
             pred, margin = self.clf.predict(feats)
             roles, alts, missing = ({}, {}, []) if pred == NONE else \
                 self._fill(u, pred, recent, here)

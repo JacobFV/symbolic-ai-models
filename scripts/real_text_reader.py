@@ -1,0 +1,318 @@
+"""The learned reader on real prose, fitted from distant supervision only.
+
+Every number the learned reader has produced came from generated surfaces with
+**exact span→claim alignment**. The status note named that as the expensive
+input: not rules, but aligned spans. This asks whether the alignment is
+necessary, on 168 Wikipedia company intros whose gold facts come from Wikidata
+and whose spans nobody has ever marked.
+
+Distant supervision: a sentence is labelled with relation `p` if it *contains* a
+gold filler for `p`, and with nothing otherwise. No span is given, no role is
+given, and the label is wrong whenever the string occurs for an unrelated
+reason — which it does. That is the supervision a real corpus can actually
+supply.
+
+Three relations from the same 168 articles: `parent` (Wikidata P749 chains),
+`country` (P17) and `headquarters` (P159). Mentions are proposed by capitalised
+runs — knowledge of English, in the same category as the tokenizer — because a
+name here is *Ministry of Communications*, three tokens with a lowercase one in
+the middle and no shape to generalise.
+
+Scored per document at strict, case-insensitive string equality against any gold
+filler, over 4-fold cross-validation so every article is held out exactly once.
+
+Predicted before running:
+
+- **Distant supervision works at all** — the headline question. `parent` correct
+  in 0.30–0.45, i.e. comparable to the hand-written state-first reader's 0.393
+  and not obviously better, because that reader had a session of tuning against
+  this corpus and this one sees 126 training articles per fold.
+- **Coverage higher, precision lower** than the hand reader's 0.601 / 0.653: a
+  classifier emits something for almost every article, while four patterns
+  abstain.
+- **`country` and `headquarters` are much easier than `parent`** — both are
+  stated in the first sentence in a fixed frame (*headquartered in New Delhi,
+  India*), so correct above 0.5, while a parent is stated anywhere or nowhere.
+- Refuted if `parent` correct comes out below 0.15, which would mean the span
+  alignment was carrying the earlier results and real corpora cannot supply what
+  this reader needs.
+
+Run: uv run python -u scripts/real_text_reader.py
+"""
+
+from __future__ import annotations
+
+import json
+import statistics
+import sys
+from collections import defaultdict
+from pathlib import Path
+
+from symbolic_ai_core.reader.learned import (CapitalisedMentions,
+                                             LearnedSpanReader, Unit, _units)
+from symbolic_ai_core.world import Claim, EntityRef
+
+PARENTS = Path("data/artifacts/wikipedia_parents.jsonl")
+RELATIONS = Path("data/artifacts/company_relations.jsonl")
+OUT = Path("runs/real_text_reader.json")
+FOLDS = 4
+#: Multi-instance pruning: refit on one positive sentence per (article,
+#: relation), chosen by the first pass. Set from the command line.
+MIL = "--mil" in sys.argv
+#: Longest gold string first, so `New Delhi, India` prefers the more specific
+#: relation when two fillers both occur in one sentence.
+RELS = ("parent", "headquarters", "country")
+
+
+def corpus() -> list[dict]:
+    """Articles with their intro and every gold filler we have for them."""
+    intros = {}
+    for line in PARENTS.read_text().splitlines():
+        r = json.loads(line)
+        intros[r["qid"]] = {"qid": r["qid"], "title": r["title"],
+                            "intro": r["intro"], "parent": list(r["current"])}
+    for line in RELATIONS.read_text().splitlines():
+        r = json.loads(line)
+        if r["qid"] in intros:
+            intros[r["qid"]]["country"] = list(r.get("country") or [])
+            intros[r["qid"]]["headquarters"] = list(r.get("headquarters") or [])
+    return [d for d in intros.values() if d["intro"]]
+
+
+def label(sentence: str, gold: dict) -> tuple[str, str] | None:
+    """Which relation this sentence is distant-supervised for, and by which
+    string. Longest match wins, so a sentence naming both a city and a country
+    is labelled for the more specific one rather than by dictionary order."""
+    best = None
+    for rel in RELS:
+        for filler in gold.get(rel) or ():
+            if filler and filler in sentence:
+                if best is None or len(filler) > len(best[1]):
+                    best = (rel, filler)
+    return best
+
+
+def supervise_distant(doc: dict) -> list[Unit]:
+    """Units labelled by string containment. No spans, no roles, no oracle.
+
+    The claim carries ONE read role -- the filler. The article's subject is not
+    read from the sentence because it is not usually in it: the intro says *"It
+    is an organisation under the Ministry of Communications"*, and the child of
+    that relation is the document, not a mention.
+    """
+    units = _units(doc["intro"])
+    for u in units:
+        hit = label(u.text, doc)
+        if hit is None:
+            continue
+        rel, filler = hit
+        u.claim = Claim(predicate=rel, roles={"value": EntityRef(filler)})
+    return units
+
+
+def prune_to_best(reader, units_by_doc):
+    """Multi-instance pruning: one positive per (article, relation).
+
+    Distant supervision's at-least-one assumption is that *some* sentence
+    containing the gold string states the relation, not that all of them do. The
+    label on the others is wrong, and on this corpus there are 516 supervised
+    sentences for 168 articles -- three positives per article for a fact stated
+    once. Keeping only the sentence the current model scores highest is the
+    standard fix and it tests the diagnosis directly: if the loss is noise, this
+    helps; if it is volume, this makes it worse by discarding two thirds of the
+    positives.
+    """
+    from symbolic_ai_core.reader.learned import _unit_features
+    out = []
+    for doc in units_by_doc:
+        best: dict[str, tuple[float, Unit]] = {}
+        for u in doc:
+            if u.claim is None:
+                continue
+            feats = _unit_features(u, reader.mentions.find(u))
+            score = reader.clf.score(feats).get(u.claim.predicate, 0.0)
+            cur = best.get(u.claim.predicate)
+            if cur is None or score > cur[0]:
+                best[u.claim.predicate] = (score, u)
+        keep = {id(u) for _, u in best.values()}
+        for u in doc:
+            if u.claim is not None and id(u) not in keep:
+                u.claim = None
+        out.append(doc)
+    return out
+
+
+def answers(reader, doc: dict) -> dict[str, str]:
+    """One answer per relation: the claim the reader believes most."""
+    res = reader.run(doc["intro"])
+    best: dict[str, tuple[float, str]] = {}
+    for i, c in enumerate(res.claims):
+        v = c.roles.get("value")
+        if not isinstance(v, EntityRef):
+            continue
+        b = res.confidence_of(i)
+        if c.predicate not in best or b > best[c.predicate][0]:
+            best[c.predicate] = (b, v.id)
+    return {k: v for k, (_, v) in best.items()}
+
+
+def decomposition(docs) -> dict:
+    """Where the loss is, as a product of three factors that must multiply out.
+
+    A distantly supervised reader cannot beat the share of articles that HAVE a
+    sentence containing the gold string; of those it must label the sentence;
+    of those it must pick the right mention. If the product does not reproduce
+    the end-to-end number, one of the three is measuring something else.
+    """
+    from symbolic_ai_core.reader.learned import _unit_features
+    cm = CapitalisedMentions()
+    ceiling, proposed, present = defaultdict(int), defaultdict(int), defaultdict(int)
+    for d in docs:
+        units = _units(d["intro"])
+        for rel in RELS:
+            if any(label(u.text, d) and label(u.text, d)[0] == rel
+                   for u in units):
+                ceiling[rel] += 1
+            for f in (d.get(rel) or ()):
+                if f in d["intro"]:
+                    present[rel] += 1
+                    proposed[rel] += any(t.text == f for u in units
+                                         for t in cm.find(u))
+    train, test = docs[42:], docs[:42]
+    reader = LearnedSpanReader(mentions=cm).fit(
+        [supervise_distant(d) for d in train])
+    clf, clf_n, rank, rank_n = (defaultdict(int) for _ in range(4))
+    for d in test:
+        for u in _units(d["intro"]):
+            hit = label(u.text, d)
+            if not hit:
+                continue
+            pred, _ = reader.clf.predict(_unit_features(u, cm.find(u)))
+            clf_n[hit[0]] += 1
+            clf[hit[0]] += pred == hit[0]
+            if pred != hit[0]:
+                continue
+            roles, _, _ = reader._fill(u, pred, [],
+                                       [t.text for t in cm.find(u)])
+            v = roles.get("value")
+            rank_n[hit[0]] += 1
+            rank[hit[0]] += v is not None and v.id == hit[1]
+    return {rel: {
+        "ceiling": ceiling[rel] / len(docs),
+        "gold_string_proposed": proposed[rel] / max(1, present[rel]),
+        "classifier_recall": clf[rel] / max(1, clf_n[rel]),
+        "ranker_given_label": rank[rel] / max(1, rank_n[rel]),
+        "product": (ceiling[rel] / len(docs)) * (clf[rel] / max(1, clf_n[rel]))
+                   * (rank[rel] / max(1, rank_n[rel]))} for rel in RELS}
+
+
+def learning_curve(docs) -> dict:
+    """Is the classifier short of data or drowning in wrong labels?
+
+    Distant supervision mislabels: a sentence naming the parent for an unrelated
+    reason is a positive. If recall is still climbing at the full corpus, the
+    binding constraint is 168 articles; if it has flattened, it is the noise, and
+    more of this corpus would not help.
+    """
+    from symbolic_ai_core.reader.learned import _unit_features
+    cm = CapitalisedMentions()
+    train, test = docs[42:], docs[:42]
+    out = {}
+    for share in (0.25, 0.5, 1.0):
+        part = train[:max(1, int(len(train) * share))]
+        reader = LearnedSpanReader(mentions=cm).fit(
+            [supervise_distant(d) for d in part])
+        ok, n = defaultdict(int), defaultdict(int)
+        for d in test:
+            for u in _units(d["intro"]):
+                hit = label(u.text, d)
+                if not hit:
+                    continue
+                pred, _ = reader.clf.predict(_unit_features(u, cm.find(u)))
+                n[hit[0]] += 1
+                ok[hit[0]] += pred == hit[0]
+        out[f"{len(part)} articles"] = {r: ok[r] / max(1, n[r]) for r in RELS}
+    return out
+
+
+def main() -> None:
+    docs = corpus()
+    print(f"{len(docs)} articles; gold coverage per relation: " + ", ".join(
+        f"{r} {sum(1 for d in docs if d.get(r)) / len(docs):.3f}"
+        for r in RELS))
+
+    hits = defaultdict(int)
+    answered = defaultdict(int)
+    have = defaultdict(int)
+    lenient = defaultdict(int)
+    supervised = defaultdict(int)
+    for fold in range(FOLDS):
+        test = [d for i, d in enumerate(docs) if i % FOLDS == fold]
+        train = [d for i, d in enumerate(docs) if i % FOLDS != fold]
+        units = [supervise_distant(d) for d in train]
+        for doc in units:
+            for u in doc:
+                if u.claim is not None:
+                    supervised[u.claim.predicate] += 1
+        reader = LearnedSpanReader(mentions=CapitalisedMentions()).fit(units)
+        if MIL:
+            reader = LearnedSpanReader(mentions=CapitalisedMentions()).fit(
+                prune_to_best(reader, units))
+        for d in test:
+            got = answers(reader, d)
+            for rel in RELS:
+                gold = [g.lower() for g in (d.get(rel) or [])]
+                if not gold:
+                    continue
+                have[rel] += 1
+                if rel not in got:
+                    continue
+                answered[rel] += 1
+                mine = got[rel].lower()
+                hits[rel] += mine in gold
+                lenient[rel] += any(mine in g or g in mine for g in gold)
+
+    print(f"\n    {'relation':<14} {'sup.sents':>9} {'coverage':>9} "
+          f"{'correct':>8} {'precision':>10} {'lenient':>8}")
+    rows = {}
+    for rel in RELS:
+        n = have[rel]
+        cov = answered[rel] / n if n else 0.0
+        cor = hits[rel] / n if n else 0.0
+        pre = hits[rel] / answered[rel] if answered[rel] else 0.0
+        len_ = lenient[rel] / n if n else 0.0
+        print(f"    {rel:<14} {supervised[rel]:9d} {cov:9.3f} {cor:8.3f} "
+              f"{pre:10.3f} {len_:8.3f}")
+        rows[rel] = {"n": n, "coverage": cov, "correct": cor, "precision": pre,
+                     "lenient_correct": len_, "supervised_sentences":
+                     supervised[rel]}
+
+    dec = decomposition(docs)
+    print(f"\n    {'relation':<14} {'ceiling':>8} {'proposed':>9} "
+          f"{'clf recall':>11} {'ranker':>8} {'product':>8}")
+    for rel in RELS:
+        r = dec[rel]
+        print(f"    {rel:<14} {r['ceiling']:8.3f} "
+              f"{r['gold_string_proposed']:9.3f} "
+              f"{r['classifier_recall']:11.3f} {r['ranker_given_label']:8.3f} "
+              f"{r['product']:8.3f}")
+
+    curve = learning_curve(docs)
+    print(f"\n    classifier recall against training size")
+    for k, v in curve.items():
+        print(f"    {k:<14} " + "  ".join(f"{r} {v[r]:.3f}" for r in RELS))
+
+    print("\n    the number to beat on `parent` is the hand-written "
+          "state-first reader:\n    coverage 0.601, correct 0.393, "
+          "precision 0.653 -- tuned against this corpus.")
+    out_path = OUT.with_name("real_text_reader_mil.json") if MIL else OUT
+    OUT.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text(json.dumps({"n_articles": len(docs), "folds": FOLDS,
+                               "multi_instance": MIL,
+                               "relations": rows, "decomposition": dec,
+                               "learning_curve": curve}, indent=2))
+    print(f"\nwrote {out_path}")
+
+
+if __name__ == "__main__":
+    main()
