@@ -182,6 +182,17 @@ the one naming the live one.
 > **granularity**, and `audit`'s spans, `unconsumed`, `evidence_conflict` and
 > `filter_stale` all rest on the same assumption.
 
+**Reproduced in the benchmark, and fixed.** `stale_clause` prefixes a real
+member's filing with a former-parent clause — *"sub_0, formerly a subsidiary of
+sub_97, reported 105.87 USD, filed 29 May 2026"*. Over 120 seeds the sentence gate
+takes the accumulating reader from **0.925 to 0.625**: not merely useless but
+**actively harmful**, exactly the *Miramax* mechanism. `filter_stale(…,
+unit="clause")` gives **1.000** to both readers, and it does two jobs at once —
+it removes the dead claim *and* the second entity that made the filing's binding
+ambiguous. **A gate that cuts at the right granularity does not just delete less;
+it simplifies what is left.** Default stays `"sentence"` so earlier numbers keep
+their meaning.
+
 And the proportion is sobering: the former-parent error is **2.7%** of articles
 while precision among answered is **0.63** against a 0.696 ceiling. On real text
 the staleness problem is a small slice of the error and the dominant one is that

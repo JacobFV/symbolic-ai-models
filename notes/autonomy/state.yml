@@ -40,6 +40,36 @@ measured:
     because the atom rule that keeps a pronoun with its antecedent -- required
     for the document to stay true -- preserves the demand binding; a property of
     the task, not a leak.
+  - A SENTENCE GATE TAKES A RIGHT ANSWER AND MAKES IT WRONG. The Miramax failure,
+    reproduced in the benchmark. SHIPPED solvency `stale_clause`: prefixes a REAL
+    member's filing with a former-parent clause -- "sub_0, formerly a subsidiary
+    of sub_97, reported 105.87 USD, filed 29 May 2026". The clause is irrelevant,
+    the filing is needed. 120 seeds:
+      reader      gate       clean   stale clause
+      branch      none       1.000          0.625
+      branch      sentence   1.000          0.625
+      branch      clause     1.000          1.000
+      accumulate  none       1.000          0.925
+      accumulate  sentence   1.000          0.625
+      accumulate  clause     1.000          1.000
+    THE SENTENCE GATE TAKES 0.925 TO 0.625 -- not merely useless, ACTIVELY
+    HARMFUL. Branch loses the filing outright (2 entities + money + date matches
+    no branch).
+    HALF-REFUTATION, and it sharpens the accumulating readers: 0.925 not 1.000,
+    because the NEAREST-MONEY binding is WRONG FOR THIS SHAPE -- the parenthetical
+    sits closer to the number than the subject. Right for "group owns sub_0, which
+    reported...", wrong for "sub_0, formerly..., reported...", and both shapes are
+    natural. Reads 0.925 rather than 0.5 only because the verdict is a threshold
+    test and one lost filing rarely crosses it.
+    THE CLAUSE GATE DOES TWO JOBS AT ONCE: removes the dead claim AND the second
+    entity that made the binding ambiguous. A GATE THAT CUTS AT THE RIGHT
+    GRANULARITY DOES NOT JUST DELETE LESS, IT SIMPLIFIES WHAT IS LEFT.
+    SHIPPED filter_stale(..., unit="clause"), default "sentence" so earlier
+    numbers keep meaning. The Wikipedia script now calls the shipped function --
+    ONE implementation -- reproducing naive 0.589/0.369, sentence 0.548/0.339,
+    clause 0.583/0.357, former-parent error 0.024 -> 0.018.
+    SURFACE TRAP PINNED: the stale clause must name a REAL entity id, or the
+    reader sees one entity, nothing is packed, and the case is quietly easy.
   - ACCUMULATE, DO NOT BRANCH -- BUILT DELIBERATELY, AND IT STRICTLY DOMINATES.
     The rule came from flood surviving packing BY ACCIDENT, which is a hypothesis
     until built somewhere it did not hold. SHIPPED read_signature_accumulating in
