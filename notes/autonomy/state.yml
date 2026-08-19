@@ -2040,6 +2040,40 @@ active_work: >
   predicates whose invented claims cost more than their lost ones, and they are
   exactly the ones that impose constraints rather than supply capacity.
 
+  THE SCALE CORPUS LANDED AND THE REAL-TEXT ARC IS COMPLETE. 1,661 Wikipedia
+  intros (data/artifacts/wikipedia_parents_scale.jsonl; the published 168-article
+  file is untouched). Heaps replicates -- full token path beta 0.915, last
+  content word 0.648 against 0.641 at n=168. parent correct 0.113 -> 0.175 ->
+  0.182 with document and query features. SIX LEVERS CLOSED: multi-instance
+  pruning, WordNet supersenses, frames on the classifier, class balancing (twice,
+  ten times apart in data), answer aggregation (oracle only 0.012 above argmax),
+  frames on the ranker (+33% ranker, +4% end to end). Only TEN TIMES THE TEXT
+  (+55%) and THE QUERY (+4%) moved the number. The binding constraint ALTERNATES
+  between classifier and ranker, so the planning quantity is the product, which
+  moved 0.143 -> 0.238 -> 0.317. Crossover with four hand patterns extrapolates
+  to 1e5-1e6 articles.
+
+  MULTI-HOP, THE NORTH-STAR CAPABILITY, MEASURED. 191 two-hop chains lie inside
+  the corpus, so "who ultimately controls X?" is scoreable and is stated in no
+  single article. Both hops are the same relation and reader, so p1 = p2 exactly:
+  the LEARNED reader lands at 0.031 against p1^2 = 0.032 -- independent to within
+  0.001 -- while the HAND reader hits 0.058 against 0.030, nearly twice its
+  prediction, because pattern success clumps on canonically-phrased articles.
+  INDEPENDENCE IS A PROPERTY OF HOW A READER FAILS, NOT OF THE QUERY.
+
+  AND THE ECONOMIC CLAIM SURVIVED ITS OWN FAIR TEST. BM25 retrieval finds the
+  hop-2 article 0.492 of the time at k=5 (predicted under 0.20 -- wrong, and a
+  small-corpus clustering effect that should weaken with scale) but only 0.073 at
+  k=1, and the second retrieval is KEYED ON HOP 1'S ANSWER, so an iterative RAG
+  loop inherits the same p1. Cost: world $1.16e-04 ONCE against iterative RAG
+  $6.32e-03 PER QUERY -- cheaper from the first query (54.5x), 545,020x at ten
+  thousand. The earlier 9,050x against full re-reading was the wrong comparison.
+
+  STILL UNMEASURED, and it is the one thing that could overturn the story: NO LLM
+  ACCURACY. Every comparison here is a price sheet plus the symbolic side's own
+  accuracy. No API key and spending money is out of scope, so this stays open and
+  should be stated as a limit in anything published.
+
   PENDING, and the decisive experiment for the volume claim:
   `scripts/fetch_wikipedia_parents_scale.py` is fetching ~1,500 articles into
   data/artifacts/wikipedia_parents_scale.jsonl (Wikidata is rate-limiting to
