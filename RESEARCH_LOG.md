@@ -342,6 +342,21 @@ attached. And it reprices an earlier row: *"an explanation that omits nothing
 material, for 37% more words"* priced completeness in **length**; the currency is
 **truth**.
 
+**And the fabrications are exactly where the arity law says they must be.** By the
+predicate each citation rests on: `mass`, `capacity`, `needs`, `demand`,
+`bridge_on` and `load_limit` are **0 false in 1,680 citations**; `flooded` 0.044,
+`depot` 0.066, and **`link` 0.642** — 70% of every falsehood in 4% of the
+citations. `link` is multi-valued with no second source, which is the channel
+detection fires 0.000 on.
+
+So `render.uncorroborated()` marks the citations nothing here can check —
+**88 of 88 false citations flagged, inside 7.5% of them.** The renderer cannot be
+made honest; it can stop presenting eleven facts as one kind of thing.
+*"Here are eleven facts, four of which nothing corroborates"* is a third option
+beside the two-fact summary and the eleven-fact account, and it is the honest one.
+Precision is 0.51, and the recall is 1.000 only because no reader error here lands
+on a value — the registry stops that, and the registry is a generator artefact.
+
 ### What each channel admits, and what it costs
 
 Two responses to a claim the reader may have got wrong, and they are gated by

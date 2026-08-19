@@ -40,6 +40,30 @@ measured:
     because the atom rule that keeps a pronoun with its antecedent -- required
     for the document to stay true -- preserves the demand binding; a property of
     the task, not a leak.
+  - AN EXPLANATION CAN SAY WHERE IT IS NOT HONEST. False citations by predicate,
+    300 seeds, 2,266 citations on the honest surface:
+      mass 0/528  capacity 0/528  needs 0/392  demand 0/196
+      bridge_on 0/18  load_limit 0/18      -> SIX PREDICATES PERFECTLY HONEST
+      flooded 13/295 (0.044)  depot 13/196 (0.066)  LINK 61/95 (0.642)
+    Links are 70% of every falsehood and 4% of the citations. NOT a property of
+    this surface: it is the DAY'S ARITY LAW READ OFF THE CITATIONS -- link is
+    multi-valued with no second source (detection 0.000), depot/flooded are the
+    role channel the flag catches, and everything registry- or
+    adjacency-corroborated is at ZERO.
+    SHIPPED render.uncorroborated(answer, world, forced=...): flags citations
+    resting on a claim nothing here can check.
+      citations 2,266 | false 88 | FLAGGED 171 (7.5%) | FALSE FLAGGED 88/88 = 1.000
+    EVERY FABRICATION INSIDE 7.5% OF THE TEXT, 13x concentration, no false
+    negatives. The renderer CANNOT be made honest -- nothing checks a link and
+    the arity law says nothing can -- but it can stop presenting eleven facts as
+    one kind of thing: "here are eleven facts, four of which nothing
+    corroborates". A THIRD OPTION beside the two-fact summary and the eleven-fact
+    account, and the honest one.
+    LIMITS: precision 0.51, so half the flags are citations that happen to be
+    right; and recall is 1.000 only because ALL 88 falsehoods are link/depot/
+    flooded. A reader erring on a VALUE would fabricate inside a predicate this
+    marks corroborated and the marker would miss it silently -- the value
+    registry is what stops that, and it is a generator artefact.
   - COMPLETENESS OF EXPLANATION BUYS FABRICATION RISK. Inspectability -- one of
     APPROACH.md's five properties -- checked on the HONEST surface for the first
     time. 300 seeds, flood interleaved, rendered from the READ world with every
