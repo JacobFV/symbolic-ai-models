@@ -417,6 +417,37 @@ magnitude while the verdict's climbs to 0.445 — they are functions of *differe
 variables*, and the ratio diverges as the perturbation shrinks rather than being
 merely greater than one.
 
+### But agreement tests exclusive alternatives, and real prose has none
+
+*Emit rather than collapse* is the idea this repo is most committed to, and every
+measurement of it was on generated surfaces. On the Wikipedia parent task, with a
+gold answer:
+
+| arm | answers | correct | **precision** |
+|---|---:|---:|---:|
+| naive first match | 0.589 | 0.369 | **0.626** |
+| emit, string identity | 0.375 | 0.226 | **0.603** |
+| emit, shared content token | 0.423 | 0.256 | **0.606** |
+
+**Agreement carries no information at all** — precision flat at ~0.60 while
+coverage varies by 0.21. And the mechanism is not correlated error:
+**multi-candidate cases are *more* precise than single-candidate ones**, 0.667
+against 0.603, and 78% of them contain a correct candidate. The candidates are the
+same corporate group at different granularities — *Sony Music Entertainment* /
+*Sony Music Group*, *Amazon MGM Studios* / *Amazon*.
+
+> **Agreement is a test for mutually exclusive alternatives.** Generated surfaces
+> supply role assignments, where exactly one can be right, so disagreement means
+> the reader guessed. Real prose supplies candidates that are neither exclusive
+> nor equivalent, and demanding agreement discards cases *more* likely to be right
+> than the ones it keeps.
+
+The enumeration theorem is untouched — its premise is that wrong candidates give a
+**different answer**, and that is the half real text breaks. **Emission needs an
+equivalence relation on answers, and on real prose that relation is entity
+resolution** — the problem the signature discipline sidesteps by naming things
+`region_0`.
+
 ### And one check buys both
 
 Certification and explanation fidelity had been measured separately. They are the

@@ -40,6 +40,30 @@ measured:
     because the atom rule that keeps a pronoun with its antecedent -- required
     for the document to stay true -- preserves the demand binding; a property of
     the task, not a leak.
+  - AGREEMENT IS A TEST FOR EXCLUSIVE ALTERNATIVES, AND REAL PROSE DOES NOT
+    SUPPLY THEM. The repo's most distinctive idea, on text nobody here wrote.
+      arm                          answers  correct  precision
+      naive first match              0.589    0.369      0.626
+      emit, string identity          0.375    0.226      0.603
+      emit, shared content token     0.423    0.256      0.606
+      (ceiling 0.696)
+    AGREEMENT CARRIES NO INFORMATION -- precision flat at ~0.60 across all three
+    while coverage varies by 0.21. Refutation condition written down first.
+    MECHANISM NOT THE ONE I GUESSED. I expected correlated errors. Instead
+    MULTI-CANDIDATE CASES ARE MORE PRECISE than single-candidate (0.667 vs
+    0.603), 78% of them contain a correct candidate, and only 17% genuinely have
+    several gold parents. The candidates are THE SAME CORPORATE GROUP AT
+    DIFFERENT GRANULARITIES plus regex noise -- "Sony Music Entertainment | Sony
+    Music Group | Japanese", "Amazon MGM Studios | Amazon".
+    SCOPE: agreement tests MUTUALLY EXCLUSIVE alternatives. Generated surfaces
+    give role assignments where exactly one can be right, so disagreement means
+    the reader guessed. Real prose gives candidates neither exclusive nor
+    equivalent -- several partly-true descriptions of one entity. Agreement is
+    vacuous there and demanding it DISCARDS CASES MORE LIKELY TO BE RIGHT.
+    THE THEOREM IS UNTOUCHED: its premise is that the wrong candidates give a
+    DIFFERENT ANSWER, and that half fails on real text. EMISSION NEEDS AN
+    EQUIVALENCE RELATION ON ANSWERS, and on real prose that is ENTITY RESOLUTION
+    -- the problem the signature discipline sidesteps by naming things region_0.
   - A CERTIFIED ANSWER IS EXPLAINED HONESTLY, FOR FREE. The day's two threads
     meet. 300 seeds, flood honest surface, complete renderer:
       population       share  accuracy  any false  link cites  cites
