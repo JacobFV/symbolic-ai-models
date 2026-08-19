@@ -82,11 +82,20 @@ suffice — but the first is now the only one with an untested mechanism behind 
 **Stop:** feature-level work on the real-text reader, and any further supervision
 work. Eight closed levers is enough.
 
-**Keep:** the two things that pay regardless of the fork. **In-degree** predicts
-where errors are expensive *before any reading*, from link structure alone, and
-is the only actionable signal any arm produced. And **error topology** — a
-reader's failures cluster or do not, it is measurable, and it changes which
-reader you want for composed queries independently of accuracy.
+**Keep:** two things that pay regardless of the fork, with one of them since
+demoted. **Error topology** — a reader's failures cluster or do not, it is
+measurable at p = 0.006, and it changes which reader you want for composed
+queries independently of accuracy. And **in-degree**, which predicts where errors
+are expensive before any reading — but as a **diagnostic only**: three
+interventions have now been tried on it (corroboration, selective ingestion,
+weighted training) and all three failed, the last because hub articles are hard
+for reasons duplication cannot fix. It is something to report to a user, not
+something to optimise.
+
+That makes **two signals this session that are real and diagnostic-only**, the
+other being sensitivity. A quantity measured *about* a reader is not
+automatically a quantity that reader can be steered by, and this programme has
+now produced two of each.
 
 ## How this fits the narrative
 
