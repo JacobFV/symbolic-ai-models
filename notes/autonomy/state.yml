@@ -25,8 +25,15 @@ measured:
     0.823 and only 1.000 -> 0.682 end to end.
   - generalisation: with 4 phrasings per claim kind drawn per case, the rules
     arm goes 1.000 -> 0.000 at V=2 (recall only halves, 1.000 -> 0.542) and the
-    lexical arm 0.136 -> 0.000. Recall tracks 1/V. No hand-authored reader
-    survives the words changing; the benchmark has full headroom at V >= 2.
+    lexical arm 0.136 -> 0.000. Recall tracks 1/V.
+  - the TYPE-SIGNATURE reader is exactly flat across V: recall 0.971, dep
+    recall 0.946, non-empty accuracy 0.318 at V=1,2,3,4. At V>=2 it is the only
+    reader above zero. Regime crossover: hand-authored wins 1.000 vs 0.318 on a
+    fixed surface, signature wins the moment the surface varies.
+  - its failure is ONE mechanism: capacity recall 0.725 because the pronoun
+    attaches by recency while its antecedent is named by a SUPERLATIVE ("X is
+    the lightest of them"). Every other kind is recall 1.000, zero spurious,
+    except one spurious link per case from the disused-track distractor.
   - flood flow: 3 kernels, world->reach->world2->routes->loads->fused, agrees
     with a brute-force oracle that shares no code with the kernels
   - flood reader (regex template): 300/300 worlds round-trip exactly, and its
@@ -101,8 +108,8 @@ unknowns:
   - Precision failures (invented/misread claims) are unswept; MISREADS exists.
 
 active_work: >
-  Surface hardened with per-case phrasing variants; every hand-authored reader
-  now scores 0.000 at V>=2. Next arm must generalise across phrasings.
+  Type-signature reader built and diagnosed. Determinism boundary located:
+  signatures recover everything except meaning-mediated reference.
 
 built:
   - symbolic_ai_generators/flood/surface.py -- five-paragraph observation
@@ -114,11 +121,16 @@ built:
     population, with oracle-world as ceiling.
 
 next_actions:
-  - A reader arm that generalises across phrasings. The measured failure is
-    lexical brittleness, so the candidates are: a synonym/registry-backed cue
-    router, distributional matching against the repo's parser machinery, or a
-    small learned span->claim model. Evaluate at V=4 where everything so far
-    scores 0.000.
+  - Superlative-mediated coreference is now the whole remaining gap on this
+    surface, and a rule for "lightest" dies under paraphrase exactly as the
+    pattern arm did. This is the first place a lexical resource (WordNet is on
+    disk) or a learned component is the only mechanism available, not a
+    shortcut. Build it as an arm and measure at V=4.
+  - The signature reader leans on paragraph POSITION, which is a property of
+    this generator's template. Test it on a surface with facts in arbitrary
+    order -- where the signature ambiguities do not resolve, the reader should
+    EMIT the ambiguity rather than guess, which is the critical invariant and
+    is untested.
   - Then domain transfer (scheduling or solvency): does WORLD IR + FLOW +
     KERNEL survive a domain change, and does the F = trivial-answer-share
     decomposition reproduce?

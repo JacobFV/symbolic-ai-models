@@ -33,7 +33,7 @@ from reader_arms import claim_key, dependency_set, score_arm  # noqa: E402
 from symbolic_ai_generators.flood import generate  # noqa: E402
 from symbolic_ai_generators.flood.flow import solve  # noqa: E402
 from symbolic_ai_generators.flood.read_surface import (  # noqa: E402
-    read_lexical, read_surface)
+    read_lexical, read_signature, read_surface)
 from symbolic_ai_generators.flood.surface import render_observation  # noqa: E402
 
 OUT = Path("runs/reader_generalisation.json")
@@ -54,7 +54,8 @@ def main() -> None:
     print("-" * len(hdr))
     rows = []
     for name, fn in (("rules, full", read_surface),
-                     ("lexical cue routing", read_lexical)):
+                     ("lexical cue routing", read_lexical),
+                     ("type signature", read_signature)):
         for v in VARIANTS:
             # the alignment must stay complete however the words change, or the
             # curve is measuring a broken ground truth rather than a reader
@@ -74,7 +75,7 @@ def main() -> None:
                   f"{'ok' if covered else 'BROKEN':>10}", flush=True)
 
     print()
-    for name in ("rules, full", "lexical cue routing"):
+    for name in ("rules, full", "lexical cue routing", "type signature"):
         a = next(r for r in rows if r["reader"] == name and r["variants"] == 1)
         b = next(r for r in rows if r["reader"] == name and r["variants"] == 4)
         print(f"  {name:<22} V=1 -> V=4:  recall {a['claim_recall']:.3f} -> "

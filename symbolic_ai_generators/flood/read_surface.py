@@ -37,7 +37,7 @@ import re
 from symbolic_ai_core.world import (Claim, Entity, EntityRef, Facet, Quantity,
                                     WorldSnapshot)
 
-__all__ = ["read_surface", "read_lexical"]
+__all__ = ["read_surface", "read_lexical", "read_signature"]
 
 _DEPOT = re.compile(r"Depot operations are run out of (region_\d+)")
 _MASS = re.compile(r"(truck_\d+) weighs (\d+) kg empty")
@@ -228,6 +228,104 @@ def read_lexical(text: str) -> WorldSnapshot:
             needs = regions[0]
         elif best == "demand" and nums:
             demand = nums[0]
+    return _assemble(links, flooded, crossings,
+                     {k: tuple(v) for k, v in vehicles.items()},
+                     depot, needs, demand)
+
+
+# ---------------------------------------------------------------------------
+# arm 5: type signatures, not words
+# ---------------------------------------------------------------------------
+#
+# `scripts/reader_generalisation.py` showed both earlier arms collapse when the
+# lexicon changes: a pattern set and a cue-word router are each written against
+# a phrasing, and four phrasings per kind take both to 0.000.
+#
+# The world IR offers something paraphrase does not touch: the **type signature**
+# of what a sentence mentions -- how many regions, how many vehicles, how many
+# quantities. Signatures alone are ambiguous,
+#
+#     (2 regions, 0 qty)  ->  link  OR  bridge_on
+#     (1 vehicle, 1 qty)  ->  mass  OR  capacity
+#     (1 region,  0 qty)  ->  flooded OR depot OR needs
+#     (0 entities, 1 qty) ->  capacity-by-pronoun OR demand
+#
+# and **paragraph position** resolves every one of them except link/bridge_on.
+# That last resolves structurally rather than lexically: every bridge in the
+# generator carries a load limit, so the bridge pairs are exactly the pairs that
+# appear in the quantities paragraph, and links are the pairs in the
+# infrastructure paragraph.
+#
+# Nothing here reads a content word. The only lexical commitment is the
+# paragraph headings, which are section labels rather than phrasings.
+
+_SECTIONS = ("SITUATION REPORT", "ROAD NETWORK", "OVERNIGHT",
+             "LOADING AND LIMITS", "TASKING")
+
+
+def _sentences(paragraph: str):
+    for raw in re.split(r"(?<=\.)\s+", paragraph):
+        if raw.strip():
+            yield raw
+
+
+def read_signature(text: str) -> WorldSnapshot:
+    """``text -> WorldSnapshot`` by entity-type signature and section position."""
+    paragraphs = text.split("\n\n")
+    links: list[tuple[str, str]] = []
+    flooded: list[str] = []
+    crossings: dict[tuple[str, str], float | None] = {}
+    vehicles: dict[str, list] = {}
+    depot = needs = ""
+    demand = None
+    last_vehicle = ""
+
+    for pi, para in enumerate(paragraphs):
+        for sent in _sentences(para):
+            regions = _REGION.findall(sent)
+            trucks = _TRUCK_ID.findall(sent)
+            nums = [float(n) for n in _NUM.findall(sent)]
+            sig = (len(set(regions)), len(set(trucks)), len(nums))
+
+            if pi == 0:                                   # actors and places
+                if sig[:2] == (1, 0) and not nums:
+                    depot = depot or regions[0]
+                elif sig[1] == 1 and nums:
+                    # a vehicle and a number in the roster is its mass
+                    vehicles.setdefault(trucks[0], [None, None])[0] = nums[0]
+                    last_vehicle = trucks[0]
+            elif pi == 1:                                 # infrastructure
+                if len(set(regions)) == 2 and not nums:
+                    a, b = regions[0], regions[1]
+                    if (a, b) not in links and (b, a) not in links:
+                        links.append((a, b))
+            elif pi == 2:                                 # current events
+                if regions:
+                    flooded.append(regions[0])
+            elif pi == 3:                                 # quantities
+                if len(set(regions)) == 2 and nums:
+                    # the LAST quantity is the current one; an earlier number in
+                    # the same sentence is a superseded value
+                    crossings[(regions[0], regions[1])] = nums[-1]
+                elif trucks and nums:
+                    vehicles.setdefault(trucks[0], [None, None])[1] = nums[0]
+                    last_vehicle = trucks[0]
+                elif nums and not regions and not trucks:
+                    # a bare quantity here attaches to the vehicle most recently
+                    # named -- coreference by recency, not by pronoun spelling
+                    if last_vehicle:
+                        vehicles.setdefault(
+                            last_vehicle, [None, None])[1] = nums[0]
+            elif pi == 4:                                 # query context
+                if regions and not nums:
+                    needs = needs or regions[0]
+                elif nums and not regions:
+                    demand = nums[0]
+
+    # A pair carrying a limit is a bridge; the rest of the network is plain link.
+    for pair in crossings:
+        if pair not in links and (pair[1], pair[0]) not in links:
+            links.append(pair)
     return _assemble(links, flooded, crossings,
                      {k: tuple(v) for k, v in vehicles.items()},
                      depot, needs, demand)
