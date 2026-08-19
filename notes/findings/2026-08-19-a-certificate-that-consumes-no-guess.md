@@ -68,7 +68,17 @@ swapped, which is the property that makes it need a precondition at all.
 
 - 123 answers bounds the error at 2.44%. A larger sample can only tighten it,
   and nothing here says it stays clean.
-- Coverage is still under half. Both certificates refuse whenever any qualifying
-  vehicle's admissible subgraph has a cut edge, which is common — a sharper
-  sufficient condition would recover more, and the deletion-dependency work
-  suggests most of those cuts are inert.
+- Coverage is still under half — but **not because the check is conservative**,
+  which is what this section first claimed. Measured over 196 non-empty cases:
+  the certificate refuses-when-insensitive **0** times and fires-when-sensitive
+  **0** times. It is **tight** for single-link deletion, so no sharper
+  sufficient condition exists. 48.8% is the fraction of cases whose answer is
+  genuinely insensitive to losing one link — a property of the task and the
+  perturbation model, not of the certificate.
+
+  More coverage therefore requires narrowing the **hypothesis**, not sharpening
+  the check: knowing *which* link is suspect rather than treating all of them as
+  candidates. That is precisely what
+  [[2026-08-19-the-empty-cell-is-closed-and-distinguishable-is-not-identifiable]]
+  shows requires content, since the disused-track sentence carries exactly the
+  link signature.

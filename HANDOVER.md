@@ -11,62 +11,104 @@ were each paid for), `APPROACH.md` (the argument), then this, then `ROADMAP.md`.
 
 ---
 
-## 0. Added 2026-08-19 — routing is answered, and the harness was the cost
+## 0. Read this first — 2026-08-19, and it supersedes some of §1
 
-Two things a cold reader should have before §1.
+A long run of work on the **text → world** front. The headline results are below;
+the corrections are mixed in rather than segregated, because several of them are
+corrections *to* the headline results.
 
-**Directive 13's routing question is answered, negatively, with numbers.** The
-escalation rule `p·L > c₁ − c₀` prices the cheap kernel as a *substitute* for
-the expensive one. In both domains measured it is a **complement** — `c₁` is a
-function of whether `c₀` ran:
+### The benchmark does not justify its own kernels, except in one place
 
-- **Flood.** Removing datalog reachability made the flow **1.78× more expensive
-  and less accurate**. Its escalation threshold is *negative*: no loss `L`,
-  however small, makes skipping it pay. The two arms that genuinely are cheaper
-  need a wrong answer to cost under 9.37e-09 / 2.63e-09 USD before they are
-  worth taking, and per-case spread is p50 1.08×, max 2.14×.
-- **Scheduling.** The sound one-sided capacity gate removes **87.7% of solver
-  time on 50.0% of instances** — 1.75× its fire rate, at zero accuracy cost.
-  Cost peaks at *barely* infeasible, where no single machine's constraint is
-  violated by any partial assignment and the contradiction lives only in the sum
-  **across** machines. clingo's propagators are per-constraint; the gate does
-  that cross-machine sum in O(n).
+- **Flood's decision is in P.** A max-min Dijkstra — maximise the minimum bridge
+  limit from depot to site over non-flooded regions — reproduces the full
+  datalog + ASP + SMT answer on **200 of 200** cases
+  (`symbolic_ai_generators/flood/widest.py`). Flood's `$/correct`, kernel
+  ablations and price-of-soundness figures measure **the pipeline, not the
+  task**. Use flood to study **reading**; do not use it to argue heterogeneous
+  kernels are necessary.
+- **Solvency's decision** is a sum against a threshold. Also polynomial.
+- **Scheduling is the only genuinely hard domain**, and it is hard
+  *asymmetrically*: a greedy packer exhibits an assignment for nearly every
+  feasible instance, so what no polynomial method supplies is a **certificate
+  that none exists**. The kernels earn their keep proving **negatives**.
+- **But the expensive negatives are the easy negatives.** Every cell where
+  clingo is slowest (198 ms at 20 jobs/−0.02, 1502 ms at 40/−0.05) is settled
+  **6/6** by the O(n) capacity gate. The only regime where the solver is both
+  necessary and expensive is **slack ≈ 0**, exact fit — which is also where the
+  ground-truth oracle degenerates. `HARD_REGIME` (20 jobs, 3 machines, slack 0)
+  is that intersection.
 
-So: **run every sound cheap check, always, and never route around one.** A
-learned router has nothing to choose between yet. What would reopen it: an
-*unsound* cheap arm whose error rate is predictable from pre-run world features,
-or a cost spread beyond 2.14×. Neither exists in these three domains.
-See `notes/findings/2026-08-19-the-cheap-kernel-is-not-an-escalation-tier.md`.
+### Routing (directive 13) is answered, negatively
 
-**The largest cost in the scheduling domain was not in the system.** `generate()`
-called an exhaustive `itertools.product` over `n_machines ** n_jobs` to fix
-ground truth — **53.1 s on one 18-job instance**, against milliseconds for the
-ASP kernel on the same world. It was written for the default `n_jobs=6`, where
-3⁶ = 729, and nobody had run it elsewhere. Replaced with a pruned *exact* search:
-same verdicts, **2,721,429× faster**, domain now reaches 80 jobs / 6 machines.
+The escalation rule `p·L > c₁ − c₀` prices the cheap kernel as a **substitute**
+for the expensive one. Measured, it is a **complement** — `c₁` depends on whether
+`c₀` ran. Removing flood's datalog reachability made the flow **1.78× more
+expensive and less accurate**, so its escalation threshold is *negative*: no loss
+value makes skipping it pay. Per-case cost spread is p50 1.08×, max 2.14×, so no
+hidden regime.
 
-Three traps in that, all still live:
+**Run every sound cheap check, always; never route around one.** A learned router
+has nothing to choose between. Reopening conditions: an *unsound* cheap arm whose
+error is predictable from pre-run world features, or a cost spread beyond 2.14×.
 
-1. **The oracle still binds.** At 40 jobs / 5 machines and at slack exactly 0
-   (capacity = demand, the bound goes tight, the problem becomes exact
-   partition) it is *again* the wall. Memoising failed states was tried and
-   bought nothing — real-valued durations mean partial states never repeat.
-   Any experiment wanting the phase transition at scale is gated on this.
-2. **A test pinned the implementation, not the property.** It asserted
-   `"itertools.product" in src` as evidence of exhaustiveness, which made the
-   oracle unimprovable. See
-   `notes/lessons/2026-08-19-a-test-that-pins-the-implementation-makes-the-code-unimprovable.md`.
-3. **The neighbouring test `test_the_expensive_kernel_really_is_the_expensive_part`
-   passed throughout and was never wrong.** It measures cost *inside the flow*;
-   the runaway cost was in the harness outside it. A correct test whose scope
-   stops short of the problem reads exactly like a clean bill of health.
+### Reading is the hard part, and the front is closed in a specific way
 
-Four hypotheses died before the real cause was found — `budget_ns` not binding
-(it binds, to the millisecond), grounding unbounded (it is unbounded, but fast),
-`SCALE=100`'s weights (innocent). All wrong the same way: **looking inside the
-system for a cost that was in the harness.**
+- Measured the same way, **flood puts reader loss at 0.500 and scheduling at
+  0.000**. One domain where reading is the whole cost, one where solving is.
+- **`read_signature`'s 1.000 was hard-coded paragraph indices** (`pi == 0..3`).
+  Section headings are worth **nothing**; paragraph *order* was worth
+  everything; paragraph **co-occurrence** replaces it at no cost.
+- **Structure is load-bearing exactly where a sentence's signature does not fix
+  its predicate** — confirmed by manipulation, not just correlation: renaming
+  flood's regions so the prefix carries the role moves interleaved accuracy
+  0.000 → 1.000 with everything else identical.
+- The residual (depot vs flooded) is **closed to content-free reading**:
+  rank-normalised observation → role is not even a function (21/21 role-slots
+  ambiguous). **Content is required**, and that is measured rather than assumed.
+- **A thesaurus is worse than no words.** WordNet expansion (17 → 1,324 tokens)
+  recovers −0.029 and costs −0.265. Precision dominates coverage for a component
+  feeding a symbolic pipeline.
 
----
+### The soundness apparatus, and what each piece actually certifies
+
+- **`ungrounded` certifies internal consistency with the world *as read*, not
+  truth.** Demonstrated: a case whose true answer is empty renders as *"truck_0
+  runs region_0 to region_3"* — a road in no claim — and returns `[]`. It cannot,
+  by construction, catch reader errors.
+- **`symbolic_ai_generators/flood/certificate.py`** proves the answer insensitive
+  to a spurious link in one DFS rather than sixteen solves, and is **tight**
+  (0 conservative, 0 incomplete over 196 cases). Prefer
+  `certifies_role_independent`: the collapsed form **reads the roles**, so it
+  inherits their errors and needs the role flag as a precondition.
+- On the honest surface (interleaved, `hard_distractors=True`): answering
+  everything gives **0.679**; the role-independent certificate gives **0 wrong at
+  48.8% coverage**. That 48.8% is what the task allows, not what the check
+  misses.
+
+### Method lessons that cost real time
+
+- **State the bound, not the number.** Zero failures in 34 cases excludes only
+  8.8%; in 400, 0.75%. Both print as `1.000`. Re-running the claimed-exact
+  findings at 400 seeds broke one of three.
+- **A check that reads part of the world inherits that part's errors.** Produced
+  three times independently — `ungrounded`, the certificate, and the role flag.
+- **The margin that makes a component look sound is the same margin that hides
+  its unsoundness.** `capacity_gate` compared summed floats and refused
+  schedules that provably exist, on 4 of 30 instances at exact fit.
+- **The risk is summation, not floating point.** Sum-vs-threshold needs exact
+  arithmetic (solvency flipped 39/200 at constructed exact fit); one quantity vs
+  one posted limit does not (flood, 0/3000).
+
+### Numbers in older notes that are now wrong
+
+- `capacity_gate` removing **87.7% of solver time "at zero accuracy cost"** — the
+  saving is real and was measured where margins are comfortable; the gate was
+  **unsound at exact fit** until fixed. Re-read, do not re-quote.
+- The **solvency reader** used *largest filing* where the rule is *latest*: wrong
+  on **9/400** cases, reported as 1.000 on 60 seeds. Fixed; now 0/400.
+- **flood `signature+content` is 0.988, not 1.000**, interleaved at V=4.
+- **The insensitivity certificate alone is 0.9786, not 1.000**, on the
+  hard-distractor surface.
 
 ## 1. Where the live edge is
 
