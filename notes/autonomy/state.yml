@@ -40,6 +40,39 @@ measured:
     because the atom rule that keeps a pronoun with its antecedent -- required
     for the document to stay true -- preserves the demand binding; a property of
     the task, not a leak.
+  - WORDNET SUPPLIES THE SEMANTICS; THE ANCESTOR'S DEPTH DECIDES EVERYTHING.
+    Attacked the day's floor (the UNCUED stale sentence) with the resource on
+    disk. SHIPPED symbolic_ai_generators/wordnet.py -- reads the distributed
+    archive with the standard library only, no new dependency. First external
+    standard used here as a given.
+    (1) SUPERSENSES CANNOT SEPARATE transition from state: they classify by
+    SUBJECT MATTER not aspect, so `cease`=verb.stative and `divest`=
+    verb.possession, exactly like `own`. The union is worse -- `left` carries
+    stative among six classes.
+    (2) HYPERNYM CLOSURE CAN, and the design set lies:
+        root set                     design   HELD-OUT   FP
+        all 8                          0.86       0.42  0.08
+        deep 6 (no change, transfer)   0.64       0.33  0.00
+    Roots chosen against a FIFTEEN-verb negative class, inflating recall ~2x.
+    (3) SENTENCE LEVEL, 10,650 real abstract sentences: all-8 fires 0.522,
+    deep-6 0.058, against 0.003 for the cancellation gate. Token fires per root:
+    change 6,899, transfer 2,191, then a CLIFF -- leave 315, end 271, remove 91,
+    exit 12, deprive 5. TWO SHALLOW ANCESTORS ARE 95% OF THE FIRING.
+    A nominal filter moves 0.522 -> 0.426 and 0.058 -> 0.045, so PART OF SPEECH
+    IS NOT THE DOMINANT PROBLEM -- DEPTH IS. Corrects my own framing from an hour
+    earlier.
+    (4) END TO END on solvency: lifts the uncued floor 0.485 -> 0.635 (the FIRST
+    thing all day that moves that arm by READING) and DESTROYS the clean surface
+    1.000 -> 0.650 on ONE WORD -- `dated`, a participial modifier in every filing
+    sentence whose first WordNet sense is the romantic one and whose chain
+    reaches `leave`.
+    (5) THE FALLBACK WAS PREDICTED TO FAIL BEFORE THE RUN: flag-rather-than-delete
+    plus emission cannot work on an AGGREGATING decision, which is what the
+    two-responses decision note says. stale_by_verb kept and MARKED, not shipped.
+    LESSON WRITTEN: a feature picked against a hand-listed negative class. Measure
+    a candidate feature's firing rate on a large UNLABELLED population before
+    adopting it -- it needs no labels, and 10,650 sentences said what fifteen
+    hand-picked verbs could not.
   - ENTROPY WAS THE WRONG STATISTIC AND THE NUMBERS SAID SO. Asked how much a
     sentence signature tells you about English nobody here wrote, reached for
     entropy because it needs no labels:
