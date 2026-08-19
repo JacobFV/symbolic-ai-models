@@ -1097,7 +1097,36 @@ was.**
 **Consequence for the contract in §7 item 2.** *"Return a witness where your
 answer has one, a minimal dependency where you can derive one"* should now read
 **"and the slack your answer has, which you already computed"**. That third
-clause is worth 10.1× on the one class here that has any, and costs one integer.
+clause is worth 10.1× on the one class here that has any.
+
+**CORRECTION, same day: "costs one integer" understated it, and the 25× answered
+a narrower question than it looked like.**
+`notes/findings/2026-08-18-the-derived-margin-is-the-first-arm-above-1x-...md`
+priced *revalidation*, which the row above left out of both arms. The delta pass
+costs **6,634 ns/key** against the digest pass's **853 ns** — **7.8× dearer** —
+so the net maintenance advantage is a curve in **queries per key**:
+
+| queries per key | 1 | 20 | 50 | 200 | **∞** |
+|---|---:|---:|---:|---:|---:|
+| read set | 0.25× | 0.91× | 0.99× | 1.04× | **1.05×** |
+| **derived, delta supplied** | 0.04× | 0.65× | 1.22× | 2.16× | **2.91×** |
+| derived, delta **recomputed** | 0.05× | 0.05× | 0.05× | 0.05× | **0.05×** |
+
+- Overtakes the read set at **34.3 queries per key**; exceeds 1.0× at **36.4**.
+- **Recomputing its own diffs is a 20× LOSS** — the XOR costs 5,911 ns against a
+  277.5 ns recompute.
+- Per *quality point bought by aiming*, 25× stands. Per *dollar of maintenance*
+  it is 2.91× at best.
+
+> **What survives is bigger than what was corrected: the derived margin is the
+> first arm in this whole certificate programme to exceed 1.0× on a real corpus
+> update.** §3b's read-set rows were 0.3×, 0.3×, 0.6×, 1.0×; the read-set ceiling
+> measured here is 1.05×; the margin reaches **2.91×**.
+
+The condition is a statement about the **workload**: the delta must come from the
+update stream (§3b's own margin arm assumed this silently, via a precomputed
+`delta_size`) and each key must be read ~36 times. A one-pass analysis does not
+meet it; a service that re-serves answers meets it easily.
 
 ## 4. Believed, not measured. Do not inherit as fact.
 

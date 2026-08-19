@@ -94,6 +94,32 @@ landing near the hand-built margin's 6.38%, recovering ~10× and leaving ~8× on
 the table; holder_count unchanged."* Measured: **6.16%, recovers 10.1×, leaves
 7.9×, holder_count unchanged exactly.** The closest prediction of the session.
 
+## AMENDMENT: the 25× omitted revalidation cost, and the condition it hides
+
+`notes/findings/2026-08-18-the-derived-margin-is-the-first-arm-above-1x-...md`.
+The **$/quality-point** comparison above priced *recompute* for both arms and
+left *revalidation* out of both. The two arms do not revalidate alike: a read-set
+check is one digest comparison; the derived check is a symmetric difference. And
+the pass that produces the delta costs **6,634 ns per key** against the digest
+pass's **853 ns** — **7.8× dearer**.
+
+Net maintenance advantage, as a function of **queries per key**:
+
+| queries per key | 1 | 20 | 50 | 200 | **∞** |
+|---|---:|---:|---:|---:|---:|
+| read set | 0.25× | 0.91× | 0.99× | 1.04× | **1.05×** |
+| **derived, delta supplied** | 0.04× | 0.65× | 1.22× | 2.16× | **2.91×** |
+| derived, delta recomputed | 0.05× | 0.05× | 0.05× | 0.05× | **0.05×** |
+
+> Per *quality point bought by aiming*, 25× stands. Per *dollar of maintenance*,
+> it is **2.91× at best, 1.0× at 36.4 queries per key, and 0.05× if the delta is
+> not supplied**. "One extra number per answer" understated the cost.
+
+**What survives is larger than what was corrected:** the derived margin is the
+**first arm in the certificate programme to exceed 1.0×** on a real corpus
+update — §3b's read-set rows were 0.3×, 0.3×, 0.6×, 1.0×, and the read-set
+ceiling here is 1.05×.
+
 ## What would refute it
 
 - **One threshold on one corpus update.** The margin's value depends on how far

@@ -268,7 +268,33 @@ last_cycle:
     repo now say the cheap half of a problem is the useful half.
 
 next:
-  preferred_action: extend-derived-sensitivity-past-counts-and-thresholds
+  preferred_action: make-the-delta-a-by-product-of-the-update-not-a-pass
+  why_now: >
+    The derived margin is the first arm in the certificate programme to exceed
+    1.0x on a real corpus update -- ceiling 2.91x against the read set's 1.05x --
+    but only above 36.4 queries per key, and it is a 20x LOSS (0.05x) if the
+    delta must be recomputed per query. The whole crossover is set by ONE
+    quantity: the delta pass costs 6,634ns/key against the digest pass's 853ns,
+    7.8x dearer.
+
+    And that pass should not exist. A corpus update IS a set of adds and removes;
+    |old XOR new| is its by-product, not something to be recovered by diffing two
+    snapshots after the fact. Removing the 6,634ns pushes the crossover from 36.4
+    queries per key toward ~1, which is the difference between a mechanism that
+    needs a service workload and one that pays on any workload at all.
+  what_that_needs: >
+    An update representation -- adds and removes per key -- rather than two
+    snapshots. symbolic_ai_core/runtime/certificate.py has changed_keys(old,new),
+    which is exactly the after-the-fact diff being charged for. The increment is
+    a Delta type that an ingest path produces directly and revalidate_sensitive
+    consumes, with the snapshot-diff kept as the fallback that prices itself
+    honestly.
+  do_not: >
+    Do not quote the 25x per-quality-point figure without the queries-per-key
+    condition beside it. And do not extend Counted to more operators before this:
+    more query shapes with slack are worth nothing while the pass that consumes
+    the slack costs more than it saves.
+  previous_preferred_action: extend-derived-sensitivity-past-counts-and-thresholds
   why_now: >
     Answered, and BUILT. The stability margin 3b called "the rung the recording
     mechanism cannot produce" is derivable from the numeric intermediate the
