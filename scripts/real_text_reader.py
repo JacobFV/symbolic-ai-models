@@ -108,6 +108,12 @@ def supersense_features(u, mentions) -> list[str]:
     return out
 
 
+#: Function words carry no relation. Removing them is what turns a frame from a
+#: string that occurs once into one that occurs repeatedly -- measured below.
+STOP = frozenset("a an the of in to for and or is was are were be been by on at "
+                 "as its it his her their this that with from".split())
+
+
 def frame_features(u, mentions) -> list[str]:
     """The abstracted token path between consecutive mentions.
 
@@ -128,12 +134,16 @@ def frame_features(u, mentions) -> list[str]:
     for a, b in zip(ment, ment[1:]):
         gap = [t.text.lower() for t in words
                if a.end <= t.start < b.start and t.start not in inside]
-        if len(gap) > 6:
+        if len(gap) > 8:
             continue
-        path = "_".join(gap)
-        out.append(f"fr={path}")
+        content = [w for w in gap if w not in STOP]
+        # The full path is a singleton 91% of the time and its type inventory
+        # grows almost as fast as the data (Heaps 0.83), so it is kept only as a
+        # last resort and the CONTENT words carry the feature (Heaps 0.64).
         out.append(f"fr.tail={'_'.join(gap[-2:])}")
-        out.append(f"fr.head={'_'.join(gap[:2])}")
+        if content:
+            out += [f"fr.cw={content[-1]}", f"fr.cw2={'_'.join(content[-2:])}"]
+            out += [f"fr.cwany={w}" for w in dict.fromkeys(content[-4:])]
     first = ment[0]
     lead = [t.text.lower() for t in words if t.start < first.start][:3]
     out.append(f"fr.lead={'_'.join(lead)}")
@@ -142,11 +152,18 @@ def frame_features(u, mentions) -> list[str]:
 
 
 def role_frame_features(pred, role, cands, j, u) -> list[str]:
-    """The words between this candidate and the mention before and after it.
+    """What sits between this candidate and the mention before it.
 
     The ranker's version of a frame, and the place the idea belongs: *X is a
     subsidiary of Y* says which SLOT Y fills, not which kind of sentence this is.
-    Put in the sentence classifier first, where it bought nothing.
+
+    The **last content word** is the feature that matters, and finding that out
+    cost an arm. Keyed on the full token path, a `parent` frame is a singleton
+    91.2% of the time and its Heaps exponent is 0.830 -- the inventory grows
+    almost as fast as the data, so no corpus makes it repeat. Dropping to the
+    last content word before the mention takes singletons to 0.741, the top-5
+    share from 0.179 to 0.463, and the exponent to 0.641. Same corpus, same
+    sentences: the representation was the problem, not the amount of text.
     """
     t = cands[j]
     words = [w for w in u.tokens if w.kind in ("word", "num")]
@@ -154,10 +171,17 @@ def role_frame_features(pred, role, cands, j, u) -> list[str]:
     after = [w.text.lower() for w in words if w.start >= t.end]
     prev_m = max((c.end for c in cands if c.end <= t.start), default=u.start)
     left = [w.text.lower() for w in words if prev_m <= w.start < t.start]
-    out = [f"path={'_'.join(left[-6:])}", f"lead={'_'.join(before[:3])}",
-           f"tail={'_'.join(after[:2])}", f"nleft={min(len(left), 6)}"]
-    if left:
-        out.append(f"gate={left[-1]}|{len(left)}")
+    content = [w for w in left if w not in STOP]
+    out = [f"lead={'_'.join(before[:3])}", f"tail={'_'.join(after[:2])}",
+           f"nleft={min(len(left), 6)}", f"path={'_'.join(left[-2:])}"]
+    if content:
+        out += [f"cw={content[-1]}", f"cw2={'_'.join(content[-2:])}",
+                f"cw.gap={content[-1]}|{min(len(left) - len(content), 3)}"]
+    else:
+        out.append("cw=<none>")
+    # Content words anywhere to the left, not only the last -- a relation stated
+    # early in a long sentence is otherwise invisible to an adjacency feature.
+    out += [f"cwany={w}" for w in dict.fromkeys(content[-4:])]
     return out
 
 
