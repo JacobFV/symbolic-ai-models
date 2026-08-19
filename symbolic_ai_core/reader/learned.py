@@ -410,6 +410,37 @@ def _role_features(pred: str, role: str, cands: Sequence[Token],
     return feats
 
 
+def char_features(u: Unit, ments: Sequence[Token], n: tuple[int, ...] = (3, 4)
+                  ) -> list[str]:
+    """Character n-grams of the abstracted sentence. No word is ever a feature.
+
+    Built so an error-correlation test can have a third arm that shares this
+    module's mention proposer and its supervision and **nothing lexical**. Names,
+    numbers and dates are replaced by single sentinel characters first, so the
+    n-grams describe the shape of the sentence around its mentions rather than
+    the vocabulary in it.
+    """
+    inside = {i for m in ments for i in range(m.start, m.end)}
+    starts = {m.start for m in ments}
+    out: list[str] = []
+    for t in u.tokens:
+        if t.start in starts:
+            out.append("\x01")
+        elif t.start in inside:
+            continue
+        elif t.kind == "num":
+            out.append("\x02")
+        elif t.kind == "date":
+            out.append("\x03")
+        else:
+            out.append(t.text.lower())
+    text = " ".join(out)
+    feats = [f"#E={min(len(ments), 4)}"]
+    for k in n:
+        feats += [f"c{k}={text[i:i + k]}" for i in range(len(text) - k + 1)]
+    return feats
+
+
 class _Ranker:
     """A binary-scored ranker: one weight vector, argmax over candidates."""
 
@@ -593,8 +624,8 @@ class LearnedSpanReader:
     def __init__(self, id: str = "learned.span@1", *, epochs: int = 8,
                  weights: Mapping[str, float] | None = None,
                  mentions: Any = None, extra_features: Any = None,
-                 extra_role_features: Any = None, model: str = "perceptron"
-                 ) -> None:
+                 extra_role_features: Any = None, model: str = "perceptron",
+                 base_features: bool = True) -> None:
         """``weights`` maps a predicate to its downstream sensitivity.
 
         Measured by intervention, not by correlation --
@@ -623,6 +654,13 @@ class LearnedSpanReader:
         #: importing one. A corpus too small to learn that `subsidiary`,
         #: `division` and `unit` behave alike can be handed the fact.
         self.extra = extra_features
+        #: When False the built-in word n-grams are suppressed and only
+        #: ``extra_features`` is used. The point is to be able to build a reader
+        #: that shares this one's mention proposer and supervision and **not a
+        #: single lexical feature** -- which is what an error-correlation test
+        #: needs as a third arm, and cannot get from two variants that differ
+        #: only in their classifier.
+        self.base_features = base_features
         #: ``(pred, role, candidates, j, unit) -> [feature]``. The ranker's own
         #: hook. A relation stated as *X is a subsidiary of Y* is a fact about
         #: which SLOT Y fills, so the words between two mentions belong here and
@@ -791,7 +829,7 @@ class LearnedSpanReader:
     def features(self, u: Unit) -> list[str]:
         """Every feature of one unit, including whatever a resource adds."""
         found = self.mentions.find(u)
-        feats = _unit_features(u, found)
+        feats = _unit_features(u, found) if self.base_features else ["bias"]
         if self.extra is not None:
             feats = feats + list(self.extra(u, found))
         return feats
@@ -885,7 +923,8 @@ class LearnedSpanReader:
                 mentions.append(Mention(t.start, t.end, t.text,
                                         entities=(t.text,), belief=(1.0,)))
                 here.append(t.text)
-            feats = _unit_features(u, found)
+            feats = (_unit_features(u, found) if self.base_features
+                     else ["bias"])
             if self.extra is not None:
                 feats = feats + list(self.extra(u, found))
             pred, margin = self.clf.predict(feats)

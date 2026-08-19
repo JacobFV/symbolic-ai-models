@@ -28,7 +28,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 
-from symbolic_ai_core.reader.learned import CapitalisedMentions, LearnedSpanReader
+from symbolic_ai_core.reader.learned import (CapitalisedMentions,
+                                             LearnedSpanReader, char_features)
 from symbolic_ai_core.world import EntityRef
 
 import scripts.real_text_reader as R
@@ -54,6 +55,23 @@ FOLDS = 4
 #: should be present, and the "patterns clump" story becomes "readers whose
 #: success depends on an inherited entity property clump".
 FAME = "fame"
+#: The third arm the queue asked for: same mention proposer, same distant
+#: supervision, and NOT ONE LEXICAL FEATURE -- character n-grams of the sentence
+#: with names, numbers and dates replaced by sentinels, at the classifier and at
+#: the ranker. If it clumps, the hand/learned split is not about being learned.
+CHAR = "char"
+
+
+def char_role_features(pred, role, cands, j, u):
+    """The ranker's character view: n-grams of the gap before the candidate."""
+    t = cands[j]
+    words = [w for w in u.tokens if w.kind in ("word", "num")]
+    prev = max((c.end for c in cands if c.end <= t.start), default=u.start)
+    gap = " ".join(w.text.lower() for w in words if prev <= w.start < t.start)
+    out = [f"idx={j}", f"n={len(cands)}", f"len={min(len(gap), 40) // 5}"]
+    for k in (3, 4):
+        out += [f"g{k}={gap[i:i + k]}" for i in range(len(gap) - k + 1)][-12:]
+    return out
 RELATIONS = {"parent": (read_parent, "current"),
              "country": (read_country, "country"),
              "headquarters": (read_hq, "headquarters")}
@@ -117,7 +135,31 @@ def main() -> None:
                             b = (res.confidence_of(i), v.id)
                 read.setdefault(d["qid"], {})[f"learned:{rel}"] = (
                     b[1] if b else None)
+    char_reader_read: dict[str, dict[str, str | None]] = {}
+    for fold in range(FOLDS):
+        te = [d for i, d in enumerate(docs) if i % FOLDS == fold]
+        tr = [d for i, d in enumerate(docs) if i % FOLDS != fold]
+        cr = LearnedSpanReader(
+            mentions=CapitalisedMentions(), base_features=False,
+            extra_features=char_features,
+            extra_role_features=char_role_features).fit(
+            [R.supervise_distant(d) for d in tr])
+        for d in te:
+            res = cr.run(d["intro"], query=d.get("title", ""))
+            for rel in RELATIONS:
+                b = None
+                for i, c in enumerate(res.claims):
+                    v = c.roles.get("value")
+                    if c.predicate == rel and isinstance(v, EntityRef):
+                        if b is None or res.confidence_of(i) > b[0]:
+                            b = (res.confidence_of(i), v.id)
+                char_reader_read.setdefault(d["qid"], {})[rel] = (
+                    b[1] if b else None)
+
     for d in docs:
+        for rel in RELATIONS:
+            read.setdefault(d["qid"], {})[f"{CHAR}:{rel}"] = (
+                char_reader_read.get(d["qid"], {}).get(rel))
         for rel, (fn, _) in RELATIONS.items():
             read.setdefault(d["qid"], {})[f"hand:{rel}"] = fn(d["intro"])
             # The fame reader names one entity per article, so it answers every
@@ -138,7 +180,7 @@ def main() -> None:
           f"{'| child bad':>13}{'odds':>7}{'chi2 p':>9}{'n both':>8}")
     out = {}
     for rel in RELATIONS:
-      for arm in ("learned", "hand", FAME):
+      for arm in ("learned", "hand", CHAR):
         a = b = c = d = 0
         for q, p in pairs:
             ci, pi = ok(arm, rel, q), ok(arm, rel, p)
