@@ -31,11 +31,18 @@ from symbolic_ai_generators.scheduling.world import generate
 
 OUT = Path("runs/where_the_gate_fires.json")
 BUDGET_NS = 3_000_000_000
-#: 0.0 exactly is deliberately absent. There the oracle's capacity bound is
-#: tight and generating one case costs 1.6s at 30 jobs; +/-0.005 is the same
-#: regime and four orders cheaper. See ``feasible_by_search``.
-SLACKS = (-0.20, -0.08, -0.03, -0.005, 0.005, 0.03, 0.08, 0.20)
-SHAPES = ((20, 3), (30, 4), (40, 5))
+#: How close to the boundary this can go is set by the **oracle**, not the
+#: kernel. Near-exact fit is where ``feasible_by_search``'s capacity bound stops
+#: pruning, and the affordable neighbourhood shrinks with size: +/-0.005 costs
+#: 0.0002s per case at 30 jobs and stalls the run at 40. +/-0.03 is affordable
+#: at every shape here and still straddles the peak, which at 20 jobs is -0.03.
+SLACKS = (-0.20, -0.08, -0.03, 0.03, 0.08, 0.20)
+#: 40 jobs / 5 machines is **absent because the oracle cannot reach it**, not
+#: because the kernel cannot. clingo is budget-capped at 3s, so ten seeds cost at
+#: most 30s; ``generate`` alone ran for minutes per slack there. Even after the
+#: 2.7-million-fold speedup of 2026-08-19, the ground truth -- not the system
+#: under test -- is what still sets how large this domain can be measured.
+SHAPES = ((20, 3), (30, 4))
 SEEDS = 10
 
 
