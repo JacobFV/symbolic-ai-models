@@ -98,12 +98,12 @@ def generate(seed: int, *, n_jobs: int = 6, n_machines: int = 3,
               "n_assignments": len(machines) ** len(jobs)})
 
 
-def feasible_by_search(jobs, machines) -> bool:
-    """Exhaustive. 3^6 = 729 assignments, so exact rather than heuristic.
+def feasible_by_brute_force(jobs, machines) -> bool:
+    """The specification: every assignment, checked. ``n_machines ** n_jobs``.
 
-    Shares no code with the ASP projection or the kernel; a heuristic oracle that
-    occasionally missed a feasible packing would be indistinguishable from a
-    kernel bug, which is the failure this is guarding against.
+    Kept because it is obviously correct and nothing else here is. It is the
+    reference ``feasible_by_search`` is tested against, and it is far too slow to
+    call from ``generate`` -- see that function for what this cost 
     """
     names = sorted(jobs)
     ms = sorted(machines)
@@ -117,6 +117,74 @@ def feasible_by_search(jobs, machines) -> bool:
         if all(load[m] <= machines[m][0] + 1e-9 for m in load):
             return True
     return False
+
+
+def feasible_by_search(jobs, machines) -> bool:
+    """Exact, and pruned so the oracle is not the most expensive thing here.
+
+    Shares no code with the ASP projection or the kernel; a heuristic oracle that
+    occasionally missed a feasible packing would be indistinguishable from a
+    kernel bug, which is the failure this is guarding against. So the pruning
+    below is **exact** -- every branch it cuts is one that provably cannot
+    complete -- and ``test_scheduling_oracle.py`` holds it against
+    ``feasible_by_brute_force`` on instances small enough to enumerate.
+
+    This replaced the brute force because the brute force *was* the cost of this
+    domain. It enumerates ``n_machines ** n_jobs`` and only returns early when it
+    finds a packing, so **infeasible** instances -- exactly the ones a negative
+    slack is built to produce -- pay the full price. Measured before the change,
+    at 3 machines: 53.1s on one 18-job instance and 5.1s on a 22-job one, against
+    single-digit **milliseconds** for the ASP kernel on the same worlds. The
+    ground truth cost four orders of magnitude more than the system it exists to
+    check, and it, not the solver, is what had capped this domain at toy sizes.
+
+    Three cuts, in descending order of what they save:
+
+    - **The remaining-capacity bound.** If the jobs still to place need more
+      hours than the machines still have, no completion exists. This is
+      ``capacity_gate``'s argument applied at every node rather than only at the
+      root, and it is what makes infeasible instances cheap.
+    - **Symmetry.** Two machines with the same remaining capacity and the same
+      capabilities generate isomorphic subtrees, so only one is tried.
+    - **Hardest first.** Longest jobs are placed first, which fails fast rather
+      than deep.
+    """
+    names = sorted(jobs, key=lambda j: (-jobs[j][0], j))   # hardest first
+    ms = sorted(machines)
+    allowed = {j: [m for m in ms if jobs[j][1] in machines[m][1]] for j in names}
+    if any(not v for v in allowed.values()):
+        return False
+
+    # suffix[i] is the demand of names[i:], for the remaining-capacity bound.
+    suffix = [0.0] * (len(names) + 1)
+    for i in range(len(names) - 1, -1, -1):
+        suffix[i] = suffix[i + 1] + jobs[names[i]][0]
+
+    remaining = {m: machines[m][0] for m in ms}
+
+    def place(i: int, spare: float) -> bool:
+        if i == len(names):
+            return True
+        if suffix[i] > spare + 1e-9:
+            return False
+        job = names[i]
+        duration = jobs[job][0]
+        tried: set[tuple[float, tuple[str, ...]]] = set()
+        for m in allowed[job]:
+            if remaining[m] + 1e-9 < duration:
+                continue
+            key = (round(remaining[m], 6), machines[m][1])
+            if key in tried:
+                continue
+            tried.add(key)
+            remaining[m] -= duration
+            if place(i + 1, spare - duration):
+                remaining[m] += duration
+                return True
+            remaining[m] += duration
+        return False
+
+    return place(0, sum(remaining.values()))
 
 
 def corrupt(case: SchedulingCase, *, seed: int, rate: float,

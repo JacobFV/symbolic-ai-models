@@ -46,15 +46,31 @@ def test_asp_agrees_with_the_exhaustive_oracle():
 
 def test_the_oracle_is_exhaustive_rather_than_heuristic():
     """A heuristic that occasionally missed a feasible packing would be
-    indistinguishable from a kernel bug."""
+    indistinguishable from a kernel bug.
+
+    This used to assert ``"itertools.product" in src``, which pinned the
+    *implementation* as the evidence for the property. That made the oracle
+    unimprovable: replacing the brute force with a pruned exact search -- which
+    strengthens nothing about correctness and cost 2.7 million x less -- failed a
+    test whose subject was correctness. Exhaustiveness is behaviour, so it is
+    checked as behaviour, against the brute force kept for the purpose.
+
+    Independence from the kernel is genuinely a property of the source, so that
+    half stays where it was.
+    """
     import inspect
 
     from symbolic_ai_generators.scheduling import world as W
 
-    src = inspect.getsource(W.feasible_by_search)
-    assert "itertools.product" in src
-    for forbidden in ("clingo", "get_kernel", "build_program", "asp@1"):
-        assert forbidden not in src
+    for seed in range(40):
+        c = generate(seed, n_jobs=6, slack=0.15)
+        assert W.feasible_by_search(c.jobs, c.machines) == \
+            W.feasible_by_brute_force(c.jobs, c.machines), c.seed
+
+    for fn in (W.feasible_by_search, W.feasible_by_brute_force):
+        src = inspect.getsource(fn)
+        for forbidden in ("clingo", "get_kernel", "build_program", "asp@1"):
+            assert forbidden not in src, (fn.__name__, forbidden)
 
 
 def test_the_expensive_kernel_really_is_the_expensive_part():
