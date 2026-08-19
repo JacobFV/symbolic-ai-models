@@ -112,6 +112,48 @@ class GeoGazetteer:
                                                     norm(l.get("cc") or ""))
                                           if v}
 
+    def phrase_match(self, phrase: str) -> set[str]:
+        """Registry names contained in the WHOLE string, longest first.
+
+        Component matching fails in a way the silent tier made visible: ROR's
+        canonical name for Purdue's main campus is "Purdue University West
+        Lafayette", the affiliation component is "Purdue University", and
+        `_contained` asks whether the registry name's tokens are a subset of the
+        *component's* — which they are not, because the city that completes the
+        name sits three components later in the same string. Matching against
+        the whole phrase asks the question the other way round and recovers
+        35.9% of the silent tier.
+        """
+        toks = set(phrase.split())
+        # Candidates come through the rarest token that ANY registry name
+        # contains. Picking the rarest token outright -- which the component
+        # version does -- lands on a postcode or a street number in a long
+        # address, `by_token` has no entry for it, and the lookup returns
+        # nothing. That alone left 188 of the 287 recoverable silent strings
+        # still silent after the first attempt at this fix.
+        known = [t for t in toks if t in self.by_token]
+        if not known:
+            return set()
+        # Candidates through the K RAREST known tokens, not one. Going through a
+        # single token requires the gold name to contain THAT token, and it
+        # usually does not: the rarest known token in "Departments of
+        # Epidemiology and Biostatistics, University of California, San
+        # Francisco" is "departments", while the answer is "university of
+        # california san francisco". Measured: that alone accounted for 28.2% of
+        # the strings still falling silent after the phrase fallback was added.
+        known.sort(key=lambda t: len(self.by_token[t]))
+        best: tuple[int, set[str]] = (0, set())
+        seen: set[str] = set()
+        for t in known[:8]:
+            for name in self.by_token[t]:
+                if name in seen:
+                    continue
+                seen.add(name)
+                nt = self._name_tokens[name]
+                if len(nt) >= 2 and nt <= toks and len(nt) > best[0]:
+                    best = (len(nt), set(self.by_name[name]))
+        return best[1]
+
     # -- the NAME view ---------------------------------------------------
     def propose(self, raw: str) -> list[set[str]]:
         """One candidate set per component. Ambiguity is KEPT, not discarded.
@@ -131,6 +173,13 @@ class GeoGazetteer:
                 hits = self.by_acronym.get(c0, set())
             if hits:
                 out.append(set(hits))
+        if not out:
+            # Nothing matched component-wise. Before falling silent -- which is
+            # the tier that sets `f`, and therefore the price -- ask the whole
+            # string.
+            whole = self.phrase_match(norm(raw))
+            if whole:
+                out.append(whole)
         return out
 
     # The three the earlier rungs call. GeoGazetteer builds the same indexes as

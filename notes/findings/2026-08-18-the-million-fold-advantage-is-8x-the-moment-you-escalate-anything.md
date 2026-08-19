@@ -101,6 +101,63 @@ the repo — after the witness/complement axis sitting in `notes/findings/`, and
 the accuracy-above-floor convention sitting in this very file. The lesson note
 covering it now has two instances; this is the third.
 
+## Shrinking `f`, and what it is worth at fixed quality
+
+The finding above names `f` as the lever, so the obvious next move is to shrink
+it. The silent tier — strings where nothing in the registry matched — was
+diagnosed against the gold institution's own registry names:
+
+| why a silent string stayed silent | share |
+|---|---:|
+| **gold name genuinely absent from the string** | **68.7%** |
+| loses the longest-match race via one rare token | 28.2% |
+| gold name is a single token | 2.1% |
+| normalisation (`1Georgetown University`) | 1.0% |
+
+Two fixes followed, both mechanical:
+
+- **Match registry names against the whole phrase, not comma-separated
+  components.** ROR's canonical name is *"Purdue University West Lafayette"*, the
+  affiliation component is *"Purdue University"*, and containment was being asked
+  in the wrong direction — the city that completes the name sits three components
+  later in the same string.
+- **Gather candidates through the K rarest *known* tokens, not one.** The single
+  rarest token in a long address is a postcode no registry name contains, so the
+  lookup returned nothing. That alone accounted for 28.2% of what remained.
+
+**Silent tier 12.3% → 5.7%. Symbolic-only quality 0.527 → 0.565.**
+
+And now the comparison that matters, because reading a new headline number
+against an old one at a *different operating point* is this repo's oldest trap:
+
+| quality target | advantage before | advantage after | **gain** |
+|---:|---:|---:|---:|
+| 0.60 | 13.6× | **28.7×** | **2.11×** |
+| 0.65 | 8.1× | 8.7× | 1.08× |
+| 0.70 | 4.4× | 4.6× | 1.05× |
+| 0.75 | 3.0× | 3.1× | 1.03× |
+| **0.85** | **1.8×** | **1.8×** | **0.98×** |
+| 0.95 | 1.2× | 1.2× | 1.00× |
+
+> **Improving the cheap layer doubles the advantage at low quality, buys 3–8% in
+> the middle, and buys nothing at deployable quality.** Once most of the work
+> escalates, the extractor's accuracy is irrelevant to the price. The symbolic
+> layer's quality matters exactly where nobody would ship it.
+
+That is the honest state of the bet: **1.8× at 0.85 quality, and no amount of
+work on the extractor moves it.** The lever that would is the *escalation cost* —
+a smaller model, a retrieval step, anything that makes the expensive half less
+expensive — not the cheap half's accuracy.
+
+### A near miss, recorded
+
+I first computed that table from hand-transcribed tier shares that summed to
+**0.954** instead of 1.0, and it reported that the improvements made things
+*worse* at every target above 0.60. That is a counterintuitive result with a
+plausible mechanism, which is exactly the kind this repo publishes — and I nearly
+did. It was caught by checking that the shares summed to one. **Read the numbers
+from the run file, not from the terminal.**
+
 ## What would refute it
 
 - **The model is assumed perfect on escalated cases.** If it scores 0.9 rather

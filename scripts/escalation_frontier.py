@@ -152,9 +152,49 @@ def main() -> None:
               f"=> {gain/r['f']:.2f} quality per unit escalated, "
               f"advantage {r['advantage']:.1f}x")
 
+    # --- the only fair comparison: advantage AT FIXED QUALITY.
+    #
+    # Reading "17.7x" against an earlier "8.1x" is this repo's oldest trap in a
+    # new place: those are different operating points. A better extractor moves
+    # the whole frontier, and the way to say by how much is to fix the quality
+    # and read off the price. Escalation order is silent first (1.00 quality per
+    # unit), then ambiguous (0.49), then certain -- best-value first, which is
+    # what any real policy would do.
+    order = [("silent", stats["silent"]), ("ambiguous", stats["ambiguous"]),
+             ("certain", stats["certain"])]
+    curve = []
+    f = 0.0
+    q = sum(t["share"] * t["f1"] for t in stats.values())
+    curve.append((0.0, q))
+    for _, t in order:
+        f += t["share"]
+        q += t["share"] * (1.0 - t["f1"])
+        curve.append((f, q))
+
+    def advantage_at(target: float) -> tuple[float, float]:
+        """Interpolate the frontier to a quality target; return (f, advantage)."""
+        for (f0, q0), (f1, q1) in zip(curve, curve[1:]):
+            if q0 <= target <= q1:
+                w = 0.0 if q1 == q0 else (target - q0) / (q1 - q0)
+                ff = f0 + w * (f1 - f0)
+                usd = ff * MODEL_USD + (1 - ff) * OURS_USD
+                return ff, (MODEL_USD / usd if usd else float("inf"))
+        return 1.0, 1.0
+
+    print("\nadvantage AT FIXED QUALITY — the only comparison that is fair "
+          "across extractors")
+    print(f"  {'quality target':<16} {'f needed':>10} {'advantage':>12}")
+    fixed = {}
+    for target in (0.65, 0.75, 0.85, 0.95):
+        ff, adv = advantage_at(target)
+        fixed[target] = {"f": ff, "advantage": adv}
+        print(f"  {target:<16.2f} {ff:>9.1%} {adv:>11.1f}x")
+
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(json.dumps({"seed": SEED, "n_unseen": n, "tiers": stats,
                                "policies": rows_out,
+                               "frontier_curve": curve,
+                               "advantage_at_fixed_quality": fixed,
                                "model_usd": MODEL_USD, "ours_usd": OURS_USD},
                               indent=2))
     print(f"\nwrote {OUT}")
