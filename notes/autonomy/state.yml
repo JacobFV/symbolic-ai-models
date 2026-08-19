@@ -1011,6 +1011,13 @@ theory:
       needs_capability costs 0.035; solvency's `owns` is multi-valued and its
       damage is the largest of the three. A system built to catch its own reading
       errors catches the ones it could most afford to make.
+      BUT UNDETECTABLE IS NOT UNCERTIFIABLE, and the first version of this entry
+      said otherwise. Every multi-valued channel measured admits INSENSITIVITY,
+      which needs no second source and no arity -- flood link 0 wrong at 48.8%,
+      scheduling has_capability 0 wrong at 52.5% with 43.5% free, solvency owns
+      0 wrong at 48.5% all free. Only an AGGREGATING decision denies both
+      (solvency revenue: every term moves the sum), which is why the repair there
+      had to be in the READER and needed both halves.
     sources: >
       Three kinds, and each covers what the others cannot because each reads a
       DIFFERENT FACT -- positional (a quantity sits beside its site), cross-role
