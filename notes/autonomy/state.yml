@@ -30,6 +30,11 @@ measured:
     recall 0.946, non-empty accuracy 0.318 at V=1,2,3,4. At V>=2 it is the only
     reader above zero. Regime crossover: hand-authored wins 1.000 vs 0.318 on a
     fixed surface, signature wins the moment the surface varies.
+  - SCOPE: F = P(truth == degenerate answer) holds on all THREE domains -- the
+    degenerate answer is the empty set (flood), False (solvency) and True
+    (scheduling), and at p=1 scheduling's accuracy is exactly its feasible
+    share 0.850. But the law's monotone FORM fails on scheduling because its
+    claims are opposite-signed evidence.
   - THEORY TRANSFER: the survival law holds on solvency with both parameters
     predicted in advance -- F 0.583 predicted / 0.590 fitted (1.1%), k 8.25
     predicted / 9.92 fitted (20.2%), rmse 0.0070. Trivial population dependency
@@ -100,6 +105,15 @@ theory:
       ~30%, not 1%. Pooled ablation vs fit agrees to 0.9% but that is two
       component errors cancelling; on non-empty cases mean d = 11.05 and
       k_eff = 10.91 against a fitted 8.31.
+    precondition: >
+      EVERY CLAIM MUST BE EVIDENCE IN THE SAME DIRECTION. Scheduling violates
+      it: job claims are demand (dropping makes instances feasible, P(True)
+      0.575 -> 1.000) and machine claims are supply (dropping makes them
+      infeasible, 0.575 -> 0.000). The composite corruption curve is U-SHAPED
+      (0.575, 0.400, 0.375, 0.575, 1.000) and a monotone form cannot fit it --
+      it reports F = 0.593 where the true value is 0.850, rmse 0.08 against
+      solvency's 0.007. Checkable before any sweep: drop each claim kind alone
+      and see whether two kinds move the answer opposite ways.
     transfers: >
       CONFIRMED out of domain on solvency, with BOTH parameters predicted from
       structure before the sweep. F = P(truth == the degenerate answer), read
@@ -159,9 +173,13 @@ next_actions:
     pattern arm did. This is the first place a lexical resource (WordNet is on
     disk) or a learned component is the only mechanism available, not a
     shortcut. Build it as an arm and measure at V=4.
-  - Third domain: scheduling is built and untried, and it has an expensive
-    kernel AND a tunable margin, so it is the natural next test of the law and
-    of the reader machinery together.
+  - A two-sided form for mixed-evidence tasks: the scheduling curve is the
+    superposition of a demand term rising to 1 and a supply term falling to 0,
+    both monotone alone. Nothing says the curve is unmodellable, only that a
+    one-parameter monotone decay is the wrong family. Fit a two-term form and
+    see whether its parameters have referents too.
+  - The reader machinery on scheduling is still untried -- only the law was
+    tested there.
   - Ambiguity budget on solvency: is it again concentrated on the claim that
     SIZES the answer -- in flood the demand, here plausibly the threshold or
     the decision date? Measurable with what now exists.
