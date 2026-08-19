@@ -62,6 +62,27 @@ measured:
     77% are "the former", the CORRELATIVE PRONOUN. Pronoun vs attributive
     adjective is a part-of-speech question, and the available patch would kill
     "the former subsidiary" -- exactly the phrase solvency uses. Not patched.
+    A SECOND GENRE CORRECTED IT AGAIN, DIFFERENTLY. 75,555 sentences of
+    public-domain narrative: tense gate 0.451 (vs 0.135 on abstracts),
+    cancellation 0.0191 with the abstracts fix, V1 list 0.0395.
+      dominant fire   abstracts   narrative
+      `used to`          53.5%       rare
+      `struck`         2 fires      29.9%
+    EACH GENRE SURFACED A DIFFERENT DOMINANT FALSE POSITIVE AND NEITHER WAS
+    PREDICTABLE FROM THE OTHER. `struck` is the VERB STRIKE; the cancelling sense
+    carries a particle, struck from / struck off. Narrative 1.91% -> 1.35%,
+    abstracts 0.34% -> 0.33%, generated surfaces BYTE-IDENTICAL a third time.
+    A THIRD CONSTRUCTION, correcting my own docstring: the lookback suppresses
+    21% of narrative `used to` and that is mostly NOT error -- it is `be used to`
+    meaning ACCUSTOMED ("had been used to look"), a state that may still hold.
+    `used to` is THREE constructions. The one genuine loss was the window
+    crossing a comma; the lookback is now clause-bounded.
+    METHOD NOTE: both corrections after the first came from ADDING A GENRE, not
+    from thinking harder about the list.
+    BLOCKED: SEC EDGAR -- the genre solvency actually imitates -- 403s without a
+    contact EMAIL in the User-Agent. Will not send the user's personal address to
+    an unrelated service unasked and will not invent one.
+    scripts/fetch_sec_prose.py is written and one line from working.
     THE STRUCTURAL POINT: 37 GB of real corpora sit in data/sources/ and EVERY
     reader, audit, certificate and cost number here is measured on text this repo
     wrote. See notes/questions/2026-08-19-every-evaluation-here-runs-on-text-this-repo-wrote.md

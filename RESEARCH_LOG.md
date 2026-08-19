@@ -90,8 +90,17 @@ number.
   `symbolic_ai_generators/staleness.py` asks whether a sentence *withdraws* what
   it asserts. **Cancellation, not tense**: a tense gate destroys true claims
   phrased in the past (0.645 scheduling, 0.317 flood) and misses *"a disused
-  track once ran"* outright. Its cue list is closed-class and domain-independent,
-  which bounds how the risk grows rather than removing it.
+  track once ran"* outright.
+- **And "closed-class" was an argument, not a measurement.** Run on English
+  nobody here wrote, the shipped cue list was **~85% false positives**: 2.29% of
+  36,223 scientific sentences, of which `used to` — the *passive of use*, *"is
+  used to obtain"* — was 53.5%. On 75,555 sentences of narrative the dominant
+  error was different again: `struck`, the verb *strike*, at 29.9% against **two**
+  fires in the scientific corpus. Three corrections, each on meaning rather than
+  on the count, took real-prose firing to **0.33%** and **1.35%** — and left every
+  generated-surface number **byte-identical**, which is the evidence that what was
+  removed was noise. Both corrections after the first came from **adding a genre**,
+  not from thinking harder about the list.
 - **It fails where the predicate is itself a negation.** The gate deletes flood's
   true *"…it is no longer passable"*, costing 0.055 on the clean surface, because
   it cannot distinguish a sentence that withdraws its own claim from one asserting
