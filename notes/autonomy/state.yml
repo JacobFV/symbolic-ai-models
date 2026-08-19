@@ -40,6 +40,24 @@ measured:
     because the atom rule that keeps a pronoun with its antecedent -- required
     for the document to stay true -- preserves the demand binding; a property of
     the task, not a leak.
+  - REFUSING TO COLLAPSE COSTS NOTHING HERE AND FLAGS EVERY ERROR. Nothing
+    downstream of a reader can catch an invented claim, so the remaining
+    response is directive 19's. The audit says offline that flood's (2 regions,
+    0 number) signature is shared with prose; the reader cannot tell WHICH link
+    is the distractor but knows the kind is suspect. Bounded hypothesis --
+    AT MOST ONE LINK IS SPURIOUS -- gives k+1 candidate worlds, median 16.
+    Collapse answers everything at 0.383. Carrying gives soundness 1.000 with
+    0.383 decided, and THE SETS ARE IDENTICAL: 23 cases, 0 decided-but-wrong,
+    0 correct-but-undecided. Same answers, and now you know which to trust.
+    decided => correct is PROVABLE; correct => decided is EMPIRICAL and would
+    break on less redundant networks (the policy would stay sound and start
+    paying coverage). The test is named for that fragility.
+    THE ARC: carrying ROLE ambiguity was sound and rapidly vacuous (72 worlds,
+    0.0% decided); carrying DISTRACTOR ambiguity is sound and free. The
+    difference is the BOUND -- role permutation enumerates a structureless
+    combinatorial space, at-most-one-spurious is a single small hypothesis the
+    generator satisfies. AMBIGUITY IS CHEAP TO CARRY WHEN THE HYPOTHESIS ABOUT
+    IT IS SMALL.
   - "GROUNDED" MEANS CONSISTENT WITH WHAT WAS READ, NOT TRUE. ungrounded()
     builds its admissible edges from the routes the flow computed FROM THE READ
     WORLD, so a route over a claim the reader INVENTED is self-consistent and
