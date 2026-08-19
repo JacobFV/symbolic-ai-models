@@ -131,6 +131,44 @@ least needed.
 Printing a worked example next to a summary statistic found both. Neither would
 have failed a test.
 
+## The identifier format carries 89.1%, which is not enough to bound
+
+The bounds are wide because an unbridged position could be any country. But the
+**identifier format itself constrains it**: a 9-character CUSIP is assigned to US
+and Canadian issuers, while foreign issuers get a **CINS** number, which begins
+with a **letter**. **89.4%** of held CUSIPs are digit-leading. If the rule holds,
+North-America exposure is nearly determined even where domicile is unknown — free
+structure doing work a model would have to guess at.
+
+**Checked where ground truth exists**, on the bridged subset:
+
+| | n | resolve to US or CA |
+|---|---:|---:|
+| **digit-leading** | 7,496 | **89.1%** |
+| letter-leading | 7 | *uninformative — see below* |
+
+**89.1%, not ~100%.** Top non-North-American countries for digit-leading CUSIPs:
+**GB 127, KY 115, JP 76, FR 49** — and that is the mechanism I predicted before
+looking: **US-listed foreign issuers and Cayman-domiciled holding companies get
+digit-leading CUSIPs while GLEIF records the parent's domicile.**
+
+> **The format carries real information and not enough to bound.** A bound needs
+> a hard constraint. A rule that fails one time in nine produces intervals that
+> are silently wrong 11% of the time — exactly the lie the interval was built to
+> avoid. The CUSIP rule is a **prior**, not a constraint, and an apparatus built
+> on *exact attained extremes* has no place for one.
+
+**And a selection effect I nearly reported as a result.** The letter-leading row
+has n = 7 and looks like it says something. It cannot: the bridge only covers
+ISINs beginning `US`, and a foreign issuer's ISIN begins with **its own** country
+code — so CINS securities are excluded from the bridge almost by construction.
+That row measures the bridge's selection, not the rule.
+
+**The thesis this sharpens:** structure in an identifier does real work for free,
+and *not the work exactness needs*. Where the product is a **guarantee** rather
+than an estimate, an 89% regularity is unusable — which says more precisely what
+this substrate is for than "symbolic beats neural" does.
+
 ## What would refute it
 
 - **`additive_bounds` assumes each unknown position is independent.** Two
