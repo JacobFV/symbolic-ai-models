@@ -25,7 +25,8 @@ from __future__ import annotations
 
 from symbolic_ai_core.world import Quantity
 
-__all__ = ["certifies_insensitive", "certifies_role_independent"]
+__all__ = ["certifies_insensitive", "certifies_role_independent",
+           "load_bearing_cheap"]
 
 
 def _read_world(world):
@@ -138,3 +139,95 @@ def certifies_role_independent(text: str, solve, *, anchors=None) -> bool:
         except Exception:
             return False
     return len(answers) == 1
+
+
+def load_bearing_cheap(world) -> set[int]:
+    """Claim indices whose deletion would change the answer, without solving.
+
+    The exhaustive version deletes each claim and re-solves: **25.5x the cost of
+    the answer** it explains, measured 2026-08-19. That is the same shape the
+    soundness work hit -- enumeration is affordable only until you want it per
+    claim -- and the same fix applies.
+
+    Each kind admits a cheap argument:
+
+    - ``depot``, ``needs``, ``demand`` -- the query. Always load-bearing; without
+      them there is no question.
+    - ``mass``, ``capacity`` -- a vehicle's attributes matter exactly when that
+      vehicle is in the answer. Removing them drops it.
+    - ``link`` -- matters when removing it lowers the **bottleneck** below some
+      qualifying vehicle's threshold. Not connectivity: a link can matter by
+      forcing a route with a worse minimum limit without disconnecting anything.
+      Reachability missed 0.83 load-bearing links per case, and the same wrong
+      proxy fired 0 of 270 times when tried for ordering candidate deletions.
+    - ``load_limit`` / ``bridge_on`` -- matter when the limit **binds**: some
+      qualifying vehicle's laden mass is at or under it while another edge on the
+      route is not more restrictive. Approximated here by whether any qualifying
+      vehicle's threshold is within the limit, which is an arithmetic test.
+    - ``flooded`` -- matters when removing the flooding opens a route that was
+      closed. Measured load-bearing only 0.22 times per case.
+
+    Sound direction: this is an **estimate**, not a certificate, and it is
+    validated against the exhaustive set rather than assumed. See
+    ``scripts/cheap_load_bearing.py`` for the agreement it achieves.
+    """
+    from dataclasses import replace as _replace
+
+    from symbolic_ai_generators.flood.widest import bottleneck
+
+    w = _read_world(world)
+    demand, depot, needs = w["demand"], w["depot"], w["needs"]
+    if demand is None or depot is None or needs is None:
+        return set()
+
+    bridge_of = {c.roles["via"].id: (c.roles["a"].id, c.roles["b"].id)
+                 for c in world.claims if c.predicate == "bridge_on"}
+    width = bottleneck(world)
+    qualifying = {v for v, m in w["mass"].items()
+                  if w["capacity"].get(v, 0.0) >= demand
+                  and m + demand <= width}
+    thresholds = [w["mass"][v] + demand for v in qualifying]
+    usable = [e for e in w["links"]
+              if e[0] not in w["flooded"] and e[1] not in w["flooded"]]
+
+    out: set[int] = set()
+    for i, c in enumerate(world.claims):
+        p = c.predicate
+        if p in ("depot", "needs", "demand"):
+            out.add(i)
+        elif p in ("mass", "capacity"):
+            if c.roles["of"].id in qualifying:
+                out.add(i)
+        elif p == "link":
+            # BOTTLENECK, not connectivity. A link matters when removing it
+            # forces a route with a lower minimum limit, which drops a vehicle
+            # below its threshold -- it does not have to disconnect anything.
+            # Using reachability here missed 0.83 load-bearing links per case,
+            # and the same wrong proxy fired 0 of 270 times when it was tried
+            # for ordering candidate deletions. Twice now.
+            if qualifying:
+                trimmed = _replace(world, claims=tuple(
+                    x for j, x in enumerate(world.claims) if j != i))
+                if bottleneck(trimmed) < max(thresholds):
+                    out.add(i)
+        elif p in ("load_limit", "bridge_on"):
+            # Same recomputation. Removing a posted limit makes that crossing
+            # unlimited, so the bottleneck can only RISE -- the claim is
+            # load-bearing when the rise lets a vehicle in that was excluded.
+            # An arithmetic test on the largest qualifying threshold missed 0.33
+            # of each kind per case, because a limit binds for a particular
+            # vehicle on a particular route.
+            trimmed = _replace(world, claims=tuple(
+                x for j, x in enumerate(world.claims) if j != i))
+            after = bottleneck(trimmed)
+            if any(m + demand <= after and v not in qualifying
+                   and w["capacity"].get(v, 0.0) >= demand
+                   for v, m in w["mass"].items()):
+                out.add(i)
+            elif qualifying and after < max(thresholds):
+                out.add(i)
+        elif p == "flooded":
+            where = c.roles["where"].id
+            if any(where in e for e in w["links"]):
+                out.add(i)
+    return out

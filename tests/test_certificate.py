@@ -84,3 +84,53 @@ def test_the_collapsed_form_reads_the_roles() -> None:
                                           claims=keep + tuple(swapped)))
         moved += a != b
     assert moved > 0, "swapping roles never changed the verdict"
+
+
+def test_cheap_load_bearing_never_misses() -> None:
+    """Recall is the safety property; precision is only paragraph length.
+
+    A missed load-bearing claim means an explanation that omits what the
+    decision turned on. An over-claimed one means a longer paragraph. So this
+    asserts recall exactly and lets precision be loose.
+    """
+    from dataclasses import replace
+
+    from symbolic_ai_generators.flood.certificate import load_bearing_cheap
+
+    checked = 0
+    for seed in range(40):
+        case = generate(seed)
+        base = solve(case.world)[0]
+        if not base:
+            continue
+        checked += 1
+        cheap = load_bearing_cheap(case.world)
+        for i in range(len(case.world.claims)):
+            trimmed = replace(case.world, claims=tuple(
+                c for j, c in enumerate(case.world.claims) if j != i))
+            try:
+                changed = solve(trimmed)[0] != base
+            except Exception:
+                changed = True
+            if changed:
+                assert i in cheap, (seed, i, case.world.claims[i].predicate)
+    assert checked > 15, checked
+
+
+def test_it_is_far_cheaper_than_deleting_each_claim() -> None:
+    """The whole point: finding what an explanation owes should not cost more
+    than computing the answer."""
+    import time
+
+    from symbolic_ai_generators.flood.certificate import load_bearing_cheap
+
+    cases = [c for c in (generate(s) for s in range(12)) if solve(c.world)[0]]
+    t0 = time.perf_counter()
+    for c in cases:
+        solve(c.world)
+    answer = time.perf_counter() - t0
+    t0 = time.perf_counter()
+    for c in cases:
+        load_bearing_cheap(c.world)
+    cheap = time.perf_counter() - t0
+    assert cheap < answer, (cheap, answer)
