@@ -105,3 +105,44 @@ finding rather than an intuition.
 Multi-instance pruning *helping*. It would have meant the positives were mostly
 wrong and the corpus was adequate, which is the opposite prescription — clean the
 labels rather than collect more. It hurt in all three relations.
+
+## 5. WordNet does not substitute for the missing data either
+
+If hand-written patterns win because they inject prior knowledge, an *external*
+lexicon should be able to inject some of the same. The obvious candidate: a
+corpus of 126 articles cannot learn that `subsidiary`, `division`, `unit` and
+`arm` behave alike, but WordNet says all four are `noun.group`, and `owned` is
+`verb.possession`. The module already on disk was extended to read the noun
+tables — same archive, same three files — and every supersense present in a
+sentence became a feature, with no list of relation words written down anywhere.
+
+| relation | n-grams only | + WordNet supersenses |
+|---|---|---|
+| `parent` correct | 0.101 | **0.101** |
+| `parent` coverage / precision | 0.411 / 0.246 | 0.500 / **0.202** |
+| `parent` classifier recall | 0.308 | **0.231** |
+| `headquarters` correct | 0.173 | 0.173 |
+| `country` correct | 0.145 | 0.151 |
+
+**Nothing.** Predicted 0.18–0.30 for `parent`; it did not move at all, and the
+classifier's recall on supervised sentences *fell*. Coverage rose and precision
+fell by the same amount, which is a classifier firing more and knowing less.
+
+The mechanism is in the module's own docstring: there is no part-of-speech
+tagging and no sense disambiguation, so a token contributes the **union** of
+every sense it could carry. `company` is `noun.group` *and* `verb.stative`;
+`unit` is `noun.Tops`, `noun.cognition` *and* `noun.group`. Every sentence in a
+company article contains group nouns, so the feature fires everywhere and
+discriminates nothing.
+
+This is the **second** time supersenses have come out at the wrong granularity
+here — the verb-class staleness arm found they could not separate a transition
+from a state, because `divested` is `possession` and `ceased` is `stative`
+exactly like the relation verbs they were meant to be told apart from. The
+pattern across both: **WordNet supplies a category, and these tasks need a
+frame.** What the hand reader knows is not that *subsidiary* is a group noun; it
+is that *"X is a subsidiary of Y"* puts Y in a particular slot.
+
+That narrows what would actually help, which is the useful half of a null: a
+resource with **frames** (FrameNet, PropBank rolesets) rather than categories, or
+enough text to learn the frames. The scale corpus tests the second.

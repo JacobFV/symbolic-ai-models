@@ -59,9 +59,37 @@ FOLDS = 4
 #: Multi-instance pruning: refit on one positive sentence per (article,
 #: relation), chosen by the first pass. Set from the command line.
 MIL = "--mil" in sys.argv
+#: Hand the classifier WordNet supersenses. The hand-written pattern reader wins
+#: on this corpus because it keys on RELATION WORDS, a tiny high-precision
+#: feature set that 126 articles cannot supply. Supersenses are the external,
+#: untuned way to get the same generalisation: `subsidiary`, `division` and
+#: `unit` are all `noun.group`, and `owned` is `verb.possession`.
+WORDNET = "--wordnet" in sys.argv
 #: Longest gold string first, so `New Delhi, India` prefers the more specific
 #: relation when two fillers both occur in one sentence.
 RELS = ("parent", "headquarters", "country")
+
+
+def supersense_features(u, mentions) -> list[str]:
+    """One feature per supersense present, plus the pairs with the frame.
+
+    Deliberately NOT tuned to this corpus: no list of relation words is written
+    down anywhere here. WordNet is consulted for every token, and which senses
+    matter is left to the fit -- which is the difference between using an
+    external standard as a given and hand-writing patterns with extra steps.
+    """
+    from symbolic_ai_generators.wordnet import noun_supersenses, verb_supersenses
+    inside = {i for m in mentions for i in range(m.start, m.end)}
+    senses: set[str] = set()
+    for t in u.tokens:
+        if t.kind != "word" or t.start in inside:
+            continue
+        for ss in noun_supersenses(t.text) | verb_supersenses(t.text):
+            senses.add(ss)
+    out = [f"ss={x}" for x in sorted(senses)]
+    out += [f"ss2={a}|{b}" for i, a in enumerate(sorted(senses))
+            for b in sorted(senses)[i + 1:]][:60]
+    return out
 
 
 def corpus() -> list[dict]:
@@ -129,8 +157,7 @@ def prune_to_best(reader, units_by_doc):
         for u in doc:
             if u.claim is None:
                 continue
-            feats = _unit_features(u, reader.mentions.find(u))
-            score = reader.clf.score(feats).get(u.claim.predicate, 0.0)
+            score = reader.clf.score(reader.features(u)).get(u.claim.predicate, 0.0)
             cur = best.get(u.claim.predicate)
             if cur is None or score > cur[0]:
                 best[u.claim.predicate] = (score, u)
@@ -179,15 +206,16 @@ def decomposition(docs) -> dict:
                     proposed[rel] += any(t.text == f for u in units
                                          for t in cm.find(u))
     train, test = docs[42:], docs[:42]
-    reader = LearnedSpanReader(mentions=cm).fit(
-        [supervise_distant(d) for d in train])
+    reader = LearnedSpanReader(
+        mentions=cm, extra_features=supersense_features if WORDNET else None
+    ).fit([supervise_distant(d) for d in train])
     clf, clf_n, rank, rank_n = (defaultdict(int) for _ in range(4))
     for d in test:
         for u in _units(d["intro"]):
             hit = label(u.text, d)
             if not hit:
                 continue
-            pred, _ = reader.clf.predict(_unit_features(u, cm.find(u)))
+            pred, _ = reader.clf.predict(reader.features(u))
             clf_n[hit[0]] += 1
             clf[hit[0]] += pred == hit[0]
             if pred != hit[0]:
@@ -220,15 +248,16 @@ def learning_curve(docs) -> dict:
     out = {}
     for share in (0.25, 0.5, 1.0):
         part = train[:max(1, int(len(train) * share))]
-        reader = LearnedSpanReader(mentions=cm).fit(
-            [supervise_distant(d) for d in part])
+        reader = LearnedSpanReader(
+            mentions=cm, extra_features=supersense_features if WORDNET else None
+        ).fit([supervise_distant(d) for d in part])
         ok, n = defaultdict(int), defaultdict(int)
         for d in test:
             for u in _units(d["intro"]):
                 hit = label(u.text, d)
                 if not hit:
                     continue
-                pred, _ = reader.clf.predict(_unit_features(u, cm.find(u)))
+                pred, _ = reader.clf.predict(reader.features(u))
                 n[hit[0]] += 1
                 ok[hit[0]] += pred == hit[0]
         out[f"{len(part)} articles"] = {r: ok[r] / max(1, n[r]) for r in RELS}
@@ -254,9 +283,12 @@ def main() -> None:
             for u in doc:
                 if u.claim is not None:
                     supervised[u.claim.predicate] += 1
-        reader = LearnedSpanReader(mentions=CapitalisedMentions()).fit(units)
+        extra = supersense_features if WORDNET else None
+        reader = LearnedSpanReader(mentions=CapitalisedMentions(),
+                                   extra_features=extra).fit(units)
         if MIL:
-            reader = LearnedSpanReader(mentions=CapitalisedMentions()).fit(
+            reader = LearnedSpanReader(mentions=CapitalisedMentions(),
+                                       extra_features=extra).fit(
                 prune_to_best(reader, units))
         for d in test:
             got = answers(reader, d)
@@ -305,7 +337,8 @@ def main() -> None:
     print("\n    the number to beat on `parent` is the hand-written "
           "state-first reader:\n    coverage 0.601, correct 0.393, "
           "precision 0.653 -- tuned against this corpus.")
-    out_path = OUT.with_name("real_text_reader_mil.json") if MIL else OUT
+    tag = ("_mil" if MIL else "") + ("_wordnet" if WORDNET else "")
+    out_path = OUT.with_name(f"real_text_reader{tag}.json") if tag else OUT
     OUT.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(json.dumps({"n_articles": len(docs), "folds": FOLDS,
                                "multi_instance": MIL,

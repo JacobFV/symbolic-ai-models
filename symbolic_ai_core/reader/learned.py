@@ -509,7 +509,7 @@ class LearnedSpanReader:
 
     def __init__(self, id: str = "learned.span@1", *, epochs: int = 8,
                  weights: Mapping[str, float] | None = None,
-                 mentions: Any = None) -> None:
+                 mentions: Any = None, extra_features: Any = None) -> None:
         """``weights`` maps a predicate to its downstream sensitivity.
 
         Measured by intervention, not by correlation --
@@ -526,6 +526,11 @@ class LearnedSpanReader:
         self.epochs = epochs
         self.weights = dict(weights or {})
         self.mentions = mentions
+        #: ``(unit, mentions) -> [feature]``. The place an external lexical
+        #: resource enters -- WordNet supersenses, say -- without the reader
+        #: importing one. A corpus too small to learn that `subsidiary`,
+        #: `division` and `unit` behave alike can be handed the fact.
+        self.extra = extra_features
         self.lex = Lexicon()
         self.clf = Perceptron()
         self.rankers: dict[str, _Ranker] = defaultdict(_Ranker)
@@ -622,7 +627,7 @@ class LearnedSpanReader:
                 self.tx_role[pred] = "date"
 
     def _fit_classifier(self, docs: Sequence[Sequence[Unit]]) -> None:
-        data = [(_unit_features(u, self.mentions.find(u)),
+        data = [(self.features(u),
                  u.claim.predicate if u.claim is not None else NONE)
                 for d in docs for u in d]
         self.clf.labels = sorted({y for _, y in data})
@@ -636,6 +641,14 @@ class LearnedSpanReader:
                 w = max(self._weight(gold), self._weight(pred))
                 self.clf.update(feats, gold, pred, w)
         self.clf.average()
+
+    def features(self, u: Unit) -> list[str]:
+        """Every feature of one unit, including whatever a resource adds."""
+        found = self.mentions.find(u)
+        feats = _unit_features(u, found)
+        if self.extra is not None:
+            feats = feats + list(self.extra(u, found))
+        return feats
 
     def _weight(self, label: str) -> float:
         if not self.weights:
@@ -711,6 +724,8 @@ class LearnedSpanReader:
                                         entities=(t.text,), belief=(1.0,)))
                 here.append(t.text)
             feats = _unit_features(u, found)
+            if self.extra is not None:
+                feats = feats + list(self.extra(u, found))
             pred, margin = self.clf.predict(feats)
             roles, alts, missing = ({}, {}, []) if pred == NONE else \
                 self._fill(u, pred, recent, here)
