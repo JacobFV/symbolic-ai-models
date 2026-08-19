@@ -268,7 +268,35 @@ last_cycle:
     repo now say the cheap half of a problem is the useful half.
 
 next:
-  preferred_action: the-delta-type-now-has-two-motivations-find-it-a-producer
+  preferred_action: price-the-backoff-tradeoff-accuracy-against-certifiability
+  why_now: >
+    The session now has one law rather than a pile of numbers. Certification
+    value obeys aim = (1 - acc_abstained)/(1 - base), the flagged share cancels
+    exactly, and therefore aim <= 1/(1 - accuracy). That single bound explains
+    every arm: curriculum models at 7.7-32.9% accuracy top out at 1.48x; the
+    federated resolver at 87.3% reached 4.69x; the maintenance oracle's 131.6x
+    is exactly 1/(1-0.9924). A model can only certify to the extent it is
+    usually right.
+
+    The immediate consequence is a trade nobody has priced. The ceiling is
+    attained only when abstained positions score ZERO. This repo deliberately
+    strengthened the structural back-off so that abstaining lands on the context
+    prior rather than the unigram -- which RAISED accuracy and, by the closed
+    form, LOWERED certifiability. Both effects are real and they pull opposite
+    ways, and the back-off is a flag (structural_fallback) so both arms exist.
+  the_experiment: >
+    Run the same ten models with structural_fallback on and off. On: higher
+    label_acc, higher a_abstained, lower aim. Off: lower label_acc, a_abstained
+    near the unigram, higher aim. The question is whether the product -- what a
+    hybrid actually costs at fixed quality -- prefers one. This is the first
+    time the repo's biggest deliberate harness decision can be scored on
+    something other than accuracy.
+  do_not: >
+    Do not read a determinacy gap as certification value. synth-001 has the
+    largest gap in the repo (+0.697) and is worth 1.02x. The gap is not the
+    quantity; 1/(1-accuracy) is the ceiling and a_abstained fixes where in it
+    you land.
+  previous_preferred_action: the-delta-type-now-has-two-motivations-find-it-a-producer
   why_now: >
     Soundness is priced and the answer is better than the first framing implied.
     The XOR bound reaches aim 16.1x; a |delta count| bound, equally SOUND,

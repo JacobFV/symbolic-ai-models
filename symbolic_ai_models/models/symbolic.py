@@ -663,7 +663,19 @@ class RuleBasedModel(Model):
             type_logits=self._mix(self.type_backoff, (B, L), t_conf,
                                   t_rows, t_cols, t_syms, t_w),
             source_logits=source_logits,
-            hidden=torch.zeros((B, L, 1)))
+            hidden=torch.zeros((B, L, 1)),
+            # The model's own determinacy, which it already computed: `s_conf`
+            # is 0 at every position it declined to vote on and positive where
+            # it committed. It was being consumed by `_mix` and thrown away,
+            # which is the same shape as the certificate arm's discarded slack
+            # (`notes/findings/2026-08-18-the-rung-...-is-derivable.md`).
+            #
+            # Exposed as a channel rather than as a readout on purpose: a
+            # readout carries floor obligations and adds a column to every
+            # published table, and nothing yet knows whether this signal is
+            # worth reporting. Nothing consumes it by default, so no existing
+            # number moves.
+            channels={"determinacy": torch.from_numpy(s_conf).float()})
 
     def source_votes(self, view: GraphView) -> dict[int, Votes]:
         """``{hidden node: votes over *node indices* of this episode}``.

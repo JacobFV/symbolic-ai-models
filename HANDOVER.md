@@ -1172,6 +1172,58 @@ stream, i.e. the `Delta` type parked in
 has a second independent motivation worth 3.6×**, and the blocker is unchanged:
 nothing here emits an update stream.
 
+## 3t. Certification is bounded by 1/(1−accuracy), and that unifies the session
+
+`notes/findings/2026-08-18-a-model-can-only-certify-to-the-extent-it-is-usually-right.md`.
+The certification value found on federated data was never checked against the
+repo's own subject. `_forward_graph` already computes `s_conf` — 0 wherever a
+model declined to vote — and discarded it; it is now
+`ModelOutput.channels["determinacy"]`, consumed by nothing else, so no published
+number moves.
+
+Ten models, one shared config, re-fitted:
+
+| model | votes on | acc\|voted | acc\|abst | gap | label_acc | **aim×** | ceiling |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| routes-001 | 98.3% | 0.329 | 0.000 | +0.329 | 0.323 | **1.48×** | 1.48× |
+| ruleinduce-001 | 82.9% | 0.391 | 0.030 | +0.360 | 0.329 | 1.45× | 1.49× |
+| ilp-001 | 60.9% | 0.475 | 0.059 | +0.416 | 0.312 | 1.37× | 1.45× |
+| syllogism-001 | 56.0% | 0.207 | 0.068 | +0.139 | 0.146 | 1.09× | 1.17× |
+| **synth-001** | **2.1%** | **0.759** | 0.062 | **+0.697** | 0.077 | **1.02×** | 1.08× |
+
+`corefer-001`, `ptrgen-001`, `vsa_perm-002` **never abstain**. `evidence-001` and
+`grammar-001` abstain on **one position of 5,233** — slices, not results.
+
+```
+aim = (1−v)(1 − a_abstained) / [(1−v)(1 − base)] = (1 − a_abstained)/(1 − base)
+```
+
+> **The flagged share cancels.** Certification value is not governed by how much
+> you flag nor by how *well* you flag. Since `a_abstained ≥ 0`:
+> **aim ≤ 1/(1 − label_acc)**, and every model sits at or just under it.
+
+**`synth-001` has the strongest determinacy signal in the repo** — 2.1% of
+positions at 0.759 against 0.062, a **+0.697** gap — **and is worth 1.02×.**
+
+**This unifies everything measured this session:**
+
+| system | base | measured aim× | 1/(1−base) |
+|---|---:|---:|---:|
+| curriculum models | 0.077–0.329 | 1.02×–1.48× | ≤ 1.49× |
+| federated resolver | 0.873 | 4.69× | 7.9× |
+| maintenance, derived margin | 0.9924 | 16.1× | 131.6× |
+| maintenance, `\|Δcount\|` | 0.9924 | 57.5× | 131.6× |
+| maintenance **oracle** | 0.9924 | **131.6×** | **131.6×** |
+
+The oracle's 131.6× is **exactly** `1/(1−0.9924)`. The session's whole 1.02×–131.6×
+spread is one quantity: **how often the system is already right.** It also
+explains §3p's candidate-recall result — recall sets the base, the base sets the
+ceiling.
+
+**A consequence nobody has priced:** the ceiling is attained only when abstained
+positions score **0**. Strengthening the structural back-off — which this repo did
+deliberately, and which raised accuracy — **lowers** certification value.
+
 ## 4. Believed, not measured. Do not inherit as fact.
 
 Recorded deliberately, with mechanisms, so a later contradiction is a finding
