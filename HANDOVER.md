@@ -92,7 +92,19 @@ filer**. The aggregate describes Vanguard, not a typical filer; quoting it would
 be the slice-versus-population error in its third form.
 
 Honest uncertainty rather than a point estimate that would have been a lie — and
-**not yet a product**: one filer in four.
+**it becomes a product when the width is attributed.** `Bounds.width_by_subject`
+was already there and the slice ignored it; settling unbridged positions
+widest-first, the 5 widest carry **57.5%** of the width and:
+
+| lookups | median band | filers inside 20 points | $/portfolio |
+|---:|---:|---:|---:|
+| 0 | 43.5% | 23.7% | 0.000 |
+| **10** | **6.9%** | **77.5%** | **$0.045** |
+| 20 | 2.0% | 92.8% | $0.091 |
+
+**Ten escalations move one-in-four to three-in-four for four and a half cents.**
+The bound was never merely honest — it came with the list of what to resolve, and
+that list is short because portfolio value is concentrated.
 
 The advantage is a property of the domain's **structure-provenance**, not of the
 technology — and this reconciles the two

@@ -169,6 +169,52 @@ and *not the work exactness needs*. Where the product is a **guarantee** rather
 than an estimate, an 89% regularity is unusable — which says more precisely what
 this substrate is for than "symbolic beats neural" does.
 
+## The width is attributable, and ten lookups make it a product
+
+`additive_bounds` has always reported **where the width comes from** —
+`Bounds.width_by_subject`, widest first, with a docstring saying exactly why:
+*"a bound with no attribution says the answer is uncertain and nothing about
+which disagreement to go and settle."* The slice above ignored it.
+
+Settling them widest-first, one escalation per unbridged position
+(`scripts/bound_attribution.py`, 489 filers):
+
+| lookups | median band | filers inside a 20-point band | $/portfolio |
+|---:|---:|---:|---:|
+| 0 | 43.5% | **23.7%** | 0.000 |
+| 1 | 28.6% | 36.6% | 0.005 |
+| 5 | 14.2% | 61.1% | 0.023 |
+| **10** | **6.9%** | **77.5%** | **0.045** |
+| 20 | 2.0% | 92.8% | 0.091 |
+| 40 | 0.0% | 97.1% | 0.181 |
+
+**The five widest unbridged positions carry 57.5% of the width** (median), and the
+median filer needs **3** lookups to reach a 20-point band; p90 is 18.
+
+> **Ten lookups put 77.5% of filers inside a 20-point band for $0.045 per
+> portfolio.** From usable for one filer in four to three in four, at a cost that
+> rounds to nothing.
+
+**The bound was never merely honest — it came with the list of what to go and
+resolve**, and the list is short because portfolio value is concentrated. This is
+the session's first result that converts a measurement into a product, and it
+does it with machinery the repo already had.
+
+It also extends the escalation lesson. Earlier: *escalate where the system
+produces nothing, not where it is unsure* (1.00 quality per unit against 0.48).
+Here every candidate produces nothing, so the ordering that remains is
+**magnitude** — escalate the silent, **widest-first**.
+
+### A bug caught by an impossible shape
+
+The first version of this curve was **non-monotone**: 28.6% median band at 1
+lookup and **32.3%** at 5. Resolving more positions cannot widen a bound. The
+cause was **survivorship** — filers that crossed the target early broke out of
+the loop and never contributed to later `k`, so each column was conditioned on a
+different, shrinking population. Every filer now contributes at every `k`. That
+is the third measurement bug this session caught by noticing a shape that cannot
+be true, rather than by a test.
+
 ## What would refute it
 
 - **`additive_bounds` assumes each unknown position is independent.** Two
