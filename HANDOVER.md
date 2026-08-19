@@ -911,6 +911,51 @@ achievable at their own k, so the raw dollar/count ratio is still an artefact.
 96.9% concentrated by dollar and 77.7% by position count. Fourth time in this
 repo. *"The workload" is not defined until the mass is.*
 
+## 3p. Determinacy is not accuracy — and §3j–§3o priced determinacy
+
+`notes/findings/2026-08-18-determinacy-is-not-accuracy-...md`. **Read this before
+quoting anything from §3j–§3o.**
+
+Every advantage in those sections came from a hand-rolled
+`advantage(f) = M/(f·M + (1−f)·O)` where `f` is *the fraction the system cannot
+settle*. That formula has **no slot for accuracy**, so accuracy was never
+measured and "settled" was read as "correct". §7 item 10 had recommended running
+this session's work through `symbolic_ai_core/cost.py` the whole time.
+
+Ground truth: the wikidata bridge, **1,015** filers, **excluded** from the system
+being scored. Floor: **pick at random among the name candidates** — strong by
+construction, because an unambiguous filer has one candidate and the floor takes
+it free.
+
+| | settles | correct (fallback) | floor | **above floor** |
+|---|---:|---:|---:|---:|
+| entity level | 80.5% | 83.7% | 82.9% | **+0.9%** |
+| group level | 84.6% | 87.3% | 87.4% | **−0.1%** |
+
+**CEILING, which no arm had computed: the true LEI is among the name candidates
+for only 93.0% of filers.** No policy over them scores above that.
+
+| system | rate | floor | $/solved | **$/solved above floor** |
+|---|---:|---:|---:|---:|
+| hybrid, escalating 15.4% | 0.965 | 0.874 | $9.80e-05 | **$1.04e-03** |
+| frontier model only | 1.000 | 0.874 | $6.15e-04 | $4.88e-03 |
+| **federated symbolic resolver** | 0.873 | 0.874 | $1.78e-11 | **inf** |
+
+**Why, and it is not a bug:** at group level closure determines the answer
+*because all candidates share a root* — and if they share a root, a random pick
+lands on it too. The floor gets exactly the cases closure settles, for free.
+
+> **The 1.22× (closure), 1.49× (crosswalk) and 1.80× (combined) are cost ratios
+> over an escalation policy, not capability gains.** What the symbolic layer buys
+> is **knowing when it is right** — certification, not capability. Priced
+> properly that is **4.7×** on $/capability-above-floor (hybrid $1.04e-03 against
+> the model's $4.88e-03), not 6.8×–12.2×.
+
+**Harness trap, walked into with the sign posted:** the first version scored
+abstention as zero and reported the layer at **−7.5% below floor** — comparing a
+system that refuses to guess against a floor that always guesses. Score both; the
+gap between them *is* the effect.
+
 ## 4. Believed, not measured. Do not inherit as fact.
 
 Recorded deliberately, with mechanisms, so a later contradiction is a finding
@@ -948,6 +993,12 @@ both fell** — see §5. What is parked now:
 | "the corpus has no genuine two-source property conflict" (three findings) | **false**: four airports where openflights and geonames disagree on country and the disagreement survives ICAO agreement, name agreement and a self-incoherence filter — EUN, SMW, VIL (Western Sahara) and PRN (Kosovo). Broadest defensible count 8 |
 | "make dependency-certification a substrate-wide contract" (this handover's own §7 item 1, previous revision) | the **lower-value half** of the right idea. Every kernel reporting its read set is worth **0.3x–1.0x** per quarter, and the read set over-reads the actual dependency by up to **6,591x**. What pays is a **witness** plus a **minimal** dependency, and neither is producible by the generic mechanism |
 | "two unrelated arms, one axis — now worth treating as a property of the substrate rather than two observations" (mine) | **four**, and two of them **predate the session**. The existential/universal asymmetry was measured on this same route network before the certificate arm began (§3, 247x / 2.0x). What this session added is the *maintenance* economics and the appearance of the axis in plain set queries with no proof machinery at all — which is the better claim, and the one that answers `datalog/proof.py`'s stated open question |
+| "no file on disk links a CIK to an LEI" (mine, §3j) | **false.** `wikidata/idbridges_full_p0.parquet` carries 3,660 `sec` and 53,198 `lei` edges; **2,113** entities carry both. I searched for the *mechanism* (a `same_as` column) and never for a file named after its purpose |
+| "the composite is `(1 − coverage) × f_name`" (mine, `bridged_join.py`) | the **product of the marginals**, and they are not independent: crosswalk coverage is enriched **1.33×** (z = 5.03) toward the filers names cannot settle, so it underpriced the crosswalk by 10.9% of itself. Measured joint `f` **9.81%**, not 11.01% |
+| "the curated crosswalk is 3.43× better targeted" (mine) | **artefact.** The dollar/count ratio's ceiling is `1/coverage`, so a smaller crosswalk scores higher mechanically. Against an oracle at each crosswalk's own k they attain **69.8%** and **66.0%** — 1.06× apart. Saturation, not targeting |
+| "tier 3 is not a procurement problem — a relationship GLEIF did not record was not recorded anywhere" (mine, §3l) | **untested assumption, and the null is worse news.** wikidata holds **4.3×** more ownership structure and settles **3** more filers of 598. Only 3,996 of 1.28M edges are expressible about LEIs because **1.58%** of entities carry a twin. The tiers are **not independent**: 2 and 3 are gated by tier-1 identity, which saturates |
+| "purchasable reach saturates" (mine, §3l headline) | **conditional, not a law.** Top-7.5% mass share spans **27.3%** (GitHub events) to **96.9%** (13F dollars), a 3.5× span. Replaced by a decision rule: measure that share before acquiring anything |
+| **"the federated advantage is 6.8×→12.2×, and closure buys 1.22×" (mine, §3j–§3o, six arms)** | **determinacy priced as accuracy.** `advantage(f)` has no slot for accuracy, so equal accuracy was asserted silently once per arm. Against a floor sharing the same candidate sets the resolver is **+0.9%** at entity level, **−0.1%** at group level, and **does not beat its floor**. The honest number is **4.7×** on $/capability-above-floor — §3p |
 | five end-to-end query classes quoted with **no floor** (mine, across three findings) | audited with `scripts/query_floors.py`: **nothing retracts**, no floor meets its system. But `collaborators` had **28.8%** of its score bought by a query-blind popularity guess — read its lift as **0.297**, not 0.417 — and the other four lose 4–6%. `symbolic_ai_core/cost.py` had been enforcing `accuracy - floor` in code the whole time |
 | "the lever is the logical form of the claim" (mine, two hours later) | **wrong.** The lever is the *true dependency* of the claim. The 95x NP/coNP gap on set cover is real; the 8,932x version of it on shortest path collapses to **1.4x** once the optimality certificate is hand-derived, and the rest was the BFS over-reading |
 
@@ -1020,7 +1071,12 @@ has a demonstrated failure rate.
    falsifier, which cut the headline from 95.1% to 8.1%.
 9. ~~The shrinking-corpus inversion.~~ **Run — §3b. It narrows 93x → 72x and
    does not invert; the belief held at 0.8 was false.**
-10. **Put this session's work through `symbolic_ai_core/cost.py`.** Everything
+10. ~~Put this session's work through `symbolic_ai_core/cost.py`.~~ **Done —
+    §3p, and it was the most consequential thing in this revision.** The
+    resolver does not beat its floor; six arms had priced determinacy and read
+    it as accuracy. Original text kept below because the reason it was written
+    is exactly the failure it caught.
+    **Put this session's work through `symbolic_ai_core/cost.py`.** Everything
     here was priced with hand-rolled arithmetic in scripts while the repo's own
     ledger sat unused, and the floors now exist to make it computable. *Why it
     matters:* a number on a different basis from the published ones is not

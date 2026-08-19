@@ -268,7 +268,39 @@ last_cycle:
     repo now say the cheap half of a problem is the useful half.
 
 next:
-  preferred_action: leave-the-finance-workload-and-test-the-arc-elsewhere
+  preferred_action: rebuild-the-arc-on-capability-above-floor
+  why_now: >
+    HANDOVER §7 item 10 had stood unaddressed and it was right. Six arms this
+    session were priced with a hand-rolled advantage(f) that has NO SLOT for
+    accuracy, so "settled" was silently read as "correct". Run through
+    symbolic_ai_core/cost.py against a floor that picks at random among the same
+    candidate sets, the federated symbolic resolver scores +0.9% above floor at
+    entity level, -0.1% at group level, and DOES NOT BEAT ITS FLOOR -- the
+    module prints its cost per unit of capability as inf, unprompted.
+
+    The mechanism is clean and was invisible from inside the series: at group
+    level closure determines the answer BECAUSE all candidates share a root, and
+    if they share a root a random pick lands on it too. Determinacy is not
+    accuracy. What the symbolic layer buys is knowing when it is right --
+    certification, not capability -- worth 4.7x on $/capability-above-floor via
+    escalation, against the 6.8x-12.2x cost ratios published.
+
+    So the next work is not another arm. It is deciding what the programme
+    claims now that its strongest recent numbers have been restated an order of
+    magnitude down, and 4.7x is the first capability-above-floor number this
+    session has produced.
+  the_open_question: >
+    If the symbolic layer's value is CERTIFICATION rather than accuracy, then
+    the north star metric may itself be mismatched: $/solved-above-floor prices
+    getting the answer right, and prices knowing-you-are-right at zero. The
+    certificate arm (§3b) measured exactly that property and was never connected
+    to the cost ledger. That connection is the highest-value unbuilt thing, and
+    it is the mandate's own live edge -- make dependency certificates
+    economically consequential.
+  do_not: >
+    Do not run another arm on the SEC/GLEIF workload, and do not quote any
+    advantage from §3j-§3o without §3p beside it.
+  previous_preferred_action: leave-the-finance-workload-and-test-the-arc-elsewhere
   why_now: >
     The reach arc is RESOLVED and it resolved into a conditional, which is the
     right shape. advantage = 1/f; f is set by reach; reach is purchasable
