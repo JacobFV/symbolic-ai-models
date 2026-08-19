@@ -333,16 +333,52 @@ v6** — the tuning debt did not bite, which is measured rather than assumed.
 > **Negative:** six rungs and an authoritative registry still leave **38% of an
 > achievable ceiling** unreached.
 
-**The diagnosis is sharper than the ladder, and it names the next arm.** *One*
-string in 6,489 produced no candidate. The extractor is not failing to **find**
-institutions, it is failing to **choose**: "University of Wisconsin" names
-thirteen ROR campuses and the string carries exactly what separates them —
-*Madison*, *Lancaster*, *Karlsruhe* — which nothing in six rungs reads, because
-they match names against names and **geography is a different view of the
-world**. ROR's dump carries `locations`; the string carries a city; nothing
-joined them. That is **the multi-kernel thesis stated as a bug**, and it would be
-the first place in this repo where two views genuinely have to compose to answer
-one question.
+**The diagnosis was sharper than the ladder and it was wrong.** *One* string in
+6,489 produced no candidate, so the extractor fails at **choosing**, not finding
+— "University of Wisconsin" names thirteen ROR campuses. I concluded the
+discriminating evidence was geography sitting unread in the string, promoted it
+to §7 item 1, and built it. **It does not work** — see §3f, and read that section
+before repeating any part of it.
+
+## 3f. The composition failed, and the control caught it
+
+`notes/findings/2026-08-18-a-second-view-that-undoes-a-mistake-without-being-worth-making-one.md`
+
+Names propose, geography disposes: the first deliberate two-view composition in
+this repo, on a problem that needed one. Means over three splits:
+
+| variant | mean F1 | vs v6 |
+|---|---:|---:|
+| **v6** names only, abstains on ambiguity | **0.618** | — |
+| B — abstention relaxed, **no** geography | 0.582 | **−0.036** |
+| v7 — relaxed **+** geography | 0.611 | −0.007 |
+| v8 — v6's abstention kept, geography may only **admit**, on city/subdivision only | 0.617 | −0.001 |
+
+**The ablation is the finding.** Relaxing abstention costs −0.036; geography
+recovers +0.029 of it, **81%**, and never gets ahead.
+
+> **A second view informative enough to undo a mistake and not informative
+> enough to be worth making one.** It has to beat *abstention*, not merely beat
+> guessing — a higher bar than the architecture makes it look.
+
+**The control, written before the run**, is why this is a finding rather than a
+regression explained away: geography changed **9.8%** of answers and was better
+on **23.0%**, worse on **46.4%**.
+
+**Why:** 65% of ambiguous components carry no geographic evidence at all.
+
+**And the expensive part.** I designed this arm from **five printed examples** out
+of 1,251 disjoint cases; all five named a city, and the population does not. The
+65% was computable from the same error breakdown before any variant existed.
+That is a **slice inversion**, this repo's oldest documented mechanism, walked
+into while writing a finding that cites the abstention lesson twice. Guard in
+`notes/lessons/2026-08-18-i-designed-an-experiment-from-five-printed-examples.md`:
+*a diagnosis derived from a slice must be sized on the population before it is
+built on.*
+
+What survives: the ~62% plateau is now a **harder** number, because it withstood
+a serious attempt at its diagnosed cause. And **abstention won three times in one
+session** — v2's word-overlap fallback, B's relaxed admission, and this.
 
 ## 4. Believed, not measured. Do not inherit as fact.
 
@@ -442,14 +478,17 @@ has a demonstrated failure rate.
    number in the cost argument that has never been attacked, gutenberg and
    stackexchange are both on disk, and the mechanism (facts here are
    20-character identifiers) predicts it should move.
-6. **Join geography to entity linking** (§3e). The single highest-value arm in
-   the repo right now: the extraction residual is disambiguation, the
-   discriminating evidence is a city sitting in the input string, ROR ships
-   `locations`, and no rung reads it. *Why this ranks first among the open
-   items:* it is simultaneously the first arrow's next 38% and the first
-   genuine two-view composition this repo would have — the multi-kernel claim
-   tested on a problem that actually needs it rather than on one arranged to.
-7. **The shrinking-corpus inversion.** One arm, and it is the falsifier for the
+6. ~~Join geography to entity linking.~~ **Run, and it failed — §3f.** Do not
+   repeat it without first sizing the signal on the population (65% of the
+   cases it targets carry no geography at all).
+7. **Price the two arrows end to end.** Both are now measured separately —
+   extraction at ~62% of ceiling, reasoning at 37x–13,987x maintenance
+   advantage — and **nobody has asked what a 62%-correct world does to an exact
+   reasoner over it**. `CLAUDE.md` says cost is charged to the *system*; this is
+   the first experiment that could charge it. The repo has a measured precedent
+   for the shape: a composition amplified its inputs' errors ~13x on the route
+   network.
+8. **The shrinking-corpus inversion.** One arm, and it is the falsifier for the
    witness asymmetry rather than another confirmation of it.
 
 **What not to do:** more kernels (the data says stop at eight); more query
