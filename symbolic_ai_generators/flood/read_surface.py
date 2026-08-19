@@ -41,7 +41,7 @@ from symbolic_ai_core.world import (Claim, Entity, EntityRef, Facet, Quantity,
 __all__ = ["read_surface", "read_lexical", "read_signature",
            "read_signature_roles", "read_content_roles",
            "read_content_roles_checked", "read_content_roles_worlds",
-           "VALUE_REGISTRY", "ROLE_ANCHORS"]
+           "VALUE_REGISTRY", "ROLE_ANCHORS", "evidence_conflict"]
 
 #: A value vocabulary per claim kind -- **external knowledge**, and ablatable.
 #:
@@ -681,6 +681,123 @@ def _anchor_role(sent: str, anchors: dict) -> str:
     return hit.pop() if len(hit) == 1 else ""
 
 
+def _scan(text: str, anchors: dict) -> dict:
+    """The raw evidence, before any role is resolved.
+
+    Extracted from `read_content_roles_checked` so a second consumer can see the
+    **same** evidence without re-parsing -- in particular `evidence_conflict`,
+    which needs the adjacency signal for `needs` even when an anchor already
+    claimed that role. Behaviour of the reader is unchanged; this is a pure
+    extraction, pinned by the reader's own tests.
+    """
+    links: list[tuple[str, str]] = []
+    crossings: dict[tuple[str, str], float | None] = {}
+    vehicles: dict[str, list] = {}
+    flooded: list[str] = []
+    unresolved: list[str] = []
+    order: list[str] = []
+    anchored: dict[str, str] = {}
+    by_region: dict[str, str] = {}
+    depot = needs = adjacent = ""
+    demand = None
+
+    paras = [[s for s in _sentences(p)] for p in text.split("\n\n")]
+    pairs = [sum(1 for s in ss
+                 if len(set(_REGION.findall(s))) == 2 and not _NUM.findall(s)
+                 and not _TRUCK_ID.findall(s)) for ss in paras]
+    network = max(range(len(paras)), key=lambda i: pairs[i]) if paras else -1
+
+    for pi, sents in enumerate(paras):
+        last_vehicle = ""
+        for sent in sents:
+            regions = list(dict.fromkeys(_REGION.findall(sent)))
+            trucks = list(dict.fromkeys(_TRUCK_ID.findall(sent)))
+            nums = [float(n) for n in _NUM.findall(sent)]
+            if len(regions) == 2 and nums:
+                crossings[(regions[0], regions[1])] = nums[-1]
+            elif len(regions) == 2 and not nums and not trucks:
+                if pi == network:
+                    links.append((regions[0], regions[1]))
+            elif len(regions) == 1 and not nums and not trucks:
+                role = _anchor_role(sent, anchors)
+                order.append(regions[0])
+                if role:
+                    anchored.setdefault(role, regions[0])
+                    by_region.setdefault(regions[0], role)
+                if role == "depot" and not depot:
+                    depot = regions[0]
+                elif role == "flooded":
+                    flooded.append(regions[0])
+                elif role == "needs" and not needs:
+                    needs = regions[0]
+                else:
+                    unresolved.append(regions[0])
+            elif len(trucks) == 1 and nums:
+                slot = 0 if nums[0] in VALUE_REGISTRY["mass"] else 1
+                vehicles.setdefault(trucks[0], [None, None])[slot] = nums[0]
+                last_vehicle = trucks[0]
+            elif len(trucks) == 1 and not nums:
+                last_vehicle = trucks[0]
+            elif not regions and not trucks and len(nums) == 1:
+                if nums[0] in VALUE_REGISTRY["demand"]:
+                    demand = nums[0]
+                    if order:
+                        adjacent = order[-1]
+                elif nums[0] in VALUE_REGISTRY["capacity"] and last_vehicle:
+                    vehicles.setdefault(last_vehicle, [None, None])[1] = nums[0]
+
+    return {"links": links, "crossings": crossings, "vehicles": vehicles,
+            "flooded": flooded, "unresolved": unresolved, "order": order,
+            "anchored": anchored, "by_region": by_region,
+            "depot": depot, "needs": needs,
+            "adjacent": adjacent, "demand": demand}
+
+
+def evidence_conflict(text: str, *, anchors: dict | None = None) -> dict:
+    """Where two independent signals name **different** regions for one role.
+
+    The reader has two ways to find the needs site: a lexical anchor, and
+    **positional adjacency** to the bare demand quantity, which is content-free
+    and survives interleaving because the atom rule keeps a pronoun with its
+    antecedent. It uses the second only when the first stayed silent, so when
+    they disagree the disagreement is discarded.
+
+    That discarded disagreement is the only signal measured so far that can see
+    a **misfire** -- an anchor firing on a sentence it was not written for.
+    A misfired role is invisible to everything else: it reads as ``forced``, so
+    `read_content_roles_worlds` enumerates one world and agreement is vacuous;
+    its sentence is consumed, so `audit.unconsumed` sees nothing; and the
+    certificate builds its graph from the roles, so it inherits the error.
+
+    Two forms of the same disagreement, and both are needed:
+
+    - ``"stolen"`` -- an anchor named a **different** region as the needs site;
+    - ``"reassigned"`` -- an anchor gave the adjacent region **another** role.
+
+    The second matters more than it looks. A needs sentence tripping the
+    flooding vocabulary marks the destination impassable, which is the single
+    worst misfire measured (accuracy 0.151 against a 0.988 baseline) and does
+    not steal the needs slot, so the first form cannot see it.
+
+    Returns a dict of the conflicts found, empty when the signals agree or when
+    one is missing. **Silence is not safety** -- adjacency is unavailable on
+    some documents, and this says nothing there. It also covers exactly the one
+    role that HAS a second signal: a misfire onto depot or flooding, with no
+    needs sentence involved, is invisible here and stays invisible (measured
+    fire rate 0.000 at accuracy 0.655).
+    """
+    anchors = ROLE_ANCHORS if anchors is None else anchors
+    ev = _scan(text, anchors)
+    out = {}
+    a, b = ev["anchored"].get("needs", ""), ev["adjacent"]
+    if a and b and a != b:
+        out["stolen"] = (a, b)
+    other = ev["by_region"].get(b, "") if b else ""
+    if other and other != "needs":
+        out["reassigned"] = (b, other)
+    return out
+
+
 def read_content_roles(text: str, *, anchors: dict | None = None
                        ) -> WorldSnapshot:
     """The reading alone. See `read_content_roles_checked` for the whole story."""
@@ -806,56 +923,16 @@ def read_content_roles_checked(text: str, *, anchors: dict | None = None
     group is already pinned, which is what lets partial anchor coverage cascade.
     """
     anchors = ROLE_ANCHORS if anchors is None else anchors
-    links: list[tuple[str, str]] = []
-    crossings: dict[tuple[str, str], float | None] = {}
-    vehicles: dict[str, list] = {}
-    flooded: list[str] = []
-    unresolved: list[str] = []
-    order: list[str] = []
-    depot = needs = adjacent = ""
-    demand = None
+    ev = _scan(text, anchors)
+    links = ev["links"]
+    crossings = ev["crossings"]
+    vehicles = ev["vehicles"]
+    flooded = ev["flooded"]
+    unresolved = ev["unresolved"]
+    depot, needs, adjacent = ev["depot"], ev["needs"], ev["adjacent"]
+    demand = ev["demand"]
 
-    paras = [[s for s in _sentences(p)] for p in text.split("\n\n")]
-    pairs = [sum(1 for s in ss
-                 if len(set(_REGION.findall(s))) == 2 and not _NUM.findall(s)
-                 and not _TRUCK_ID.findall(s)) for ss in paras]
-    network = max(range(len(paras)), key=lambda i: pairs[i]) if paras else -1
-
-    for pi, sents in enumerate(paras):
-        last_vehicle = ""
-        for sent in sents:
-            regions = list(dict.fromkeys(_REGION.findall(sent)))
-            trucks = list(dict.fromkeys(_TRUCK_ID.findall(sent)))
-            nums = [float(n) for n in _NUM.findall(sent)]
-            if len(regions) == 2 and nums:
-                crossings[(regions[0], regions[1])] = nums[-1]
-            elif len(regions) == 2 and not nums and not trucks:
-                if pi == network:
-                    links.append((regions[0], regions[1]))
-            elif len(regions) == 1 and not nums and not trucks:
-                role = _anchor_role(sent, anchors)
-                order.append(regions[0])
-                if role == "depot" and not depot:
-                    depot = regions[0]
-                elif role == "flooded":
-                    flooded.append(regions[0])
-                elif role == "needs" and not needs:
-                    needs = regions[0]
-                else:
-                    unresolved.append(regions[0])
-            elif len(trucks) == 1 and nums:
-                slot = 0 if nums[0] in VALUE_REGISTRY["mass"] else 1
-                vehicles.setdefault(trucks[0], [None, None])[slot] = nums[0]
-                last_vehicle = trucks[0]
-            elif len(trucks) == 1 and not nums:
-                last_vehicle = trucks[0]
-            elif not regions and not trucks and len(nums) == 1:
-                if nums[0] in VALUE_REGISTRY["demand"]:
-                    demand = nums[0]
-                    if order:
-                        adjacent = order[-1]
-                elif nums[0] in VALUE_REGISTRY["capacity"] and last_vehicle:
-                    vehicles.setdefault(last_vehicle, [None, None])[1] = nums[0]
+    del anchors  # consumed by _scan
 
     # --- resolve what the anchors did not reach ---------------------------
     # Adjacency first: the demand quantity names its site by sitting next to it,
