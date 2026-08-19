@@ -268,7 +268,31 @@ last_cycle:
     repo now say the cheap half of a problem is the useful half.
 
 next:
-  preferred_action: raise-base-accuracy-or-stop-pricing-certification-here
+  preferred_action: leave-certification-it-is-closed-and-pick-an-unmeasured-axis
+  why_now: >
+    Certification is now closed as a line of work, and closed properly: the
+    theory is one expression (realised = recall/f_flagged, ceiling = 1/f_needed,
+    3b's 1/P_hit being the sound case), the instruments are built and validated
+    (Targeting, Sensitivity, two guards), and the numbers span 1.02x to
+    131.6x with the spread fully explained by f_needed.
+
+    There is nothing left to measure here that the algebra does not already
+    answer. On the curriculum, f_needed is 0.67-0.92 so the ceiling is 1.49x
+    whatever anyone does. On federated data the mechanism is understood and the
+    remaining gap is over-approximation, which needs an update stream nothing
+    here produces.
+  what_is_genuinely_unmeasured: >
+    Six cycles have all run on ONE axis: what a symbolic system is worth per
+    unit of expensive work avoided. The mandate's five properties in APPROACH.md
+    include several nothing this session touched -- and CLAUDE.md is explicit
+    that work moving the BENCHMARK toward those properties outranks work moving
+    a model up the existing table. Read APPROACH.md before choosing, because the
+    task list is a record of what looked worth doing when it was written.
+  do_not: >
+    Do not run another certification arm anywhere. Do not present a rearranged
+    definition as a confirmation -- check the two paths a validation row's
+    numbers came from before counting it.
+  previous_preferred_action: raise-base-accuracy-or-stop-pricing-certification-here
   why_now: >
     The back-off trade is measured and closed: real, and one-sided. It buys
     +0.021 and +0.030 label_acc and costs 0.04x of a metric capped at 1.49x, and

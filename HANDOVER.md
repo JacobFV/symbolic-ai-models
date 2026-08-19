@@ -1258,6 +1258,54 @@ rows rather than a fixture.
 accuracy by **0.000**. Whatever produced that gain, the flag alone does not
 reproduce it; not chased.
 
+## 3u. Escalation and maintenance are one expression (a DERIVATION)
+
+`notes/findings/2026-08-18-escalation-and-maintenance-are-one-expression.md`.
+Labelled as a derivation on purpose: the algebra is new here, the empirical
+content is five rows that were already §3b's.
+
+With `f_flagged` = P(flagged), `f_needed` = P(this case needs the expensive
+path), `precision = P(needed | flagged)`, `recall = P(flagged | needed)`:
+
+```
+realised  =  recall / f_flagged  =  (1/f_needed) × precision
+ceiling   =  1 / f_needed        attained iff precision = recall = 1
+```
+
+- A **sound** certificate has `recall = 1` and realises `1/f_flagged` — **§3b's
+  `advantage = min(compute/check, 1/P_hit)` exactly**.
+- A **model's abstention is not soundness**, so `recall < 1` (`ilp-001`: 0.535).
+- An **oracle** attains `1/f_needed`.
+
+> **§3b's `1/P_hit` is the sound case; the achievable ceiling is `1/f_needed`,
+> and the gap is the certificate's over-approximation** — 8.2× for the
+> symmetric-difference bound, 2.3× for `|Δcount|`.
+
+**Independently confirmed rows** (measured from timings and USD, predicted from
+invalidation counts) — the other seven rows in the script are **identities** and
+confirm nothing:
+
+| row | predicted | measured | error |
+|---|---:|---:|---:|
+| §3b witness (path edges) | 29,389.5× | 29,182.1× | 0.7% |
+| §3b optimality, recorded | 3.27× | 3.27× | 0.0% |
+| §3b optimality, minimal | 21,788.8× | 21,534.3× | 1.2% |
+| §3b full answer | 14,120.1× | 13,987.1× | 1.0% |
+| §3b maintenance, `min_filers_covering` | 1.000× | 0.998× | 0.3% |
+
+**No arm exceeds `1/f_needed`.** That is the one thing the table could have
+falsified.
+
+**Near miss, recorded:** the first version presented all twelve rows as
+confirmations. For maintenance `aim = 1/f_flagged` *by construction*; the
+curriculum rows rearrange to the expression `aim` came from. A suspiciously
+small error (1.2% over five orders of magnitude) was the tell. See
+`notes/lessons/2026-08-18-a-validation-that-reproduces-its-own-definitions.md`.
+
+**What it is good for:** two quantities decide any certification opportunity and
+both are measurable before building — `f_needed` sets the ceiling, and
+`f_flagged/f_needed` is what the mechanism wastes.
+
 ## 4. Believed, not measured. Do not inherit as fact.
 
 Recorded deliberately, with mechanisms, so a later contradiction is a finding
