@@ -40,6 +40,22 @@ measured:
     because the atom rule that keeps a pronoun with its antecedent -- required
     for the document to stay true -- preserves the demand binding; a property of
     the task, not a leak.
+  - MAINTENANCE IS THE FOURTH THING THE AUDIT PREDICTS. Testing each domain
+    with the reader that EXISTED FIRST against four surface events: flood breaks
+    on 2 of 4 (shuffle paragraphs and interleave sentences, both 1.000 -> 0.000)
+    and survives drop-headings and paraphrase; scheduling and solvency break on
+    NONE. flood dies on ARRANGEMENT and survives WORDING, which is its reader
+    being signature-based over signatures that do not fix their predicates.
+    NEARLY PUBLISHED THE OPPOSITE: a first version tested read_content_roles for
+    flood and reported zero breakages everywhere. That reader was BUILT to
+    survive interleaving and paraphrase, so it measures the repair and reports
+    the damage as zero. The other two have only ever had one reader, so their
+    rows were already historical -- which is why the flat table looked plausible
+    rather than suspicious.
+    ONE OFFLINE NUMBER NOW PREDICTS FOUR THINGS: reader difficulty, where error
+    concentrates, how soon the route pays back, and how often it needs
+    repairing. Maintenance is RECURRING, which is what stops it amortising --
+    the amortisation finding assumed a reader is written once.
   - A BIG RATIO ON A TINY NUMBER IS STILL A TINY NUMBER. Computed the missing
     half with development cost left as a PARAMETER: break-even episodes at
     $1,000 of engineering are 0.9M-2.2M against a frontier model, 18M-44M
