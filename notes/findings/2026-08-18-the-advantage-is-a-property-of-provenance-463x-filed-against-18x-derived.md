@@ -122,6 +122,51 @@ anything this repo has attempted. It is also the highest-value acquisition
 available: one bridge file would move the federated advantage from 7× toward the
 463× the single-source case already reaches.
 
+## I acquired the bridge, and it buys 29% rather than 68×
+
+The section above ends by calling the cliff *"a data acquisition problem — one
+crosswalk file"*. So I acquired one. GLEIF publishes a free daily **ISIN → LEI**
+mapping, and for US securities `isin[2:11]` **is** the CUSIP — and 13F holdings
+are CUSIP-keyed. That is an exact-identifier join between two filed sources, the
+first in this repo that does not go through names.
+
+| | | |
+|---|---:|---|
+| US CUSIPs carrying an LEI | 2,281,221 | the mapping |
+| distinct CUSIPs held across 13F | 33,656 | the workload |
+| **bridged** | **7,503 (22.3%)** | 5,436 legal entities reached |
+| **ambiguous among the bridged** | **0 (0.0000%)** | an identifier hits or misses |
+
+Ambiguity behaves exactly as predicted — **zero**. Coverage does not: I predicted
+40–70% and it is **22.3%**.
+
+And a coverage gap **escalates exactly as an ambiguity does**: a query the bridge
+cannot answer still has to go somewhere. So:
+
+| policy | **f** | **advantage** |
+|---|---:|---:|
+| name join alone | 14.70% | **6.8×** |
+| **identifier join alone** | **77.71%** | **1.3×** — *worse than the names it replaced* |
+| bridge, then names where it misses | 11.42% | **8.8×** |
+
+> **The bridge does not close the cliff. It converts it from an ambiguity
+> problem into a coverage problem, and coverage is the larger of the two.**
+> Acquiring exactly the data the previous section asked for buys **1.29×**, not
+> 68×.
+
+**So that section's closing claim is mostly wrong**, and this is what replaces
+it: the cliff is not about the absence of an identifier, it is about the absence
+of an identifier **that covers the workload**. A mapping built for *registered
+securities* covers a fifth of what an institutional portfolio actually holds —
+the rest being funds, options, foreign lines and small issuers that never needed
+an LEI.
+
+The general lesson for federation: **a name join and an identifier bridge fail in
+ways that do not compose into a small number.** The name join is universal and
+uncertain; the bridge is certain and partial. A federated substrate needs both
+plus a policy, and that policy's `f` is the **product** of the two failure rates,
+not the smaller of them.
+
 ## Two caveats that belong next to the number
 
 - **Quality 1.0 in the filed regime is relative to the filing.** The task's

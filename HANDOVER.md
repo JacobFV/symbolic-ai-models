@@ -55,8 +55,15 @@ links a CIK to an LEI, and GLEIF's own external identifier is the *Delaware
 register number* (NVIDIA: 2862596) rather than the CIK (1045810). Two filed
 sources fail to join **not for lack of identifiers but for a surplus of
 incompatible ones**, and the only attribute both hold is the name. Closing the
-68× cliff is a **data-acquisition** problem — one crosswalk file — not an
-algorithmic one, and it is now the highest-value acquisition available.
+68× cliff looked like a **data-acquisition** problem — one crosswalk file — and
+**that has now been tried and is mostly wrong.** GLEIF's free ISIN→LEI mapping is
+on disk (`data/sources/gleif-isin/`), gives an exact-identifier join to 13F's
+CUSIP-keyed holdings with **0.0000% ambiguity**, and covers only **22.3%** of
+held securities. A coverage gap escalates exactly as an ambiguity does, so the
+identifier join *alone* is **worse** than the names it replaced (f 77.7%, 1.3×);
+bridge-then-name gives f 11.4% and **8.8×**, up from 6.8×. **The acquisition buys
+1.29×, not 68×** — the cliff is not the absence of an identifier but the absence
+of one that **covers the workload**.
 
 The advantage is a property of the domain's **structure-provenance**, not of the
 technology — and this reconciles the two
