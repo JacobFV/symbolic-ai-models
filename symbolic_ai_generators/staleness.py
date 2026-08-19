@@ -36,18 +36,58 @@ from __future__ import annotations
 import re
 
 __all__ = ["stale_by_tense", "stale_by_cancellation", "filter_stale",
-           "TENSE", "CANCELLING"]
+           "TENSE", "CANCELLING", "CANCELLING_V1"]
 
 #: Past-tense and perfect auxiliaries. A sentence in the past, nothing more.
 TENSE = ("was", "were", "had", "used to", "did")
 
-#: Cues that a sentence **withdraws** what it asserts: the state is over, the
-#: item is off the list, or a clause bounds it in the past. Declared from what
-#: these words mean, not fitted to the corpus -- the fitting version of this
-#: experiment is what the misfiring-vocabulary result is about.
-CANCELLING = ("disused", "former", "formerly", "no longer", "used to", "once",
-              "previously", "struck", "cancelled", "withdrawn", "ceased",
-              "before the", "until the", "since removed", "came off")
+#: Cues that a sentence **withdraws** what it asserts: the state is over or the
+#: item is off the list. Declared from what these words mean, not fitted to a
+#: corpus -- the fitting version of this experiment is what the
+#: misfiring-vocabulary result is about.
+#:
+#: **Corrected against 36,223 sentences of real scientific prose** (`data/sources/
+#: openalex-prose`, `scripts/gate_on_real_prose.py`). The first list carried four
+#: more cues, and on English nobody here wrote they were **temporal ordering**
+#: rather than withdrawal -- *"before the reaction"*, *"previously reported"*,
+#: *"once-weekly"*, *"until the endpoint"*. A sentence may say "before the war X
+#: was Y" while X is still Y. They accounted for **40%** of all fires on real
+#: text and nothing in any generated surface here depends on them, every
+#: distractor carrying a second, genuinely cancelling cue.
+CANCELLING = ("disused", "former", "formerly", "no longer", "struck",
+              "cancelled", "withdrawn", "ceased", "since removed", "came off")
+
+#: ``used to`` is two constructions and only one of them cancels. The habitual
+#: past -- *"job_0 used to cut"* -- says the state is over. The passive of *use*
+#: -- *"is used to obtain"*, *"have been widely used to examine"* -- says nothing
+#: of the kind, and it is **53.5% of every fire on real prose**, 439 of 443 of
+#: them as the only cue in the sentence. That is not a temporal/cancelling
+#: confusion, it is an ambiguity between two grammars, and it separates on one
+#: observable: the passive is preceded by a form of *be*.
+_BE = frozenset({"is", "are", "was", "were", "be", "been", "being"})
+#: How far back to look for the auxiliary. Three tokens, because an adverb or two
+#: routinely intervenes -- *"are then used to"*, *"have been widely used to"* --
+#: and an approximation is what is available without a parser. It costs a false
+#: NEGATIVE on a genuine habitual whose subject sits within three tokens of a
+#: be-form ("he was tired and used to walk"), which is the cheap direction to be
+#: wrong in: a missed cancellation leaves a claim standing, where a false
+#: positive DELETES a true one.
+_LOOKBACK = 3
+
+
+def _habitual_past(low: str) -> bool:
+    """``used to`` in the habitual reading -- not the passive of *use*."""
+    tokens = re.findall(r"[a-z0-9_]+", low)
+    for i in range(len(tokens) - 1):
+        if tokens[i] == "used" and tokens[i + 1] == "to":
+            before = tokens[max(0, i - _LOOKBACK):i]
+            if not (_BE & set(before)):
+                return True
+    return False
+
+#: The first list, kept so a published number can be reproduced rather than
+#: silently redefined. Nothing measured here moved when the four were dropped.
+CANCELLING_V1 = CANCELLING + ("once", "previously", "before the", "until the")
 
 
 def _has(sentence: str, cues) -> bool:
@@ -67,9 +107,9 @@ def stale_by_tense(sentence: str) -> bool:
     return _has(sentence, TENSE)
 
 
-def stale_by_cancellation(sentence: str) -> bool:
+def stale_by_cancellation(sentence: str, *, cues=CANCELLING) -> bool:
     """The sentence withdraws what it asserts."""
-    return _has(sentence, CANCELLING)
+    return _has(sentence, cues) or _habitual_past(sentence.lower())
 
 
 def filter_stale(text: str, gate) -> str:

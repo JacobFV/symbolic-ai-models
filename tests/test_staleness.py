@@ -98,3 +98,43 @@ def test_exactly_one_real_phrasing_trips_the_gate_and_it_is_flooding():
                 if stale_by_cancellation(s):
                     tripped.append(kind)
     assert tripped == ["flooded"], tripped
+
+
+def test_temporal_ordering_is_not_cancellation():
+    """The four cues dropped after 36,223 sentences of real prose. A sentence
+    may bound a state in the past without withdrawing it."""
+    from symbolic_ai_generators.staleness import CANCELLING_V1
+    for s in ("Before the reaction, the sample was weighed.",
+              "The present method is better than those previously reported.",
+              "Once-weekly dosing was tolerated as well as the comparator.",
+              "Measurements continued until the endpoint was reached."):
+        assert not stale_by_cancellation(s), s
+        assert stale_by_cancellation(s, cues=CANCELLING_V1), (
+            f"{s!r} should still fire under the first list, or the record of "
+            "what changed is wrong")
+
+
+def test_used_to_is_two_constructions_and_only_one_cancels():
+    """53.5% of every fire on real prose was the PASSIVE OF USE, 439 of 443 as
+    the only cue in the sentence. Not a temporal confusion -- two grammars."""
+    assert stale_by_cancellation("job_0 used to cut as well.")
+    assert stale_by_cancellation("sub_98 used to be part of the group.")
+    for s in ("These results are then used to obtain the inequalities.",
+              "Funnel plots have been widely used to examine bias.",
+              "A survey of styles is used to classify them."):
+        assert not stale_by_cancellation(s), s
+
+
+def test_the_corrections_cost_the_generated_surfaces_nothing():
+    """Removals can only reduce firing, so this is a check and not a fit -- and
+    it is the evidence that what was removed was noise. Every distractor here
+    carries a second, genuinely cancelling cue."""
+    for s in ("A disused track once ran from region_0 to region_3.",
+              "machine_0 was set up to paint last shift, before the head came "
+              "off.",
+              "job_0 used to cut as well, until the drawing was revised.",
+              "sub_98 is a former subsidiary of group, divested before the "
+              "period.",
+              "job_90 was cancelled by the customer and has been struck from "
+              "the list."):
+        assert stale_by_cancellation(s), s
