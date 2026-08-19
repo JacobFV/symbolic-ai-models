@@ -17,9 +17,22 @@ The programme pivoted on 2026-08-18 from *model zoo + language curriculum* to a
 **typed world-program runtime over real federated data**. The curriculum is a
 development harness, not the benchmark. The live frontier is:
 
-> **Maintaining an answer instead of re-deriving it: what an answer actually
+> **What the cost advantage is worth at fixed quality — because every
+> million-fold number this repo has published prices a system nobody would
+> deploy, and the moment anything escalates to a model the advantage is `1/f`.**
+
+Measured (§3i): escalating the **12.3%** of extraction cases where the symbolic
+layer produces nothing at all takes the advantage from **2,061,364× to 8.1×**.
+Reaching 83.5% quality costs **2.0×**. `symbolic_ai_core/cost.py` said this in
+its own docstring before the session started — *"cheap-and-incapable is not a
+point on the cost curve; it is a point off the capability axis entirely"* — and
+every cost row here ignored it until now.
+
+The previous frontier, which is measured and closed rather than abandoned:
+
+> *Maintaining an answer instead of re-deriving it: what an answer actually
 > depends on, how much smaller that is than what the computation read, and what
-> the difference is worth per corpus update.**
+> the difference is worth per corpus update.*
 
 That is a move from the previous revision's frontier ("computing with
 disagreements no source is entitled to settle"), which is not abandoned but is
@@ -491,6 +504,35 @@ such a sibling):
 
 The finding carries a banner at the overstated section; do not quote it without
 the correction.
+
+## 3i. The advantage at fixed quality: 8.1×, not 10⁶
+
+`notes/findings/2026-08-18-the-million-fold-advantage-is-8x-the-moment-you-escalate-anything.md`
+
+**Read this before quoting any number in §3, §3b, §3c or §3g.** They all compare
+a cheap-and-wrong system against an expensive-and-assumed-perfect one. The
+comparison anyone would actually make is a hybrid, and its price is set by the
+escalated fraction `f`:
+
+| policy | **f** | quality | **advantage** |
+|---|---:|---:|---:|
+| symbolic only | 0.0% | 0.526 | 2,061,364× |
+| **escalate SILENT only** | **12.3%** | **0.650** | **8.1×** |
+| escalate AMBIGUOUS only | 38.3% | 0.712 | 2.6× |
+| escalate silent + ambiguous | 50.6% | 0.835 | **2.0×** |
+| model only | 100% | 1.000 | 1.0× |
+
+**And the extractor cannot tell what it knows.** Its `certain` tier — every
+matched component naming exactly one institution — scores **F1 0.666**, against a
+pre-registered *"below 0.7 changes my mind"*. Confident and wrong a third of the
+time; `certain` beats `ambiguous` by only +0.150.
+
+**The one thing that works inverts the intuition:** silence is a better
+escalation signal than ambiguity. Escalating the silent tier buys **1.00 quality
+per unit escalated** (those cases score 0.000, so nothing is re-bought);
+escalating the ambiguous tier buys **0.48**, wasting half the spend on cases
+already 0.516 right. **Escalate where the system produces nothing, not where it
+is unsure.**
 
 ## 4. Believed, not measured. Do not inherit as fact.
 

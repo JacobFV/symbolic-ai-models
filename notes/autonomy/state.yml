@@ -5,6 +5,11 @@ schema_version: 1
 updated: 2026-08-18
 
 mission:
+  headline_correction_2026_08_18: >
+    Cost ratio at FIXED QUALITY is the comparison anyone would make, and by that
+    measure the number is 2x-8x rather than 10^6. Every million-fold figure in
+    this repo prices a system nobody would deploy. cost.py's docstring said so
+    before the session began.
   north_star: >
     $ per correct answer, an order of magnitude below neural inference, with the
     reasoning inspectable rather than inferred. Priced against a *realistic*
@@ -110,6 +115,12 @@ measured:
     commit: f3d6010
   - claim: "The Witness contract is carried by 4 kernels of 8 (asp, smt, lean, datalog-opt-in). The other four split three-way rather than two: egraph COULD carry one (its equivalent_form claim's witness is the rewrite sequence, unrecorded) and rigid/geo/economy have none to have, because a pose, a geodesic distance and a consolidated total are function evaluations rather than searches."
     evidence: tests/test_witness.py::TestWitnessCoverage
+    commit: pending
+  - claim: "The cost advantage at FIXED QUALITY is 8.1x, not 10^6. Escalating the 12.3% of extraction cases where the symbolic layer produces nothing takes it from 2,061,364x to 8.1x; reaching 83.5% quality costs 2.0x. The advantage is 1/f where f is the escalated fraction, and the million-fold numbers exist only at f=0, i.e. at 52.6% quality."
+    evidence: notes/findings/2026-08-18-the-million-fold-advantage-is-8x-the-moment-you-escalate-anything.md
+    commit: pending
+  - claim: "The extractor cannot tell what it knows: its `certain` tier scores F1 0.666 against a pre-registered 0.7 threshold, and beats `ambiguous` by only +0.150. But SILENCE is a good escalation signal -- escalating it buys 1.00 quality per unit escalated against ambiguity's 0.48, because silent cases score 0.000 and nothing is re-bought."
+    evidence: same finding
     commit: pending
   - claim: "Scoping survives a dense graph. On the filed-real routing mixture: read p50 1, max 8, 0 refusals in 250 queries, anchor 179/179. What breaks is wall time -- 48.3 ms/query against GLEIF's 2.8 us -- and the governing variable is conflict rate x read footprint, not topology."
     evidence: notes/findings/2026-08-18-scoping-survives-a-dense-graph-and-what-breaks-is-wall-time-not-refusal.md
