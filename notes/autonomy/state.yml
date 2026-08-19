@@ -268,7 +268,31 @@ last_cycle:
     repo now say the cheap half of a problem is the useful half.
 
 next:
-  preferred_action: issuers-not-filers-does-identity-coverage-move
+  preferred_action: acquire-form-adv-and-close-the-filer-column
+  why_now: >
+    The reach arc is now resolved and it ends on an asymmetry: over the SAME 13F
+    edge, questions pointed at the security are 66.3% addressable by value and
+    questions pointed at the holder are 23.2%. The residual f of 8.17% lives on
+    the filer side, so it is NOT a tail phenomenon, and every lever tried so far
+    (a second crosswalk, a second structural source) has failed on exactly that
+    side.
+
+    The finding names its own refuter and it is unusually cheap: Form ADV is the
+    SEC's own registry of investment advisers -- the population wikidata misses
+    entirely -- it is public, it carries CRD and SEC file numbers alongside legal
+    and business names, and it is not on disk. If it lifts filer identity
+    coverage from 23.2%, the whole filer column moves and every number in 3j-3n
+    is recomputed on a better bridge. If it does not, identity coverage is a
+    genuine wall and the programme should stop trying to buy its way past it.
+  why_this_beats_the_alternatives: >
+    It is the only untried lever that targets the side the residual f actually
+    lives on. Every other candidate either re-measures the issuer side (already
+    at 66.3%) or adds structure that cannot be addressed (measured null, 1.01x).
+  acquisition_note: >
+    Public SEC download, no credential, no payment -- inside the mandate's
+    "download legally usable research data" clause. Check robots/terms and size
+    before fetching; wget rather than curl, per the GLEIF lesson.
+  previous_preferred_action: issuers-not-filers-does-identity-coverage-move
   why_now: >
     Federating a second structural source is a DEAD ARM: wikidata holds 4.3x
     more ownership structure than GLEIF (1,279,720 edges to 296,491) and settles

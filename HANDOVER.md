@@ -843,6 +843,41 @@ predicts the 1.01× without building anything.
 
 **Do not quote** the 54.5% conditional determinacy from that run: n = 11.
 
+## 3n. Coverage is asymmetric in the DIRECTION of the query
+
+`notes/findings/2026-08-18-identity-coverage-is-asymmetric-in-the-direction-of-the-query.md`.
+§3m's null rests on **1.58%** of GLEIF entities carrying a wikidata twin — an
+unweighted per-entity count, and this repo has been caught by that denominator
+three times. Checked, over $51.4T of 13F positions:
+
+| population | by count | **by value** | ratio | vs flat 1.58% |
+|---|---:|---:|---:|---:|
+| **held securities** (issuers), by $ held | 12.0% | **66.3%** | 5.5× | **42×** |
+| **13F filers**, by AUM | 1.6% | **23.2%** | 14.3× | 15× |
+| all GLEIF entities, unweighted | 1.6% | 1.6% | 1.0× | — |
+
+> **Coverage is asymmetric in the *direction* of the query over the same edge.**
+> The 13F holdings relation traversed toward the security is 66.3% addressable
+> by value; traversed toward the holder, 23.2%. **2.9× apart**, same bridge,
+> same technology.
+
+Two consequences, and they point opposite ways:
+
+- **The residual `f` of 8.17% is NOT a tail phenomenon.** The alignment workload
+  where `f` lives is over *filers*. Correcting the denominator was necessary and
+  §3m's null survives it — that arm ran on the population wikidata covers worst.
+- **The vertical slice (§3k) rests on much firmer ground than the alignment
+  does**, because it operates on the *issuer* side at 66.3% of held value.
+  Nothing had established that.
+
+**Prominence tracks entity TYPE, not size.** I predicted 12–25% of filers by
+count and 55–80% by AUM; it is 1.6% and 23.2%. wikidata is an encyclopaedia of
+operating companies, and most of the 8,755 13F filers are small registered
+advisers with no encyclopaedic existence at any AUM.
+
+**Strongest available refuter, and it is cheap:** Form ADV covers exactly the
+registered advisers wikidata misses, is public, and is not on disk.
+
 ## 4. Believed, not measured. Do not inherit as fact.
 
 Recorded deliberately, with mechanisms, so a later contradiction is a finding
