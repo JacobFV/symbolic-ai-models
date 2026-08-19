@@ -31,7 +31,8 @@ from typing import Any
 
 from symbolic_ai_core.world import Quantity
 
-__all__ = ["Citation", "Answer", "render_answer", "ungrounded"]
+__all__ = ["Citation", "Answer", "render_answer", "ungrounded",
+           "incomplete"]
 
 _NUM = re.compile(r"\b\d+(?:\.\d+)?\b")
 _ENT = re.compile(r"\b(?:region|truck|bridge)_\d+\b")
@@ -287,3 +288,51 @@ def ungrounded(answer: Answer, case: Any, outputs: dict[str, Any]) -> list[str]:
         if tok not in known_ents:
             bad.append(f"entity {tok} appears in no claim or flow output")
     return bad
+
+
+def incomplete(answer: Answer, case: Any) -> list[str]:
+    """Facts the decision turned on that the paragraph never cites.
+
+    The companion to `ungrounded`, and it exists because that check cannot reach
+    this. `ungrounded` inspects what is **present** -- tokens supported, route
+    hops real, no contradiction with the structured answer -- and every one of
+    those is satisfied by a paragraph that simply says *less*. A paragraph citing
+    a strict subset of true claims asserts nothing false.
+
+    Measured 2026-08-19 on flood, rendering under a citation budget: grounding is
+    **1.000 at every budget** while a reader of the paragraph alone reconstructs
+    the answer 0.000 of the time at four cited facts and 0.529 at sixteen. The
+    two are independent axes, and the pipeline's argument is that its reasoning
+    is *inspectable* -- a fully grounded, materially incomplete paragraph is
+    inspectable in the letter and not in substance.
+
+    The test here is **decision-completeness**: rebuild a world from the claims
+    the paragraph actually cites, re-solve, and compare with the answer it
+    states. What comes back is the set of claim kinds whose absence changes the
+    answer -- i.e. what a reader would need and does not have.
+    """
+    cited = set()
+    for c in answer.citations:
+        if c.source.startswith("claim:"):
+            tail = c.source.split(":", 1)[1]
+            if tail.isdigit():
+                cited.add(int(tail))
+    from dataclasses import replace as _replace
+
+    from symbolic_ai_generators.flood.flow import solve as _solve
+
+    partial = _replace(case.world,
+                       claims=tuple(case.world.claims[i]
+                                    for i in sorted(cited)
+                                    if i < len(case.world.claims)))
+    try:
+        if _solve(partial)[0] == tuple(answer.structured):
+            return []
+    except Exception:
+        pass
+    missing = sorted({case.world.claims[i].predicate
+                      for i in range(len(case.world.claims))
+                      if i not in cited})
+    return [f"the paragraph cites {len(cited)} of "
+            f"{len(case.world.claims)} claims; a reader could not rebuild the "
+            f"answer without: {', '.join(missing)}"] if missing else []

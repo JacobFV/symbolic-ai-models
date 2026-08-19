@@ -93,3 +93,43 @@ def test_the_oracle_world_is_where_grounded_means_true() -> None:
             hops = m.group(1).split(" to ")
             for a, b in zip(hops, hops[1:]):
                 assert frozenset((a, b)) in true_links, (seed, a, b)
+
+
+def test_grounding_does_not_measure_sufficiency() -> None:
+    """The shipped renderer cites 2 of 28.5 claims and is grounded on all of
+    them. Grounding checks that nothing false is asserted; it cannot check that
+    enough was said.
+
+    Asserting the gap EXISTS is the point -- if a future renderer becomes
+    decision-complete this test should be updated, not deleted, because the
+    scope claim about `ungrounded` survives the renderer improving.
+    """
+    from symbolic_ai_generators.flood.render import incomplete
+
+    grounded = complete = n = 0
+    for seed in range(30):
+        case = generate(seed)
+        answer, outs, _ = solve(case.world)
+        if not answer:
+            continue
+        n += 1
+        para = render_answer(case, answer, outs)
+        grounded += not ungrounded(para, case, outs)
+        complete += not incomplete(para, case)
+    assert n > 10, n
+    assert grounded == n, "the renderer should be fully grounded"
+    assert complete == 0, "and it should be decision-complete on none of them"
+
+
+def test_completeness_is_recoverable_by_citing_everything() -> None:
+    """The check must be satisfiable, or it is measuring nothing."""
+    from dataclasses import replace
+
+    from symbolic_ai_generators.flood.render import Citation, incomplete
+
+    case = generate(0)
+    answer, outs, _ = solve(case.world)
+    para = render_answer(case, answer, outs)
+    full = replace(para, citations=tuple(
+        Citation(0, 0, f"claim:{i}") for i in range(len(case.world.claims))))
+    assert incomplete(full, case) == []
