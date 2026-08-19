@@ -1532,7 +1532,17 @@ theory:
         union (every group in X)        parent d 0.866   country d 0.574
         argmax (largest group in X)              0.493            0.327
         existence (is G in X at all)             0.015            0.010
-      d SPANS A FACTOR OF SIXTY ON IDENTICAL CLAIMS. Flood, a selection over a
+      d SPANS A FACTOR OF SIXTY ON IDENTICAL CLAIMS.
+      AMENDED: enumeration is the wrong variable. A VOI experiment meant to SWAP
+      the relations' roles failed -- parent's d exceeds country's in BOTH the
+      parent-enumerated and country-enumerated queries. d is governed by VALUE
+      REDUNDANCY IN THE ANSWER SET: country values repeat (many companies share
+      "united states") so dropping one rarely changes the set, parent values are
+      near-unique so dropping one usually does. That also explains flood's low d
+      without appeal to aggregation -- its network has alternative routes.
+      Selectivity changes redundancy; enumeration is one way to get it, not the
+      thing itself. And VOI ~ d*(1-acc) is directionally right but quantitatively
+      weak: a gain ratio of 16.0 against a VOI ratio of 5.45. Flood, a selection over a
       redundant graph, sits at 0.236. THE VALUE OF TASK-WEIGHTED READING IS ~1/d,
       AND d IS SET BY THE QUERY'S AGGREGATION SHAPE -- knowable before a word is
       read. At d ~ 0.01 an existence query makes 99% of reading effort irrelevant;

@@ -97,6 +97,39 @@ accuracy *is* the right objective.** Task-weighted reconstruction is not
 universally the better target — it is better exactly where the query is
 insensitive, which is what `d` measures.
 
+## Amendment: enumeration was the wrong variable, redundancy is the right one
+
+Trying to turn `d` into a **value-of-information** rule — `VOI(r) ≈ d_r·(1−acc_r)`,
+the rational decision rule the frame asks for before any learned router — the
+discriminating design **failed**, and the failure is informative.
+
+Two queries were meant to swap the relations' roles: *groups in country X* (parent
+enumerated) against *countries of group G* (country enumerated). **`d` did not
+swap.** Parent's `d` exceeds country's in both, so VOI and the naive *improve the
+weakest relation* agree and nothing is discriminated.
+
+The reason is that **`d` is governed by value redundancy in the answer set**, not
+by whether a relation is enumerated or filtering. Country values *repeat* — many
+companies share *united states* — so dropping one country claim rarely changes the
+set. Parent values are near-unique, so dropping one usually does. That also
+explains flood's low `d` without appeal to aggregation at all: its network has
+alternative routes, so most links are redundant.
+
+So the controlling variable is **redundancy of the relation's values within the
+answer**, and aggregation shape is one way to get it rather than the thing itself.
+The union/argmax/existence spread above is still a factor of sixty on identical
+claims — but it is the *selectivity* changing the redundancy, not the enumeration
+per se.
+
+One more number worth keeping: fixing half of each relation's errors gave a gain
+ratio of **16.0** against a VOI ratio of **5.45**. First-order `d·(1−acc)` is
+directionally right and **quantitatively weak** — it under-predicts how
+concentrated the value is.
+
+*(The `d` figures in this amendment are computed over all rows per probe rather
+than only matching ones, so 0.099 is not comparable with the 0.866 above — same
+quantity, diluted denominator.)*
+
 ## What would refute this
 
 - The three shapes share a corpus and a reader, which is what makes them a
