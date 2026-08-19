@@ -352,6 +352,19 @@ def omits_load_bearing(answer: Answer, case: Any) -> list[str]:
     paragraph rather than a recitation, and
     `symbolic_ai_generators.flood.certificate.load_bearing_cheap` supplies the
     set at 1.03x the cost of the answer.
+
+    **This is a lower bound, not a guarantee**, and the name says less than it
+    might appear to. It tests SINGLE-claim deletion. Measured 2026-08-19, flood
+    has **2.5 pairs per case** that change the answer together while neither
+    changes it alone -- most often ``link``+``link``, which is parallel routes:
+    delete either and the other carries the traffic, delete both and it does
+    not. A paragraph can cite every singly-load-bearing claim and still omit a
+    pair the answer depends on.
+
+    Solvency has none, which a sum predicts: every latest filing is already
+    individually load-bearing, so nothing is jointly-but-not-singly critical.
+    The redundancy that makes an explanation short is what creates the blind
+    spot.
     """
     from symbolic_ai_generators.flood.certificate import load_bearing_cheap
 

@@ -188,3 +188,41 @@ def test_completeness_is_bought_with_length_not_magic() -> None:
         long += len(render_complete(case, answer, outs).text.split())
     assert long > short, (long, short)
     assert long < short * 3, "a complete explanation should not be a recitation"
+
+
+def test_omits_load_bearing_is_a_lower_bound() -> None:
+    """It tests SINGLE-claim deletion, so a jointly-critical pair is invisible.
+
+    flood has 2.5 such pairs per case -- most often two parallel links, where
+    deleting either leaves the other carrying the traffic. Asserting they EXIST
+    keeps the check's name honest: it reports what it computes, and what it
+    computes is a bound.
+    """
+    import itertools
+    from dataclasses import replace
+
+    found = 0
+    for seed in range(6):
+        case = generate(seed)
+        base = solve(case.world)[0]
+        if not base:
+            continue
+        claims = case.world.claims
+        single = set()
+        for i in range(len(claims)):
+            t = replace(case.world, claims=tuple(
+                c for j, c in enumerate(claims) if j != i))
+            if solve(t)[0] != base:
+                single.add(i)
+        inert = [i for i in range(len(claims)) if i not in single]
+        for a, b in itertools.combinations(inert, 2):
+            t = replace(case.world, claims=tuple(
+                c for j, c in enumerate(claims) if j not in (a, b)))
+            if solve(t)[0] != base:
+                found += 1
+                break
+        if found:
+            break
+    assert found, ("no jointly-critical pair found; if single-claim "
+                   "sensitivity now captures everything, this test should be "
+                   "replaced rather than deleted")
