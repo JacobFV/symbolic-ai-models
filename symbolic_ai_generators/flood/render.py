@@ -32,7 +32,7 @@ from typing import Any
 from symbolic_ai_core.world import Quantity
 
 __all__ = ["Citation", "Answer", "render_answer", "ungrounded",
-           "incomplete"]
+           "incomplete", "omits_load_bearing", "render_complete"]
 
 _NUM = re.compile(r"\b\d+(?:\.\d+)?\b")
 _ENT = re.compile(r"\b(?:region|truck|bridge)_\d+\b")
@@ -336,3 +336,76 @@ def incomplete(answer: Answer, case: Any) -> list[str]:
     return [f"the paragraph cites {len(cited)} of "
             f"{len(case.world.claims)} claims; a reader could not rebuild the "
             f"answer without: {', '.join(missing)}"] if missing else []
+
+
+def omits_load_bearing(answer: Answer, case: Any) -> list[str]:
+    """Load-bearing claims the paragraph never cites — the achievable check.
+
+    `incomplete` demands the answer be **rebuildable** from the paragraph, which
+    no explanation a person would read can satisfy: the shipped renderer scores
+    0.000 and a paragraph reciting 28 facts is worse output. That check is a
+    diagnostic.
+
+    This is the objective. A claim is **load-bearing** when deleting it changes
+    the answer, and an explanation owes the reader exactly those. Measured
+    2026-08-19: 10.8 of 28.4 claims per case, so a complete explanation is a
+    paragraph rather than a recitation, and
+    `symbolic_ai_generators.flood.certificate.load_bearing_cheap` supplies the
+    set at 1.03x the cost of the answer.
+    """
+    from symbolic_ai_generators.flood.certificate import load_bearing_cheap
+
+    cited = set()
+    for c in answer.citations:
+        if c.source.startswith("claim:"):
+            tail = c.source.split(":", 1)[1]
+            if tail.isdigit():
+                cited.add(int(tail))
+    missing = load_bearing_cheap(case.world) - cited
+    if not missing:
+        return []
+    kinds: dict[str, int] = {}
+    for i in missing:
+        k = case.world.claims[i].predicate
+        kinds[k] = kinds.get(k, 0) + 1
+    return [f"{len(missing)} load-bearing claims are never cited: "
+            + ", ".join(f"{v}x {k}" for k, v in sorted(kinds.items()))]
+
+
+def render_complete(case: Any, structured: tuple[str, ...],
+                    outputs: dict[str, Any]) -> Answer:
+    """The verdict, then every fact the decision turned on.
+
+    The template renderer cites 2.0 of 28.4 claims and 9% of the load-bearing
+    set: a summary, and a good one, but not an explanation a reader could check.
+    This appends the rest of what the answer depends on.
+
+    Longer by construction — about eleven facts rather than two — which is the
+    price of an explanation that omits nothing material. Whether that is the
+    right output is a product decision; what was missing was the *option*, and a
+    check that says which one you are looking at.
+    """
+    from symbolic_ai_generators.flood.certificate import load_bearing_cheap
+
+    base = render_answer(case, structured, outputs)
+    p = _Para()
+    p.glue(base.text)
+    cited = {int(c.source.split(":", 1)[1]) for c in base.citations
+             if c.source.startswith("claim:")
+             and c.source.split(":", 1)[1].isdigit()}
+    rest = sorted(load_bearing_cheap(case.world) - cited)
+    if rest:
+        p.glue(" The decision turns on: ")
+        for n, i in enumerate(rest):
+            claim = case.world.claims[i]
+            if n:
+                p.glue("; ")
+            ents = " ".join(claim.entities())
+            q = claim.roles.get("value")
+            if isinstance(q, Quantity):
+                p.say(f"{ents} {float(q.value):.0f} kg", f"claim:{i}")
+            else:
+                p.say(f"{ents}", f"claim:{i}")
+        p.glue(".")
+    return Answer(structured=base.structured, text=p.text(),
+                  citations=tuple(base.citations) + tuple(p.cites))

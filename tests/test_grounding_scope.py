@@ -133,3 +133,58 @@ def test_completeness_is_recoverable_by_citing_everything() -> None:
     full = replace(para, citations=tuple(
         Citation(0, 0, f"claim:{i}") for i in range(len(case.world.claims))))
     assert incomplete(full, case) == []
+
+
+def test_the_complete_renderer_omits_nothing_load_bearing() -> None:
+    """The achievable objective, met.
+
+    The template cites 9% of the load-bearing set; this cites all of it, stays
+    grounded, and costs about 37% more words.
+    """
+    from symbolic_ai_generators.flood.render import (omits_load_bearing,
+                                                     render_complete)
+
+    n = 0
+    for seed in range(25):
+        case = generate(seed)
+        answer, outs, _ = solve(case.world)
+        if not answer:
+            continue
+        n += 1
+        para = render_complete(case, answer, outs)
+        assert not ungrounded(para, case, outs), seed
+        assert not omits_load_bearing(para, case), seed
+    assert n > 10, n
+
+
+def test_the_template_does_not_meet_it() -> None:
+    """Asserting the gap exists, so the check cannot quietly become trivial."""
+    from symbolic_ai_generators.flood.render import omits_load_bearing
+
+    missed = 0
+    for seed in range(25):
+        case = generate(seed)
+        answer, outs, _ = solve(case.world)
+        if not answer:
+            continue
+        missed += bool(omits_load_bearing(render_answer(case, answer, outs),
+                                          case))
+    assert missed > 10, missed
+
+
+def test_completeness_is_bought_with_length_not_magic() -> None:
+    """A complete explanation is longer. If it were not, the check would be
+    measuring nothing."""
+    from symbolic_ai_generators.flood.render import render_complete
+
+    short = long = n = 0
+    for seed in range(15):
+        case = generate(seed)
+        answer, outs, _ = solve(case.world)
+        if not answer:
+            continue
+        n += 1
+        short += len(render_answer(case, answer, outs).text.split())
+        long += len(render_complete(case, answer, outs).text.split())
+    assert long > short, (long, short)
+    assert long < short * 3, "a complete explanation should not be a recitation"
