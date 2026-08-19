@@ -48,7 +48,7 @@ from scripts.multi_relation_world import norm
 CORPUS = Path("data/artifacts/wikipedia_parents_closed.jsonl")
 OUT = Path("runs/bootstrap_relation.json")
 SEED_SHARE = 0.10
-ROUNDS = 4
+ROUNDS = 8
 #: How many pseudo-labelled articles to add per round, highest belief first.
 ADD = 200
 #: Three splits, because a single seed draw is a single draw -- and this session
@@ -98,6 +98,7 @@ def one_split(docs, split_seed: int) -> dict:
     train = [R.supervise_distant(d) for d in seed]
     remaining = list(unlabelled)
     added = 0
+    prev: dict[int, str] = {}
     for rnd in range(1, ROUNDS + 1):
         scored = []
         for d in remaining:
@@ -112,6 +113,19 @@ def one_split(docs, split_seed: int) -> dict:
                 scored.append((best[0], best[1], d))
         scored.sort(key=lambda x: -x[0])
         take = scored[:ADD]
+        # Unsupervised signals, recorded because the case this is FOR has no
+        # held-out gold: a relation nobody curated cannot tell you when to stop.
+        # If none of these tracks the accuracy peak, bootstrapping needs a
+        # stopping rule it does not have.
+        signals = {
+            "mean_belief": (statistics.mean(x[0] for x in take)
+                            if take else 0.0),
+            "coverage": len(scored) / max(1, len(remaining)),
+            "churn": (statistics.mean(
+                1.0 if prev.get(id(d)) not in (None, g) else 0.0
+                for _, g, d in scored) if scored else 0.0),
+        }
+        prev = {id(d): g for _, g, d in scored}
         if not take:
             print("    (nothing confident enough to add; stopping)")
             break
@@ -128,7 +142,7 @@ def one_split(docs, split_seed: int) -> dict:
         reader = fit(train)
         rate, k, n = accuracy(reader, held)
         rows.append({"round": rnd, "rate": rate, "k": k, "n": n,
-                     "pseudo": added})
+                     "pseudo": added, **signals})
     return {"split": split_seed, "ceiling": c_rate, "ceiling_k": c_k,
             "n": c_n, "rounds": rows}
 
@@ -157,6 +171,19 @@ def main() -> None:
                 if rnd < len(r["rounds"])]
         if len(vals) == len(SPLITS):
             line("seed only" if rnd == 0 else f"bootstrap round {rnd}", vals)
+
+    print(f"\n    UNSUPERVISED SIGNALS (mean over splits) -- would any of these"
+          f"\n    have told you to stop, without the held-out column above?")
+    print(f"    {'round':<8}{'accuracy':>10}{'mean belief':>13}"
+          f"{'coverage':>10}{'churn':>8}")
+    for rnd in range(1, ROUNDS + 1):
+        got = [r["rounds"][rnd] for r in results if rnd < len(r["rounds"])]
+        if len(got) != len(SPLITS):
+            continue
+        print(f"    {rnd:<8}{statistics.mean(g['rate'] for g in got):10.3f}"
+              f"{statistics.mean(g['mean_belief'] for g in got):13.3f}"
+              f"{statistics.mean(g['coverage'] for g in got):10.3f}"
+              f"{statistics.mean(g['churn'] for g in got):8.3f}")
 
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(json.dumps(results, indent=2))

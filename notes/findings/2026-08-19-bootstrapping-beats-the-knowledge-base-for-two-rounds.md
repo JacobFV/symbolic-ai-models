@@ -78,6 +78,46 @@ Two things it does not say:
   longer run is the obvious next measurement and the shape suggests it keeps
   falling.
 
+## Eight rounds, and no way to know when to stop
+
+The obvious next measurement, run: eight rounds instead of four, with three
+**unsupervised** signals recorded alongside — because the case bootstrapping is
+*for* is a relation nobody curated, and that case has no held-out gold to peek at.
+
+| round | held-out accuracy | mean belief | coverage | churn |
+|---|---|---|---|---|
+| 1 | 0.131 | 0.989 | 0.330 | 0.000 |
+| **2** | **0.160** | 0.998 | 0.492 | 0.171 |
+| 3 | 0.152 | 0.998 | 0.758 | 0.194 |
+| 4 | 0.139 | **1.000** | 0.794 | **0.291** |
+| 5 | 0.147 | 0.997 | 0.699 | 0.266 |
+| 6 | 0.146 | 0.994 | 0.722 | 0.228 |
+| 7 | 0.130 | 0.992 | 0.773 | 0.226 |
+| 8 | 0.120 | 0.961 | 0.711 | 0.202 |
+
+**None of the three finds the peak.**
+
+- **Mean belief is saturated from round one** — 0.989 rising to 1.000 — and is
+  *highest at round 4*, where accuracy is at a local minimum. Self-training
+  inflates confidence regardless of correctness, which is exactly what it should
+  be expected to do and exactly why it cannot supervise itself. It also destroys
+  the calibration the logistic model was chosen for: a probability that is 0.99
+  for everything is a margin again.
+- **Coverage** rises and plateaus. No peak.
+- **Churn** peaks at round **4**, two rounds after the accuracy peak. Following it
+  would stop at the worst round in the first half.
+
+So bootstrapping here **works and cannot be tuned**. That is the practical
+finding and it is not fatal, because of where the floor sits:
+
+> Round 8 is 0.120 against a full-knowledge-base ceiling of 0.117 and a seed of
+> 0.093. **Every round from 1 to 8 is at or above the ceiling.** Missing the peak
+> costs the +37% and returns you to par — not below it.
+
+Stated as advice: run it, take any number of rounds between one and eight, and
+the result is between par with a curated KB and 37% better than one. What cannot
+be done without gold is find the 37%.
+
 ## What would have refuted it
 
 Round 2 landing below the seed on any split — the drift story would then have
