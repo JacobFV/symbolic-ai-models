@@ -14,10 +14,15 @@ bottleneck: >
   world is still RECEIVED from a generator rather than READ.
 
 measured:
-  - reader arm zero: the template reader scores claim P/R 1.000 on the OLD
-    report and 0.000 on the NEW surface, over the same worlds. On the pooled
-    metric it scores 0.450, identical to having no reader at all; on non-empty
-    cases it scores 0.000. Oracle world is 1.000/1.000.
+  - reader arms on the five-paragraph surface, non-empty accuracy: oracle
+    1.000; rules-full 1.000 (reaches the ceiling, so the surface is fair);
+    rules-no-coreference 0.000; rules-with-distractors 0.682; lexical cue
+    routing 0.136; template reader 0.000, identical to no reader at all.
+  - coreference is decisive: removing it costs 1.000 -> 0.000 while global
+    claim recall falls only 1.000 -> 0.895, because the DEMAND is pronoun-
+    stated in every case and without it nothing can be sized.
+  - distractors are cheap: admitting all of them costs precision 1.000 ->
+    0.823 and only 1.000 -> 0.682 end to end.
   - flood flow: 3 kernels, world->reach->world2->routes->loads->fused, agrees
     with a brute-force oracle that shares no code with the kernels
   - flood reader (regex template): 300/300 worlds round-trip exactly, and its
@@ -39,7 +44,9 @@ theory:
       Do not optimise certification on low-accuracy systems. THREAD CLOSED.
     evidence: 5 independent rows, worst error 1.2%; the rest are identities
   - name: reader_survival
-    status: mechanistic_model   # promoted; both parameters have referents
+    status: screen_not_predictor   # DEMOTED: fitted on random loss, readers
+                                   # lose systematically. Per-kind form
+                                   # supersedes the flat one.
     formula: "S = F + (1-F) q^k;  non-empty answers: S = q^8.31, F = 0.014"
     variables:
       q: per-claim recall
@@ -58,6 +65,16 @@ theory:
       ~30%, not 1%. Pooled ablation vs fit agrees to 0.9% but that is two
       component errors cancelling; on non-empty cases mean d = 11.05 and
       k_eff = 10.91 against a fitted 8.31.
+    superseded_by: "S = prod_kind q_kind^d_kind, d_kind from ablation"
+    why_demoted: >
+      Tested predictively on four reader arms. The flat form is QUALITATIVELY
+      wrong on the no-coreference arm: 0.835 dependency recall predicts 0.222
+      and the truth is 0.000, because a single q assumes losses are
+      exchangeable and a reader loses whole KINDS. The per-kind product gets
+      that exactly (a lost kind sends the product to zero) but only moves mean
+      error 0.137 -> 0.116, and still over-predicts the lexical arm 3.5x
+      (0.476 vs 0.136). Use it to RULE OUT arms that lose a kind; do not
+      forecast a number with it.
     next_test: >
       Does the decomposition reproduce on scheduling or solvency? If their
       floors are not their trivial-answer shares, F is not general.
@@ -74,8 +91,8 @@ unknowns:
   - Precision failures (invented/misread claims) are unswept; MISREADS exists.
 
 active_work: >
-  Reader arms. The surface and the scoring harness are BUILT; arm zero is
-  measured. Next is arms 1-N.
+  Reader arms 0-4 measured. Dominant failure identified: coreference. Next is
+  either a harder surface where rules cannot reach 1.000, or a second domain.
 
 built:
   - symbolic_ai_generators/flood/surface.py -- five-paragraph observation
@@ -87,11 +104,13 @@ built:
     population, with oracle-world as ceiling.
 
 next_actions:
-  - Build reader arms 1-N as case -> WorldSnapshot and run them through
-    scripts/reader_arms.py. Candidates: deterministic rules written for THIS
-    surface; the repo's parser machinery (categorical/regex/chunker/induced);
-    omegaclaw; lexical/registry retrieval; a hybrid. Do not polish the first.
-  - Then: identify the dominant failure mode and pursue it.
+  - The rules arm reaches 1.000, so THIS surface no longer discriminates at the
+    top. Either harden it (paraphrase variation per case, so no fixed pattern
+    set can win) or move to a second domain -- the architecture-transfer
+    question matters more than another arm here.
+  - Chase coreference: it is the whole gap. A reader arm whose only difference
+    is a real reference-resolution mechanism, rather than a hand-written
+    antecedent rule, is the informative one.
   - Renderer: structured answer -> grounded answer paragraph, kept separate from
     the canonical answer so generation quality cannot contaminate reasoning
     evaluation.

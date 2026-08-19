@@ -39,6 +39,7 @@ from symbolic_ai_core.world import Quantity, WorldSnapshot
 from symbolic_ai_generators.flood import generate
 from symbolic_ai_generators.flood.flow import solve
 from symbolic_ai_generators.flood.read import read_report
+from symbolic_ai_generators.flood.read_surface import read_lexical, read_surface
 from symbolic_ai_generators.flood.surface import render_observation
 
 OUT = Path("runs/reader_arms.json")
@@ -79,6 +80,11 @@ def score_arm(name: str, reader: Callable[[object], WorldSnapshot | None],
               cases, truths, deps) -> dict:
     tp = fp = fn = 0
     dep_tp = dep_n = 0
+    #: per-kind recall over the CRITICAL claims only, which is what the refined
+    #: law needs. Global per-kind recall would count claims the answer never
+    #: depended on.
+    kind_tp: dict[str, int] = {}
+    kind_n: dict[str, int] = {}
     hits = hits_ne = n_ne = 0
     errors = 0
     for case, want, dep in zip(cases, truths, deps):
@@ -94,6 +100,10 @@ def score_arm(name: str, reader: Callable[[object], WorldSnapshot | None],
         fn += len(gold - got)
         dep_tp += len(dep & got)
         dep_n += len(dep)
+        for key in dep:
+            kind = key[0]
+            kind_n[kind] = kind_n.get(kind, 0) + 1
+            kind_tp[kind] = kind_tp.get(kind, 0) + (key in got)
         if got_world is None:
             answer = ()
             errors += 1
@@ -110,7 +120,11 @@ def score_arm(name: str, reader: Callable[[object], WorldSnapshot | None],
             hits_ne += ok
     prec = tp / (tp + fp) if tp + fp else 0.0
     rec = tp / (tp + fn) if tp + fn else 0.0
+    per_kind = {k: kind_tp.get(k, 0) / n for k, n in kind_n.items() if n}
+    crit_per_case = {k: n / len(cases) for k, n in kind_n.items()}
     return {"arm": name, "claim_precision": prec, "claim_recall": rec,
+            "critical_recall_by_kind": per_kind,
+            "critical_per_case_by_kind": crit_per_case,
             "claim_f1": (2 * prec * rec / (prec + rec)) if prec + rec else 0.0,
             "dependency_recall": dep_tp / dep_n if dep_n else float("nan"),
             "accuracy_pooled": hits / len(cases),
@@ -129,12 +143,20 @@ def main() -> None:
           f"mean dependency {statistics.mean(len(d) for d in deps):.2f} "
           f"claims\n", flush=True)
 
+    def on_surface(fn, **kw):
+        """Every reader arm sees the TEXT and nothing else."""
+        return lambda c: fn(render_observation(c).text, **kw)
+
     arms = (
         ("oracle world (CEILING)", lambda c: c.world),
         ("template reader, OLD report", lambda c: read_report(c.report)),
-        ("template reader, NEW surface",
-         lambda c: read_report(render_observation(c).text)),
-        ("empty world (no reader)",
+        ("0  template, NEW surface", on_surface(read_report)),
+        ("1  rules, full", on_surface(read_surface)),
+        ("2  rules, no coreference", on_surface(read_surface, coref=False)),
+        ("3  rules, distractors admitted",
+         on_surface(read_surface, reject_distractors=False)),
+        ("4  lexical cue routing", on_surface(read_lexical)),
+        ("   empty world (no reader)",
          lambda c: dataclasses.replace(c.world, claims=())),
     )
     hdr = (f"{'arm':<30} {'claim P':>8} {'claim R':>8} {'dep R':>7} "
@@ -149,6 +171,53 @@ def main() -> None:
               f"{r['claim_recall']:>8.3f} {r['dependency_recall']:>7.3f} "
               f"{r['accuracy_pooled']:>11.3f} {r['accuracy_non_empty']:>14.3f}",
               flush=True)
+
+    # --- the law's first predictive use. It says end-to-end success tracks
+    # DEPENDENCY-weighted recall, not global recall. An arm whose global recall
+    # is high and whose dependency recall is low should fall much further than
+    # the global number suggests.
+    print(f"\nglobal recall vs dependency recall -- the law says the second "
+          f"one predicts:\n")
+    print(f"  {'arm':<30} {'global R':>9} {'dep R':>7} {'non-empty':>10}")
+    for r in rows:
+        if r["arm"].startswith(("0", "1", "2", "3", "4")):
+            print(f"  {r['arm']:<30} {r['claim_recall']:>9.3f} "
+                  f"{r['dependency_recall']:>7.3f} "
+                  f"{r['accuracy_non_empty']:>10.3f}")
+
+    # --- the refined law. The sweep that fitted S = q^k dropped claims at
+    # RANDOM; a reader loses SYSTEMATICALLY -- arm 2 loses the demand in every
+    # case -- and systematic loss is not exchangeable with random loss of the
+    # same size. The per-kind form makes that explicit:
+    #
+    #     S  =  prod_kind  q_kind ^ d_kind
+    #
+    # with d_kind the ablation-measured critical claims of that kind per case.
+    # A kind lost entirely sends its factor, and the product, to zero -- which
+    # no single-q model can express.
+    K_GLOBAL = 8.31
+    print(f"\ntwo forms of the survival law against measurement:\n")
+    print(f"  {'arm':<30} {'dep R':>7} {'q^k':>8} {'prod q^d':>10} "
+          f"{'measured':>10}")
+    for r in rows:
+        if not r["arm"][0] in "01234":
+            continue
+        q = r["dependency_recall"]
+        flat = q ** K_GLOBAL
+        prod = 1.0
+        for kind, d in r["critical_per_case_by_kind"].items():
+            qk = r["critical_recall_by_kind"].get(kind, 0.0)
+            prod *= qk ** d if qk > 0 else 0.0
+        r["law_flat"], r["law_per_kind"] = flat, prod
+        print(f"  {r['arm']:<30} {q:>7.3f} {flat:>8.3f} {prod:>10.3f} "
+              f"{r['accuracy_non_empty']:>10.3f}")
+    scored = [r for r in rows if "law_flat" in r]
+    e_flat = sum(abs(r["law_flat"] - r["accuracy_non_empty"])
+                 for r in scored) / len(scored)
+    e_kind = sum(abs(r["law_per_kind"] - r["accuracy_non_empty"])
+                 for r in scored) / len(scored)
+    print(f"\n  mean |error|:  flat q^k {e_flat:.3f}   per-kind "
+          f"{e_kind:.3f}   ({'per-kind wins' if e_kind < e_flat else 'flat wins'})")
 
     tmpl = next(r for r in rows if "NEW surface" in r["arm"])
     none = next(r for r in rows if "no reader" in r["arm"])

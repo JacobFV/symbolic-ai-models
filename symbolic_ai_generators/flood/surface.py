@@ -240,8 +240,17 @@ def render_observation(case: Any, *, seed: int | None = None) -> Observation:
                     reference="definite")
     doc.glue(" ")
     doc.add("Ratings are for the laden vehicle, not the payload alone.")
-    caps = sorted(by_pred.get("capacity", []), key=lambda i: ent(i, "of"))
     masses = {ent(i, "of"): _q(world.claims[i]) for i in by_pred.get("mass", [])}
+    caps = sorted(by_pred.get("capacity", []), key=lambda i: ent(i, "of"))
+    # The pronoun sentence says "<v> is the lightest of them. It can take ...",
+    # so the claim it realises must belong to the vehicle the naming sentence
+    # NAMES. A first version rendered the first capacity by id there, which made
+    # the text assert something false whenever the lightest vehicle was not
+    # truck_0 -- a defect in the ground truth, not in any reader, and it cost
+    # arm 1 one capacity claim per case.
+    if masses and caps:
+        lightest = min(masses, key=lambda k: masses[k])
+        caps.sort(key=lambda i: (ent(i, "of") != lightest, ent(i, "of")))
     for n, ci in enumerate(caps):
         v = ent(ci, "of")
         doc.glue(" ")
@@ -250,9 +259,7 @@ def render_observation(case: Any, *, seed: int | None = None) -> Observation:
             # wrong rather than the reader. The naming sentence is glue -- it
             # realises no claim -- and the pronoun in the next sentence resolves
             # to it, which is the coreference step the reader has to do.
-            lightest = min(masses, key=lambda k: masses[k]) if masses else v
-            doc.glue(f"Turning to payloads, {lightest} is the lightest of "
-                     f"them. ")
+            doc.glue(f"Turning to payloads, {v} is the lightest of them. ")
             doc.add(f"It can take a further {_q(world.claims[ci]):.0f} kg on "
                     f"top of its own weight.", claim=ci, kind="capacity",
                     entities=(v,), reference="pronoun")

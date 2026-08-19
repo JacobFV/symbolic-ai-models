@@ -125,3 +125,43 @@ class TestItIsDeterministic:
     def test_different_cases_render_differently(self):
         assert (render_observation(generate(5)).text
                 != render_observation(generate(6)).text)
+
+
+class TestThePronounSaysSomethingTrue:
+    """The naming sentence and the claim the pronoun realises must be about the
+    SAME vehicle. A first version named the lightest and then stated the first
+    vehicle's capacity, which made the text assert something false whenever they
+    differed -- a defect in the ground truth that cost the rules arm one claim
+    per case and looked like a reader failure."""
+
+    def test_the_named_antecedent_owns_the_capacity_the_pronoun_states(self):
+        import re
+        from symbolic_ai_core.world import Quantity
+        for seed in range(20):
+            case = generate(seed)
+            o = render_observation(case)
+            m = re.search(r"Turning to payloads, (truck_\d+) is the lightest of "
+                          r"them\. It can take a further (\d+) kg", o.text)
+            assert m, f"seed {seed}: the pronoun sentence is missing"
+            named, kg = m.group(1), float(m.group(2))
+            caps = {c.roles["of"].id: c.roles["value"].value
+                    for c in case.world.claims
+                    if c.predicate == "capacity"
+                    and isinstance(c.roles.get("value"), Quantity)}
+            assert caps[named] == kg, (
+                f"seed {seed}: text names {named} and states {kg} kg, but "
+                f"{named}'s capacity is {caps[named]}")
+
+    def test_the_named_vehicle_really_is_the_lightest(self):
+        import re
+        from symbolic_ai_core.world import Quantity
+        for seed in range(20):
+            case = generate(seed)
+            o = render_observation(case)
+            named = re.search(r"Turning to payloads, (truck_\d+)", o.text).group(1)
+            masses = {c.roles["of"].id: c.roles["value"].value
+                      for c in case.world.claims
+                      if c.predicate == "mass"
+                      and isinstance(c.roles.get("value"), Quantity)}
+            assert masses[named] == min(masses.values()), (
+                f"seed {seed}: {named} is called the lightest and is not")
