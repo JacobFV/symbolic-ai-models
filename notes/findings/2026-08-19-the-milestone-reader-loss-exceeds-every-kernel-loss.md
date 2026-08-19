@@ -1,4 +1,5 @@
 ---
+superseded: 2026-08-19 -- the headline is WITHDRAWN, reader loss is 0.000
 title: The end-to-end milestone — report to typed world to three kernels to a decision and a grounded paragraph — and reader loss (0.682) exceeds every kernel loss (0.500 at worst)
 date: 2026-08-19
 author: lead
@@ -79,3 +80,19 @@ does not save compute; it wastes it.
 ```bash
 uv run python -u scripts/milestone_end_to_end.py
 ```
+
+## WITHDRAWN, same day: reader loss is 0.000, not 0.682
+
+The headline rested on the signature reader scoring 0.318, which was caused by a
+missing branch in the reader rather than by any property of reading. Fixed, the
+table reads:
+
+| system | claim R | task acc | $/correct |
+|---|---:|---:|---:|
+| oracle world (ceiling) | 1.000 | **1.000** | 1.97e-08 |
+| **signature reader** | **1.000** | **1.000** | **2.03e-08** |
+| oracle, no SMT | 1.000 | 0.500 | 3.37e-08 |
+
+**Reader loss 0.000 at a 3% cost premium**, and the kernel losses now dominate.
+The claims about what each *column* establishes survive; the claim about which
+component is the bottleneck does not.

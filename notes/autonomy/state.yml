@@ -14,12 +14,13 @@ bottleneck: >
   world is still RECEIVED from a generator rather than READ.
 
 measured:
-  - MILESTONE (V=4, non-empty population): oracle world 1.000 task acc at
-    $1.39e-08/correct; best reader (signature) 0.318 at $3.95e-08; rules,
-    lexical and template all 0.000. Kernel ablations from the oracle world: no
-    SMT 0.500, no datalog 0.818, no ASP search 0.864. READER LOSS 0.682 EXCEEDS
-    EVERY KERNEL LOSS (worst 0.500). Grounded paragraphs 1.000 everywhere the
-    renderer ran.
+  - MILESTONE (V=4, non-empty), CORRECTED: oracle world 1.000 task acc at
+    $1.97e-08/correct; signature reader ALSO 1.000 at $2.03e-08 -- a 3% cost
+    premium and ZERO reader loss. rules/lexical/template all 0.000. Kernel
+    ablations: no SMT 0.500, no datalog 0.818, no ASP search 0.864, so the
+    KERNEL losses dominate. Grounded paragraphs 1.000 everywhere.
+    The earlier "reader loss 0.682 exceeds every kernel loss" headline was
+    caused by a missing branch in my own reader and is WITHDRAWN.
   - RENDERER: 40/40 flood cases produce a fully grounded answer paragraph, both
     polarities explained (including "no route reaches it at all: the network is
     cut by flooding in region_2 and region_4"). The checker is token AND
@@ -37,10 +38,11 @@ measured:
   - generalisation: with 4 phrasings per claim kind drawn per case, the rules
     arm goes 1.000 -> 0.000 at V=2 (recall only halves, 1.000 -> 0.542) and the
     lexical arm 0.136 -> 0.000. Recall tracks 1/V.
-  - the TYPE-SIGNATURE reader is exactly flat across V: recall 0.971, dep
-    recall 0.946, non-empty accuracy 0.318 at V=1,2,3,4. At V>=2 it is the only
-    reader above zero. Regime crossover: hand-authored wins 1.000 vs 0.318 on a
-    fixed surface, signature wins the moment the surface varies.
+  - the TYPE-SIGNATURE reader is flat across V and now scores 1.000 on claim
+    recall, dependency recall and non-empty accuracy at V=1,2,3,4. Its one
+    failure -- capacity recall 0.725 -- was a MISSING BRANCH: a sentence with
+    one vehicle and no quantity fell through, so the pronoun's antecedent was
+    never registered. Fixed with one clause and no lexicon.
   - SCOPE: F = P(truth == degenerate answer) holds on all THREE domains -- the
     degenerate answer is the empty set (flood), False (solvency) and True
     (scheduling), and at p=1 scheduling's accuracy is exactly its feasible
@@ -60,10 +62,8 @@ measured:
     decidedness is NOT a function of world count -- 2 worlds of "bare" (which
     number is the demand) decide 45.5% while 4 worlds of "vehicle" decide
     75.8%. Collapsing instead scores 0.250 and cannot say when it is wrong.
-  - its failure is ONE mechanism: capacity recall 0.725 because the pronoun
-    attaches by recency while its antecedent is named by a SUPERLATIVE ("X is
-    the lightest of them"). Every other kind is recall 1.000, zero spurious,
-    except one spurious link per case from the disused-track distractor.
+  - hand-authored readers still collapse under phrasing variation: rules
+    1.000 -> 0.000 at V=2, lexical 0.136 -> 0.000.
   - flood flow: 3 kernels, world->reach->world2->routes->loads->fused, agrees
     with a brute-force oracle that shares no code with the kernels
   - flood reader (regex template): 300/300 worlds round-trip exactly, and its
@@ -208,10 +208,13 @@ next_actions:
     term. Deriving that would complete the unconditional curve.
   - The reader machinery on scheduling is still untried -- only the law was
     tested there.
-  - The measured bottleneck is now unambiguous: reader loss 0.682 against a
-    worst kernel loss of 0.500, and the only reader that generalises sits at
-    0.318. Everything else is second-order until that moves. The failure is
-    known too -- superlative-mediated coreference -- and WordNet is on disk.
+  - THE SURFACE IS SATURATED. A reader consulting no content word reaches the
+    oracle, so this benchmark no longer discriminates -- the same trap the
+    rules arm hit at V=1, walked into from the other side. It still hands the
+    reader SECTION HEADINGS and a FIXED PARAGRAPH ORDER, and position does most
+    of the disambiguation. The honest frontier is a surface without those,
+    where this same reader (position ablated) leaves 72 consistent worlds and a
+    bound deciding 0.0% -- so it must EMIT ambiguity rather than resolve it.
   - Renderer for solvency, to give it a milestone row.
   - Tighten grounding to ROLE level. Token-and-adjacency still passes a real
     number asserted about the wrong entity, which is the same shape of gap the

@@ -353,6 +353,18 @@ def read_signature(text: str) -> WorldSnapshot:
                 elif trucks and nums:
                     vehicles.setdefault(trucks[0], [None, None])[1] = nums[0]
                     last_vehicle = trucks[0]
+                elif trucks and not nums and not regions:
+                    # A NAMING sentence: one vehicle, no quantity. It introduces
+                    # the referent the next bare quantity attaches to.
+                    #
+                    # This branch was missing, and its absence is what made the
+                    # capacity claims fail -- last_vehicle kept whatever the ¶1
+                    # roster left, so the pronoun bound to the wrong vehicle. It
+                    # was read as evidence that superlative-mediated reference
+                    # needs a lexical resource. It does not: the antecedent is
+                    # the nearest preceding lone vehicle mention, recoverable
+                    # from POSITION and SIGNATURE with no content word read.
+                    last_vehicle = trucks[0]
                 elif nums and not regions and not trucks:
                     # a bare quantity here attaches to the vehicle most recently
                     # named -- coreference by recency, not by pronoun spelling

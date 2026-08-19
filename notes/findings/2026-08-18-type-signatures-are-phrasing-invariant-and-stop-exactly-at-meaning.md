@@ -1,4 +1,5 @@
 ---
+superseded_in_part: 2026-08-19 -- the boundary claim is WITHDRAWN
 title: A reader keyed on entity-type signatures is exactly flat across four phrasings — 0.971 recall at every V while pattern and lexical arms go to 0.000 — and its single failure is coreference through a superlative
 date: 2026-08-18
 author: lead
@@ -108,3 +109,19 @@ structured.
 ```bash
 uv run python -u scripts/reader_generalisation.py
 ```
+
+## WITHDRAWN, 2026-08-19: the boundary was my own missing branch
+
+The claim that signatures *"stop exactly at reference mediated by meaning"*, and
+that this is *"the first place a lexical resource is the only mechanism
+available"*, is **wrong**.
+
+The naming sentence has signature (1 vehicle, 0 quantities). My reader's
+quantities-paragraph branch handled three other signatures and let that one fall
+through, so `last_vehicle` kept whatever the roster left. **One clause, consulting
+no lexicon, takes the reader to claim recall 1.000 and task accuracy 1.000 at
+every phrasing setting.**
+
+The capacity failure was an implementation gap, not a capability boundary. See
+`notes/findings/2026-08-19-i-drew-a-capability-boundary-around-my-own-missing-branch.md`
+and the lesson beside it.
