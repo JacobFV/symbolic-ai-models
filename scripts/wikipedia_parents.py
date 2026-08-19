@@ -4,6 +4,13 @@
 intro. The task is the real-world analogue of solvency's ``owns``: read the
 article, name the company's **current** parent.
 
+**Emission does not transfer to this task and that is measured, not assumed** --
+see ``notes/findings/2026-08-19-agreement-is-a-test-for-exclusive-alternatives.md``.
+Answering only when the candidates agree gives precision 0.603 (string identity)
+and 0.606 (shared content token) against the naive 0.626, at 0.375 and 0.423
+coverage. Multi-candidate cases are *more* precise than single-candidate ones,
+0.667 against 0.603.
+
 Three arms, and the third is the one the experiment is for:
 
 - **naive** -- every ownership mention the patterns find, first one wins;
