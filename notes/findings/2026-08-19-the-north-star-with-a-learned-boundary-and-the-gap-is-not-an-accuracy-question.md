@@ -74,6 +74,27 @@ scheduling — the claim strengthens where the kernel is trivial. In flood it
 bill is ASP and SMT. "Reading dominates" is a statement about the *kernel*, not
 about reading.
 
+## Re-verified after the reader was refactored
+
+`symbolic_ai_core/reader/learned.py` took a dozen commits after these numbers
+were measured on it: a logistic classifier beside the perceptron, held-out
+calibration, pluggable mention proposers, feature hooks at the classifier and the
+ranker, a `base_features` switch, character n-gram features, and two new `Unit`
+fields. This repo's own lesson is that after touching anything shared you re-run
+one unchanged measurement and diff its row, so this one was re-run whole.
+
+| domain | published | re-run | Δ |
+|---|---|---|---|
+| solvency | $1.59e-08 | $1.580e-08 | −0.6% |
+| scheduling | $2.37e-08 | $2.318e-08 | −2.2% |
+| flood | $9.65e-08 | $9.516e-08 | −1.4% |
+
+Accuracy is 1.000 in all three, the dominant component is unchanged in all three
+(reader, reader, **kernels**), and the API multiples move from 112,395 / 101,809 /
+25,597 to 112,798 / 104,187 / 25,947. **Every difference is under 2.5% and every
+one is timing** — the cost is derived from measured wall-clock throughput, which
+varies run to run on a shared machine. No behaviour moved.
+
 ## What an outside reader should hold against this
 
 - **Generated surfaces.** The accuracy is 1.000 in distribution; the same reader
