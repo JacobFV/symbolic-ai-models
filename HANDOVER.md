@@ -295,8 +295,54 @@ Two things inside the ladder outlive its top line: **v2 made it worse** — a
 fallback firing where the extractor knows least, guessing worse than abstaining,
 the same shape as the largest harness effect in this repo's history — and **F1
 is insensitive to the operating point**, so the precision/recall *frontier* is
-the object. v3 is the rung to ship despite the flat F1: for a world that will be
-reasoned over, fewer wrong facts beats more facts.
+the object.
+
+**CORRECTION, same day.** The 0.717 "ceiling the task imposes" was **my own task
+construction**: the fetcher flattened authorships, labelling each raw string with
+every institution its author listed. Re-fetched preserving the boundary (new
+snapshot beside the old), the ceiling is **F1 0.988 / 98.2% exact** — the label
+*is* a function of the input. The correction makes this **harsher**: the
+extractor misses 51% of an *achievable* target, not 47% of a noisy one. The
+ladder now **measures** its ceiling from data rather than pinning a constant,
+which is what would have caught it.
+
+## 3e. Knowledge beats data, and still plateaus
+
+`notes/findings/2026-08-18-a-zero-shot-registry-beats-a-learned-dictionary-and-both-plateau-at-62-percent.md`
+
+The residual was localised to generalising to an unseen *wording*, so the
+registry was the obvious test of this repo's stated principle that **external
+resources are givens**. ROR: **135,710 institutions, 449,658 name variants**,
+CC0, unauthenticated, now at `data/sources/ror/ror-v2.11-2026-08-03/`.
+
+Three splits, because the ladder had been iterated six times on one. Mean % of a
+measured ~0.99 ceiling:
+
+| v0 learned | v3 best learned | **v4 zero-shot registry** | v5 hybrid | **v6 + abbrev/containment** |
+|---:|---:|---:|---:|---:|
+| 38.2% | 47.4% | **54.2%** | 59.8% | **62.3%** |
+
+**Ordering identical on all three splits, and the tuned split gives the lowest
+v6** — the tuning debt did not bite, which is measured rather than assumed.
+
+> **Positive:** a **zero-shot** registry lookup — no training split, no learned
+> dictionary, no fitted parameter — beats the best dictionary learned from 3,500
+> works on **every** split (+0.039, +0.103, +0.059) at **41,668 ns against
+> 96,915**. It is the only rung with nothing to tune.
+>
+> **Negative:** six rungs and an authoritative registry still leave **38% of an
+> achievable ceiling** unreached.
+
+**The diagnosis is sharper than the ladder, and it names the next arm.** *One*
+string in 6,489 produced no candidate. The extractor is not failing to **find**
+institutions, it is failing to **choose**: "University of Wisconsin" names
+thirteen ROR campuses and the string carries exactly what separates them —
+*Madison*, *Lancaster*, *Karlsruhe* — which nothing in six rungs reads, because
+they match names against names and **geography is a different view of the
+world**. ROR's dump carries `locations`; the string carries a city; nothing
+joined them. That is **the multi-kernel thesis stated as a bug**, and it would be
+the first place in this repo where two views genuinely have to compose to answer
+one question.
 
 ## 4. Believed, not measured. Do not inherit as fact.
 
@@ -396,11 +442,13 @@ has a demonstrated failure rate.
    number in the cost argument that has never been attacked, gutenberg and
    stackexchange are both on disk, and the mechanism (facts here are
    20-character identifiers) predicts it should move.
-6. **Attack the 0.717 ceiling, or accept it.** The residual 47% is the whole
-   question for the first arrow: is it reachable by anything that is not a
-   model? ROR's own reconciliation service and a full gazetteer are both
-   untried, and both are symbolic. *Why this ranks high:* every advantage this
-   repo publishes sits downstream of this number.
+6. **Join geography to entity linking** (§3e). The single highest-value arm in
+   the repo right now: the extraction residual is disambiguation, the
+   discriminating evidence is a city sitting in the input string, ROR ships
+   `locations`, and no rung reads it. *Why this ranks first among the open
+   items:* it is simultaneously the first arrow's next 38% and the first
+   genuine two-view composition this repo would have — the multi-kernel claim
+   tested on a problem that actually needs it rather than on one arranged to.
 7. **The shrinking-corpus inversion.** One arm, and it is the falsifier for the
    witness asymmetry rather than another confirmation of it.
 

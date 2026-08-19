@@ -81,6 +81,18 @@ measured:
   - claim: "The crossover does NOT transfer across corpora: 5,242 on prose against GLEIF's 99,512, because corpus_tokens scales with corpus size. The transferable term is the dependency -- 302 tokens on prose against 41, i.e. 7.4x larger."
     evidence: same finding, section A
     commit: 0cf99cd
+  - claim: "A ZERO-SHOT ROR registry lookup beats a dictionary learned from 3,500 works on all three splits (+0.039, +0.103, +0.059) with no training data and at 41,668 ns against 96,915. 'External resources are givens' validated where it matters."
+    evidence: notes/findings/2026-08-18-a-zero-shot-registry-beats-a-learned-dictionary-and-both-plateau-at-62-percent.md
+    commit: 7722dd2
+  - claim: "Six symbolic extraction rungs plateau at 62.3% of a measured ~0.99 ceiling. Ordering identical on three splits and the tuned split is the WORST, so the tuning debt did not bite."
+    evidence: same finding
+    commit: 7722dd2
+  - claim: "The extraction residual is DISAMBIGUATION, not retrieval: 1 string in 6,489 produced no candidate, and 38.2% of true institutions are never proposed because a near-identical name was. 'University of Wisconsin' names 13 ROR campuses and the city that separates them is in the input string, unread."
+    evidence: same finding, error breakdown
+    commit: 7722dd2
+  - claim: "The 0.717 extraction ceiling I published was my own task construction (flattened authorships). Corrected: 0.988 F1 / 98.2% exact. The label IS a function of the input and the shortfall is genuine extraction failure, not label noise."
+    evidence: notes/findings/2026-08-18-the-first-arrow-is-cheap-and-bad.md section D bis
+    commit: fef77b3
   - claim: "Scoping survives a dense graph. On the filed-real routing mixture: read p50 1, max 8, 0 refusals in 250 queries, anchor 179/179. What breaks is wall time -- 48.3 ms/query against GLEIF's 2.8 us -- and the governing variable is conflict rate x read footprint, not topology."
     evidence: notes/findings/2026-08-18-scoping-survives-a-dense-graph-and-what-breaks-is-wall-time-not-refusal.md
     commit: 2b8443d
@@ -187,18 +199,19 @@ last_cycle:
     repo now say the cheap half of a problem is the useful half.
 
 next:
-  preferred_action: attack-the-0717-extraction-ceiling
+  preferred_action: join-geography-to-entity-linking
   why_shipped_instead: >
     witness-on-kernelresult is DONE: `Witness` is on the kernel ABI, the ASP
     kernel returns its answer set instead of discarding it, and
     `KernelResult.maintainable` is true exactly when a witness is present --
     deliberately NOT for a proof of impossibility, however conclusive.
   why: >
-    The residual 47% of the extraction ceiling is the whole question for the
-    first arrow, and every advantage this repo publishes sits downstream of it.
-    ROR's own reconciliation service and a full institution gazetteer are both
-    untried and both symbolic; if either reaches the ceiling the bet holds, and
-    if neither does then the arrow needs something that is not string matching.
+    Two things at once, which is why it outranks everything else open. It is the
+    first arrow's next 38% -- the extraction residual is disambiguation, the
+    discriminating evidence is a city sitting in the input string, ROR ships
+    locations, and no rung reads it. And it is the first genuine two-view
+    composition this repo would have: the multi-kernel claim tested on a problem
+    that actually needs it rather than on one arranged to need it.
   superseded_hub_labelling: >
     It is the newest finding's own named refuter. Meet-in-the-middle may not be
     the cheapest certificate for "no shorter path"; hub labelling and 2-hop
