@@ -197,3 +197,24 @@ def test_reading_sentence_by_sentence_with_context_equals_reading_the_whole():
         ctxd.extend(reader.run(s, context=tuple(sents[:i])).delta().claims)
     assert {key(x) for x in canonical(tuple(ctxd), o.text)} == whole
     assert {key(x) for x in canonical(tuple(blind), o.text)} != whole
+
+
+def test_calibration_replaces_a_squashed_margin_with_a_held_out_accuracy():
+    """A belief must be a probability before anything may arbitrate on it.
+
+    Uncalibrated, `confidence_of` is a monotone squash of a perceptron margin --
+    fine for ranking two readings of one sentence, useless for deciding whether
+    this reader or another one is more likely right. After calibration the value
+    is the accuracy that score earned on documents the fit never saw.
+    """
+    data = corpus("flood", range(80))
+    docs = [supervise(o.text, o.spans, c.world.claims) for c, o in data]
+    reader = LearnedSpanReader().fit(docs[:60])
+    assert not reader.calibrators
+    before = reader.run(data[70][1].text).confidence_of(0)
+
+    reader.calibrate(docs[60:])
+    assert reader.calibrators
+    after = reader.run(data[70][1].text).confidence_of(0)
+    assert 0.0 < after <= 0.95
+    assert after != before

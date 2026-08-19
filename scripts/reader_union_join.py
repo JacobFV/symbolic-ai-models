@@ -57,8 +57,15 @@ from scripts.real_text_reader import (RELS, extra, role_frame_features,
                                       supervise_distant)
 
 OUT = Path("runs/reader_union_join.json")
+#: With a calibrated belief this is a real accuracy threshold: override the
+#: pattern reader only where the classifier has historically been right more
+#: often than the patterns are (0.556 precision on `parent`).
+OVERRIDE_AT = 0.6
 PARENTS = Path("data/artifacts/wikipedia_parents.jsonl")
 FOLDS = 4
+#: Fit a held-out score->accuracy map per predicate, so a belief is a probability
+#: rather than a squashed margin. Costs a quarter of the training articles.
+CALIBRATE = "--calibrate" in sys.argv
 #: The learned reader's relation names, mapped onto this script's.
 AS = {"parent": "parent", "country": "country", "headquarters": "hq"}
 
@@ -86,10 +93,17 @@ def learned_answers(docs) -> dict[str, dict[str, tuple[str, float]]]:
     for fold in range(FOLDS):
         test = [d for i, d in enumerate(docs) if i % FOLDS == fold]
         train = [d for i, d in enumerate(docs) if i % FOLDS != fold]
+        # A quarter of the training articles are held back from the FIT so the
+        # calibrator sees scores the model did not learn from. Calibrating on
+        # the fitting set is the failure the calibrator's own docstring names.
+        fit_part = [d for i, d in enumerate(train) if i % 4]
+        cal_part = [d for i, d in enumerate(train) if not i % 4]
         reader = LearnedSpanReader(
             mentions=CapitalisedMentions(), extra_features=extra(),
             extra_role_features=role_frame_features).fit(
-            [supervise_distant(d) for d in train])
+            [supervise_distant(d) for d in (fit_part if CALIBRATE else train)])
+        if CALIBRATE:
+            reader.calibrate([supervise_distant(d) for d in cal_part])
         for d in test:
             res = reader.run(d["intro"])
             best: dict[str, tuple[str, float]] = {}
@@ -125,7 +139,8 @@ def build(docs, learned, arm: str) -> list[dict]:
             for k in h:
                 if not h[k]:
                     got[k] = l_.get(k)
-                elif l_.get(k) and norm(l_[k]) != norm(h[k]) and lc.get(k, 0) > 0.9:
+                elif l_.get(k) and norm(l_[k]) != norm(h[k]) \
+                        and lc.get(k, 0) > OVERRIDE_AT:
                     got[k] = l_[k]
                 else:
                     got[k] = h[k]
@@ -214,7 +229,8 @@ def main() -> None:
               f"{j['precision']:>10.3f} {j['recall']:>8.3f} {j['f1']:>8.3f}")
 
     OUT.parent.mkdir(parents=True, exist_ok=True)
-    OUT.write_text(json.dumps({"n": len(docs), "overlap": overlap,
+    (OUT.with_name("reader_union_join_calibrated.json") if CALIBRATE
+     else OUT).write_text(json.dumps({"n": len(docs), "overlap": overlap,
                                "arms": rows}, indent=2))
     print(f"\nwrote {OUT}")
 

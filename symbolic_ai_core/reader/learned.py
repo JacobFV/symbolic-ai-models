@@ -541,6 +541,15 @@ class LearnedSpanReader:
         #: not only in the sentence classifier -- which is where they were first
         #: put, and why they bought nothing.
         self.extra_role = extra_role_features
+        #: predicate -> ScoreCalibrator, fitted on HELD-OUT documents by
+        #: :meth:`calibrate`. Until then a belief is a squashed margin, which is
+        #: monotone in confidence and means nothing quantitatively -- enough to
+        #: rank two readings of one sentence, not enough to arbitrate between
+        #: this reader and another one. Measured: letting an uncalibrated
+        #: learned reader override a pattern reader on disagreement costs 0.03
+        #: on every relation, while letting it speak only where the other
+        #: abstains gains on every relation.
+        self.calibrators: dict[str, Any] = {}
         self.lex = Lexicon()
         self.clf = Perceptron()
         self.rankers: dict[str, _Ranker] = defaultdict(_Ranker)
@@ -651,6 +660,39 @@ class LearnedSpanReader:
                 w = max(self._weight(gold), self._weight(pred))
                 self.clf.update(feats, gold, pred, w)
         self.clf.average()
+
+    def calibrate(self, docs: Sequence[Sequence[Unit]]) -> "LearnedSpanReader":
+        """Fit score -> accuracy per predicate, on documents NOT used to fit.
+
+        A margin is an arbitrary scale. `ScoreCalibrator` bins it against the
+        outcomes it actually produced and enforces monotonicity, so a belief
+        becomes the accuracy that score has earned. The caller supplies held-out
+        documents; calibrating on the fitting set produces a map that is
+        confidently wrong exactly where the model is.
+        """
+        from symbolic_ai_core.calibration import ScoreCalibrator
+        scores: dict[str, list[float]] = defaultdict(list)
+        oks: dict[str, list[bool]] = defaultdict(list)
+        for doc in docs:
+            for u in doc:
+                pred, margin = self.clf.predict(self.features(u))
+                if pred == NONE:
+                    continue
+                gold = u.claim.predicate if u.claim is not None else NONE
+                scores[pred].append(margin)
+                oks[pred].append(pred == gold)
+        self.calibrators = {}
+        for p, sc in scores.items():
+            cal = ScoreCalibrator().fit(sc, oks[p])
+            if cal.fitted:
+                self.calibrators[p] = cal
+        return self
+
+    def _belief(self, pred: str, margin: float) -> float:
+        cal = self.calibrators.get(pred)
+        if cal is None:
+            return _sigmoid(margin)
+        return float(cal(margin))
 
     def features(self, u: Unit) -> list[str]:
         """Every feature of one unit, including whatever a resource adds."""
@@ -774,7 +816,7 @@ class LearnedSpanReader:
             base = len(claims)
             claims.append(Claim(predicate=pred, roles=roles,
                                 valid_time=vt, transaction_time=tt))
-            belief[base] = _sigmoid(margin)
+            belief[base] = self._belief(pred, margin)
             aligns.append(Alignment(u.start, u.end, base))
             for role, others in alts.items():
                 idx = [base]
@@ -783,7 +825,7 @@ class LearnedSpanReader:
                     claims.append(Claim(predicate=pred,
                                         roles={**roles, role: filler},
                                         valid_time=vt, transaction_time=tt))
-                    belief[idx[-1]] = _sigmoid(margin) * 0.5
+                    belief[idx[-1]] = self._belief(pred, margin) * 0.5
                     aligns.append(Alignment(u.start, u.end, idx[-1]))
                 factors.append(Factor("xor", tuple(idx),
                                       detail=f"{pred}.{role} antecedent"))

@@ -78,3 +78,33 @@ The learned reader's correct set being contained in the hand reader's — it wou
 have meant the classifier had found the same few high-frequency frames and added
 only noise. It is not contained in any relation, and least of all in the one
 where the union gains most.
+
+## 4. Calibration halves the cost of arbitration, and costs more data than it returns
+
+`union+` losing to `union` says the learned reader's belief is not a probability:
+it is a squashed perceptron margin, monotone in confidence and meaningless
+quantitatively. So the reader was given `ScoreCalibrator` — isotonic, per
+predicate, fitted on documents held back from the fit — and the arbitration
+threshold became a real accuracy (0.6) rather than a made-up score cut.
+
+Isolating the effect *within* a training regime, where the data cost cancels:
+
+| | `parent` | `country` | `hq` | mean |
+|---|---|---|---|---|
+| arbitration penalty, uncalibrated (`union` − `union+`) | 0.030 | 0.126 | 0.006 | **0.054** |
+| arbitration penalty, calibrated | 0.006 | 0.054 | 0.006 | **0.022** |
+
+**Calibration cuts the cost of overriding by 59%.** It does not make overriding
+profitable — the penalty is smaller, not negative — so a reader this weak should
+still only speak where nothing else does.
+
+Across regimes it is worse than that. Calibration needs held-out documents, here
+a quarter of the training articles, and on 168 articles that quarter costs more
+than the calibration returns: `union` falls 0.345 → 0.339 (`parent`), 0.855 →
+0.843 (`country`), 0.327 → 0.290 (`hq`).
+
+**So on this corpus calibration is not worth its data cost, and that is a
+statement about the corpus rather than about calibration.** The prediction for
+the scale corpus: with ten times the articles the held-out quarter is cheap, the
+`union` regression disappears, and the 59% reduction in arbitration penalty is
+kept for free — at which point `union+` is worth re-testing and may go positive.
