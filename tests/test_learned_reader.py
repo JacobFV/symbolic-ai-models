@@ -218,3 +218,63 @@ def test_calibration_replaces_a_squashed_margin_with_a_held_out_accuracy():
     after = reader.run(data[70][1].text).confidence_of(0)
     assert 0.0 < after <= 0.95
     assert after != before
+
+
+def test_a_calibrator_fitted_on_the_training_distribution_goes_flat():
+    """The methodological trap that made a whole arm read as a null.
+
+    Holding documents out of the training pool holds out DOCUMENTS and not the
+    distribution shift. The model is near-perfect on the phrasings it was fitted
+    on, so isotonic regression correctly reports that score does not predict
+    accuracy and returns a constant -- and every threshold downstream goes inert
+    for a reason that has nothing to do with the thresholds.
+
+    Calibrating on documents drawn from the DEPLOYMENT distribution instead
+    keeps the belief graded. Both calibration sets are disjoint from the fit and
+    from the evaluation; only their phrasing distribution differs.
+    """
+    from scripts.reader_survives import build, domains
+    dom = domains()["flood"]
+    docs = [supervise(t, o.spans, c.world.claims)
+            for c, o, t in build(dom, range(120), variants=2)]
+    same_dist = [supervise(t, o.spans, c.world.claims)
+                 for c, o, t in build(dom, range(400, 460), variants=2)]
+    deployed = [supervise(t, o.spans, c.world.claims)
+                for c, o, t in build(dom, range(500_000, 500_060))]
+    held = corpus("flood", range(1_000_000, 1_000_004))
+
+    def levels(cal):
+        reader = LearnedSpanReader().fit(docs)
+        reader.calibrate(cal)
+        seen = set()
+        for c, o in held:
+            r = reader.run(o.text)
+            seen |= {round(r.confidence_of(i), 2) for i in range(len(r.claims))}
+        return seen
+
+    assert len(levels(same_dist)) < len(levels(deployed))
+
+
+def test_a_logistic_score_is_a_probability_and_a_margin_is_not():
+    """Both beliefs are informative; only one is on a meaningful scale.
+
+    The perceptron's squashed margin is graded and predicts its own correctness
+    (AUC 0.84 on flood), so it can RANK. It is not a probability, so a threshold
+    derived from the kernels cannot be compared against it. The logistic score
+    can be.
+    """
+    from scripts.reader_survives import build, domains
+    dom = domains()["flood"]
+    docs = [supervise(t, o.spans, c.world.claims)
+            for c, o, t in build(dom, range(120), variants=2)]
+    reader = LearnedSpanReader(model="logistic").fit(docs)
+    c, o = corpus("flood", [1_000_000])[0]
+    res = reader.run(o.text)
+    beliefs = [res.confidence_of(i) for i in range(len(res.claims))]
+    assert beliefs and all(0.0 <= b <= 1.0 for b in beliefs)
+    assert len({round(b, 2) for b in beliefs}) > 1
+
+
+def test_an_unknown_classifier_is_refused_rather_than_defaulted():
+    with pytest.raises(ValueError, match="unknown model"):
+        LearnedSpanReader(model="randomforest")

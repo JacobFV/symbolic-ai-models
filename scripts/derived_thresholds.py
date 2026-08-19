@@ -83,8 +83,15 @@ def main() -> None:
         schema = induce_schema([(c, o) for c, o, _ in build(dom, range(N_TRAIN))])
 
         docs = [supervise(t, o.spans, c.world.claims) for c, o, t in train]
-        fit_part = [d for i, d in enumerate(docs) if i % 4]
-        cal_part = [d for i, d in enumerate(docs) if not i % 4]
+        fit_part = docs
+        # THE CALIBRATION SET MUST MATCH THE DEPLOYMENT DISTRIBUTION, not the
+        # training one. Holding out documents from the V=2 training pool holds
+        # out documents and not the shift: the model is near-perfect on V=2, so
+        # isotonic regression correctly returns a constant and every threshold
+        # goes inert. These are V=4 documents from the DEVELOPMENT seed range
+        # (500,000+), disjoint from both the fit and the evaluation.
+        cal_part = [supervise(t, o.spans, c.world.claims) for c, o, t in
+                    build(dom, range(500_000, 500_100))]
 
         rows = {}
         print(f"    {'model / rule':<26} {'claim F1':>9} {'end-to-end':>11} "

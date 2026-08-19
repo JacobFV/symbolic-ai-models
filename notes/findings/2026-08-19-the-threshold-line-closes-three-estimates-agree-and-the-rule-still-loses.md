@@ -9,6 +9,16 @@ The derived-threshold mechanism was left "correct, cheap, and unusable", because
 the perceptron's calibrated belief had two values and no threshold could act. It
 is now usable, and it loses. This closes the line and says what would reopen it.
 
+> **Corrected the same day.** Sections 1 and 2 first attributed the flat belief
+> to the perceptron and were wrong. The perceptron's raw belief is graded (15
+> distinct values on flood) and predicts its own correctness at **AUC 0.843**.
+> What flattened it was **calibrating on the training distribution**, where the
+> model is near-perfect, so isotonic regression correctly reported that score
+> does not predict accuracy and returned a constant. Calibrating on the
+> deployment distribution keeps 5–7 levels. The conclusion is unchanged and now
+> rests on a fair test rather than a broken one: with graded, meaningful beliefs
+> the derived thresholds still never improve end-to-end accuracy, in nine cells.
+
 ## 1. A graded posterior, without a neural encoder
 
 `LearnedSpanReader(model="logistic")` — multinomial logistic regression by SGD
@@ -21,22 +31,47 @@ capacity. Distinct belief values across ten held-out documents:
 | logistic + isotonic | 2 | 1 | 1 |
 | **logistic, uncalibrated** | **10** | **13** | **4** |
 
-Note the middle row. **Passing a logistic probability through the isotonic
-calibrator re-bins it into at most eight levels and collapses it to one or two** —
-reintroducing exactly the failure the calibrator was brought in to fix, by
-applying it where it was not needed. A score that is already a probability should
-not be calibrated.
+Note the middle row. Passing a logistic probability through the isotonic
+calibrator re-binned it into at most eight levels and collapsed it. The cause was
+**not** that the score was already a probability — it was the calibration set:
+documents held out of the V=2 training pool, on which the model is near-perfect,
+so every bin has the same outcome rate and PAVA pools them into one value. That
+is the calibrator being right about a set that could not inform it.
+
+Calibrating on **V=4 documents from the development seed range** (500,000+),
+disjoint from both the fit and the evaluation, fixes it:
+
+| arm | flood | scheduling | solvency |
+|---|---|---|---|
+| perceptron, calibrated on the training distribution | 2 | 1 | 1 |
+| **perceptron, calibrated on the deployment distribution** | **6** | **5** | 1 |
+| logistic, calibrated on the deployment distribution | 3 | 7 | 1 |
+| logistic, uncalibrated | 11 | 14 | 5 |
+
+**The belief was informative all along.** AUC(belief → claim correct), measured
+directly: perceptron 0.843 / 0.794 / 0.595 and logistic 0.745 / 0.896 / 0.905 on
+flood / scheduling / solvency. A reader that ranks its own errors at 0.84 is not
+a reader with a flat belief.
 
 ## 2. With thresholds that can act, they hurt
 
-| domain | uniform 0.5 | derived θ | Δ end-to-end |
-|---|---|---|---|
-| flood | 0.350 | 0.317 | **−0.033** |
-| scheduling | 0.642 | 0.633 | −0.009 |
-| solvency | 0.667 | 0.667 | 0.000 |
+Nine cells — three domains x {perceptron calibrated, logistic calibrated,
+logistic raw} — and **θ never improves end-to-end accuracy in any of them**:
 
-Claim F1 moves with it (flood 0.835 → 0.809), so the extra claims θ admits are
-simply wrong. Predicted a gain; measured a loss, twice.
+| domain | arm | uniform 0.5 | derived θ |
+|---|---|---|---|
+| flood | perceptron, calibrated | 0.375 | 0.375 |
+| | logistic, calibrated | 0.342 | 0.342 |
+| | logistic, raw | 0.350 | **0.317** |
+| scheduling | perceptron, calibrated | 0.625 | **0.608** |
+| | logistic, calibrated | 0.633 | 0.633 |
+| | logistic, raw | 0.642 | **0.633** |
+| solvency | all three | 0.667 | 0.667 |
+
+Six ties and three losses. Where claim F1 moves it moves *up* while accuracy
+moves down (scheduling 0.734 → 0.748 F1 against 0.625 → 0.608), which is the
+signature of a rule trading answer correctness for claim count. Predicted a gain;
+measured a loss or nothing, nine times.
 
 ## 3. Three independent estimates of `s⁺`, all saying "cheap"
 
