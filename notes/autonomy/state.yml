@@ -1526,6 +1526,13 @@ theory:
       d -> 1 collapses critical mass onto the ordinary metrics and weighting buys
       nothing (solvency revenue: every filing moves the sum). d -> 0 makes every
       claim inert. Weighting separates exactly on 0 < d < 1.
+      AND d BELONGS TO THE QUERY, NOT THE DOMAIN -- measured on the real-text
+      composed query, a UNION over a join gives d = 0.866 for parent and 0.574
+      for country against flood's 0.236. A SELECTION query hides most
+      single-claim errors; an ENUMERATION query shows nearly all of them. Blunt
+      corollary: for enumeration queries plain extraction accuracy IS the right
+      objective, and task-weighted reconstruction is better exactly where the
+      query is insensitive.
     unifies: >
       The certificate is a proof that critical mass is zero WITHOUT knowing W.
       render.uncorroborated works because the complete renderer cites the
