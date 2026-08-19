@@ -101,6 +101,29 @@ someone else built**. Built by us, at 3.7 million times less, the world is 57.6%
 right at the fact level and answers `collaborators` at Jaccard 0.157 — or 0.196
 if you pick the operating point on the query rather than on the fact.
 
+## Floors, computed after the fact
+
+These numbers were first published **without floors**, against this repo's
+standing rule that a lift is quoted against a floor or not quoted at all — and
+against `symbolic_ai_core/cost.py`, which enforces it in code by dividing by
+`accuracy - floor`. `scripts/query_floors.py` computes them: return the `N` most
+frequent items in the reference world, `N` = the mean true answer size, using no
+per-query information at all.
+
+| query class | floor | best measured | **lift** | share that was floor |
+|---|---:|---:|---:|---:|
+| `institutions_of(work)` | 0.034 | 0.576 | **0.542** | 6.0% |
+| `collaborators(institution)` | **0.120** | 0.417 | **0.297** | **28.8%** |
+| `works_at(institution)` | 0.027 | 0.671 | **0.644** | 4.0% |
+| `works_at_both(A,B)` | 0.022 | 0.465 | **0.443** | 4.8% |
+| `institutions_unique_to(w1,w2)` | 0.033 | 0.599 | **0.566** | 5.6% |
+
+**No floor meets or beats its measured system, so nothing here retracts.** But
+`collaborators` — the class quoted most in this arm — had **29%** of its score
+bought by a guess that ignores the query, because collaboration is heavy-tailed
+and large institutions co-occur with nearly everyone. Read its lift as **0.297**,
+not 0.417. The other four lose 4–6%.
+
 ## What would refute it
 
 - **Two operating points, not a curve.** `v4` and `v4r` bracket a range; the best

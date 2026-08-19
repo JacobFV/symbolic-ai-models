@@ -164,6 +164,29 @@ different intersections carrying the same word. It returned 43.7% against 33.8%,
 a null, and I nearly recorded it as one. The partition that matters is registry
 **confusability of the institution pair**, and it gives 8.1%.
 
+## Floors, computed after the fact
+
+These numbers were first published **without floors**, against this repo's
+standing rule that a lift is quoted against a floor or not quoted at all — and
+against `symbolic_ai_core/cost.py`, which enforces it in code by dividing by
+`accuracy - floor`. `scripts/query_floors.py` computes them: return the `N` most
+frequent items in the reference world, `N` = the mean true answer size, using no
+per-query information at all.
+
+| query class | floor | best measured | **lift** | share that was floor |
+|---|---:|---:|---:|---:|
+| `institutions_of(work)` | 0.034 | 0.576 | **0.542** | 6.0% |
+| `collaborators(institution)` | **0.120** | 0.417 | **0.297** | **28.8%** |
+| `works_at(institution)` | 0.027 | 0.671 | **0.644** | 4.0% |
+| `works_at_both(A,B)` | 0.022 | 0.465 | **0.443** | 4.8% |
+| `institutions_unique_to(w1,w2)` | 0.033 | 0.599 | **0.566** | 5.6% |
+
+**No floor meets or beats its measured system, so nothing here retracts.** But
+`collaborators` — the class quoted most in this arm — had **29%** of its score
+bought by a guess that ignores the query, because collaboration is heavy-tailed
+and large institutions co-occur with nearly everyone. Read its lift as **0.297**,
+not 0.417. The other four lose 4–6%.
+
 ## What would refute it
 
 - **`common_institutions` has n = 26.** Random work pairs almost never share an
