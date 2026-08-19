@@ -474,7 +474,13 @@ That is the third independent route to one gap: agreement fails because names ar
 not **resolved**, ranking fails because non-entities are not **filtered**, and the
 signature discipline works at all only because entities are named `region_0`.
 **Entity resolution and entity typing are the missing capability for real text**,
-now named from three directions rather than argued from one.
+now named from three directions rather than argued from one. *(Corrected: supplied
+as a given, entity **resolution** buys nothing — only **1.2%** of candidate pairs
+are the same entity, so the granularity examples were unrepresentative and there
+was no identity to recover. Agreement fails because the facts are **genuinely
+plural** — former owners, siblings, the subject's own subsidiaries — not because
+names are unresolved. Entity **typing** does help, lifting the ranker 0.535 →
+0.638; the missing primitive is **relation** typing.)*
 
 **But supplying crude typing does not rescue the ranker** — it moves it 0.535 →
 0.543 and costs first-match 0.626 → 0.609 — and chasing why produced the sharper

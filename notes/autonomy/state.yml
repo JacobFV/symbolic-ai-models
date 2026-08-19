@@ -109,7 +109,12 @@ measured:
     all of which the extractor mistook for owners. The filter survives because it
     only REMOVES and still takes the first candidate, and an intro leads with the
     current owner.
-    THREE ROUTES, ONE GAP: agreement fails because names are not RESOLVED (Sony
+    THREE ROUTES, ONE GAP -- AND ROUTE 1 IS NOW REFUTED, see the
+    candidate-semantics finding: only 1.2% of candidate pairs are the SAME
+    ENTITY, so there was no identity to recover and entity resolution supplied
+    as a given buys nothing. Entity TYPING helps a little (ranker +0.103); the
+    thing actually missing is RELATION typing.
+    (superseded) agreement fails because names are not RESOLVED (Sony
     Music Entertainment vs Sony Music Group); ranking fails because non-entities
     are not FILTERED (French, CPR); and the signature discipline works only
     because entities are named region_0. ENTITY RESOLUTION AND ENTITY TYPING ARE
