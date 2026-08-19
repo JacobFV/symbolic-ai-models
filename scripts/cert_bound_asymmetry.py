@@ -40,6 +40,7 @@ Run: uv run python -u scripts/cert_bound_asymmetry.py
 from __future__ import annotations
 
 import json
+import os
 import random
 import time
 from collections import defaultdict
@@ -50,7 +51,14 @@ from scripts.cert_freshness_13f import filing_updates
 from scripts.cert_maintenance_13f import (
     NEW_FILE, OLD_FILE, SEED, USD_PER_CORE_HOUR, load_store)
 
-OUT = Path("runs/cert_bound_asymmetry.json")
+#: Swap the two snapshots, so the same filed bytes read as a SHRINKING corpus
+#: instead of a growing one. 13F opened 411,122 edges against 333,014 closed, so
+#: the witness -- which is monotone under additions and dies only on deletion --
+#: had the easier direction. Reversing is the falsifier for that, and it needs
+#: no new data and nothing injected.
+REVERSE = bool(os.environ.get("SYMBOLIC_AI_REVERSE_SNAPSHOTS"))
+OUT = Path("runs/cert_bound_asymmetry_reversed.json" if REVERSE
+           else "runs/cert_bound_asymmetry.json")
 N_QUERIES = 300
 COVER_SIZE = 12
 
@@ -111,6 +119,10 @@ def main() -> None:
     rng = random.Random(SEED)
     print("loading two filed snapshots ...", flush=True)
     old, new = load_store(OLD_FILE), load_store(NEW_FILE)
+    if REVERSE:
+        old, new = new, old
+        print("  REVERSED: the later snapshot is 'old', so the corpus shrinks",
+              flush=True)
     updates = filing_updates(old, new)
     total_keys = len(set(old) | set(new))
 

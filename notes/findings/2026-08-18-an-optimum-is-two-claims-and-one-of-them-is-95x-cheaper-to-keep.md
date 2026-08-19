@@ -115,6 +115,37 @@ the newer and less-tested code of the two.
   was measured at 0.3x–1.0x per quarter. Kernels should report **witnesses**
   where their answers have them, and say plainly where they do not.
 
+## The direction of corpus drift was the obvious attack, and it is second-order
+
+This finding's own "what would refute it" said: *13F grows — 411,122 opened
+against 333,014 closed — so a corpus that mostly **shrinks** inverts the
+asymmetry, the witness becoming the fragile half. That is a cheap experiment
+nobody has run.* It was also recorded in `state.yml` as a belief at **confidence
+0.8**.
+
+Run, by reading the same two filed snapshots in the opposite order — so
+"shrinking" is made of real filings rather than a simulation:
+
+| | forward (growing) | **reversed (shrinking)** |
+|---|---:|---:|
+| per filing | 48.8 opened, 39.5 closed | 39.5 opened, **48.8 closed** |
+| witness P(hit) | 0.0305% | **0.0351%** |
+| optimality P(hit) | 2.8589% | 2.5509% |
+| witness advantage | 3,253.9x | 2,813.3x |
+| optimality advantage | 35.0x | 39.2x |
+| **the split** | **93x** | **72x** |
+
+**The belief was false.** The asymmetry does not invert; it narrows by 23%, which
+is exactly the rise in the deletion rate (39.5 → 48.8 closures per filing). The
+optimality certificate is invalidated by a change in *either* direction so its
+P(hit) barely moves; the witness is hit only by deletions, so it moves in step
+with them, and the gap narrows by that ratio and nothing else.
+
+**So the dominant term is dependency size** — twelve edges against twelve whole
+holder sets — and corpus direction is second-order. Anchors held in both
+directions: 300/300 witnesses well-formed, 0 wrong maintained bounds, and the
+forward run reproduces the published 93x, so the two are the same measurement.
+
 ## What would refute it
 
 - **The opponent.** As in the parent finding: it re-derives everything per
@@ -123,10 +154,8 @@ the newer and less-tested code of the two.
 - **The witness is not minimal, only small.** Twelve edges for twelve items is
   minimal at edge granularity for *this* problem shape; a problem whose witness
   is large would show none of this.
-- **13F grows.** 411,122 opened against 333,014 closed. A corpus that mostly
-  *shrinks* inverts the asymmetry — the witness would be the fragile half and
-  the optimality claim the stable one — and that is a cheap experiment nobody
-  has run.
+- ~~13F grows, and a shrinking corpus would invert the asymmetry.~~ **Run — see
+  above. It does not invert; it narrows 93x → 72x.**
 - **Anchor B is thin.** 13 re-solutions. The witness's soundness is structural
   rather than empirical (the k edges *are* a cover), so anchor B is testing the
   implementation, not the theorem; anchor A at n=300 is the load-bearing one.
