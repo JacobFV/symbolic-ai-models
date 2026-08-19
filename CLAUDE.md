@@ -270,6 +270,38 @@ What that means concretely, all of it learned here the expensive way:
   `symbolic-ai-models sweep` twice, both times flattering the write-up. Use
   them to form hypotheses, never to report.
 
+## Write the executive summary down, and write it periodically
+
+Every so often — after a stretch of work that changes the shape of the argument,
+and whenever the user asks where things stand — stop and produce a **programme-level
+assessment**, then commit it to `notes/status/` as a dated file.
+
+It is not a findings digest and not a changelog. It answers four questions:
+
+- **Where are we?** What the bet has established, what is still unproven, and
+  which claims are narrower than they sound. Lead with the status of the *thesis*,
+  not with a list of recent work.
+- **How have things progressed?** The moves that got here, including the ones that
+  turned out wrong, and what each cost.
+- **What does the trajectory look like?** What the evidence says to do next, and
+  what it says to stop doing.
+- **How do we fit the existing narrative?** Symbolic AI has a literature and a
+  post-mortem — the knowledge-acquisition bottleneck, brittleness, the
+  neuro-symbolic revival, the scaling position. Say what these results confirm,
+  qualify or contradict in that conversation, *and* what they say about symbolic
+  systems in their own right.
+
+Two properties make it worth writing rather than performing:
+
+- **Every number is cited from a note under `notes/findings/`.** A status note
+  introduces no new measurements; if it needs one, that is a finding first.
+- **It states what would make an outside reader sceptical** — sample sizes, how
+  many headlines the repo has overturned, which "laws" are two-point fits. A
+  summary that only accumulates is a sales document.
+
+`notes/status/2026-08-19-where-the-programme-stands.md` is the worked example, and
+`notes/README.md` carries the directory's entry.
+
 ## Write it down in `notes/`, even when you are not going to chase it
 
 `notes/` is the lab notebook; `RESEARCH_LOG.md` is the paper. **One file per

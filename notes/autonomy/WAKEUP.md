@@ -16,7 +16,16 @@ repeated here.
 5. Do not ask permission for reversible internal work. Do not re-run a number
    that is already on disk. Update `state.yml` when the research state
    materially changes — not after every command.
-6. Keep working until this invocation ends; the scheduler will resume you.
+6. **Periodically, write the executive summary.** After a stretch that changes
+   the shape of the argument — not every wake-up — produce a programme-level
+   assessment and commit it to `notes/status/` as a dated file: where we are, how
+   things progressed, what the trajectory says to do and to stop, and how the
+   results sit against the existing narrative about symbolic AI as well as on
+   their own terms. Every number cited from `notes/findings/`, no new
+   measurements, and an explicit note of what would make an outside reader
+   sceptical. `CLAUDE.md` has the full standard; the worked example is
+   `notes/status/2026-08-19-where-the-programme-stands.md`.
+7. Keep working until this invocation ends; the scheduler will resume you.
 
 Binding context lives in `CLAUDE.md` (how to work here), `HANDOVER.md` (where
 the edge is), `APPROACH.md` (the argument).
