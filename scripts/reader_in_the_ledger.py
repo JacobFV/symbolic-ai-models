@@ -114,9 +114,9 @@ def main() -> None:
         toks = sum(_tokens(t) for t in texts)
         per_answer = toks / len(texts)
         reader = cpu_component(f"{name}.reader", toks / read_s,
-                               source="measured on this machine")
+                               source="measured on this machine", stage="read")
         kernel = cpu_component(f"{name}.kernel", toks / solve_s,
-                               source="measured on this machine")
+                               source="measured on this machine", stage="solve")
         cap = Capability(unit="answer", rate=rate, floor=floor, n=n,
                          tokens_per_attempt=per_answer)
         only = ledger(System(name=f"{name} (kernel only)",

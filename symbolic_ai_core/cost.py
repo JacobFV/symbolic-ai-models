@@ -144,6 +144,15 @@ class Component:
     usd_per_mtok_in: float | None = None
     #: ``api``: USD per million output tokens, from the vendor's price sheet.
     usd_per_mtok_out: float | None = None
+    #: Which pipeline stage this prices: ``"read"``, ``"solve"``, ``"render"``,
+    #: or ``""`` when the author has not said.
+    #:
+    #: Declaring it is what lets :func:`ledger` notice a **missing** stage. It
+    #: cannot notice a missing *component* -- ``sum`` is not optional only over
+    #: what it is given -- but it can notice that nothing in the system claims to
+    #: do the reading, which is the omission that priced 4% of solvency for
+    #: months. See this module's header.
+    stage: Literal["read", "solve", "render", ""] = ""
     #: Free text: where the number came from. A component whose provenance is
     #: empty is an assumption wearing a measurement's clothes.
     source: str = ""
@@ -180,16 +189,17 @@ class Component:
 
 
 def cpu_component(name: str, tokens_per_sec: float, *, cores: float = 1.0,
-                  source: str = "") -> Component:
+                  source: str = "", stage: str = "") -> Component:
     return Component(name=name, kind="cpu", tokens_per_sec=tokens_per_sec,
-                     cores=cores, source=source)
+                     cores=cores, source=source, stage=stage)
 
 
 def api_component(name: str, usd_per_mtok_in: float, *,
                   usd_per_mtok_out: float | None = None,
-                  source: str = "") -> Component:
+                  source: str = "", stage: str = "") -> Component:
     return Component(name=name, kind="api", usd_per_mtok_in=usd_per_mtok_in,
-                     usd_per_mtok_out=usd_per_mtok_out, source=source)
+                     usd_per_mtok_out=usd_per_mtok_out, source=source,
+                     stage=stage)
 
 
 @dataclass(frozen=True)
@@ -408,6 +418,21 @@ def ledger(system: System, capability: Capability, *,
     else:
         notes.append("a component prices by token and not by core, so latency "
                      "is a round trip and is not derivable here")
+
+    # The omission this module could not see until 2026-08-19. It cannot detect
+    # a MISSING COMPONENT -- ``sum`` is not optional only over what it is given
+    # -- but it can notice that nothing in the system claims to do the reading.
+    stages = {c.stage for c in system.components if c.stage}
+    if stages and "read" not in stages:
+        notes.append(
+            "no component is declared for READING, and every component that is "
+            "declared names another stage. Text has to become a world before a "
+            "kernel can run on it, so a system priced without that step is an "
+            "incomplete ledger rather than a cheaper system. Measured "
+            "2026-08-19: reading is 1.9% of flood's wall clock, 0.9% of "
+            "scheduling's and 96.1% of solvency's, so the omission is invisible "
+            "where the kernel dominates and hides almost the whole cost where "
+            "it does not")
 
     bytes_per_prop = None
     if retained_propositions > 0 and parameters > 0:
