@@ -21,6 +21,18 @@ measured:
     KERNEL losses dominate. Grounded paragraphs 1.000 everywhere.
     The earlier "reader loss 0.682 exceeds every kernel loss" headline was
     caused by a missing branch in my own reader and is WITHDRAWN.
+  - SCHEDULING (third domain): reader claim precision and recall exactly 1.000
+    at V=1..4 with NO coreference -- entity prefixes carry the type so the
+    signatures separate outright. Renderer 40/40 grounded and distinguishes a
+    capability failure from a packing failure. External knowledge slot is the
+    CAPABILITY VOCABULARY, the lexical counterpart of flood's numeric value
+    registry, and it doubles as the distractor filter.
+  - GROUNDING DECOMPOSES: the contradiction check is reusable WITHIN AN ANSWER
+    TYPE -- boolean_contradiction is now shared code between solvency and
+    scheduling, parameterised only by the verdict phrases. Flood's set answer
+    needs per-element polarity and keeps its own. The middle relational check
+    is bespoke every time: route adjacency / date validity / capability
+    validity.
   - SOLVENCY RENDERER: 60/60 grounded, and the explanation is BITEMPORAL --
     "Excluded as not yet knowable: sub_3 filed 169.91 USD dated 2026-06-01,
     after the determination". First explanation in the repo that must cite a
@@ -200,6 +212,10 @@ unknowns:
   - Precision failures (invented/misread claims) are unswept; MISREADS exists.
 
 active_work: >
+  Pipeline complete on ALL THREE domains: flood (set answer, 2 expensive
+  kernels), solvency (boolean, bitemporal), scheduling (boolean, NP-hard
+  kernel). Surface + reader + renderer + grounding on each.
+prior_active_work: >
   Pipeline complete on TWO domains now: flood (surface, 5 reader arms, 3
   kernels, grounded paragraph) and solvency (surface, readers, kernel, grounded
   bitemporal paragraph). Remaining: scheduling has only the law tested on it.
@@ -241,9 +257,9 @@ next_actions:
     of the disambiguation. The honest frontier is a surface without those,
     where this same reader (position ablated) leaves 72 consistent worlds and a
     bound deciding 0.0% -- so it must EMIT ambiguity rather than resolve it.
-  - Reader machinery on scheduling -- the only domain with no reader or
-    renderer, and its boolean answer would test whether the boolean
-    contradiction form is reusable or whether every domain needs its own.
+  - A THIRD ANSWER TYPE (a number, a ranking) would test whether "one shared
+    check per answer type" is a real decomposition or an artefact of having
+    only boolean and set.
   - Grounding now has three levels -- token, route adjacency, and CONTRADICTION
     against the structured answer -- and the renderer passes all three 40/40.
     The remaining hole is a real quantity attached to the wrong entity when no

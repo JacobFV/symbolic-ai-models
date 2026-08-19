@@ -32,6 +32,8 @@ from typing import Any
 
 from symbolic_ai_core.world import Quantity
 
+from ..grounding import boolean_contradiction
+
 __all__ = ["Citation", "Answer", "render_answer", "ungrounded"]
 
 _NUM = re.compile(r"\b\d+(?:\.\d+)?\b")
@@ -152,16 +154,11 @@ def ungrounded(answer: Answer, case: Any) -> list[str]:
             usable.append(max(known, key=lambda pair: pair[1])[0])
     known_nums.add(f"{round(sum(usable), 2):.2f}")
 
-    bad: list[str] = []
-    # the check the whole separation depends on
-    said_met = "covenant was met" in answer.text
-    said_not = "covenant was not met" in answer.text
-    if said_met and said_not:
-        bad.append("the paragraph asserts the verdict both ways")
-    elif said_met != bool(answer.structured):
-        bad.append(f"paragraph asserts the covenant "
-                   f"{'was' if said_met else 'was not'} met, but the "
-                   f"structured verdict is {answer.structured}")
+    # The check the whole separation depends on. Shared with scheduling: the
+    # only domain-specific part is the pair of verdict phrases.
+    bad: list[str] = list(boolean_contradiction(
+        answer.text, answer.structured,
+        yes="covenant was met", no="covenant was not met"))
     for tok in _DATE.findall(answer.text):
         if tok not in known_dates:
             bad.append(f"date {tok} is neither a filing date nor the "
