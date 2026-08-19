@@ -40,6 +40,31 @@ measured:
     because the atom rule that keeps a pronoun with its antecedent -- required
     for the document to stay true -- preserves the demand binding; a property of
     the task, not a leak.
+  - THE TRANSFERABLE COMPONENT WAS 85% FALSE POSITIVES ON REAL ENGLISH.
+    staleness.py's whole claim is that its cue list is CLOSED-CLASS, and every
+    number for it came from surfaces this repo generated. Run on 36,223 sentences
+    of real scientific abstracts (data/sources/openalex-prose) it fires on 2.29%
+    and roughly 85% of those are wrong:
+      used to 443 (53.5%)   previously 206 (24.9%)   once 88 (10.6%)
+      no longer 23          former 22                before the 21
+    I PREDICTED `once` AND `before the` WOULD DOMINATE. They are 10.6% and 2.5%.
+    The dominant error is `used to` -- 439 of 443 as the ONLY cue -- and it is the
+    PASSIVE OF USE ("is used to obtain"), not a temporal confusion but an
+    ambiguity between TWO GRAMMARS, separating on one observable: the passive is
+    preceded by a form of BE. Three tokens of lookback, no parser available.
+    Second correction: `once`, `previously`, `before the`, `until the` mark
+    TEMPORAL ORDERING not withdrawal. Dropped; kept as CANCELLING_V1.
+    RESULT: real-prose firing 2.29% -> 0.34% (6.8x) with EVERY generated-surface
+    number BYTE-IDENTICAL (scheduling 1.000/1.000/1.000, flood 0.933 x4).
+    Removals can only reduce firing, so the domains could only stay or fall --
+    they stayed, which is the evidence that what went was noise.
+    RESIDUAL NEEDS WORD SENSES, NOT WORDS: 122 fires left, `former` 18% of which
+    77% are "the former", the CORRELATIVE PRONOUN. Pronoun vs attributive
+    adjective is a part-of-speech question, and the available patch would kill
+    "the former subsidiary" -- exactly the phrase solvency uses. Not patched.
+    THE STRUCTURAL POINT: 37 GB of real corpora sit in data/sources/ and EVERY
+    reader, audit, certificate and cost number here is measured on text this repo
+    wrote. See notes/questions/2026-08-19-every-evaluation-here-runs-on-text-this-repo-wrote.md
   - INSENSITIVITY RESCUES THE ARM DETECTION CANNOT SEE -- AND GROWS CONFIDENT AS
     IT FAILS. Today's declared floor was the UNCUED divested-filer distractor:
     multi-valued role so detection is 0.000 by construction, no declared cue so
@@ -1117,6 +1142,12 @@ beliefs:
     Dependency-weighted recall is likely a better target than global recall.
   - Ambiguity should be emitted, not collapsed. Kernels can branch or bound.
 unknowns:
+  - WHETHER ANY OF THIS SURVIVES TEXT NOBODY HERE WROTE. 37 GB in data/sources/
+    and every number is self-generated. The one component testable without ground
+    truth was 85% false positives on real prose. A READER on real text needs
+    claim-aligned ground truth, which no corpus here ships -- structured sources
+    have facts without prose, prose sources have prose without facts. sec-edgar
+    has both and is the obvious frontier build.
   - ANSWERED for the sentence-internal form: a CANCELLATION gate reads the same
     sentence twice and repairs both domains' multi-valued channel. Still open --
     a second reading that is not sentence-internal, for a domain whose predicate
