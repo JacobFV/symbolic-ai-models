@@ -753,6 +753,62 @@ December 2025 and the quarter after, 2,282,570 → 2,360,678 holdings edges,
 corpus *update* this repo has had, as against a corpus. Everything in §3b was
 measured on those bytes and nothing in it is injected.
 
+## 3l. Reach has three tiers, and the residual lives in the one nobody recorded
+
+Two findings, `notes/findings/2026-08-18-purchasable-reach-saturates-...md` and
+`notes/findings/2026-08-18-reach-has-three-tiers-...md`. The *purchasable /
+structural* split this repo has carried is wrong; it is three.
+
+**1. Purchasable — and it SATURATES.** Over 26,850 securities and **$51.4T** of
+13F positions:
+
+| crosswalk | rows | by count | **by dollar** | attained vs oracle at its own k |
+|---|---:|---:|---:|---:|
+| filed, GLEIF ISIN→LEI | 2,281,221 | 27.9% | **75.0%** | 66.0% |
+| curated, wikidata→ISIN | 2,383 | 7.5% | **68.8%** | 69.8% |
+
+A crosswalk **957× smaller** answers 92% as much of what the workload weighs —
+**878× more answered value per row**. Normalised against an oracle picking the
+best k securities at each crosswalk's *own* k (random-at-k as the floor), the two
+are **1.06×** apart, so neither is better targeted and the effect is pure value
+concentration. **The raw dollar/count ratio (9.21× vs 2.68×) is an artefact** —
+its ceiling is `1/coverage`, so a smaller crosswalk scores higher mechanically.
+Do not quote it.
+
+**2. Derivable from recorded structure — works, and is narrow.** Transitive
+closure over GLEIF's relationship graph, on the 598 ambiguous filers:
+
+| | | |
+|---|---:|---|
+| determined at group level, unconditional | **18.2%** | 109/598 |
+| candidates all present in the graph | 22.4% | 134/598 |
+| determined, **conditional on that** | **81.3%** | 109/134 |
+| permutation control, both populations | **0.0%** | 0/598 and 0/134 |
+
+**3. Absent.** GLEIF mentions **348,836 of 3,348,427** entities (**10.4%**) in
+any relationship, because Level 2 is only reportable when a consolidating parent
+exists *and* is itself LEI-registered. For the other 90% the relationship was
+never recorded by anyone — not a procurement problem, and closure cannot reach it.
+
+**And the two levers are near-orthogonal.** `f` for a group-level question:
+
+| policy | `f` | advantage | |
+|---|---:|---:|---|
+| names alone | 14.66% | 6.8× | |
+| + wikidata bridge | 9.81% | 10.2× | 1.49× — acquired |
+| + closure, zero acquisition | 11.99% | 8.3× | 1.22× — derived |
+| **+ both** | **8.17%** | **12.2×** | **1.80×** (1.49 × 1.22 = 1.82) |
+
+> **The residual `f` of 8.17% lives almost entirely in tier 3.** The frontier of
+> the federated advantage is not a reasoning limit and not a budget limit — it is
+> the limit of what the world has written down.
+
+**Scope, and it is half the result.** Closure settles **group-level** questions
+only; *"which country is this filer's legal entity in"* stays ambiguous when the
+group spans countries. Matching the question to the data's shape is worth
+**1.22×**, free — the first time this repo has priced that thesis rather than
+asserting it.
+
 ## 4. Believed, not measured. Do not inherit as fact.
 
 Recorded deliberately, with mechanisms, so a later contradiction is a finding

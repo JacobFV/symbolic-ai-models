@@ -268,7 +268,24 @@ last_cycle:
     repo now say the cheap half of a problem is the useful half.
 
 next:
-  preferred_action: match-the-question-to-the-data-shape
+  preferred_action: can-structural-reach-be-manufactured-from-closure
+  why_now: >
+    Reach was split into PURCHASABLE and STRUCTURAL, and the purchasable half is
+    now measured and closed: it SATURATES. 2,383 curated crosswalk rows reach
+    68.8% of $51.4T of 13F value; 2,281,221 filed rows reach 75.0%. A file 957x
+    smaller answers 92% as much of what the workload weighs, and normalised
+    against an oracle at each crosswalk's own k the two are 1.06x apart -- so
+    neither is better targeted and the shape is pure value concentration. Buying
+    more mappings will not close the 68x cliff.
+
+    That leaves the structural half, and it is the half this repo's machinery is
+    actually FOR. The question nobody has asked: can transitive closure over
+    GLEIF's relationship graph REACH the 3,063 matched-but-unbridged filers from
+    the 1,015 bridged ones? A filer whose parent or subsidiary is bridged is
+    reachable by reasoning rather than by acquisition. If that works, symbolic
+    closure buys reach money cannot -- which is the programme's central claim,
+    tested on a real workload with a floor, rather than argued.
+  previous_preferred_action: match-the-question-to-the-data-shape
   why_shipped_instead: >
     witness-on-kernelresult is DONE: `Witness` is on the kernel ABI, the ASP
     kernel returns its answer set instead of discarding it, and
