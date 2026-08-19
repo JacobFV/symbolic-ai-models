@@ -119,15 +119,31 @@ def decide(case: SolvencyCase, *, as_of: str) -> tuple[bool, float, bool]:
     the kernel** it is used to check — an oracle that shared the kernel's code
     would agree with it by construction.
     """
-    total = 0.0
+    # Summed in CENTS, as integers.
+    #
+    # A decision that compares a SUM to a threshold needs exact arithmetic in
+    # the domain's smallest unit; one that compares a single measured quantity
+    # to a single posted one does not. Measured 2026-08-19 by constructing the
+    # exact-fit case: this comparison flips on 39 of 200 cases when the
+    # threshold equals the total, because a float sum of two-decimal amounts
+    # lands 1e-13 below it -- e.g. 618.3599999999999 against 618.36. flood, which
+    # compares one laden mass with one posted limit, flips 0 of 3000.
+    #
+    # LATENT rather than active on this generator, whose threshold is a random
+    # multiple and lands on the boundary with probability ~0. Fixed anyway,
+    # because solvency is this repo's tunable-margin domain and any sweep to
+    # exact fit fires it -- which is exactly how the same bug in
+    # ``scheduling.capacity_gate`` was found.
+    cents = 0
     complete = True
     for m in case.members:
         seen = [(v, k) for e, v, k in case.filings if e == m and k <= as_of]
         if not seen:
             complete = False
             continue
-        total += max(seen, key=lambda p: p[1])[0]
-    return total >= case.threshold, round(total, 2), complete
+        cents += int(round(max(seen, key=lambda p: p[1])[0] * 100))
+    return (cents >= int(round(case.threshold * 100)), round(cents / 100.0, 2),
+            complete)
 
 
 # ---------------------------------------------------------------------------

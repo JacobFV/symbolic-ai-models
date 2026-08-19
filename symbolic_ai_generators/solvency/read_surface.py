@@ -92,19 +92,31 @@ def read_signature(text: str) -> Reading:
 def decide_reading(reading: Reading) -> bool | None:
     """The covenant verdict implied by a reading.
 
-    The rule is the domain's, not a reimplementation of the kernel: for each
-    member take the **largest** figure known on or before the determination
-    date, sum, compare with the threshold. A reading missing the threshold or
-    the date returns ``None`` rather than guessing -- an unanswerable reading is
-    not a negative answer, the same distinction the ASP kernel draws between
+    For each member take the **latest** figure known on or before the
+    determination date -- the most recent filing, not the largest one -- sum,
+    and compare with the threshold. A reading missing the threshold or the date
+    returns ``None`` rather than guessing: an unanswerable reading is not a
+    negative answer, the same distinction the ASP kernel draws between
     unsatisfiable and unfinished.
+
+    **This said "largest" and did the largest, which is a different rule.**
+    Revisions here go down as well as up -- seed 69's group files 198.80 and
+    then revises to 188.36 -- so the two disagree on 62 of 948 member-dates and
+    flip the verdict on **9 of 400 cases**. It measured 1.000 over 60 seeds,
+    which is too few to see a 2% error rate, and the tests used 30. Found while
+    auditing a *different* bug class, which is the only reason it was found at
+    all.
     """
     if reading.threshold is None or reading.decision_date is None:
         return None
-    total = 0.0
+    # Cents, for the same reason ``decide`` uses them: a sum compared with a
+    # threshold needs exact arithmetic, and ``round(total, 2)`` does not supply
+    # it -- rounding a sum that is already 1e-13 low can leave it low.
+    cents = 0
     for m in reading.members:
-        seen = [v for e, v, k in reading.filings
+        seen = [(k, v) for e, v, k in reading.filings
                 if e == m and k <= reading.decision_date]
         if seen:
-            total += max(seen)
-    return round(total, 2) >= reading.threshold
+            # latest by DATE, not largest by value
+            cents += int(round(max(seen)[1] * 100))
+    return cents >= int(round(reading.threshold * 100))

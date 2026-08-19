@@ -40,6 +40,25 @@ measured:
     because the atom rule that keeps a pronoun with its antecedent -- required
     for the document to stay true -- preserves the demand binding; a property of
     the task, not a leak.
+  - THE SOLVENCY READER USED THE WRONG TEMPORAL RULE, and a 60-seed sample
+    could not see it. decide() takes the LATEST filing by date; the reader took
+    the LARGEST by value and documented itself as doing so. Revisions go DOWN as
+    well as up (seed 69: group files 198.80 then revises to 188.36), so the
+    rules differ on 62/948 member-dates and FLIPPED THE VERDICT ON 9/400 CASES.
+    It had been reported at 1.000 in all six cells over 60 seeds, tests using
+    30 -- about one expected failure at a 2.25% rate, and it did not land.
+    FIXED; now 0 disagreements over 400 seeds on both surfaces. The
+    structure-independence conclusion is unaffected (same reader both sides),
+    but the CONFIDENCE was wrong: the sample was sized to run quickly, not to
+    bound the error it asserted.
+  - THE RISK IS SUMMATION, NOT FLOATING POINT. Swept the exact-fit bug class
+    across all three domains by CONSTRUCTING the boundary case: solvency flips
+    39/200 (sum vs threshold), flood 0/3000 (one quantity vs one posted limit),
+    scheduling 0 after the gate fix. Comparing a SUM to a threshold needs exact
+    arithmetic in the smallest unit; comparing one measured quantity to one
+    posted quantity does not. Applicable by inspection. Solvency was LATENT --
+    random threshold, boundary probability ~0 -- and is fixed in cents anyway
+    because it is the tunable-margin domain.
   - CAPACITY_GATE WAS UNSOUND AT EXACT FIT, and pushing the benchmark to its
     boundary is what found it. It summed hours as FLOATS and compared
     demand > capacity; at HARD_REGIME demand equals capacity by construction and
