@@ -227,22 +227,28 @@ last_cycle:
     repo now say the cheap half of a problem is the useful half.
 
 next:
-  preferred_action: give-egraph-a-rewrite-witness
+  preferred_action: route-by-monotonicity
   why_shipped_instead: >
     witness-on-kernelresult is DONE: `Witness` is on the kernel ABI, the ASP
     kernel returns its answer set instead of discarding it, and
     `KernelResult.maintainable` is true exactly when a witness is present --
     deliberately NOT for a proof of impossibility, however conclusive.
   why: >
-    Wiring is DONE for the four kernels whose answers are existential: asp
-    (answer set), smt (model), lean (refutations), datalog (derivation, opt-in).
-    The classification is now three-way and only ONE cell is a genuine gap:
-    egraph claims `equivalent_form`, whose witness is the rewrite sequence, and
-    SaturationReport counts rule applications without keeping an ordered path.
-    rigid/geo/economy have no witness to have -- a pose, a distance and a total
-    are function evaluations, not searches. So the remaining work is one kernel
-    and one data structure, and emptying that cell would make every existential
-    answer in the repo checkable without re-running its kernel.
+    Monotonicity is now measured on the same axis four times -- twice before this
+    session (witness verifies 247x cheaper, optimality certificate 2.0x dearer
+    than re-solving) and twice in it (the 93x/72x maintenance split, and monotone
+    queries repairing a noisy world while the antitone one cannot). The design
+    consequence has been STATED and never built: world construction and answer
+    construction want opposite defaults, and nothing in the architecture says so.
+    The testable version is a ROUTER that reads a query's FORM -- monotone or
+    not, decided without seeing the answer -- and sends it to the precise world
+    or the complete one. That is also the mandate's stated long-term object,
+    routing computation across heterogeneous components, and this repo has never
+    measured a routing decision.
+  superseded_egraph: >
+    Deferred by decision: the cheap version is a trace, not a certificate, and
+    the real one is proof-producing congruence closure with no consumer today.
+    See notes/decisions/2026-08-18-deferring-the-egraph-witness-...md
   superseded_geo: >
     Ran and failed; see 3f. Do not repeat without sizing the signal first.
   superseded_hub_labelling: >
