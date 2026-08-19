@@ -19,6 +19,16 @@ OUT = Path("runs/audit_domains.json")
 N = 40
 
 
+def _cases(domain: str):
+    if domain == "flood":
+        from symbolic_ai_generators.flood import generate
+    elif domain == "scheduling":
+        from symbolic_ai_generators.scheduling import generate
+    else:
+        from symbolic_ai_generators.solvency import generate
+    return [generate(s) for s in range(N)]
+
+
 def corpus(domain: str, V: int = 4):
     if domain == "flood":
         from symbolic_ai_generators.flood import generate
@@ -50,9 +60,12 @@ def main() -> None:
             from symbolic_ai_generators.flood.read_surface import VALUE_REGISTRY
             reg = VALUE_REGISTRY
         ent = r"\b(sub)_\d+\b|\b(group)\b" if domain == "solvency" else None
-        a = audit_surface(corpus(domain), registries=reg, entity=ent)
+        obs = corpus(domain)
+        a = audit_surface(obs, registries=reg, entity=ent,
+                          worlds=[c.world for c in _cases(domain)])
         results[domain] = {"spans": a.spans,
                            "ambiguity_mass": a.ambiguity_mass,
+                           "real_ambiguity_mass": a.real_ambiguity_mass,
                            "kinds": sorted(a.by_kind),
                            "collisions": {str(s): sorted(k)
                                           for s, k in a.collisions.items()}}
@@ -60,23 +73,23 @@ def main() -> None:
         print(a.report())
         print()
 
-    print(f"{'domain':<12} {'kinds':>6} {'spans':>7} {'ambiguity mass':>15} "
-          f"{'predicts':>28}")
+    print(f"{'domain':<12} {'kinds':>6} {'spans':>7} {'raw mass':>10} "
+          f"{'real mass':>10} {'predicts':>26}")
     print("-" * 72)
     for domain, r in results.items():
-        m = r["ambiguity_mass"]
+        m = r["real_ambiguity_mass"]
         pred = ("arrangement load-bearing" if m > 0.05
                 else "signature suffices")
         print(f"{domain:<12} {len(r['kinds']):>6} {r['spans']:>7} "
-              f"{m:>15.3f} {pred:>28}")
+              f"{r['ambiguity_mass']:>10.3f} {m:>10.3f} {pred:>26}")
 
     f, s = results["flood"], results["scheduling"]
-    if f["ambiguity_mass"] > 0.05 and s["ambiguity_mass"] < 0.05:
+    if f["real_ambiguity_mass"] > 0.05 and s["real_ambiguity_mass"] < 0.05:
         print(f"\n-> the instrument reproduces both measured answers, which is "
               f"what licenses its\n   use on the third. flood's collision is "
               f"exactly the group the closure finding\n   proved unreachable "
               f"without content; scheduling has none.")
-    v = results["solvency"]["ambiguity_mass"]
+    v = results["solvency"]["real_ambiguity_mass"]
     print(f"\n-> PREDICTION for solvency, before any reader exists: ambiguity "
           f"mass {v:.3f}, so a\n   signature reader should "
           f"{'NOT ' if v > 0.05 else ''}need arrangement, and interleaving "

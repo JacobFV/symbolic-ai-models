@@ -82,14 +82,52 @@ class Audit:
         """
         return self.ambiguous_spans / self.spans if self.spans else 0.0
 
+    #: predicate -> the role names it carries, when the worlds were supplied
+    roles_by_kind: dict = field(default_factory=dict)
+
     @property
     def collisions(self) -> dict:
         """Signature -> the kinds sharing it, for signatures carrying several."""
         return {s: k for s, k in self.by_signature.items() if len(k) > 1}
 
+    @property
+    def real_collisions(self) -> dict:
+        """Collisions where the kinds also share a **role signature**.
+
+        A sentence-signature collision is only ambiguity if the colliding kinds
+        could be confused once the roles are recovered. flood's largest
+        collision by span mass -- ``bridge_on`` (a, b, via) against ``link``
+        (a, b), 456 of every thousand claim spans -- is not one: they look
+        identical in text and cannot be swapped, because a reader that recovers
+        the roles already has them apart. Measured cost of that collision:
+        **zero, on zero permutable cases.**
+
+        Needs ``worlds``; without it this returns every collision, which
+        over-counts. flood reads 0.617 raw and 0.161 real.
+        """
+        if not self.roles_by_kind:
+            return self.collisions
+        out = {}
+        for sig, kinds in self.collisions.items():
+            sigs = {frozenset(self.roles_by_kind.get(k, ())) for k in kinds}
+            if len(sigs) < len(kinds):
+                out[sig] = kinds
+        return out
+
+    @property
+    def real_ambiguity_mass(self) -> float:
+        """Ambiguity mass counting only collisions the roles cannot settle."""
+        if not self.spans:
+            return 0.0
+        real = sum(self.mass_by_signature.get(s, 0) for s in self.real_collisions)
+        return real / self.spans
+
     def report(self) -> str:
         lines = [f"{self.spans} claim spans, ambiguity mass "
                  f"{self.ambiguity_mass:.3f}"]
+        if self.roles_by_kind:
+            lines[0] += f" ({self.real_ambiguity_mass:.3f} real)"
+        real = self.real_collisions
         if not self.collisions:
             lines.append("  no signature carries more than one claim kind: a "
                          "reader can type every")
@@ -99,7 +137,9 @@ class Audit:
                 self.collisions.items(),
                 key=lambda kv: -self.mass_by_signature.get(kv[0], 0)):
             n = self.mass_by_signature.get(sig, 0)
-            lines.append(f"  {n:>5} spans  {sig}  ->  {', '.join(sorted(kinds))}")
+            mark = "" if sig in real else "   [roles differ: not ambiguity]"
+            lines.append(f"  {n:>5} spans  {sig}  ->  "
+                         f"{', '.join(sorted(kinds))}{mark}")
         return "\n".join(lines)
 
 
@@ -138,7 +178,7 @@ def signature_of(text: str, registries: dict | None = None,
 
 
 def audit_surface(observations, registries: dict | None = None,
-                  entity: str | None = None) -> Audit:
+                  entity: str | None = None, worlds=None) -> Audit:
     """Audit a corpus of rendered observations.
 
     Each observation supplies ``spans``; a span with a ``claim`` realises a
@@ -147,6 +187,10 @@ def audit_surface(observations, registries: dict | None = None,
     them would inflate the ambiguity with text that realises nothing.
     """
     out = Audit()
+    if worlds is not None:
+        for w in worlds:
+            for c in w.claims:
+                out.roles_by_kind.setdefault(c.predicate, frozenset(c.roles))
     seen: list[tuple] = []
     for obs in observations:
         for span in obs.spans:
@@ -162,4 +206,73 @@ def audit_surface(observations, registries: dict | None = None,
         if len(out.by_signature[sig]) > 1:
             out.ambiguous_spans += 1
             out.mass_by_signature[sig] = out.mass_by_signature.get(sig, 0) + 1
+    return out
+
+
+def role_signature(claim) -> frozenset:
+    """The role names a claim carries -- ``{"where"}``, ``{"a", "b", "via"}``.
+
+    A sentence-signature collision is only *real* ambiguity if the colliding
+    kinds also share this. ``link`` (a, b) and ``bridge_on`` (a, b, via) look
+    identical in text -- two regions, no number -- and are the largest collision
+    flood has by span mass, yet cost nothing: a reader that recovers the roles
+    can still tell them apart, and the flow rebuilds bridges from the crossings
+    that carry limits. ``depot``, ``flooded`` and ``needs`` all carry ``where``
+    alone, and that collision costs everything.
+    """
+    return frozenset(claim.roles)
+
+
+def collision_cost(cases, observations, solve, *, registries=None,
+                   entity=None, seed=0) -> dict:
+    """What each signature collision costs the answer, measured not reasoned.
+
+    For every colliding signature, the predicates of the claims realised by
+    spans with that signature are **permuted among claims sharing a role
+    signature**, in the *true* world, and the flow is re-solved. That is the cost
+    of being unable to tell those kinds apart.
+
+    Crucially this needs no reader. The audit's value is that it speaks before a
+    reader exists, and a cost estimate that required one would give that up.
+
+    Returns ``{frozenset(kinds): {"cost": float, "n": int, "permutable": int}}``.
+    """
+    import random
+    from dataclasses import replace
+
+    a = audit_surface(observations, registries=registries, entity=entity)
+    groups = {frozenset(k) for k in a.collisions.values()}
+    out: dict = {}
+
+    for kinds in groups:
+        rng = random.Random(seed)
+        ok, permutable = [], 0
+        for case, obs in zip(cases, observations):
+            world = case.world
+            base = solve(world)[0]
+            idx = [i for i, c in enumerate(world.claims) if c.predicate in kinds]
+            by_roles: dict = defaultdict(list)
+            for i in idx:
+                by_roles[role_signature(world.claims[i])].append(i)
+            claims = list(world.claims)
+            moved = False
+            for members in by_roles.values():
+                if len(members) < 2:
+                    continue
+                preds = [claims[i].predicate for i in members]
+                if len(set(preds)) < 2:
+                    continue
+                shuffled = preds[:]
+                rng.shuffle(shuffled)
+                if shuffled == preds:
+                    shuffled = preds[1:] + preds[:1]
+                for i, p in zip(members, shuffled):
+                    claims[i] = replace(claims[i], predicate=p)
+                moved = True
+            if not moved:
+                continue
+            permutable += 1
+            ok.append(solve(replace(world, claims=tuple(claims)))[0] == base)
+        out[kinds] = {"cost": 1.0 - (sum(ok) / len(ok)) if ok else 0.0,
+                      "n": len(ok), "permutable": permutable}
     return out

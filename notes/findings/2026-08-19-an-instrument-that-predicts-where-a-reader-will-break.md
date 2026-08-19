@@ -107,3 +107,51 @@ A domain auditing at 0.000 whose reader nonetheless breaks under interleaving �
 that would mean something outside sentence signature carries the reading, and the
 instrument is incomplete. Solvency was the first real test of that and passed;
 two confirmations and one prediction is not a law.
+
+---
+
+## From ordinal to cardinal (same day)
+
+The limit this note recorded — *"it measures collisions, not consequences"* — was
+the next thing to fix, and it turned out not to need dependency weighting at all.
+
+**Two of the three collisions are settled by a rule that costs nothing to
+compute.** A sentence-signature collision is real ambiguity only if the colliding
+kinds also share a **role signature**:
+
+| collision | spans | span share | permutable cases | cost |
+|---|---:|---:|---:|---:|
+| depot+flooded+needs | 141 | 0.124 | 40 | **0.625** |
+| **bridge_on+link** | **520** | **0.456** | **0** | **—** |
+| capacity+load_limit | 43 | 0.038 | 40 | **0.550** |
+
+`link` carries `(a, b)` and `bridge_on` carries `(a, b, via)`. They are
+indistinguishable in **text** — two regions, no number — and are flood's largest
+collision, 456 of every thousand claim spans. They cost nothing, and not as a
+measured accident: **there is nothing to permute.** A reader that recovers the
+roles already has them apart, and the flow rebuilds bridges from the crossings
+carrying limits.
+
+That is worth stating precisely: the zero in that row is **structural, not
+empirical**. The permutation never fires, which is why the table reports
+`permutable = 0` rather than a cost of 0.000 measured over 40 cases. Reporting it
+as a measured zero would claim evidence that was never gathered.
+
+With the role-signature filter applied, flood reads **0.617 raw → 0.161 real**,
+and the two remaining collisions are exactly the ones that hurt.
+
+### Span mass is the wrong weight, and badly
+
+The largest collision by mass costs nothing; the second smallest costs 0.550. Any
+weighting by how *often* kinds collide would have ranked these exactly backwards.
+`capacity`/`load_limit` is 3.8% of spans and over half the answer, because both
+are answer-critical quantities and swapping them corrupts the load check.
+
+### What this did not need
+
+I expected to reach for the ablation-measured dependency sizes this repo already
+computes. They were not necessary: **role signature** settles which collisions are
+real, and direct permutation in the true world settles what the real ones cost.
+Both are computable from the world and the surface with **no reader**, which is
+the property that makes the audit worth having — an instrument that needed a
+reader could not speak before one existed.

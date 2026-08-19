@@ -79,3 +79,51 @@ def test_an_entity_off_the_naming_convention_is_still_counted() -> None:
     given = signature_of("group owns sub_1 outright", entity=SOLVENCY_ENTITY)
     assert sum(n for _, n in generic.entities) == 1
     assert sum(n for _, n in given.entities) == 2
+
+
+# --- from ordinal to cardinal: which collisions are real, and what they cost ---
+
+def _flood_cases(n: int = 12):
+    from symbolic_ai_generators.flood import generate
+    return [generate(s) for s in range(n)]
+
+
+def test_roles_separate_the_collision_that_costs_nothing() -> None:
+    """``link`` (a, b) and ``bridge_on`` (a, b, via) are flood's LARGEST
+    collision by span mass and cost nothing, because a reader that recovers the
+    roles already has them apart. Span mass is the wrong weight."""
+    from symbolic_ai_generators.flood.read_surface import VALUE_REGISTRY
+    a = audit_surface(_flood(), registries=VALUE_REGISTRY,
+                      worlds=[c.world for c in _flood_cases()])
+    real = {frozenset(k) for k in a.real_collisions.values()}
+    assert frozenset({"bridge_on", "link"}) not in real
+    assert frozenset({"depot", "flooded", "needs"}) in real
+    assert a.real_ambiguity_mass < a.ambiguity_mass
+
+
+def test_real_mass_still_separates_the_domains() -> None:
+    from symbolic_ai_generators.flood.read_surface import VALUE_REGISTRY
+    flood = audit_surface(_flood(), registries=VALUE_REGISTRY,
+                          worlds=[c.world for c in _flood_cases()])
+    from symbolic_ai_generators.scheduling import generate as sg
+    sched = audit_surface(_scheduling(),
+                          worlds=[sg(s).world for s in range(12)])
+    assert flood.real_ambiguity_mass > 0.05
+    assert sched.real_ambiguity_mass == 0.0
+
+
+def test_the_costly_collision_is_the_one_that_breaks() -> None:
+    """The permutation is done in the TRUE world, so no reader is involved --
+    which is what lets the audit speak before a reader exists."""
+    from symbolic_ai_generators.audit import collision_cost
+    from symbolic_ai_generators.flood.flow import solve
+    from symbolic_ai_generators.flood.read_surface import VALUE_REGISTRY
+    cases = _flood_cases(10)
+    costs = collision_cost(cases, _flood(10), solve, registries=VALUE_REGISTRY)
+    residual = costs[frozenset({"depot", "flooded", "needs"})]
+    assert residual["cost"] > 0.3, residual
+    assert residual["n"] == 10, residual
+    # nothing to permute where the roles differ, so this is structural rather
+    # than a measured zero -- and the count is what says so
+    harmless = costs[frozenset({"bridge_on", "link"})]
+    assert harmless["permutable"] == 0, harmless
