@@ -48,6 +48,76 @@ critical_path: >
   - step 5, in a first form. 168 intros -> three relations -> one world ->
     parent JOIN country, an answer stated in no sentence, at F1 0.138.
 
+# REFINEMENTS to the critical path, user, 2026-08-19. These modify the order and
+# two of the abstractions; they do not replace the frame.
+critical_path_refinements: >
+  NORTH STAR RESTATED: not "GPT-2-ish". It is an OPEN-ENDED LINGUISTIC INTERFACE
+  TO A PERSISTENT COMPUTATIONAL WORLD MODEL. GPT-2 is a fluency baseline and a
+  recognisable experience target, not the thing being architected; conversation
+  should FALL OUT of the goal rather than define it.
+
+  1. THE READER LEARNS A TASK-SUFFICIENT STATISTIC, BUT THE WORLD STAYS RICHER
+     THAN THE QUERY. Formally the objective is P(Y | Z, Q) ~ P(Y | X, Q) while
+     minimising C(R) + C(reasoning) + lambda * loss -- "extract the minimum
+     structured information from language that preserves the answer-relevant
+     information", which is the tokens/$ thesis in one line.
+     CAVEAT THAT MATTERS: do NOT let [W]_Q become "only parse what this query
+     needs". Two distinct objects:
+       observation -> persistent interpretation -> claims/uncertainty/provenance
+                   -> PERSISTENT WorldSnapshot
+       WorldSnapshot + current Q -> task quotient -> [W]_Q -> kernels
+     The persistent reader captures reusable information cheap enough to extract;
+     the quotient happens downstream, per query. Today's irrelevant fact answers
+     tomorrow's query.
+
+  2. CANDIDATE IDENTITY EARLY, COLLAPSE LATE. Not
+     mention -> resolve irrevocably -> relation, because RELATION SEMANTICS
+     DISAMBIGUATE IDENTITY ("Mercury" + "orbits the Sun"). Candidate entity
+     generation early, joint reconciliation with candidate predicates and roles,
+     collapse last -- which is the ambiguity machinery already built.
+
+  3. READER SENSITIVITY AS A THEORETICAL OBJECT, AND THEN AS A LOSS. With k
+     critical claims each recovered with probability r, P(success) ~ r^k gives
+     d log P / d r = k / r -- so recall improvements are worth MORE, linearly, in
+     effective dependency size. Independence will be false, so measure an
+     EFFECTIVE k_eff from perturbation curves: P(success | r) ~ r^k_eff, a
+     transferable statistic saying how many independently fragile facts a task
+     needs. Weighted: P(failure) ~ 1 - PROD(1 - p_i s_i) ~ SUM p_i s_i for small
+     values, which is the principled reason for critical-claim recall AND gives
+     a training loss L_reader = SUM s_i L_i.
+     BACKPROPAGATE IMPORTANCE FROM THE SYMBOLIC COMPUTATION INTO THE NEURAL
+     READER, even without differentiating through the kernels. This is named as
+     the genuinely novel direction: learn exactly the distinctions the symbolic
+     downstream proves are consequential.
+
+  4. ReadResult MUST NOT BE FORCED TO ONE WorldDelta. It should be able to say
+     "claim A: 0.62, claim B: 0.38, A XOR B" -- a compact factor/constraint
+     representation rather than enumerated worlds.
+
+  5. STREAMING IS NOT A BLOCKING PREREQUISITE. The first learned reader can be
+     proven on 100k-1M generated examples while streaming is wired in parallel;
+     otherwise a day goes to infrastructure and produces zero capability.
+     STATUS: symbolic_ai_core/data/stream.py ALREADY has Cursor, stream_cases,
+     stream_episodes and stream_batches, with a keyed permutation and a bounded
+     window -- the gap is only that FitContext takes Sequence[Episode] and
+     NeuralModel.fit calls the list sampler. One file, deferred to step 7.
+
+  6. PERSISTENT MULTI-DOCUMENT WORLD UPDATE was missing from the path and belongs
+     early: many documents into one persistent world, queried repeatedly, rather
+     than rebuilding from the prompt each time. The economics follow --
+     cost/query = C_ingest / N_future_uses + C_incremental + C_reasoning +
+     C_generation -- and a fact extracted once and reused 10^6 times has
+     radically different economics from a transformer re-reading it 10^6 times.
+
+  REVISED ORDER: (1) Reader ABI [DONE]; (2) wrap the hand reader as
+  reader.handcrafted@1 [DONE as flood.content@1]; (3) a primitive LEARNED reader
+  now, on existing finite generated data; (4) oracle-world vs learned-world end to
+  end; (5) the corruption/sensitivity experiment and the survival law; (6) use it
+  to define what the learned reader optimises; (7) make ReplayableDataset the
+  actual training interface; (8) real-text entity candidates and multi-relation
+  extraction; (9) persistent multi-document world updates; (10) fluent decoding
+  only once the reader is genuinely useful.
+
 # STRATEGIC FRAME, set by the user 2026-08-19 after the reading session. This
 # outranks the task list and reorganises the next stretch.
 central_question: >
