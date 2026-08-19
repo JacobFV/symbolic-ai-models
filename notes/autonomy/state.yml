@@ -52,12 +52,23 @@ measured:
     decided => correct is PROVABLE; correct => decided is EMPIRICAL and would
     break on less redundant networks (the policy would stay sound and start
     paying coverage). The test is named for that fragility.
-    THE ARC: carrying ROLE ambiguity was sound and rapidly vacuous (72 worlds,
-    0.0% decided); carrying DISTRACTOR ambiguity is sound and free. The
-    difference is the BOUND -- role permutation enumerates a structureless
-    combinatorial space, at-most-one-spurious is a single small hypothesis the
-    generator satisfies. AMBIGUITY IS CHEAP TO CARRY WHEN THE HYPOTHESIS ABOUT
-    IT IS SMALL.
+    THE ARC, AND ITS CORRECTION: I first attributed the difference to the BOUND
+    -- "ambiguity is cheap to carry when the hypothesis about it is small". That
+    is WRONG, and the experiment run to test it said so. Varying only the bound
+    on the SAME collision gives k=0 decided 1.000 / sound 0.433, k=1 decided
+    0.067 / sound 0.867, k=3 decided 0.017 / sound 1.000: decidedness collapses
+    at the FIRST step and there is no usable middle anywhere.
+    The real variable is DEPENDENCY. A spurious link is often inert because the
+    network has other paths; a misassigned role never is -- it moves the depot,
+    the destination or the flooding. AND THE AUDIT ALREADY MEASURED THIS: its
+    collision cost is 0.000 for bridge_on/link and 0.625 for
+    depot+flooded+needs, which predicts free vs vacuous exactly. That is a
+    SECOND USE for the instrument -- collision cost forecasts whether
+    emit-rather-than-collapse will be usable, offline and before any reader.
+    Corrected statement: CARRIED AMBIGUITY IS CHEAP EXACTLY WHEN THE AMBIGUOUS
+    KIND HAS LOW COLLISION COST. Rests on two points in one domain, which is the
+    same weakness that sank version one -- scheduling and solvency both audit at
+    zero collisions and cannot test it.
   - "GROUNDED" MEANS CONSISTENT WITH WHAT WAS READ, NOT TRUE. ungrounded()
     builds its admissible edges from the routes the flow computed FROM THE READ
     WORLD, so a route over a claim the reader INVENTED is self-consistent and
