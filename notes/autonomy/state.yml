@@ -1990,6 +1990,34 @@ active_work: >
   domains. There is no regime here where this reader makes graded errors, so
   these surfaces can no longer discriminate reader designs. The next real test
   needs harder text, not a better fit.
+
+  REAL TEXT, STEP 8, DONE AND NEGATIVE. Fitted on 168 Wikipedia intros by
+  DISTANT SUPERVISION alone (a sentence is labelled if it contains a gold
+  filler; no spans), the reader reaches parent 0.101 correct against the
+  hand-written state-first reader's 0.393 -- a 3.9x loss, on the same corpus
+  where the same reader beats every hand reader when the text is generated and
+  the spans are exact. The loss decomposes and multiplies back: ceiling 0.577
+  (only 58% of intros contain a sentence with the gold CANONICAL LABEL),
+  classifier recall 0.308, ranker 0.500.
+
+  Two candidate explanations tested and both refuted. NOISE: multi-instance
+  pruning to one positive per article makes it worse everywhere (0.101 ->
+  0.042), so the constraint is VOLUME. EXTERNAL LEXICON: WordNet supersenses
+  move parent 0.101 -> 0.101 and lower the classifier's recall, because with no
+  POS or sense disambiguation every token contributes the union of its senses
+  and `noun.group` fires in every sentence of a company article. Second time
+  supersenses have been the wrong granularity here -- WordNet supplies a
+  CATEGORY and these tasks need a FRAME.
+
+  PENDING, and the decisive experiment for the volume claim:
+  `scripts/fetch_wikipedia_parents_scale.py` is fetching ~1,500 articles into
+  data/artifacts/wikipedia_parents_scale.jsonl (Wikidata is rate-limiting to
+  429s, so it backs off to ten minutes and takes an hour). When it lands, run
+  `uv run python -u scripts/real_text_reader.py --corpus
+  data/artifacts/wikipedia_parents_scale.jsonl`. Prediction on file: if volume
+  is the constraint, parent correct should move a long way toward the 0.577
+  ceiling; if it does not move, the diagnosis is wrong and the missing thing is
+  frames, not text. The 168-article file is never written to.
 prior_active_work: >
   Pipeline complete on TWO domains now: flood (surface, 5 reader arms, 3
   kernels, grounded paragraph) and solvency (surface, readers, kernel, grounded
