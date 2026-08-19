@@ -93,3 +93,34 @@ def test_the_hard_regime_keeps_ground_truth_affordable() -> None:
     for seed in range(3):
         generate_hard(seed)
     assert time.perf_counter() - t0 < 2.0
+
+
+def test_the_capacity_gate_is_sound_at_exact_fit() -> None:
+    """The regression this gate's float comparison caused.
+
+    At HARD_REGIME total demand equals total capacity by construction, and
+    summation order made demand exceed capacity by 1.4e-14 on 4 of 30 instances
+    -- so a gate documented as "provably sufficient" refused schedules that
+    provably exist. It now sums in integer centihours, the same units
+    ``build_program`` uses.
+
+    A one-sided check that is sometimes wrong is worse than no check, because
+    everything downstream trusts it.
+    """
+    from symbolic_ai_generators.scheduling import generate_hard
+
+    for seed in range(30):
+        case = generate_hard(seed)
+        need_search, _ = capacity_gate(case.world)
+        if not need_search:
+            assert not case.feasible, (seed, "gate refused a feasible schedule")
+
+
+def test_the_gate_still_fires_where_it_should() -> None:
+    """The fix must not silence it: below the boundary it still settles."""
+    from symbolic_ai_generators.scheduling import HARD_REGIME
+
+    fired = sum(not capacity_gate(
+        generate(s, **{**HARD_REGIME, "slack": -0.02}).world)[0]
+        for s in range(20))
+    assert fired == 20, fired

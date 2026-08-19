@@ -40,6 +40,24 @@ measured:
     because the atom rule that keeps a pronoun with its antecedent -- required
     for the document to stay true -- preserves the demand binding; a property of
     the task, not a leak.
+  - CAPACITY_GATE WAS UNSOUND AT EXACT FIT, and pushing the benchmark to its
+    boundary is what found it. It summed hours as FLOATS and compared
+    demand > capacity; at HARD_REGIME demand equals capacity by construction and
+    summation order made demand exceed it by 1.4e-14 (seed 8: 77.04 vs
+    77.03999999999999), so a gate documented "provably sufficient" refused
+    schedules that provably exist, on 4 of 30. FIXED: integer centihours, the
+    same units build_program uses. Ceiling 0.867 -> 1.000, gate settles 8/30 ->
+    2/30, solve 8.2 -> 17.5 ms/case. The 87.7%-of-solver-time claim was measured
+    where margins are comfortable, so it was true where measured and the
+    component was broken anyway. THE MARGIN THAT MAKES A COMPONENT LOOK SOUND IS
+    THE SAME MARGIN THAT HIDES ITS UNSOUNDNESS.
+  - THE COMPLEMENT OF FLOOD, MEASURED THE SAME WAY. Scheduling end to end at
+    HARD_REGIME: reader loss 0.000, claim recall 1.000 UNCHANGED BY
+    INTERLEAVING, ceiling 1.000, $/correct 9.49e-08, 17.5 ms/case. Against
+    flood's honest milestone -- reader loss 0.500, $/correct 3.69e-08, decision
+    a widest path. ONE DOMAIN WHERE READING IS THE WHOLE COST, ONE WHERE SOLVING
+    IS. Either number alone invites the wrong conclusion about where effort
+    belongs.
   - THE EXPENSIVE NEGATIVES ARE THE EASY NEGATIVES. Corrects the headline
     below. Clingo costs 0.6ms in the band my greedy could not settle -- the
     CHEAPEST cell in the grid -- so that band measured heuristic weakness, not

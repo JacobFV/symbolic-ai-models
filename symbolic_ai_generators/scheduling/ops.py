@@ -89,19 +89,33 @@ def capacity_gate(world: WorldSnapshot) -> tuple[bool, str]:
     sufficient condition -- capacity to spare says nothing about whether the
     capabilities line up -- so there is only one gate here, not two.
     """
-    demand = capacity = 0.0
+    # Summed in CENTIHOURS, as integers, not in floats.
+    #
+    # The generator emits two-decimal hours, so the exact comparison is an
+    # integer one -- and a float comparison is **unsound at exact fit**.
+    # Measured 2026-08-19 at HARD_REGIME (slack 0.0), where total demand equals
+    # total capacity by construction: summation order made demand exceed
+    # capacity by 1.4e-14 on 4 of 30 instances, so this gate refused a schedule
+    # that provably exists. A one-sided check that is sometimes wrong is worse
+    # than no check, because everything downstream trusts it -- and this one is
+    # cited as removing 87.7% of solver time "at zero accuracy cost", which was
+    # measured far from the boundary where the margin hides the defect.
+    #
+    # SCALE is the same factor ``build_program`` uses, so the gate and the ASP
+    # encoding now agree on what the numbers are.
+    demand = capacity = 0
     for c in world.claims:
         q = c.roles.get("value")
         if not isinstance(q, Quantity):
             continue
         if c.predicate == "duration":
-            demand += q.value
+            demand += int(round(q.value * SCALE))
         elif c.predicate == "capacity":
-            capacity += q.value
+            capacity += int(round(q.value * SCALE))
     if demand > capacity:
-        return False, (f"total demand {demand:.2f}h exceeds total capacity "
-                       f"{capacity:.2f}h, so no assignment can fit whatever the "
-                       f"capabilities are")
+        return False, (f"total demand {demand / SCALE:.2f}h exceeds total "
+                       f"capacity {capacity / SCALE:.2f}h, so no assignment can "
+                       f"fit whatever the capabilities are")
     return True, ""
 
 
