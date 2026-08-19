@@ -40,6 +40,30 @@ measured:
     because the atom rule that keeps a pronoun with its antecedent -- required
     for the document to stay true -- preserves the demand binding; a property of
     the task, not a leak.
+  - THE INVISIBLE ERROR IS CERTIFIABLE, EVEN THOUGH IT IS UNDETECTABLE.
+    Corrects this morning's own headline. scheduling has_capability is the worst
+    channel of the day (0.210 lost, ALL 42 failures unsound, every detector
+    0.000) and I concluded a multi-valued channel leaves only fixing the reader.
+    Too strong: insensitivity needs no second source and no arity.
+    200 cases, default regime, at-most-one-spurious-capability:
+      clean         acc 1.000  cover 0.665  acc|cert 1.000  cover|feas 0.056  1.80 solves
+      hard machine      0.790        0.525          1.000              0.159  3.07 solves
+    All 42 unsound answers REFUSED -- each is feasible only through the spurious
+    capability. 21% silent unsound error becomes 47.5% refusal at soundness 1.000.
+    43.5% OF THE COVERAGE IS FREE (monotone: deleting a capability cannot rescue
+    an infeasible instance).
+    OVER-CALLED: predicted 30-60% coverage among FEASIBLE readings; measured 0.056
+    clean. At slack 0.15 nearly every capability is load-bearing, so the check is
+    almost "infeasible => certified" plus a sliver.
+    THIRD INSTANCE OF RISING COVERAGE, WITH A DISTINCTION: cover|feas rises
+    0.056 -> 0.159 on the corrupt surface because the spurious capability ADDS
+    REDUNDANCY -- but here soundness holds, because the corruption is INSIDE the
+    hypothesis the check enumerates. APPARENT STABILITY FROM A CHANNEL THE
+    CERTIFICATE COVERS IS REAL; FROM ONE IT DOES NOT, IT IS AN ILLUSION.
+    PRICE OF SOUNDNESS 4.62x (solves 1.00 -> 3.07, correct 158 -> 105), against
+    flood's 13.4x before its certificate and 1.0x after. And
+    usd_per_solved_above_floor makes this row WORSE however sound it is -- the gap
+    cost.py's docstring names.
   - THE TRANSFERABLE COMPONENT WAS 85% FALSE POSITIVES ON REAL ENGLISH.
     staleness.py's whole claim is that its cue list is CLOSED-CLASS, and every
     number for it came from surfaces this repo generated. Run on 36,223 sentences

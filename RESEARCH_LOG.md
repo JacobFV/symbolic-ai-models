@@ -157,6 +157,41 @@ the clean one, because phantom links add 2-edge-connectivity.
 > comparing coverage across surfaces is a trap. Report it with the accuracy among
 > the certified, on the same surface, always.
 
+### What each channel admits, and what it costs
+
+Two responses to a claim the reader may have got wrong, and they are gated by
+different properties. **Detection** reads the fact a second time and compares —
+sound *and* complete, gated by the role's **arity** and by whether a companion
+sentence pins it. **Insensitivity** proves the answer does not depend on the
+claim — sound but lossy, gated by the shape of the **decision**. Neither is a
+better check; they are answers to different questions.
+
+| domain, damaging channel | arity | detection | insensitivity | price |
+|---|---|---:|---:|---:|
+| flood, `link` (phantom road) | multi | **0.000** | 0 wrong at 48.8% | 13.4× → **1.0×** |
+| flood, roles (misfire) | single/multi | **0.774 – 0.976**, 0 false alarms | — | ~0 |
+| scheduling, `has_capability` | multi | **0.000** | 0 wrong at **52.5%**, 43.5% of it free | **4.62×** |
+| scheduling, `needs_capability` | **single** | **1.000** | — | ~0 |
+| solvency, `owns` | multi | **0.000** | 0 wrong at 48.5%, all of it free | ~0 |
+| solvency, `revenue` | multi | 0.000 | **none possible** — a sum moves on every term | — |
+
+Three readings worth carrying:
+
+- **The detectable errors are the harmless ones.** Scheduling's detectable
+  channel costs 0.035 and its undetectable one costs 0.210 with every failure
+  unsound; flood's most detectable misfire direction costs 0.865 and its
+  undetectable one 0.655. Arity has nothing to do with damage.
+- **Undetectable is not uncertifiable.** Every multi-valued channel above admits
+  insensitivity, and in two of three the useful half is **free** — deleting a
+  claim can only make an instance *more* infeasible or a sum *smaller*, so the
+  negative verdict is certified with no extra solve. That is the fourth
+  appearance here of *what is cheap to prove is the negative*.
+- **Only an aggregating decision denies both.** Solvency's revenue channel is
+  multi-valued *and* every term moves the sum, so it has no second reading and no
+  insensitivity. That is why the repair there had to be in the **reader** —
+  membership from ownership, plus the staleness gate — and why it needed **both**:
+  each alone bought 0.000 and 0.035, together 0.550.
+
 ### The rule this leaves
 
 > **A distractor that cannot be admitted, or that is admitted and cannot matter,
