@@ -71,6 +71,48 @@ point this session.** Every arm ended at coverage. That is a more useful thing t
 know than any of the individual numbers, and it says where the next year should
 go: not to better kernels, and not to cheaper inference, but to **reach**.
 
+## Is the gap a download away? No — and the mechanism is satisfying
+
+The obvious follow-up: 5.3% coverage might be *our copy's* limit rather than the
+world's. It is not.
+
+| | | |
+|---|---:|---:|
+| GLEIF entities in the repo | 3,348,427 | **98.3%** of the 3,405,477 GLEIF publishes |
+| entities reporting a consolidating parent | 137,686 | **4.1%** |
+| entities appearing **as** a parent | 53,639 | 1.6% |
+
+**We hold essentially all of GLEIF, and only 4.1% of it reports a parent** —
+because reporting is required only under accounting-consolidation circumstances.
+No download fixes that.
+
+And the held issuers explain themselves:
+
+| bridged held issuers (n = 5,436) | | |
+|---|---:|---:|
+| report a parent | 265 | 4.9% |
+| **are** a parent | **1,945** | **35.8%** |
+| neither | 3,335 | 61.4% |
+
+**Held issuers are 22× enriched as parents** — 35.8% against 1.6% of the
+population. An institutional portfolio holds the **top** of ownership chains, not
+the bottom. **The closure does not fire because you already own the ultimate
+parent.** It would be load-bearing for a different question — *who ultimately
+owns this private subsidiary* — and is structurally irrelevant to *what a
+portfolio owns*.
+
+### Which splits the programme conclusion in two
+
+> **Reach is the bottleneck, and reach has two kinds.**
+>
+> - **Purchasable** — a crosswalk, a corpus, a token. The extraction gap and the
+>   bridge gap are partly this.
+> - **Structural** — what the world files at all. The ownership gap is this, and
+>   no amount of acquisition touches it.
+
+That is a sharper instruction than "invest in reach", because half the reach on
+offer cannot be bought.
+
 ## What would refute it
 
 - **One question.** Ownership closure is irrelevant *to country exposure* on this

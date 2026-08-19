@@ -46,6 +46,22 @@ language model is still unrun for want of credentials, and that blocker has now
 bitten a **product** claim rather than only a cost row — `a`, the lookup accuracy
 the band's reliability depends on, is unmeasured.
 
+**And the programme-level result, which is what a reviewer should take away.**
+Three arms this session ended the same way — **the symbolic machinery was correct
+and the data did not reach**:
+
+| arm | the machinery | the reach |
+|---|---|---|
+| extraction | works | **62%** of a 0.99 ceiling |
+| the identifier bridge | exact, **0** ambiguity | **22.3%** per security |
+| the ownership closure | **95.7%** agreement with filed truth | **5.3%** of held issuers |
+
+**The bottleneck is not reasoning and has not been at any point this session.**
+And reach splits in two: **purchasable** (a crosswalk, a corpus, a token — the
+extraction and bridge gaps are partly this) and **structural** (what the world
+files at all — the repo holds **98.3%** of GLEIF and only **4.1%** of its
+entities report a parent). Half the reach on offer cannot be bought.
+
 **Read next:** §3i–§3k for the above, §5 for what this session retracted
 (fourteen rows, most of them mine), §7 for what to do.
 
