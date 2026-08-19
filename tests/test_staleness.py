@@ -138,3 +138,28 @@ def test_the_corrections_cost_the_generated_surfaces_nothing():
               "job_90 was cancelled by the customer and has been struck from "
               "the list."):
         assert stale_by_cancellation(s), s
+
+
+def test_struck_needs_its_particle():
+    """Narrative's dominant fire was `struck` at 29.9% -- the verb *strike*,
+    where the abstracts corpus fired it twice. Each genre surfaced a different
+    dominant false positive and neither was predictable from the other."""
+    assert not stale_by_cancellation("The blow struck him on the shoulder.")
+    assert not stale_by_cancellation("She was struck by the resemblance.")
+    assert stale_by_cancellation("job_90 has been struck from the list.")
+    assert stale_by_cancellation("The entry was struck off the register.")
+
+
+def test_be_used_to_means_accustomed_and_does_not_cancel():
+    """The third construction. `be used to` is a state that may well still hold,
+    so suppressing it is correct rather than a false negative -- it accounts for
+    most of the 21% of narrative `used to` the lookback drops."""
+    assert not stale_by_cancellation("He had been used to look in Hertfordshire.")
+    assert not stale_by_cancellation("He has been used to her complaints.")
+
+
+def test_the_lookback_stops_at_the_clause_boundary():
+    """Unbounded, it reached across a comma into a different clause and dropped
+    a genuine habitual."""
+    assert stale_by_cancellation(
+        "All during this May that we have been having, I used to run down.")

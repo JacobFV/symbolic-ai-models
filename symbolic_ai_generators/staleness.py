@@ -54,8 +54,15 @@ TENSE = ("was", "were", "had", "used to", "did")
 #: was Y" while X is still Y. They accounted for **40%** of all fires on real
 #: text and nothing in any generated surface here depends on them, every
 #: distractor carrying a second, genuinely cancelling cue.
-CANCELLING = ("disused", "former", "formerly", "no longer", "struck",
-              "cancelled", "withdrawn", "ceased", "since removed", "came off")
+#: A second genre corrected it again, and differently. On 75,555 sentences of
+#: public-domain narrative (`scripts/gate_on_narrative.py`) the dominant fire was
+#: **`struck`** at 29.9% -- the verb *strike*, "struck him", "was struck by" --
+#: where the abstracts corpus fired it twice. The cancelling sense always carries
+#: a particle: *struck from*, *struck off*. **Each genre surfaced a different
+#: dominant false positive and neither was predictable from the other.**
+CANCELLING = ("disused", "former", "formerly", "no longer", "struck from",
+              "struck off", "cancelled", "withdrawn", "ceased",
+              "since removed", "came off")
 
 #: ``used to`` is two constructions and only one of them cancels. The habitual
 #: past -- *"job_0 used to cut"* -- says the state is over. The passive of *use*
@@ -67,22 +74,29 @@ CANCELLING = ("disused", "former", "formerly", "no longer", "struck",
 _BE = frozenset({"is", "are", "was", "were", "be", "been", "being"})
 #: How far back to look for the auxiliary. Three tokens, because an adverb or two
 #: routinely intervenes -- *"are then used to"*, *"have been widely used to"* --
-#: and an approximation is what is available without a parser. It costs a false
-#: NEGATIVE on a genuine habitual whose subject sits within three tokens of a
-#: be-form ("he was tired and used to walk"), which is the cheap direction to be
-#: wrong in: a missed cancellation leaves a claim standing, where a false
-#: positive DELETES a true one.
+#: and an approximation is what is available without a parser.
+#:
+#: **Bounded by the clause.** Measured on narrative, an unbounded three-token
+#: window suppressed **22.0%** of *used to*, and the samples showed it reaching
+#: across a comma into a different clause: *"this May that we have been having,
+#: I used to run down"*. Stopping at a comma or semicolon is the clause boundary
+#: a parser would supply. What survives suppression is the third construction,
+#: *be used to* meaning **accustomed** -- *"he had been used to look"*, *"you have
+#: been lately used to"* -- which is a state that may well still hold and so is
+#: correctly not a cancellation.
 _LOOKBACK = 3
+_CLAUSE_END = re.compile(r"[,;:]")
 
 
 def _habitual_past(low: str) -> bool:
     """``used to`` in the habitual reading -- not the passive of *use*."""
-    tokens = re.findall(r"[a-z0-9_]+", low)
-    for i in range(len(tokens) - 1):
-        if tokens[i] == "used" and tokens[i + 1] == "to":
-            before = tokens[max(0, i - _LOOKBACK):i]
-            if not (_BE & set(before)):
-                return True
+    for m in re.finditer(r"\bused to\b", low):
+        head = low[:m.start()]
+        cut = max(head.rfind(c) for c in ",;:")
+        clause = head[cut + 1:] if cut >= 0 else head
+        before = re.findall(r"[a-z0-9_]+", clause)[-_LOOKBACK:]
+        if not (_BE & set(before)):
+            return True
     return False
 
 #: The first list, kept so a published number can be reproduced rather than
