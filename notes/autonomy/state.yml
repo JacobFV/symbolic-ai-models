@@ -40,6 +40,25 @@ measured:
     because the atom rule that keeps a pronoun with its antecedent -- required
     for the document to stay true -- preserves the demand binding; a property of
     the task, not a leak.
+  - CORROBORATION TRANSFERS WHERE AGREEMENT DOES NOT. Same family in the notes,
+    completely different on real prose. 168 Wikipedia intros, answered cases
+    split by whether the candidate's core token appears ELSEWHERE in the intro:
+      corroborated (>=2 mentions)   n=71   precision 0.718
+      single mention                n=26   precision 0.346
+    A 2.1x GAP. As a policy: coverage 0.423 at precision 0.718 against the naive
+    0.589 at 0.626. Agreement, by contrast, was FLAT at 0.603-0.626.
+    WHY: AGREEMENT IS A PROPERTY OF THE RELATION BETWEEN CANDIDATES;
+    CORROBORATION IS A PROPERTY OF ONE CANDIDATE. Agreement needs mutual
+    exclusivity so disagreement means somebody guessed, and real prose supplies
+    none. Corroboration needs only that a true thing be mentioned twice, which
+    real prose supplies abundantly. The generated surfaces made agreement look
+    powerful because their candidates were ROLE ASSIGNMENTS -- exactly one can be
+    right by construction.
+    PRICED: break_even_wrong_cost(0.369, 0.423, 1.0, 0.718) = 0.103. A wrong
+    answer need only cost ONE TENTH of a right one for the filter to pay -- the
+    lowest break-even measured today (flood's certificate 0.60, scheduling's
+    2.95). No extra compute, and THE FIRST COMPONENT HERE THAT IMPROVES A
+    REAL-TEXT NUMBER.
   - AGREEMENT IS A TEST FOR EXCLUSIVE ALTERNATIVES, AND REAL PROSE DOES NOT
     SUPPLY THEM. The repo's most distinctive idea, on text nobody here wrote.
       arm                          answers  correct  precision

@@ -442,6 +442,19 @@ same corporate group at different granularities — *Sony Music Entertainment* /
 > nor equivalent, and demanding agreement discards cases *more* likely to be right
 > than the ones it keeps.
 
+**Corroboration, from the same family in these notes, transfers.** Splitting the
+answered cases by whether the candidate's core token appears elsewhere in the
+intro: **0.718** precision for corroborated candidates against **0.346** for
+single mentions, a 2.1× gap, and a policy of answering only when corroborated
+gives 0.423 coverage at 0.718 — against the naive 0.589 at 0.626. Priced at
+`break_even_wrong_cost` = **0.103**, the lowest of the day, and the first
+component here to improve a **real-text** number.
+
+> The two come apart because **agreement is a property of the relation *between*
+> candidates and corroboration a property *of one*.** Agreement needs exclusivity,
+> which real prose does not supply; corroboration needs only repetition, which it
+> supplies abundantly.
+
 The enumeration theorem is untouched — its premise is that wrong candidates give a
 **different answer**, and that is the half real text breaks. **Emission needs an
 equivalence relation on answers, and on real prose that relation is entity
