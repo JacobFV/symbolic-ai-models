@@ -88,10 +88,23 @@ measured:
     Re-checked the earlier carrying result for the same trap: the decided ==
     correct identity holds WITHIN each population and non-empty reads 0.588, so
     pooling UNDERSTATED it. Check run, answer went the other way.
+    CROSS-DOMAIN NOW, and my "only one domain" scope note was wrong: the law is
+    about DELETION DEPENDENCY OF A CLAIM KIND, which every domain has and which
+    needs no reader -- only the POLICY needs one. Three domains, twelve kinds,
+    non-degenerate population: mean absolute error 0.033, signed bias +0.005, no
+    free parameter. Extremes show the mechanism: solvency revenue decides 0.000
+    (every filing moves the sum), solvency owns decides 1.000 (recoverable from
+    the filings).
+    TWO ESTIMATORS, AND THEY SWAP: per-case E[(1-d)^n] wins ONLY pooled (0.040
+    vs 0.183, Jensen over a bimodal mix -- which is what the earlier +0.131
+    really was, NOT correlation between deletions) and LOSES clean (0.051 vs
+    0.033) because it SMOOTHS A DETERMINISTIC OUTCOME: within a case d comes
+    from the very deletions tested, so truth is 0 for any k>=1 while (1-k/n)^n
+    stays positive. Rule: mean-d on a homogeneous population, per-case only if
+    you must pool.
     SCOPE: measured on TRUE worlds, so it characterises the DOMAIN, not a
-    reader. The enumeration in a real policy runs over the READ world whose d
-    and n differ; the true-world link row is 0.059 while the read-world carrying
-    experiment is 0.588, and comparing them would be the next mistake.
+    reader. A real policy enumerates over the READ world whose d and n differ,
+    and comparing the two directly is the next available mistake.
     GUARD: collision_cost and deletion_dependency sit beside each other in
     audit.py documenting that they are NOT the same number, with a test
     asserting both.
