@@ -34,6 +34,14 @@ shared. **A fifth to two fifths of the learned reader's correct answers are on
 articles the patterns miss**, which is what a different inductive bias looks like
 rather than a worse copy of the same one.
 
+> **Power check, added after the fact.** The `headquarters` figure is 15 of 37,
+> 95% CI [0.263, 0.565] — solid enough to carry the claim. The **`parent` figure
+> is 5 of 25**, CI [0.089, 0.391], and the `country` figure 7 of 30. The
+> *range* "a fifth to two fifths" is therefore anchored at its low end by five
+> events. The claim that survives the counts is the `headquarters` one and the
+> qualitative fact that the correct sets are not nested; the specific fractions
+> for `parent` and `country` should not be quoted.
+
 ## 2. Filling gaps helps; overriding does not
 
 | arm | `parent` | `country` | `hq` | JOIN precision | recall | F1 |

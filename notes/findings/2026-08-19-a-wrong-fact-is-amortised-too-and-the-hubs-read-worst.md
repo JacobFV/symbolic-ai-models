@@ -30,7 +30,16 @@ the 191 chains.
 | **any (≥1)** | **135** | **0.126** | — |
 
 **Hubs read 36% worse relatively** — 0.126 against 0.197 — and wrong articles
-carry **1.6x the in-degree** of correct ones (0.124 against 0.076). The mechanism
+carry **1.6x the in-degree** of correct ones (0.124 against 0.076).
+
+> **Power check, added after the fact.** That headline rests on **17 successes in
+> 135 hub articles**. Wilson intervals are [0.080, 0.192] against [0.178, 0.218],
+> which nearly touch, and a two-proportion test gives **p = 0.044** — real, and
+> fragile. It would *not* survive a correction for the four-bucket table
+> immediately above it, and the 3+ row (1 success in 14) carries nothing at all.
+> The mean-in-degree comparison (0.124 against 0.076 over all 1,661 articles) is
+> the better-powered form of the same claim and is the one to quote. Treat the
+> 36% as a direction with one asterisk, not as a measured size. The mechanism
 is visible in the last column: an entity that many companies belong to is a big
 company, and a big company's intro is nearly **twice as long** and correspondingly
 harder.
