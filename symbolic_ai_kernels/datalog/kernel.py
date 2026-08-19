@@ -15,7 +15,7 @@ proportional to what changed rather than to the size of the world.
 from __future__ import annotations
 
 from dataclasses import replace
-from typing import Any, Iterable
+from typing import Any, Iterable, Mapping
 
 from symbolic_ai_core.artifact.value import Provenance
 from symbolic_ai_core.runtime.estimate import PowerLawCost
@@ -23,8 +23,10 @@ from symbolic_ai_core.world import (Claim, EntityRef, WorldDelta, WorldSnapshot)
 
 from ..abi import (Discard, KernelCost, KernelManifest, KernelRequest,
                    KernelResult, Projection, check_entitlement, price_cpu_ns,
-                   register_kernel, timed)
+                   register_kernel, timed, Witness)
 from .engine import Fact, Program, Rule, add_facts_report, evaluate
+from .proof import (derivation_tree, evaluate_with_derivations,
+                    tree_size)
 from .project import DatalogProgram, project_world, rule_from_dict
 
 __all__ = ["DatalogKernel", "DATALOG"]
@@ -104,9 +106,49 @@ class DatalogKernel:
                         "derives nothing, and returning an empty delta would "
                         "read as 'no consequences' rather than 'nothing asked'",
                 diagnostics={"n_facts": len(prog.facts)})
-        model, ns = timed(lambda: evaluate(prog.program, prog.facts))
+        # A witness here is OPT-IN, and the reason is in `proof.py`'s own
+        # docstring: recording provenance costs memory proportional to the
+        # closure and slows the fixed point, and a published number carrying
+        # `evaluate`'s name must keep meaning what it meant. So the caller asks
+        # for one goal and pays for it; the default path is byte-for-byte the
+        # one every existing measurement used.
+        goal = request.params.get("witness_for")
+        if goal is None:
+            model, ns = timed(lambda: evaluate(prog.program, prog.facts))
+            derived = model - prog.facts
+            return self._result(projection, derived, ns,
+                                extra={"full": True,
+                                       "witness": "not requested — pass "
+                                                  "witness_for to pay for "
+                                                  "derivation recording"})
+
+        goal_fact = goal if isinstance(goal, Fact) else _fact_from(goal)
+
+        def work():
+            return evaluate_with_derivations(prog.program, prog.facts)
+
+        (model, why), ns = timed(work)
         derived = model - prog.facts
-        return self._result(projection, derived, ns, extra={"full": True})
+        if goal_fact not in model:
+            # Not derivable is the UNIVERSAL half and it has no witness: under
+            # closed-world semantics it is a claim about the whole fixed point,
+            # and nothing smaller than recomputing it establishes the absence.
+            return self._result(projection, derived, ns,
+                                extra={"full": True,
+                                       "witness": "goal is not derivable; a "
+                                                  "non-derivation has no tree"})
+        tree = derivation_tree(goal_fact, why)
+        return self._result(
+            projection, derived, ns,
+            extra={"full": True, "witness_nodes": tree_size(tree)},
+            witness=Witness(
+                kind="derivation",
+                facts=tuple(sorted(str(f) for f in _leaves(tree))),
+                claim=f"{goal_fact} follows from these base facts",
+                verifies=("replay the rule applications over the named base "
+                          "facts; `verify_derivation` reads the tree and the "
+                          "base set and never the closure, which is why it "
+                          "stays flat as the model grows")))
 
     def run_delta(self, projection: Projection, delta: WorldDelta, *,
                   known: set[Fact] | None = None) -> KernelResult:
@@ -155,7 +197,8 @@ class DatalogKernel:
 
     # ---- shared -------------------------------------------------------
     def _result(self, projection: Projection, facts: set[Fact],
-                ns: tuple[int, int], extra: dict[str, Any]) -> KernelResult:
+                ns: tuple[int, int], extra: dict[str, Any],
+                witness: Witness | None = None) -> KernelResult:
         roles = projection.meta.get("roles", {})
         claims = tuple(_fact_to_claim(f, roles, projection) for f in sorted(facts))
         check_entitlement(projection, claims)
@@ -166,7 +209,28 @@ class DatalogKernel:
             diagnostics={"derived": len(facts),
                          "discarded": len(projection.discarded),
                          "semantics": list(projection.semantics), **extra},
+            witness=witness,
             cost=_cost(ns))
+
+
+def _leaves(d) -> list:
+    """The base facts a derivation actually rests on — its dependency set."""
+    if d.is_base:
+        return [d.fact]
+    return [f for c in d.children for f in _leaves(c)]
+
+
+def _fact_from(goal: Any) -> Fact:
+    """A goal given as a mapping, or already as a fact.
+
+    ``Fact`` is ``tuple`` and a fact is **flat** — ``(predicate, *constants)``,
+    not ``(predicate, args)``. Building it the second way produces a two-element
+    tuple whose second element is a tuple, which matches nothing in the model
+    and fails silently as "not derivable" rather than loudly as a type error.
+    """
+    if isinstance(goal, Mapping):
+        return (str(goal["predicate"]), *tuple(goal["args"]))
+    return tuple(goal)
 
 
 def _request_rules(request: KernelRequest) -> list[Rule]:

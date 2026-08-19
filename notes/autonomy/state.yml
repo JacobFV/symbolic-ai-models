@@ -108,6 +108,9 @@ measured:
   - claim: "Intersection's noise filtering requires INDEPENDENT errors. works_at_both precision is 95.1% on co-occurring institution pairs and 8.1% on registry-CONFUSABLE ones -- below the 36.5% fact-level rate. Over-generation is free where disambiguation is not needed and ruinous where it is."
     evidence: same finding, correction section
     commit: f3d6010
+  - claim: "The Witness contract is carried by 4 kernels of 8 (asp, smt, lean, datalog-opt-in). The other four split three-way rather than two: egraph COULD carry one (its equivalent_form claim's witness is the rewrite sequence, unrecorded) and rigid/geo/economy have none to have, because a pose, a geodesic distance and a consolidated total are function evaluations rather than searches."
+    evidence: tests/test_witness.py::TestWitnessCoverage
+    commit: pending
   - claim: "Scoping survives a dense graph. On the filed-real routing mixture: read p50 1, max 8, 0 refusals in 250 queries, anchor 179/179. What breaks is wall time -- 48.3 ms/query against GLEIF's 2.8 us -- and the governing variable is conflict rate x read footprint, not topology."
     evidence: notes/findings/2026-08-18-scoping-survives-a-dense-graph-and-what-breaks-is-wall-time-not-refusal.md
     commit: 2b8443d
@@ -117,11 +120,12 @@ beliefs:
     confidence: 0.85
     basis: "IVM maintains the answer at delta cost instead of re-deriving it; the numbers here carry no claim against a database"
     falsifier: "an IVM system that cannot maintain an answer produced by an external solver with no per-query delta rule"
-  - claim: "A corpus that mostly SHRINKS inverts the witness asymmetry: the witness becomes the fragile half and the optimality claim the stable one."
-    confidence: 0.8
-    basis: "the witness is monotone under additions and dies on deletion; 13F opened 411,122 against 333,014 closed"
-    falsifier: "measured on a shrinking corpus and the asymmetry does not invert"
-    note: "cheap and unrun. Recorded rather than assumed."
+  # FALSIFIED 2026-08-18. Held at 0.8 and wrong. Reading the same two filed
+  # snapshots in the opposite order makes the corpus shrink for real, and the
+  # asymmetry narrows 93x -> 72x rather than inverting -- exactly the 23% rise
+  # in the deletion rate. Dependency size dominates; corpus direction is
+  # second-order. Kept here rather than deleted, because a belief recorded so a
+  # contradiction would be a finding should show the contradiction.
   - claim: "Most kernels in this repo have a witness available and discard it. The ASP kernel holds the model and returns only claims."
     confidence: 0.7
     basis: "read of symbolic_ai_kernels/asp/kernel.py; the cover script had to re-extract picked filers by hand"
@@ -223,21 +227,22 @@ last_cycle:
     repo now say the cheap half of a problem is the useful half.
 
 next:
-  preferred_action: wire-witness-into-the-remaining-seven-kernels
+  preferred_action: give-egraph-a-rewrite-witness
   why_shipped_instead: >
     witness-on-kernelresult is DONE: `Witness` is on the kernel ABI, the ASP
     kernel returns its answer set instead of discarding it, and
     `KernelResult.maintainable` is true exactly when a witness is present --
     deliberately NOT for a proof of impossibility, however conclusive.
   why: >
-    The extraction arm has now produced six findings and three self-corrections
-    in a row and is showing diminishing returns per rung; per the mandate's
-    anti-obsession check it is time to bank the capability rather than add a
-    seventh rung. MONOTONICITY is now measured on the same axis in two unrelated
-    arms -- the witness/complement gap in the certificate work, and
-    monotone-vs-antitone queries over a noisy world -- so the Witness contract
-    already on KernelResult is the structure both results point at, and it is
-    currently populated by exactly one kernel of eight.
+    Wiring is DONE for the four kernels whose answers are existential: asp
+    (answer set), smt (model), lean (refutations), datalog (derivation, opt-in).
+    The classification is now three-way and only ONE cell is a genuine gap:
+    egraph claims `equivalent_form`, whose witness is the rewrite sequence, and
+    SaturationReport counts rule applications without keeping an ordered path.
+    rigid/geo/economy have no witness to have -- a pose, a distance and a total
+    are function evaluations, not searches. So the remaining work is one kernel
+    and one data structure, and emptying that cell would make every existential
+    answer in the repo checkable without re-running its kernel.
   superseded_geo: >
     Ran and failed; see 3f. Do not repeat without sizing the signal first.
   superseded_hub_labelling: >

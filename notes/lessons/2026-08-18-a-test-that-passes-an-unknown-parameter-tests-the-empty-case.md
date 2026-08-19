@@ -54,6 +54,27 @@ trivial one.** Kernels here already publish exactly that in `diagnostics` —
 `unique`, `satisfiable`, `n_models`, `discarded` — and none of the original
 tests read any of it.
 
+## It happened again three hours later, twice, in the same file
+
+Writing the witness tests for the SMT and datalog kernels I invented the
+parameter shapes a second time: `{"predicate": ..., "args": ...}` where datalog
+takes `{"pred": ..., "terms": ...}`, and a `variables`/`constraints` pair the SMT
+kernel does not accept in that form. Then, having fixed those, I built a datalog
+goal as `(predicate, args_tuple)` when `Fact = tuple` and a fact is **flat** —
+`(predicate, *constants)` — so the goal matched nothing and came back "not
+derivable", which is a **legitimate answer** and would have passed a weaker test.
+And once more: I read a claim's roles with `str(v)` when they hold `EntityRef`,
+producing the constant `"EntityRef(id='b')"`.
+
+Four variants of one mistake, all caught, none by the suite — by assertions I
+had written *because of this note* that the intended path was actually taken.
+
+**The stronger guard, learned the second time:** do not write fixtures at all.
+**Import them from the kernel's existing test module.** `tests/test_smt_kernel.py`
+exports `K`, `robot()` and `under_20kg()`; `tests/test_datalog_kernel.py` exports
+`ANCESTRY` and `world()`. Reusing them is shorter than guessing, cannot drift
+from the real API, and fails loudly at import if the API moves.
+
 ## What it bought
 
 The mistake produced the `vacuous` flag on `Witness`, which is a real

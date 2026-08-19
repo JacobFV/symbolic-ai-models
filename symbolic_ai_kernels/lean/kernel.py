@@ -36,7 +36,7 @@ from symbolic_ai_lean.kernel import TypeError_
 
 from ..abi import (KernelCost, KernelManifest, KernelRequest, KernelResult,
                    Projection, check_entitlement, price_cpu_ns, register_kernel,
-                   timed)
+                   timed, Witness)
 from .project import LeanProgram, PROP, project_world
 
 __all__ = ["LeanKernel", "LEAN"]
@@ -117,6 +117,22 @@ class LeanKernel:
             delta=WorldDelta(claims=claims),
             artifacts={"refutations": [
                 {"claim": i, "term": term, "why": why} for i, why, term in bad]},
+            # The asymmetry runs the other way here, which is worth naming. This
+            # kernel's positive answer -- "every claim typechecks" -- is
+            # UNIVERSAL and has no witness: nothing short of rechecking
+            # establishes it. Its negative answer is existential, and each
+            # refutation is a witness a reader can check by typing one term.
+            # So a witness appears exactly when the kernel finds something
+            # wrong, and its absence here means the stronger claim, not a
+            # weaker one.
+            witness=(Witness(
+                kind="refutation",
+                facts=tuple(f"claim#{i}: {term} — {why}" for i, why, term in bad),
+                claim=(f"{len(bad)} of {len(checked)} claims do not typecheck; "
+                       "the world is not consistent with its declarations"),
+                verifies=("typecheck the named term against the signature; one "
+                          "term each, and no other claim is involved"))
+                if bad else None),
             cost=KernelCost(cpu_ns=cpu, wall_ns=wall, usd=price_cpu_ns(cpu)),
             diagnostics={
                 "checked": len(checked), "refuted": len(bad),

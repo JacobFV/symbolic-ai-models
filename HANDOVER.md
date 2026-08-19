@@ -44,13 +44,14 @@ measured on those bytes and nothing in it is injected.
 | `additive_bounds`, `Bounds` | same | exact, attained extremes for a sum of independent per-subject terms, in linear time |
 | `exposure`, `rank_by_exposure` | same | what a conflict costs *before* enumerating it |
 | `AmbiguityExplosion.read` | same | a refusal that **names the conflicts the query depends on** |
+| `Witness`, `KernelResult.witness/.maintainable` | `symbolic_ai_kernels/abi.py` | the facts that make an **existential** answer true, and `maintainable` is true exactly when one is present — deliberately **not** for a proof of impossibility. Carried by `asp@1` (answer set), `smt@1` (model), `lean@1` (refutations), `datalog@1` (derivation, **opt-in** via `witness_for` because recording provenance changes `evaluate`'s cost profile). `egraph@1` could and does not; `rigid@1`/`geo@1`/`economy@1` have none to have, because their answers are computed values rather than searches. `tests/test_witness.py::TestWitnessCoverage` holds that classification and fails if a new kernel skips it |
 | `certify`, `revalidate`, `RecordingStore` | `symbolic_ai_core/runtime/certificate.py` | the same recording trick over **facts** rather than conflicts: run a computation once against a mapping that remembers, and its dependency set is the answer. Works on an arbitrary computation, including one that shells out to clingo |
 | the tasks | `symbolic_ai_tasks/` | `ultimate_parent`, `company_key`, `cross_source_alignment`, `airport_country`, `range_limited_routing` |
 | the experiments | `scripts/gleif_scoped_ambiguity.py`, `gleif_ambiguity_ladder.py`, `alignment_bounds.py`, `ambiguity_advantage.py`, `retrieval_rounds.py`, `gleif_fund_exposure.py` | every number in §3 |
 
 Tests: `tests/test_ambiguity.py` (38), `tests/test_fusion.py`,
-`tests/test_certificate.py` (17), `tests/test_witness.py` (12). Full suite
-**3,394 passed, 10 skipped**. One test in that run was a ~25% flake that raced
+`tests/test_certificate.py` (17), `tests/test_witness.py` (21). Full suite
+**3,403 passed, 10 skipped**. One test in that run was a ~25% flake that raced
 the solver against itself; it is fixed and verified over 25 runs.
 
 ## 3. Measured. Do not re-derive these.

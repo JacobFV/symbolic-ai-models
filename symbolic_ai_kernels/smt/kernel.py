@@ -34,7 +34,7 @@ from symbolic_ai_core.world import (Claim, EntityRef, Quantity, WorldDelta,
 
 from ..abi import (EXHAUSTED, PROVED_IMPOSSIBLE, KernelCost, KernelManifest, KernelRequest, KernelResult,
                    KernelUnavailable, Projection, check_entitlement,
-                   price_cpu_ns, register_kernel, timed)
+                   price_cpu_ns, register_kernel, timed, Witness)
 from .project import SmtProgram, Variable, project_world, unit_of
 from .units import UnitError
 
@@ -171,6 +171,21 @@ class SmtKernel:
             delta=WorldDelta(),
             artifacts={"model": {k: str(model[z[k]]) for k in sorted(z)
                                  if model[z[k]] is not None}},
+            # The satisfying assignment IS the witness, and it was already
+            # being computed and handed out as an artifact with a comment
+            # saying "a witness is not a measurement". Naming it as one makes
+            # it re-checkable by a consumer that never calls z3: substitute and
+            # evaluate. `unsat` deliberately gets none — that is the universal
+            # half, it has no short certificate, and inventing one here is the
+            # error the Witness docstring exists to prevent.
+            witness=Witness(
+                kind="model",
+                facts=tuple(f"{k}={model[z[k]]}" for k in sorted(z)
+                            if model[z[k]] is not None),
+                claim="these constraints are satisfiable",
+                verifies=("substitute the assignment into each constraint and "
+                          "evaluate; no solver is required"),
+                vacuous=not any(model[z[k]] is not None for k in z)),
             cost=_cost(ns),
             diagnostics={"satisfiable": True, "n_variables": len(prog.variables),
                          "n_constraints": len(prog.constraints),
