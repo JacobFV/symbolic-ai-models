@@ -40,6 +40,23 @@ measured:
     because the atom rule that keeps a pronoun with its antecedent -- required
     for the document to stay true -- preserves the demand binding; a property of
     the task, not a leak.
+  - AN INSTRUMENT THAT PREDICTS WHERE A READER WILL BREAK, BEFORE IT EXISTS.
+    symbolic_ai_generators/audit.py computes, from the surface alone, which
+    claim kinds share a sentence signature. Reproduces both known answers --
+    flood 0.617 mass (irreducible part 141/1141 = 0.124, exactly the
+    depot/flooded/needs group that breaks under interleaving), scheduling 0.000
+    -- and PREDICTED solvency at 0.000 when that domain had no reader at all.
+    The reader built afterwards (solvency/read_surface.py, the module it was
+    missing) scores 1.000 accuracy and 1.000 filing recall in all six cells of
+    V x arrangement. Honest at the ORDINAL level, over-counts at the cardinal:
+    judging which collisions a declared mechanism resolves is still human, and
+    ranking them by span mass is what makes that cheap.
+    NEAR MISS worth remembering: the first solvency reader scored 0.583 in all
+    six cells -- identical across V and arrangement, exactly the signature of
+    the structure-independence I was predicting. 0.583 is the MAJORITY-CLASS
+    FLOOR; it answered False on all 60 cases, because solvency names its parent
+    `group` with NO number and the entity pattern required one. Accuracy could
+    not catch it; the OUTPUT DISTRIBUTION did, in one line.
   - THE GAP IS NOT LEXICAL, AND A THESAURUS IS WORSE THAN NO WORDS. WordNet
     installs; expanding the declared anchors by synset + direct hyponyms +
     direct hypernyms + derivational forms takes 6/6/5 tokens to 507/224/593 and
@@ -422,12 +439,12 @@ next_actions:
           It also rhymes with the ambiguity machinery and directive 19: emit
           what is known, let the kernel decide, rather than collapsing to a role
           name the text never used.
-      (b) DONE for scheduling, and the answer reframed the question -- see
-          measured. Solvency is still open and now has a sharper form: it has
-          no committed reader module (its 1.000 came from a script), so the
-          first step is a reader, then the signature-determinacy audit. The
-          audit is the cheap general instrument: for a new domain, ask which
-          claim kinds share a sentence signature BEFORE building anything.
+      (b) DONE for all three. Solvency now has its reader and audits clean.
+          The audit's own next step is DEPENDENCY WEIGHTING: it counts
+          collisions, not consequences, and link/bridge_on costs nothing while
+          depot/flooded costs everything. This repo already computes
+          ablation-measured dependency size, so weighting by it would turn the
+          instrument from ordinal to cardinal.
       (c) the rules arm survives arrangement and dies on paraphrase; the
           signature arm the reverse. A reader combining them is not obviously
           impossible -- the closure is about the residual, not the whole task.
