@@ -105,8 +105,52 @@ class _Doc:
         return "".join(self.parts)
 
 
+def _hard_pairs(world):
+    """(machine, capability it lacks), (job, capability it does not need).
+
+    Both drawn from the world so the sentence names a real entity and an
+    in-vocabulary word -- the two properties that make the default distractors
+    inert. Either may be ``None`` if nothing qualifies.
+    """
+    has: dict[str, set] = {}
+    needs: dict[str, set] = {}
+    for c in world.claims:
+        if c.predicate == "has_capability":
+            has.setdefault(c.roles["machine"].id, set()).add(
+                c.roles["capability"])
+        elif c.predicate == "needs_capability":
+            needs.setdefault(c.roles["job"].id, set()).add(
+                c.roles["capability"])
+    mp = next(((m, c) for m in sorted(has) for c in CAPABILITIES
+               if c not in has[m]), None)
+    jp = next(((j, c) for j in sorted(needs) for c in CAPABILITIES
+               if c not in needs[j]), None)
+    return mp, jp
+
+
 def render_observation(case: Any, *, seed: int | None = None,
-                       variants: int = 1) -> Observation:
+                       variants: int = 1,
+                       hard_distractors: bool | str = False) -> Observation:
+    """Render the works order.
+
+    ``hard_distractors`` points the distractors at **real** entities with
+    **in-vocabulary** capabilities, which the reader must then admit. The
+    default distractors are defanged the same way flood's disused track was: the
+    withdrawn machine and cancelled job carry no capability and no quantity, and
+    "no machine is set up for anodising" names a capability outside the
+    vocabulary, so the capability list rejects all three for free.
+
+    The two hard forms are **not symmetric**, and the asymmetry is the point:
+    each job needs exactly one capability, so a spurious ``needs_capability`` is
+    an arity violation and can be caught; a machine holds any number, so a
+    spurious ``has_capability`` cannot. And the uncatchable one is the
+    **unsound** one -- an extra machine capability makes an infeasible instance
+    read as feasible.
+
+    Pass ``True`` for both, or ``"machine"`` / ``"job"`` for one side, so the
+    two can be priced apart. Default ``False``, so every published number keeps
+    its meaning; ``True`` is the honest setting.
+    """
     world = case.world
     rng = random.Random(case.seed if seed is None else seed)
 
@@ -136,6 +180,9 @@ def render_observation(case: Any, *, seed: int | None = None,
     doc.glue(" ")
     doc.add("machine_90 is withdrawn for maintenance and is not available this "
             "shift.")
+    _sides = ({"machine", "job"} if hard_distractors is True
+              else {hard_distractors} if hard_distractors else set())
+    _mp, _jp = _hard_pairs(world) if _sides else (None, None)
 
     doc.glue("\n\nCAPABILITIES.")
     for i in sorted(by.get("has_capability", []),
@@ -146,6 +193,10 @@ def render_observation(case: Any, *, seed: int | None = None,
                 kind="has_capability", entities=(m,))
     doc.glue(" ")
     doc.add("No machine on this floor is set up for anodising.")
+    if _mp and "machine" in _sides:
+        m, c = _mp
+        doc.glue(" ")
+        doc.add(f"{m} was set up to {c} last shift, before the head came off.")
 
     doc.glue("\n\nTHE WORK.")
     for i in sorted(by.get("duration", []), key=lambda i: role(i, "of")):
@@ -164,6 +215,10 @@ def render_observation(case: Any, *, seed: int | None = None,
         doc.glue(" ")
         doc.add(pick("needs_capability").format(j=j, c=c), claim=i,
                 kind="needs_capability", entities=(j,))
+    if _jp and "job" in _sides:
+        j, c = _jp
+        doc.glue(" ")
+        doc.add(f"{j} used to {c} as well, until the drawing was revised.")
 
     doc.glue("\n\nTASKING. ")
     doc.add("Can every job be assigned to a machine that has its capability, "
