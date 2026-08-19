@@ -186,3 +186,22 @@ words for, and by a distractor the generator declined to arm. Both are now
 measurable (`hard_distractors=True`, and the adversarial variant set), and the
 honest headline for this arm is **0.333–1.000 depending on which props are
 removed**.
+
+---
+
+## Third correction: 1.000 was measured on 34 cases
+
+The interleaved V=4 cell is **0.988 (3 failures in 252 non-empty cases)**, not
+1.000. See [[2026-08-19-what-our-exact-numbers-actually-bound]].
+
+The original measurement used 34 non-empty cases, which by the rule of three
+excludes only error rates above 8.8%. All three failures are cases where **two**
+lone-region sentences dodge the declared anchors at once — *"went under"* for
+flooding and *"dispatched"* for the depot, both named as misses when the
+vocabulary was declared — leaving two unresolved regions and an elimination step
+that picks the wrong one.
+
+The finding's structure is unaffected: this is still the only arm invariant to
+both phrasing and arrangement, and the ablation showing content is load-bearing
+stands. What was wrong is the claim of exactness on a sample that could not
+support it.

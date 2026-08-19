@@ -40,6 +40,21 @@ measured:
     because the atom rule that keeps a pronoun with its antecedent -- required
     for the document to stay true -- preserves the demand binding; a property of
     the task, not a leak.
+  - STATE THE BOUND, NOT THE NUMBER. Rule of three: zero failures in N cases
+    bounds the true rate at ~3/N, so "exact over 34" excludes only 8.8% and
+    "exact over 400" excludes 0.75% -- and both read as 1.000 on the page.
+    Re-ran the claimed-exact findings at 400 seeds and ONE OF THREE BROKE:
+    flood signature+content interleaved is 0.988 (3 of 252), not 1.000. The
+    certificate held 0/252 (bound 3.2% -> 1.19%) and the scheduling reader held
+    0/400 (7.5% -> 0.75%).
+    The failures are the KNOWN coverage gap, not a new defect: two lone-region
+    sentences dodging the anchors in the same case ("went under" for flooding,
+    "dispatched" for the depot -- both named as misses when the vocabulary was
+    DECLARED), leaving two unresolved regions and an elimination that picks the
+    wrong one. NOT patching the vocabulary: that is memorising the generator one
+    variant later. The reader KNOWS it guessed in all three, so a refusing
+    variant converts 3 silent errors into 3 refusals at soundness 1.000 --
+    machinery exists, named as next step.
   - THE SOLVENCY READER USED THE WRONG TEMPORAL RULE, and a 60-seed sample
     could not see it. decide() takes the LATEST filing by date; the reader took
     the LARGEST by value and documented itself as doing so. Revisions go DOWN as
