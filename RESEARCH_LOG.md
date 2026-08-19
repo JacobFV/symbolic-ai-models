@@ -1910,6 +1910,81 @@ constructing them to *pass*. Here they killed the author's own line, and the
 must-fail control failed as required. A null from the agent that built the thing
 runs against its own incentive; a win does not.
 
+## The advantage is `1/f`, and `f` is a property of provenance
+
+The largest correction this file has had to absorb, and it invalidates the
+*framing* of every cost row above it rather than their arithmetic.
+
+Every cost comparison in this repo has priced a **cheap-and-wrong** system
+against an **expensive-and-assumed-perfect** one. Nobody deploys either. The
+choice anyone would make is a hybrid — cheap structure answers what it can, the
+rest escalates — and its price is fixed by the escalated fraction `f`:
+
+```
+advantage = model / (f x model + (1-f) x ours)   ~   1/f
+```
+
+**Neither side of that has a lever.** Measured on affiliation → ROR linking over
+5,000 OpenAlex works:
+
+- **The cheap half's accuracy barely matters.** Halving the tier where the
+  extractor produces nothing (12.3% → 5.7%, via whole-phrase containment and a
+  k-rarest-token candidate lookup) doubled the advantage at 0.60 quality,
+  bought 3–8% in the middle, and bought **nothing** at 0.85 — 1.8× before and
+  after.
+- **The escalated prompt cannot be narrowed.** A cheaper model tier is not ours,
+  because the opponent can use the same one. A shorter prompt *would* be ours —
+  and is unavailable: adding the k candidate names makes it **1.5× larger**
+  (r = 0.68×, k median 5), and the two prompts that genuinely are shorter
+  (2.11× and 8.19×) are exactly the two that strip the evidence needed to
+  choose. **You cannot both narrow the choice and shrink the prompt, because
+  the narrowing is information.**
+
+So on a derived-structure task the number is **1.8× at 0.85 quality**. The
+million-fold figures elsewhere in this file price a system running at **53%**
+quality.
+
+**And then the same formula in the other regime.** `f` is the fraction of
+queries the system cannot settle. Where structure is *filed*, there is no
+extraction step to fail — a regulator did it and is legally accountable — so `f`
+is only what the data itself leaves undetermined:
+
+| regime | `f` | quality | advantage |
+|---|---:|---:|---:|
+| **FILED** — GLEIF `ultimate_parent`, filed-vs-filed | **0.216%** | 1.00 | **463×** |
+| FILED — incl. closure-vs-filed conflicts | 4.274% | 1.00 | 23× |
+| **DERIVED** — OpenAlex affiliation → ROR | **56.0%** | 0.85 | **1.8×** |
+
+**259× between regimes**, same formula and same code. The advantage is a
+property of the domain's **structure-provenance**, not of the technology — which
+reconciles the two halves that looked contradictory: this file's earlier
+advantages were all measured on GLEIF and SEC, both **filed**, and they were
+real. **Quoting either number without naming the regime is the error.**
+
+The mechanism, stated so it can be attacked: in the filed regime `f` is the rate
+at which *the world is contested* — disputed ultimate ownership at 0.216%,
+disputed sovereignty at 0.068% — which is small and irreducible. In the derived
+regime `f` is the rate at which *extraction fails*, which is large and is a
+property of the method.
+
+**What is charged and what is granted.** The symbolic side pays for building the
+world it answers from. The model is granted perfect accuracy, zero output tokens,
+and only the dependency rather than the corpus. Every ratio is therefore a lower
+bound and needs no API credentials to stand — which matters, because the accuracy
+comparison is still blocked (`ROADMAP.md` 0b).
+
+**Two caveats that belong beside the number, not under it.** Quality 1.0 in the
+filed regime is relative to **the filing**, the same circularity as an automated
+extractor being its own anchor — better, since a filer is legally accountable,
+but not truth. And `f` counts undetermined answers as escalations when this
+repo's ambiguity machinery returns the *alternatives enumerated*; a caller that
+can act on a retained mixture escalates none of them, so 463× is conservative.
+
+Scripts: `escalation_frontier.py`, `regime_dichotomy.py`, `session_ledger.py`,
+`query_floors.py`. Notes: the four findings dated 2026-08-18 under
+`the-million-fold-advantage-...`, `the-advantage-is-a-property-of-provenance-...`,
+`the-first-arrow-is-cheap-and-bad`, `the-extractor-that-wins-on-facts-...`.
+
 ## Awaiting independent challenge — the promotion queue
 
 `notes/` promotes into this file **only once something independent has tried to
@@ -1929,7 +2004,9 @@ finding that never gets challenged.
 | ~~the copy lead~~ | — | **PROMOTED**, above. Survived an independent attack that eliminated three artefact hypotheses — same scored key lists, back-off provably absent from the pointer, leads 5/5 draws including fresh episodes. The *improvement* did not survive: quoted against the wrong baseline, the atomspace-specific increment is **+0.0165**, not +0.049. The attack also found a denominator mismatch in `copy_ceiling` affecting every copy number in this file. |
 
 | `notes/findings/2026-08-18-a-query-pays-for-the-conflicts-it-reads-and-4992-of-them-cost-one.md` | a query over a world holding 4,992 unresolved conflicts reads a median of **0** and a max of **1** of them; 117,129 answers in 0.3s where whole-world enumeration is refused (2^4992); `additive_bounds` matched enumerated extremes 3,273/3,273 | an independent reader tracing `possible_answers_scoped`'s read-set closure loop. The anchor (410/410 against full enumeration on an 8-conflict sub-mixture) is author-designed, and this repo has had author-designed controls pass while hollow — one in this very batch did |
-| `notes/findings/2026-08-18-the-advantage-curve-was-mostly-the-framing-and-what-is-left-is-a-constant.md` plus its same-day correction | the ~5e7 constant, and the three factors any advantage figure must now name | a second corpus. The constant is measured on facts that are 20-character identifiers; prose facts should move it, and nothing here predicts where |
+| `notes/findings/2026-08-18-the-advantage-curve-was-mostly-the-framing-and-what-is-left-is-a-constant.md` plus its same-day correction | the ~5e7 constant, and the three factors any advantage figure must now name | ~~a second corpus~~ **DONE**: prose moves the *dependency* 7.4× (41 → 302.3 tokens) and the crossover does not transfer at all (99,512 → 5,242), because it scales with corpus size. Now superseded by the `1/f` section above |
+| the certificate arm — `the-certificate-is-worth-nothing-per-quarter-and-1342x-per-filing`, `an-optimum-is-two-claims-...`, `a-witness-grows-linearly-...` | a read-set certificate is worth 0.3–1.0× per quarter and 37×–1,342× per filing, with `advantage <= 1/P_hit` and `P_hit ~ r × keys_per_update / total_keys`; an optimum's witness half is 93× cheaper to keep than its optimality half, narrowing to 72× on a shrinking corpus | **an independent reader.** Every control here is author-designed and two of them failed on first run *in ways that flattered nothing* — but this repo has had author-designed controls pass while hollow. The specific thing to trace: whether the recorded read set is the *dependency* or the *search order*, since it over-approximated by 6,591× on one problem and was exact on another, with nothing in the mechanism distinguishing them |
+| `notes/findings/2026-08-18-a-zero-shot-registry-beats-a-learned-dictionary-and-both-plateau-at-62-percent.md` | a zero-shot ROR lookup beats a dictionary learned from 3,500 works on all three splits, at half the cost, with nothing to tune | **a second registry-backed task.** The claim "external resources are givens" is this repo's own principle and this is its first real test; one task is not a validation of a principle |
 
 The one thing the queue must not become is a parking lot for results nobody
 intends to challenge. A finding that sits here unchallenged is not "pending"; it
@@ -1979,6 +2056,12 @@ Each of these was in the README as a result:
 | "A retriever can only guess what an answer depends on" (asserted and refuted the same day) | an ideal retriever certifies determinacy in **<=4 rounds** with zero misses. What survives is that it has no *stopping rule* — silently wrong on 1.128% of the world at its natural stop — and over-fetches **46x** |
 | "Ambiguity does not propagate in this graph, amplification 1.0x" | true of the 251 conflicts that occurred, false of the graph. The same conflicts on the highest-exposure nodes contaminate **102x** more; exposure spans 1 to 3,848 inside one relation |
 | "Alternatives are retained, not collapsed" | held only inside the process. `FusionResult.to_dict` carried a count and dropped the competing claims, so retention died at the artifact boundary |
+| every cost ratio in this file, quoted without a regime | the arithmetic stands; the framing does not. They are `1/f` evaluated where structure is **filed**. On a **derived**-structure task the same formula gives **1.8×** at 0.85 quality |
+| "the advantage is 1.1M×–2.5M× per answer above floor" (this file, hours earlier) | true only at `f = 0`, i.e. at **52.6%** quality. Escalating even the 12.3% of cases the extractor cannot touch collapses it to **8.1×**. `cost.py`'s own docstring said so first: *cheap-and-incapable is not a point on the cost curve* |
+| "abstention beats guessing" (concluded three times in one day, on fact-level evidence) | true at the fact level, **backwards at the system level**. An abstaining extractor builds a world with half the entities, and aggregate queries pay for *completeness*: the extractor that wins on facts by 0.121 F1 loses on every aggregate query |
+| "F1 0.717 is a ceiling the affiliation task imposes" | **my own task construction.** The fetcher flattened authorships, labelling each raw string with every institution its author listed. Grouped correctly the ceiling is **0.988** — the label *is* a function of the input — and the shortfall is genuine extraction failure, not label noise |
+| "the witness/complement asymmetry is a new axis, two arms converging" | **four** observations, and two predate the session: a witness verifies **247×** cheaper than solving and an optimality certificate **2.0×** *dearer* than re-solving, both already in `notes/findings/`. `HANDOVER.md` §3 omitted them, which is how the claim got made |
+| "geography disambiguates entity linking" (promoted to the top of the roadmap on five printed examples) | **it does not.** Three constructions, all at or below abstaining (−0.036, −0.007, −0.001); geography recovers 81% of the damage that admitting ambiguous candidates does and never gets ahead. 65% of ambiguous components carry no geographic evidence at all |
 
 The pattern is worth naming: **six-lesson slices and weak floors both produce
 confident results with the wrong sign.** Three separate conclusions inverted when
