@@ -145,9 +145,20 @@ cannot answer still has to go somewhere. So:
 
 | policy | **f** | **advantage** |
 |---|---:|---:|
-| name join alone | 14.70% | **6.8×** |
-| **identifier join alone** | **77.71%** | **1.3×** — *worse than the names it replaced* |
-| bridge, then names where it misses | 11.42% | **8.8×** |
+| name join alone *(a different join — see the correction below)* | 14.70% | 6.8× |
+| **identifier join alone, per distinct security** | **77.71%** | **1.3×** |
+| ~~bridge, then names where it misses~~ | ~~11.42%~~ | ~~8.8×~~ **INVALID** |
+
+> **CORRECTION.** The struck row multiplied the *coverage* of the CUSIP→LEI join
+> by the *ambiguity* of the CIK→LEI **name** join. Those are different joins over
+> different entity types, and there is no name fallback for a CUSIP because
+> CUSIPs are not names. See
+> `notes/findings/2026-08-18-three-sources-two-joins-and-an-answer-that-has-to-be-an-interval.md`.
+>
+> **And coverage has two denominators.** 22.3% is per *distinct security*; per
+> *position held* it is **58.8%**, because portfolios concentrate on widely-held
+> large caps and those are the issuers that carry an LEI. So the identifier join
+> alone is `f = 41.2%` on portfolio workloads, not 77.7%.
 
 > **The bridge does not close the cliff. It converts it from an ambiguity
 > problem into a coverage problem, and coverage is the larger of the two.**

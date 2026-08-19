@@ -61,9 +61,29 @@ on disk (`data/sources/gleif-isin/`), gives an exact-identifier join to 13F's
 CUSIP-keyed holdings with **0.0000% ambiguity**, and covers only **22.3%** of
 held securities. A coverage gap escalates exactly as an ambiguity does, so the
 identifier join *alone* is **worse** than the names it replaced (f 77.7%, 1.3×);
-bridge-then-name gives f 11.4% and **8.8×**, up from 6.8×. **The acquisition buys
-1.29×, not 68×** — the cliff is not the absence of an identifier but the absence
-of one that **covers the workload**.
+the cliff is not the absence of an identifier but the absence of one that
+**covers the workload** — and coverage has **two denominators**: 22.3% per
+distinct security, **58.8% per position held**, because portfolios concentrate on
+the large caps that carry LEIs. *(A "bridge-then-name" row first published here
+was invalid: it multiplied one join's coverage by a different join's ambiguity.
+See §3k.)*
+
+## 3k. The first federated query, and it answers in an interval
+
+`notes/findings/2026-08-18-three-sources-two-joins-and-an-answer-that-has-to-be-an-interval.md`
+
+Three filed sources, two **identifier** joins, no names: 13F holdings (CUSIP) →
+GLEIF ISIN-LEI → GLEIF entities (country). **World built in 5.8 s; 347 µs per
+portfolio answered.** The answer is necessarily an interval — `additive_bounds`
+gives exact attained extremes and the lower bound carries a **witness** a reader
+checks by following two joins per position.
+
+| US exposure, interval width | p10 **18.0%** | p50 **38.9%** | p90 71.0% |
+|---|---|---|---|
+
+**13.4%** of filers get a band ≤ 20 points (threshold set before the run). Honest
+uncertainty rather than a point estimate that would have been a lie — and **not
+yet a product**.
 
 The advantage is a property of the domain's **structure-provenance**, not of the
 technology — and this reconciles the two
