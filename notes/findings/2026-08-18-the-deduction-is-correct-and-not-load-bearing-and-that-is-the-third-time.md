@@ -113,6 +113,52 @@ portfolio owns*.
 That is a sharper instruction than "invest in reach", because half the reach on
 offer cannot be bought.
 
+## And on the population it was built for, it is strongly load-bearing
+
+The section above predicts the closure "would be load-bearing for a different
+question." That is testable, and it decides whether the lesson is about the
+**kernel** or about the **question**.
+
+Over the **124,454** entities that report a parent and have both countries known:
+
+| | |
+|---|---:|
+| ultimate in a **different** country | **44,641 = 35.9%** |
+| *the same measurement through a portfolio* | *0.8%* |
+
+**45× apart.** And the depth gradient is the mechanism, visible:
+
+| chain depth | n | cross-border |
+|---:|---:|---:|
+| 1 | 97,549 | 31.2% |
+| **2** | 19,647 | **50.9%** |
+| 3 | 4,535 | 58.1% |
+| 5 | 496 | 75.6% |
+| 6 | 206 | **86.4%** |
+
+A chain that crosses a border usually does so **through an intermediate holding
+company**, so the deeper the chain the likelier it crosses. **At depth ≥ 2 —
+24,800 entities — a majority cross a border**, which means the single-hop answer
+is wrong for most of them and transitivity is doing real work. The top shifts are
+the expected multinational structures: `GB→US` 1,258, `US→DE` 688, `KY→US` 668,
+`IN→US` 660.
+
+> **So the 0.8% was a statement about the question, not the kernel.** Portfolios
+> hold the top of ownership chains, so the closure has nothing to traverse. The
+> same closure over the entities that actually *have* parents changes a third of
+> the answers.
+
+### Which sharpens the instruction one more turn
+
+Not *"invest in reach"* and not *"build better kernels"* but:
+
+> **Match the question to the data's shape.**
+
+The machinery was right in all three arms this session. **Twice the question did
+not exercise it; once the data did not reach.** Those are different failures with
+different fixes, and conflating them would have sent the next year to the wrong
+place.
+
 ## What would refute it
 
 - **One question.** Ownership closure is irrelevant *to country exposure* on this

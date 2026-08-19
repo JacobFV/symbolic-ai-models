@@ -62,6 +62,17 @@ extraction and bridge gaps are partly this) and **structural** (what the world
 files at all — the repo holds **98.3%** of GLEIF and only **4.1%** of its
 entities report a parent). Half the reach on offer cannot be bought.
 
+**But two of the three were the question, not the reach.** The same ownership
+closure that changes 0.8% of *portfolio* answers changes **35.9%** on the
+population that actually has parents — rising to **86.4%** at chain depth 6,
+because a chain crosses a border through an intermediate holding company.
+Portfolios hold the *top* of chains, so there is nothing to traverse. So the
+instruction is one turn sharper than "invest in reach":
+
+> **Match the question to the data's shape.** The machinery was right in all
+> three arms. Twice the question did not exercise it; once the data did not
+> reach. Different failures, different fixes.
+
 **Read next:** §3i–§3k for the above, §5 for what this session retracted
 (fourteen rows, most of them mine), §7 for what to do.
 
