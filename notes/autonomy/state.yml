@@ -228,6 +228,21 @@ research_debt:
     load_bearing_for: ["every advantage ratio in HANDOVER section 3"]
     reason_to_revisit: "If accuracy is ever measured and the symbolic side is not perfect, every ratio moves."
 
+calibration:
+  measured: 2026-08-18, over 36 hypotheses with recorded outcomes
+  confidence_works: >
+    Mean confidence 0.69 on the predictions that landed inside their band, 0.58
+    on the ones that were wrong. Do not adjust it.
+  magnitude_is_biased: >
+    13 over-optimistic, 1 mixed, 0 under-optimistic. I predict the magnitude a
+    mechanism would have if it were the only thing operating, and the world
+    supplies a second constraint I did not price -- coverage, correlation, a
+    selection effect, an offsetting cost.
+  guard: >
+    Before writing a range, name what would CAP it and say whether that is
+    measured. If the cap is unmeasured, state a bound rather than a band.
+    See notes/lessons/2026-08-18-my-magnitude-predictions-are-over-optimistic-thirteen-to-nil.md
+
 last_cycle:
   action: >
     Built the dependency-certificate substrate and priced it on the first real
@@ -253,7 +268,7 @@ last_cycle:
     repo now say the cheap half of a problem is the useful half.
 
 next:
-  preferred_action: acquire-a-cik-lei-crosswalk
+  preferred_action: match-the-question-to-the-data-shape
   why_shipped_instead: >
     witness-on-kernelresult is DONE: `Witness` is on the kernel ABI, the ASP
     kernel returns its answer set instead of discarding it, and
