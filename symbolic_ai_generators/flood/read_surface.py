@@ -37,7 +37,27 @@ import re
 from symbolic_ai_core.world import (Claim, Entity, EntityRef, Facet, Quantity,
                                     WorldSnapshot)
 
-__all__ = ["read_surface", "read_lexical", "read_signature"]
+__all__ = ["read_surface", "read_lexical", "read_signature", "VALUE_REGISTRY"]
+
+#: A value vocabulary per claim kind -- **external knowledge**, and ablatable.
+#:
+#: With paragraph position ablated the reader cannot tell a mass from a capacity
+#: or a demand from a capacity, and the resulting 72 consistent worlds support a
+#: bound that decides 0.0% of the fleet. Consistency pruning has nothing to bite
+#: on, because every reading is internally coherent.
+#:
+#: A registry does bite: these vocabularies are **disjoint** where the ambiguity
+#: is (mass n capacity is empty, demand n capacity is empty), so a value alone
+#: settles which role a number plays.
+#:
+#: Reported as a CEILING on what a value vocabulary buys. These sets are the
+#: generator's own draw sets, so they are unusually clean; a real registry would
+#: be noisier and would overlap.
+VALUE_REGISTRY = {
+    "mass": frozenset({1200.0, 1800.0, 2600.0, 3200.0}),
+    "capacity": frozenset({1500.0, 2500.0, 4000.0}),
+    "demand": frozenset({900.0, 1400.0, 2100.0}),
+}
 
 _DEPOT = re.compile(r"Depot operations are run out of (region_\d+)")
 _MASS = re.compile(r"(truck_\d+) weighs (\d+) kg empty")
@@ -389,6 +409,7 @@ def read_signature(text: str) -> WorldSnapshot:
 def signature_worlds(text: str, *, cap: int = 512,
                      open_groups: frozenset[str] = frozenset(
                          {"vehicle", "region", "bare"}),
+                     registry: dict | None = None,
                      truth=None) -> list[WorldSnapshot]:
     """Every world consistent with what the signature could determine.
 
@@ -434,6 +455,28 @@ def signature_worlds(text: str, *, cap: int = 512,
     region_choices = [(d, n) for d in range(len(regions))
                       for n in range(len(regions)) if d != n]
     demand_choices = list(range(len(bare))) if bare else [None]
+
+    # External knowledge, ablatable: a value vocabulary settles which role a
+    # number plays, because the vocabularies are disjoint where the ambiguity is.
+    if registry:
+        mass_v, cap_v = registry.get("mass", ()), registry.get("capacity", ())
+        dem_v = registry.get("demand", ())
+        keep = []
+        for vc in veh_choices:
+            ok = True
+            for name, flip in zip(paired, vc):
+                a, b = roles[name]
+                m, c = (b, a) if flip else (a, b)
+                if (mass_v and m not in mass_v) or (cap_v and c not in cap_v):
+                    ok = False
+                    break
+            if ok:
+                keep.append(vc)
+        veh_choices = keep or veh_choices
+        if dem_v and bare:
+            narrowed = [i for i in demand_choices
+                        if i is not None and bare[i] in dem_v]
+            demand_choices = narrowed or demand_choices
     if truth is not None:
         by = {c.predicate: c for c in truth.claims}
         if "vehicle" not in open_groups:

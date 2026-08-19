@@ -57,6 +57,14 @@ measured:
     core). Signature reader 1.000 at every V; flood's "take the latest value"
     rule 0.850; first-filed 0.900; majority floor 0.583. Filing recall is 1.000
     for ALL arms, so the 15-point gap is purely how transaction_time is used.
+  - EXTERNAL KNOWLEDGE substitutes for paragraph position. With position
+    ablated the reader leaves 72 worlds and a bound deciding 0.0%; adding a
+    value registry (mass/capacity/demand vocabularies, which are DISJOINT where
+    the ambiguity is) gives 9 worlds and 36.4% decided, soundness preserved.
+    It collapses the vehicle and bare groups entirely and leaves exactly the
+    region group. Consistency pruning buys NOTHING -- every ambiguous reading
+    is internally coherent, and the domain invariants (depot never flooded,
+    needs never flooded) are automatically satisfied by any role permutation.
   - carrying ambiguity is ALWAYS SOUND (1.000 on every row) and rapidly
     vacuous: 4 worlds decide 75.8% of the fleet, 72 worlds decide 0.0%, and
     decidedness is NOT a function of world count -- 2 worlds of "bare" (which
@@ -208,6 +216,10 @@ next_actions:
     term. Deriving that would complete the unconditional curve.
   - The reader machinery on scheduling is still untried -- only the law was
     tested there.
+  - The residual ambiguity is the REGION group -- flooded/depot/needs are all
+    bare region mentions and no value signal separates them. Closing it needs
+    relational knowledge (a depot is where vehicles start, flooding is an
+    event), which is a different kind of external knowledge from a value list.
   - THE SURFACE IS SATURATED. A reader consulting no content word reaches the
     oracle, so this benchmark no longer discriminates -- the same trap the
     rules arm hit at V=1, walked into from the other side. It still hands the
