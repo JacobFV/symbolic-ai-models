@@ -50,9 +50,113 @@ CORPUS = Path("data/artifacts/wikipedia_parents_closed.jsonl")
 RELS = Path("data/artifacts/company_relations_scale.jsonl")
 OUT = Path("runs/composed_query_scale.json")
 FOLDS = 4
+#: Corpus sizes to sweep. The headline "the union's gain grew sevenfold" compared
+#: THIS script at 2,502 articles against a DIFFERENT script at 168 -- different
+#: country gold, different minimum group size, different code. That is not a
+#: comparison, it is two numbers. Subsampling inside one code path is, and it can
+#: refute the claim.
+SIZES = (200, 500, 1000, 2502)
+
+
+def run(docs, rows, rel, by_qid, min_gold: int = 3) -> dict:
+    """One corpus size, end to end: fit, read, join, score."""
+    read: dict[str, dict[str, str | None]] = defaultdict(dict)
+    for fold in range(FOLDS):
+        te = [d for i, d in enumerate(docs) if i % FOLDS == fold]
+        tr = [d for i, d in enumerate(docs) if i % FOLDS != fold]
+        reader = LearnedSpanReader(
+            mentions=CapitalisedMentions(), extra_features=R.extra(),
+            extra_role_features=R.role_frame_features).fit(
+            [R.supervise_distant(d) for d in tr])
+        for d in te:
+            res = reader.run(d["intro"], query=d.get("title", ""))
+            for r_ in ("parent", "country"):
+                b = None
+                for i, c in enumerate(res.claims):
+                    v = c.roles.get("value")
+                    if c.predicate == r_ and isinstance(v, EntityRef):
+                        if b is None or res.confidence_of(i) > b[0]:
+                            b = (res.confidence_of(i), v.id)
+                read[d["qid"]][f"learned:{r_}"] = b[1] if b else None
+    for d in docs:
+        read[d["qid"]]["hand:parent"] = read_parent(d["intro"])
+        read[d["qid"]]["hand:country"] = read_country(d["intro"])
+        for r_ in ("parent", "country"):
+            read[d["qid"]][f"union:{r_}"] = (
+                read[d["qid"]][f"hand:{r_}"] or read[d["qid"]].get(f"learned:{r_}"))
+
+    out = {}
+    for arm in ("hand", "union"):
+        def groups(country, source):
+            got = set()
+            for d in docs:
+                q = d["qid"]
+                if source == "gold":
+                    ok = any(norm(country) == norm(g)
+                             for g in (rel.get(q, {}).get("country") or []))
+                    ps = by_qid[q].get("current") or []
+                else:
+                    a = read[q].get(f"{arm}:country")
+                    ok = bool(a) and norm(a) == norm(country)
+                    p = read[q].get(f"{arm}:parent")
+                    ps = [p] if p else []
+                if ok:
+                    got |= {norm(x) for x in ps if x}
+            return got
+
+        scored = []
+        for c in sorted({norm(c) for d in docs
+                         for c in (rel.get(d["qid"], {}).get("country") or [])}):
+            gold = groups(c, "gold")
+            if len(gold) < min_gold:
+                continue
+            got = groups(c, "read")
+            tp = len(gold & got)
+            p_ = tp / len(got) if got else 0.0
+            r_ = tp / len(gold)
+            scored.append(2 * p_ * r_ / (p_ + r_) if p_ + r_ else 0.0)
+        out[arm] = {"f1": statistics.mean(scored) if scored else 0.0,
+                    "countries": len(scored)}
+    return out
+
+
+def sweep() -> None:
+    rows = [json.loads(x) for x in CORPUS.read_text().splitlines() if x.strip()]
+    by_qid = {r["qid"]: r for r in rows}
+    rel = {json.loads(x)["qid"]: json.loads(x)
+           for x in RELS.read_text().splitlines() if x.strip()}
+    R.PARENTS, R.RELATIONS = CORPUS, RELS
+    all_docs = R.corpus()
+    print(f"{'articles':>9}{'countries':>11}{'hand F1':>10}{'union F1':>10}"
+          f"{'union gain':>12}")
+    out = []
+    # The file is the scale corpus followed by the 841 closure articles, which
+    # are PARENT companies -- hubs, and the articles both readers are worst on.
+    # `all_docs[:n]` therefore adds hubs only at the largest size, so a rising
+    # gain could be "patterns fail on hubs" wearing "gain rises with scale" as a
+    # costume. A fixed shuffle spreads them across every size.
+    import random as _r
+    shuffled = list(all_docs)
+    _r.Random(20260819).shuffle(shuffled)
+    order = shuffled if "--shuffle" in sys.argv else all_docs
+    print(f"    order: {'SHUFFLED' if '--shuffle' in sys.argv else 'file order'}")
+    for n in SIZES:
+        docs = order[:n]
+        res = run(docs, rows, rel, by_qid)
+        h, u = res["hand"]["f1"], res["union"]["f1"]
+        gain = (u - h) / h if h else float("nan")
+        print(f"{len(docs):9d}{res['hand']['countries']:11d}{h:10.3f}{u:10.3f}"
+              f"{gain:11.1%}")
+        out.append({"n": len(docs), **res, "union_gain": gain})
+    tag = "shuffled" if "--shuffle" in sys.argv else "fileorder"
+    path = Path(f"runs/composed_query_sweep_{tag}.json")
+    path.write_text(json.dumps(out, indent=2))
+    print(f"\nwrote {path}")
 
 
 def main() -> None:
+    if "--sweep" in sys.argv:
+        return sweep()
     rows = [json.loads(x) for x in CORPUS.read_text().splitlines() if x.strip()]
     by_qid = {r["qid"]: r for r in rows}
     rel = {json.loads(x)["qid"]: json.loads(x)

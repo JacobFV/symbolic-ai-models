@@ -44,6 +44,33 @@ and here both are: ingestion still costs $1.50e-04 once against $6.32e-03 per
 retrieval query, and the answers are less complete than they were at 168
 articles.
 
+> **Corrected the same day by a control I ran on this note's own claims, and
+> both are weaker than written.** The two numbers compared above come from
+> *different scripts* — different country gold, different minimum group size,
+> different code — which is two numbers rather than a comparison. Subsampling
+> inside one code path, and then shuffling the corpus because the file is the
+> scale corpus followed by 841 **hub** articles that only enter at the largest
+> size:
+>
+> | articles | hand F1 | union F1 | union gain (file order) | union gain (**shuffled**) |
+> |---|---|---|---|---|
+> | 200 | 0.178 / 0.103 | 0.182 / 0.094 | +2.1% | **−9.3%** |
+> | 500 | 0.123 / 0.084 | 0.127 / 0.098 | +3.8% | **+17.0%** |
+> | 1,000 | 0.123 / 0.067 | 0.130 / 0.080 | +6.3% | **+18.9%** |
+> | 2,502 | 0.089 / 0.089 | 0.109 / 0.107 | +22.7% | **+19.8%** |
+>
+> **The smooth monotone rise was an ordering artefact.** Shuffled, the union
+> *hurts* at 200 articles (−9.3%), jumps to +17% by 500 and then **plateaus** at
+> 17–20%. It does not keep growing, and "sevenfold" is not the shape.
+> Section 2's claim weakens the same way: shuffled hand F1 goes 0.103 → 0.084 →
+> 0.067 → **0.089**, falling and then recovering rather than declining with size.
+>
+> What survives: **the union is worth about +19% on the composed query once the
+> corpus is above a few hundred articles, and is worth nothing below that** —
+> which is still the only place in this session where the learned reader's
+> contribution grows with corpus size at all, and it now has a floor and a
+> ceiling instead of a trend line.
+
 ## The result worth keeping
 
 **The union beats the patterns on every column, and its advantage grew sevenfold
