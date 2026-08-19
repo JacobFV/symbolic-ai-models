@@ -21,6 +21,14 @@ measured:
     KERNEL losses dominate. Grounded paragraphs 1.000 everywhere.
     The earlier "reader loss 0.682 exceeds every kernel loss" headline was
     caused by a missing branch in my own reader and is WITHDRAWN.
+  - SOLVENCY RENDERER: 60/60 grounded, and the explanation is BITEMPORAL --
+    "Excluded as not yet knowable: sub_3 filed 169.91 USD dated 2026-06-01,
+    after the determination". First explanation in the repo that must cite a
+    DATE rather than a value. The grounding CONTRACT transfers (tokens, a
+    domain-specific relation, contradiction against the structured answer) but
+    the MECHANISM does not: it needed a boolean verdict form instead of
+    per-vehicle polarity, and a date channel. The domain-specific middle check
+    is route adjacency in flood and date validity here.
   - RENDERER: 40/40 flood cases produce a fully grounded answer paragraph, both
     polarities explained (including "no route reaches it at all: the network is
     cut by flooding in region_2 and region_4"). The checker is token AND
@@ -192,6 +200,10 @@ unknowns:
   - Precision failures (invented/misread claims) are unswept; MISREADS exists.
 
 active_work: >
+  Pipeline complete on TWO domains now: flood (surface, 5 reader arms, 3
+  kernels, grounded paragraph) and solvency (surface, readers, kernel, grounded
+  bitemporal paragraph). Remaining: scheduling has only the law tested on it.
+prior_active_work: >
   MILESTONE DELIVERED on flood: report -> typed world -> three kernels ->
   structured decision + grounded paragraph, with reader arms, kernel ablations
   and $/correct in one table.
@@ -229,7 +241,9 @@ next_actions:
     of the disambiguation. The honest frontier is a surface without those,
     where this same reader (position ablated) leaves 72 consistent worlds and a
     bound deciding 0.0% -- so it must EMIT ambiguity rather than resolve it.
-  - Renderer for solvency, to give it a milestone row.
+  - Reader machinery on scheduling -- the only domain with no reader or
+    renderer, and its boolean answer would test whether the boolean
+    contradiction form is reusable or whether every domain needs its own.
   - Grounding now has three levels -- token, route adjacency, and CONTRADICTION
     against the structured answer -- and the renderer passes all three 40/40.
     The remaining hole is a real quantity attached to the wrong entity when no
