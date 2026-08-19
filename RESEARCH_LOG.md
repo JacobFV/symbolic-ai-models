@@ -1951,11 +1951,15 @@ is only what the data itself leaves undetermined:
 
 | regime | `f` | quality | advantage |
 |---|---:|---:|---:|
-| **FILED** — GLEIF `ultimate_parent`, filed-vs-filed | **0.216%** | 1.00 | **463×** |
+| **FILED** — GLEIF `ultimate_parent`, **single-source** | **0.216%** | 1.00 | **463×** |
 | FILED — incl. closure-vs-filed conflicts | 4.274% | 1.00 | 23× |
+| **FILED** — SEC → GLEIF, **CROSS-SOURCE** | **14.7%** | 1.00 | **7×** |
 | **DERIVED** — OpenAlex affiliation → ROR | **56.0%** | 0.85 | **1.8×** |
 
-**259× between regimes**, same formula and same code. The advantage is a
+**259× end to end, but the steps are 68× / 4×** — so the cliff is *not* at the
+filed/derived edge. It is at the **first identity boundary, inside the filed
+regime**, and crossing boundaries is what a federated substrate is for. Same
+formula and same code. The advantage is a
 property of the domain's **structure-provenance**, not of the technology — which
 reconciles the two halves that looked contradictory: this file's earlier
 advantages were all measured on GLEIF and SEC, both **filed**, and they were

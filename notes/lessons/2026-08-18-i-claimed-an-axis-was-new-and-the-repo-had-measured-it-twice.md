@@ -106,3 +106,29 @@ The cheap version, and it costs one command:
 ```bash
 ls symbolic_ai_core/ && grep -rl "<the quantity>" symbolic_ai_core/ symbolic_ai_kernels/
 ```
+
+
+## Fourth instance, and the count is now the point
+
+Testing whether `f` is small for *all* filed relations or only for GLEIF's, I
+needed the ambiguity rate of a cross-source alignment. It was already measured
+and published: **14.7%**, in
+`notes/findings/2026-08-18-alignment-not-merge-is-load-bearing-and-the-composition-behind-it-is-unpowered.md`,
+which predates this session.
+
+Four instances in one session — the witness axis, the accuracy-above-floor
+convention, `cost.py`'s *cheap-and-incapable* docstring, and now this. The
+pattern is no longer "I should have looked"; it is that **this repo's prior work
+is not reachable from the documents an arriving agent reads.** `HANDOVER.md` is
+curated and lossy by design, and `RESEARCH_LOG.md` is organised by narrative
+rather than by quantity.
+
+The guard that would actually work is an index by **quantity measured**, not by
+finding. Until one exists, the standing move before any experiment is:
+
+```bash
+grep -rli "<the quantity>" notes/ RESEARCH_LOG.md symbolic_ai_core/ symbolic_ai_kernels/
+```
+
+Run it for the *number you are about to produce*, not for the conclusion you
+expect.

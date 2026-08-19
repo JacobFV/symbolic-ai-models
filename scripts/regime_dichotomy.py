@@ -1,4 +1,4 @@
-"""Where the advantage lives: 1.8x on derived structure, 463x on filed structure.
+"""Where the advantage lives: it tracks how many identity boundaries a query crosses.
 
 `notes/findings/2026-08-18-the-million-fold-advantage-is-8x-the-moment-you-escalate-anything.md`
 closed the cost arc with a hard negative: the advantage is `1/f`, neither the
@@ -16,8 +16,16 @@ the *data itself* leaves undetermined, which `HANDOVER.md` §3 records at
 conflicts are counted). There is no extraction step to fail, because the
 regulator already did it and is legally accountable for it.
 
-Same arithmetic, same technology, same price sheet. Only the provenance of the
-structure changes.
+**And "filed" is not one regime.** A query that stays inside one source, using
+that source's own identifiers, has nothing to contest but genuine real-world
+disputes. A query that crosses two *filed* sources with no shared identifier has
+to join through names, and `notes/findings/...alignment-not-merge-is-load-bearing...`
+measured **14.7%** of matched SEC filers as having more than one GLEIF candidate.
+That is a third rung, sitting 68x below the single-source number and 8x above the
+derived one.
+
+Same arithmetic, same technology, same price sheet. What changes is how many
+identity boundaries the query crosses.
 
 Run: uv run python -u scripts/regime_dichotomy.py
 """
@@ -47,6 +55,10 @@ REGIMES = [
     ("FILED   same, incl. closure-vs-filed conflicts", 0.04274, 1.00,
      GLEIF_DEPENDENCY_TOKENS, GLEIF_OURS_USD,
      "HANDOVER §3: 5,006 of 117,129 undetermined"),
+    ("FILED   SEC -> GLEIF alignment, CROSS-SOURCE", 0.147, 1.00,
+     GLEIF_DEPENDENCY_TOKENS, GLEIF_OURS_USD,
+     "notes/findings/...alignment-not-merge-is-load-bearing...: 598 of 4,068 "
+     "matched filers have more than one GLEIF candidate"),
     ("DERIVED OpenAlex affiliation -> ROR", 0.560, 0.85,
      DERIVED_DEPENDENCY_TOKENS, DERIVED_OURS_USD,
      "escalation_frontier.py: f needed for 0.85 quality"),
@@ -70,13 +82,19 @@ def main() -> None:
               f"{adv:>10.0f}x")
 
     filed = rows["FILED   GLEIF ultimate_parent, filed-vs-filed"]["advantage"]
-    closure = rows["FILED   same, incl. closure-vs-filed conflicts"]["advantage"]
+    cross = rows["FILED   SEC -> GLEIF alignment, CROSS-SOURCE"]["advantage"]
     derived = rows["DERIVED OpenAlex affiliation -> ROR"]["advantage"]
-    print(f"\nbetween regimes: {filed/derived:,.0f}x (filed-vs-filed) and "
-          f"{closure/derived:,.0f}x (with closure conflicts)")
-    print("\nSame formula, same technology, same price sheet. The only thing "
-          "that changes\nis whether the structure was FILED or had to be "
-          "DERIVED.")
+    print(f"\nbetween regimes: {filed/cross:,.0f}x from single-source to "
+          f"cross-source, {cross/derived:,.0f}x from cross-source to derived, "
+          f"{filed/derived:,.0f}x end to end")
+    print("\nSame formula, same technology, same price sheet. What changes is "
+          "HOW MANY\nIDENTITY BOUNDARIES THE QUERY CROSSES:")
+    print("  within one source, using its own identifiers -- nothing to contest "
+          "but\n    genuine real-world disputes (contested ownership)")
+    print("  across two FILED sources with no shared identifier -- the join goes "
+          "through\n    names, and one filer in seven matches more than one "
+          "entity")
+    print("  from unstructured text -- the whole structure has to be derived")
 
     print("\nTwo caveats that belong next to the number:")
     print("  * quality 1.0 in the filed regime is relative to THE FILING, the "
@@ -90,8 +108,10 @@ def main() -> None:
 
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(json.dumps({"rows": rows,
-                               "between_regimes": {"filed_vs_derived": filed / derived,
-                                                   "closure_vs_derived": closure / derived}},
+                               "between_regimes": {
+                                   "single_to_cross_source": filed / cross,
+                                   "cross_source_to_derived": cross / derived,
+                                   "end_to_end": filed / derived}},
                               indent=2))
     print(f"\nwrote {OUT}")
 

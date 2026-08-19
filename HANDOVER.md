@@ -37,12 +37,19 @@ derived (§3j):**
 
 | regime | **f** | quality | **advantage** |
 |---|---:|---:|---:|
-| **FILED** — GLEIF `ultimate_parent` | **0.216%** | 1.00 | **463×** |
+| **FILED** — GLEIF `ultimate_parent`, **single-source** | **0.216%** | 1.00 | **463×** |
 | FILED — incl. closure-vs-filed conflicts | 4.274% | 1.00 | 23× |
+| **FILED** — SEC → GLEIF, **CROSS-SOURCE** | **14.7%** | 1.00 | **7×** |
 | **DERIVED** — OpenAlex affiliation → ROR | **56.0%** | 0.85 | **1.8×** |
 
-**259× between regimes.** So the advantage is a property of the domain's
-**structure-provenance**, not of the technology — and this reconciles the two
+**68× from single-source to cross-source; only 4× from cross-source to derived.**
+So the cliff is **not** at the filed/derived edge — it is at the **first identity
+boundary, inside the filed regime**. And crossing boundaries is what a federated
+substrate is *for*: a system that answers only within one source does not need
+federation, and the moment it does, the advantage falls 463× → 7×.
+
+The advantage is a property of the domain's **structure-provenance**, not of the
+technology — and this reconciles the two
 halves of the session that looked contradictory. The repo's earlier advantages
 were measured on GLEIF and SEC, both **filed**, and they were real. The
 extraction arm's 1.8× is also real. One formula, two regimes; **quoting either

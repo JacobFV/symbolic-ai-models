@@ -1,5 +1,5 @@
 ---
-title: The advantage is a property of the structure's provenance, not of the technology — 463× where it was filed, 1.8× where it had to be derived, from the same formula
+title: The advantage tracks how many identity boundaries a query crosses — 463× within one filed source, 7× across two filed sources, 1.8× from text; the big cliff is inside the filed regime, not at its edge
 date: 2026-08-18
 author: lead
 status: provisional
@@ -54,6 +54,40 @@ This also reconciles the two halves of the session that looked contradictory. Th
 repo's earlier advantages — measured on GLEIF and SEC, both **filed** — were
 real. The extraction arm's 1.8× is also real. They are the same formula evaluated
 in two regimes, and quoting either without naming the regime is the error.
+
+## CORRECTION, same day: "filed" is not one regime, and the cliff is inside it
+
+The table above treats *filed* as a single regime and quotes **463×** for it.
+That is a **single-source** number. A query that crosses two filed sources has
+no shared identifier to join on — `kg:sec:cik:*` and `kg:lei:*` are disjoint
+namespaces — so the join goes through names, and
+`notes/findings/2026-08-18-alignment-not-merge-is-load-bearing-and-the-composition-behind-it-is-unpowered.md`
+(which **predates this session**) measured **14.7%** of matched SEC filers as
+having more than one GLEIF candidate.
+
+| regime | **f** | quality | **advantage** |
+|---|---:|---:|---:|
+| FILED — GLEIF `ultimate_parent`, single-source | 0.216% | 1.00 | **463×** |
+| FILED — same, incl. closure-vs-filed conflicts | 4.274% | 1.00 | 23× |
+| **FILED — SEC → GLEIF alignment, CROSS-SOURCE** | **14.7%** | 1.00 | **7×** |
+| DERIVED — OpenAlex affiliation → ROR | 56.0% | 0.85 | **1.8×** |
+
+**68× from single-source to cross-source. 4× from cross-source to derived.**
+
+So the dichotomy I published this morning had the cliff in the wrong place. It is
+not *filed versus derived* — that last step is worth only 4×. **The cliff is at
+the first identity boundary, inside the filed regime, and it costs 68×.**
+
+That matters more than the number, because **crossing boundaries is what a
+federated substrate is for.** A system that only answers within one source does
+not need federation; the moment it does, `f` jumps by two orders of magnitude and
+the advantage falls from 463× to 7×.
+
+The mechanism, restated to be attackable: `f` tracks **how many identity
+boundaries a query crosses.** Within one source, using that source's own
+identifiers, nothing is contested but genuine real-world disputes. Across two
+filed sources with no shared identifier, the join goes through names. From
+unstructured text, the whole structure has to be derived.
 
 ## Two caveats that belong next to the number
 
