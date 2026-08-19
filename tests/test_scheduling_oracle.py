@@ -102,3 +102,34 @@ def test_the_oracle_is_no_longer_the_bottleneck() -> None:
 def test_capabilities_are_what_the_oracle_reads() -> None:
     """Guards the assumption the symmetry key rests on."""
     assert set(CAPABILITIES) == {"cut", "paint", "weld"}
+
+
+@pytest.mark.parametrize("slack", [0.0, -0.005, 0.005])
+def test_agrees_at_the_tight_boundary(slack: float) -> None:
+    """Slack near 0 is where the capacity bound stops doing the work.
+
+    Correctness there rests on the remaining cuts rather than the main one, so
+    it gets its own agreement check instead of riding on the sweep above. Sizes
+    stay small because slack exactly 0 is genuinely expensive -- see
+    ``feasible_by_search`` for why, and why it is not fixed.
+    """
+    for n_jobs in (3, 5, 7):
+        for seed in range(6):
+            jobs, machines = _instance(seed, n_jobs, 3, slack)
+            assert feasible_by_search(jobs, machines) == \
+                feasible_by_brute_force(jobs, machines), (n_jobs, slack, seed)
+
+
+def test_just_off_the_boundary_is_affordable() -> None:
+    """Slack exactly 0 is **not** affordable and is not claimed to be.
+
+    A half-percent either side is the same regime and four orders cheaper, which
+    is what sweeps should use. Pinning it here still catches a regression in the
+    capacity bound itself.
+    """
+    t0 = time.perf_counter()
+    for slack in (-0.005, 0.005):
+        for seed in range(5):
+            generate(seed, n_jobs=30, n_machines=4, slack=slack)
+    elapsed = time.perf_counter() - t0
+    assert elapsed < 2.0, f"10 near-boundary 30-job cases took {elapsed:.1f}s"

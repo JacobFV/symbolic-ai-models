@@ -148,6 +148,16 @@ def feasible_by_search(jobs, machines) -> bool:
       capabilities generate isomorphic subtrees, so only one is tried.
     - **Hardest first.** Longest jobs are placed first, which fails fast rather
       than deep.
+
+    **The one configuration this does not rescue is ``slack`` exactly 0.** There
+    capacity equals demand, ``spare`` is zero at every node, the capacity bound
+    never fires, and what is left is exact partition. Measured: 0.027s per case
+    at 20 jobs and 1.60s at 30, against 0.0002s a half-percent either side.
+    Memoising failed states was tried and bought **nothing** -- 1.5975s against
+    1.5984s -- because durations are real-valued, so two partial assignments
+    almost never leave the same remaining capacities and there is nothing for a
+    memo table to hit. Sweeps wanting the boundary should use +/-0.005, which is
+    the same regime and four orders cheaper.
     """
     names = sorted(jobs, key=lambda j: (-jobs[j][0], j))   # hardest first
     ms = sorted(machines)
