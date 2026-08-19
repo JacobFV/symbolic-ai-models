@@ -13,6 +13,12 @@ were each paid for), `APPROACH.md` (the argument), then this, then `ROADMAP.md`.
 
 ## 0a. The state after 2026-08-19. Read this before anything else.
 
+*For the programme-level version of this — what the whole bet has established,
+what it costs, and how it sits against the GOFAI post-mortem, the neuro-symbolic
+pitch and the scaling position — see
+`notes/status/2026-08-19-where-the-programme-stands.md`. This section is the
+operational one: what changed and what to do about it.*
+
 A long session on **what a reader gets wrong, what can catch it, and what any of
 it costs**. It supersedes §0 in several places and it changes what to do first.
 

@@ -24,6 +24,7 @@ impossible and the directory listing chronological.
 | `questions/` | one idea, hunch or open question — **the parking lot** | the moment it is noticed, whether or not anyone will chase it |
 | `decisions/` | one choice and the reasoning, including what was rejected | when a design fork is taken, *before* the work |
 | `lessons/` | one **mechanism** that produces wrong claims — the mistake, what it cost, and the guard | after a wrong reading is caught, whatever caught it |
+| `status/` | one **programme-level assessment** — what is established, what it costs, and how it sits against the outside narrative | when someone asks where the whole thing stands, or a stretch of work changes the shape of the argument |
 
 ### `lessons/` records mechanisms, not claims
 
