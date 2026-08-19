@@ -40,6 +40,25 @@ measured:
     because the atom rule that keeps a pronoun with its antecedent -- required
     for the document to stay true -- preserves the demand binding; a property of
     the task, not a leak.
+  - "GROUNDED" MEANS CONSISTENT WITH WHAT WAS READ, NOT TRUE. ungrounded()
+    builds its admissible edges from the routes the flow computed FROM THE READ
+    WORLD, so a route over a claim the reader INVENTED is self-consistent and
+    passes. Demonstrated on the hard-distractor surface, seed 1: true answer is
+    EMPTY, the paragraph reads "truck_0 runs region_0 to region_3" over a road
+    existing in no claim, and ungrounded() returns []. It catches RENDERER
+    errors -- invented numbers, false orderings, contradiction with the
+    structured answer -- and cannot by construction catch READER errors.
+    "Grounded 1.000" is not a safety property unless the world is the oracle's.
+    Scope now in the docstring and pinned by tests/test_grounding_scope.py,
+    which asserts BOTH halves so it cannot be read as an excuse.
+  - THE MILESTONE, HONESTLY MEASURED (V=4, interleaved, hard_distractors=True):
+    oracle 1.000 at $1.78e-08; signature+content 0.500 at $3.69e-08 (2.1x);
+    every other reader 0.000. Reader loss 0.500 MATCHES the worst kernel loss
+    (no SMT 0.500), where the published table says reader loss 0.000 and kernels
+    dominate. AND CLAIM RECALL IS THE WRONG READER COLUMN: signature+content
+    scores 0.998 recall at 0.500 accuracy, because its failure is a claim it
+    ADDS and recall cannot see a false positive -- yet recall is what the
+    milestone reports as reader quality.
   - THE READER'S 1.000 WAS PROPPED UP BY A DEFANGED DISTRACTOR. The prose scan
     flagged that "A disused track once ran from X to Z" carries EXACTLY the link
     signature; the reader admits it every case. It was inert only because the

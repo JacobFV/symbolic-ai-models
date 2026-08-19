@@ -212,6 +212,20 @@ def ungrounded(answer: Answer, case: Any, outputs: dict[str, Any]) -> list[str]:
     rather than merely *ungraceful*, and it is why the paragraph is safe to
     generate at all: an invented crossing limit shows up here, not in a reader's
     impression of the prose.
+
+    **Scope, and it is narrower than "grounded" sounds.** The admissible edges
+    below are built from ``report``, i.e. from the routes the flow computed *from
+    the world it was given*. When that world came from a reader, a route over a
+    claim the reader **invented** is self-consistent and passes. Measured
+    2026-08-19 on the hard-distractor surface: a case whose true answer is EMPTY
+    renders as *"truck_0 runs region_0 to region_3"* -- a road that exists in no
+    claim of the true world -- and this function returns ``[]``.
+
+    So it certifies **internal consistency with the world as read**, not truth.
+    It catches renderer errors -- invented numbers, false orderings, a paragraph
+    contradicting the structured answer -- and it cannot, by construction, catch
+    reader errors. A pipeline quoting "grounded 1.000" as a safety property is
+    quoting the wrong thing unless its world is the oracle's.
     """
     known_nums: set[str] = set()
     known_ents: set[str] = set()
