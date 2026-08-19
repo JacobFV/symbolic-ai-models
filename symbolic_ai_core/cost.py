@@ -76,7 +76,7 @@ from pathlib import Path
 from typing import Any, Iterable, Literal, Sequence
 
 __all__ = [
-    "Price", "Component", "System", "Capability", "Ledger",
+    "Price", "Component", "System", "Capability", "Targeting", "Ledger",
     "cpu_component", "api_component", "capability_from_summary", "ledger",
     "ledger_table", "cheapest_above", "perverse_regime",
 ]
@@ -244,6 +244,67 @@ class Capability:
 
 
 @dataclass(frozen=True)
+class Targeting:
+    """What a system's own confidence is worth, priced where it acts.
+
+    ``usd_per_solved_above_floor`` prices **getting the answer right** and prices
+    **knowing you are right at zero**. That is a real gap, and it was found by
+    running a system through this module that scored ``inf`` -- it did not beat
+    a floor holding its own candidate sets -- while its determinacy signal
+    separated 95.8% accuracy from 40.4%. A signal that good is worth money, and
+    no column here could see it.
+
+    The money it is worth is **escalation targeting**. At a fixed budget, a
+    system that knows which of its answers are unsafe spends that budget on them;
+    one that does not spends it at random. So the floor for a targeting claim is
+    **blind escalation of the same share**, and this class refuses to carry a
+    targeted rate without it -- exactly as :class:`Capability` refuses a rate
+    without a floor, and for the same reason. "We escalated and quality rose" is
+    not a result; buying answers raises quality whoever picks them.
+    """
+
+    #: Fraction of attempts handed to the expensive tier.
+    escalated: float
+    #: Quality with no escalation at all.
+    rate_base: float
+    #: Quality escalating the cases the system itself flags as unsafe.
+    rate_targeted: float
+    #: Quality escalating the same SHARE, chosen at random. The floor.
+    rate_blind: float
+    #: USD for one attempt at the expensive tier.
+    escalated_usd_per_attempt: float
+    source: str = ""
+
+    def __post_init__(self) -> None:
+        if not 0.0 < self.escalated <= 1.0:
+            raise ValueError(
+                f"escalated={self.escalated!r} must be in (0, 1]: a targeting "
+                "claim with no budget is not a claim")
+        for name in ("rate_base", "rate_targeted", "rate_blind"):
+            v = getattr(self, name)
+            if not 0.0 <= v <= 1.0:
+                raise ValueError(f"{name}={v!r} must be a rate in [0, 1]")
+        if self.escalated_usd_per_attempt < 0:
+            raise ValueError("escalated_usd_per_attempt must be >= 0")
+
+    def points_targeted(self) -> float:
+        """Quality points bought by escalating what the system flagged."""
+        return self.rate_targeted - self.rate_base
+
+    def points_blind(self) -> float:
+        """Quality points the same budget buys spent at random -- the floor."""
+        return self.rate_blind - self.rate_base
+
+    def above_blind(self) -> float:
+        """What the confidence signal added over spending the budget blindly."""
+        return self.rate_targeted - self.rate_blind
+
+    def usd_per_attempt_escalating(self) -> float:
+        """Amortised cost of the escalation budget, per attempt overall."""
+        return self.escalated * self.escalated_usd_per_attempt
+
+
+@dataclass(frozen=True)
 class Ledger:
     """The computed row. One system, one capability, one price sheet."""
 
@@ -262,6 +323,14 @@ class Ledger:
     floor: float
     n: int
     dominant_component: str
+    #: How much more quality the budget bought by being aimed. ``None`` when no
+    #: :class:`Targeting` was supplied; ``inf`` is impossible here because a
+    #: blind gain of zero means the expensive tier is no better than the system.
+    targeting_lift: float | None = None
+    #: USD per quality point the confidence signal bought that blind spending
+    #: would not. ``inf`` when the signal is uninformative, which is the honest
+    #: entry and the whole point of having a floor.
+    usd_per_quality_point: float | None = None
     notes: tuple[str, ...] = ()
 
     def as_dict(self) -> dict[str, Any]:
@@ -287,6 +356,7 @@ def ledger(system: System, capability: Capability, *,
            price: Price | None = None,
            retained_propositions: int = 0,
            parameters: int = 0,
+           targeting: "Targeting | None" = None,
            basis: str = "measured") -> Ledger:
     """Compute one row of the capability-cost ledger."""
     price = price or Price()
@@ -329,6 +399,21 @@ def ledger(system: System, capability: Capability, *,
     if retained_propositions > 0 and parameters > 0:
         bytes_per_prop = parameters * BYTES_PER_PARAMETER / retained_propositions
 
+    lift = usd_per_point = None
+    if targeting is not None:
+        lift = _safe_div(targeting.points_targeted(), targeting.points_blind())
+        usd_per_point = _safe_div(targeting.usd_per_attempt_escalating(),
+                                  targeting.above_blind())
+        if targeting.above_blind() <= 0:
+            notes.append(
+                "the confidence signal is not informative: aiming the "
+                "escalation budget bought nothing spending it at random would "
+                "not, so the cost per quality point is infinite")
+        elif lift < 1.15:
+            notes.append(
+                f"targeting lift {lift:.2f}x is close to blind spending; the "
+                "signal exists but is not worth routing on")
+
     dominant = system.dominant(price)
     return Ledger(
         system=system.name,
@@ -347,6 +432,8 @@ def ledger(system: System, capability: Capability, *,
         floor=capability.floor,
         n=capability.n,
         dominant_component=dominant.name if dominant else "",
+        targeting_lift=lift,
+        usd_per_quality_point=usd_per_point,
         notes=tuple(notes),
     )
 
@@ -536,17 +623,27 @@ def ledger_table(rows: Iterable[Ledger], *, min_rate: float | None = None) -> st
     rows = sorted(rows, key=lambda r: r.usd_per_solved_above_floor)
     if not rows:
         return "no runs scored the requested unit"
+    # The targeting columns appear only when something carries them, so a
+    # table of rows that never made a targeting claim is unchanged.
+    aimed = any(r.targeting_lift is not None for r in rows)
+    extra = f" {'aim x':>7} {'$/pt':>12}" if aimed else ""
     header = (f"{'system':<22} {'unit':<12} {'$/Btok in':>12} "
               f"{'$/solved':>12} {'$/solved>floor':>15} {'ms/act':>8} "
-              f"{'rate':>7} {'floor':>7} {'n':>7}  basis")
+              f"{'rate':>7} {'floor':>7} {'n':>7}{extra}  basis")
     lines = [header, "-" * len(header)]
     for r in rows:
         ms = f"{r.ms_per_action:.1f}" if r.ms_per_action is not None else "-"
+        tail = ""
+        if aimed:
+            lx = f"{r.targeting_lift:.2f}" if r.targeting_lift is not None else "-"
+            pt = (_usd(r.usd_per_quality_point)
+                  if r.usd_per_quality_point is not None else "-")
+            tail = f" {lx:>7} {pt:>12}"
         lines.append(
             f"{r.system:<22} {r.unit:<12} {_usd(r.usd_per_btok_in):>12} "
             f"{_usd(r.usd_per_solved):>12} "
             f"{_usd(r.usd_per_solved_above_floor):>15} {ms:>8} "
-            f"{r.rate:>7.3f} {r.floor:>7.3f} {r.n:>7d}  "
+            f"{r.rate:>7.3f} {r.floor:>7.3f} {r.n:>7d}{tail}  "
             f"{r.basis}{'' if r.quotable else ' (NOT QUOTABLE)'}")
     seen: set[str] = set()
     for r in rows:
@@ -557,6 +654,12 @@ def ledger_table(rows: Iterable[Ledger], *, min_rate: float | None = None) -> st
     lines.append("")
     lines.append("Sorted by $/solved-above-floor. A system at or below its "
                  "floor reads 'inf' and that is the correct entry.")
+    if aimed:
+        lines.append(
+            "'aim x' is quality bought by AIMING the escalation budget over "
+            "spending it blindly;\n'$/pt' is what one such quality point "
+            "costs. A system can score inf on the accuracy\ncolumns and still "
+            "be worth paying for here -- that is the gap those columns have.")
 
     pair = perverse_regime(rows)
     if pair is not None:

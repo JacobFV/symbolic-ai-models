@@ -268,7 +268,32 @@ last_cycle:
     repo now say the cheap half of a problem is the useful half.
 
 next:
-  preferred_action: price-certification-in-the-north-star-metric
+  preferred_action: price-the-certificate-arms-own-economics-with-the-new-metric
+  why_now: >
+    The north-star hole is CLOSED, not merely noted. symbolic_ai_core/cost.py
+    now carries a Targeting denominator floored by blind escalation of the same
+    share, and the federated resolver reads inf on $/solved-above-floor and
+    4.69x at $1.31e-03 per quality point in the same row -- worthless at
+    producing answers above its floor, worth paying for at certifying them.
+    Validated against the two domains already measured, with the OpenAlex values
+    hand-computed and recorded BEFORE the implementation: silence 2.13x,
+    ambiguity 1.02x. The second is a sharper claim than 3i made -- the ambiguity
+    signal is worth NOTHING over random spending, not merely less.
+
+    The obvious next use is the one the new finding names as its own limit:
+    escalation targeting is the EASIEST use of certification to price, and it is
+    not the one the certificate arm (3b) has been measuring. A certificate that
+    lets a downstream consumer skip revalidation -- the 93x/72x maintenance
+    split, the 247x witness verification -- is worth something this column still
+    cannot see. Those numbers exist and have never been expressed as capability
+    per dollar against any floor.
+  the_specific_gap: >
+    Targeting prices "knowing which of MY answers are unsafe". The certificate
+    arm measures "letting SOMEONE ELSE avoid recomputing". Both are
+    certification and only the first is priced. The second needs a floor of its
+    own -- plausibly "revalidate everything on a schedule" -- and that floor has
+    never been written down.
+  previous_preferred_action: price-certification-in-the-north-star-metric
   why_now: >
     The arc now has one defensible capability number and one clear gap.
 

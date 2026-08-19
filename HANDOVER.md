@@ -977,9 +977,36 @@ Priced at a fixed 15.4% escalation budget:
 recall**; a certificate can only certify what the generator retrieved. Report
 candidate recall beside any determinacy claim.
 
-**And it exposes a gap in the north star:** `$/solved-above-floor` prices getting
-the answer right and prices knowing-you-are-right at **zero**. The 4.69× appears
-in no column of the ledger.
+**It exposed a gap in the north star, and the gap is now CLOSED.**
+`$/solved-above-floor` priced getting the answer right and priced
+knowing-you-are-right at **zero**. `symbolic_ai_core/cost.py` now carries a
+`Targeting` denominator, floored by **blind escalation of the same share** —
+mirroring `Capability`'s refusal to carry a rate without a floor, because *"we
+escalated and quality rose" is not a result; buying answers raises quality
+whoever picks them.* Two columns, rendered only when a row makes the claim:
+
+```
+system                       $/solved>floor   rate   floor    aim x      $/pt
+federated symbolic resolver             inf  0.873   0.874     4.69  $1.31e-03
+```
+
+**Worthless at producing answers above its floor; worth 4.69× at certifying
+them.** Applied to the two domains already measured — OpenAlex values
+hand-computed and recorded *before* the implementation existed:
+
+| signal | escalated | **aim ×** | verdict |
+|---|---:|---:|---|
+| GLEIF resolver determinacy | 15.4% | **4.69×** | worth routing on |
+| OpenAlex **silence** | 12.3% | **2.13×** | worth routing on |
+| OpenAlex **ambiguity** | 38.3% | **1.02×** | worth **nothing** |
+
+> §3i called the ambiguity signal *weak* (+0.150 F1). Priced, **it is worth
+> nothing over spending the same budget at random** — a sharper claim than that
+> finding made, obtained by pricing a description already on disk.
+
+See `notes/findings/2026-08-18-pricing-certification-...md`.
+`tests/test_cost_targeting.py`, 12 tests; the 41 existing cost tests are
+unchanged.
 
 ## 4. Believed, not measured. Do not inherit as fact.
 

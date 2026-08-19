@@ -42,8 +42,9 @@ from pathlib import Path
 from scripts.alignment_bounds import SEC, gleif_candidates
 from scripts.manufactured_reach import CONSOLIDATION, FUNDS, roots_from
 from scripts.wikidata_bridge_cik_lei import load_bridge
-from symbolic_ai_core.cost import (Capability, Price, System, api_component,
-                                   cpu_component, ledger, ledger_table)
+from symbolic_ai_core.cost import (Capability, Price, System, Targeting,
+                                   api_component, cpu_component, ledger,
+                                   ledger_table)
 from symbolic_ai_tasks.company_key import (fit_strip_set, load_task,
                                            predict_fitted)
 from symbolic_ai_tasks.cross_source_alignment import AlignmentResult
@@ -211,6 +212,15 @@ def main() -> None:
                  "blind": blind, "base": base, "targeting_lift": lift}
     print()
 
+    # And now it goes in the ledger rather than being printed beside it. The
+    # Targeting denominator was added to symbolic_ai_core/cost.py for exactly
+    # this row: a system that scores inf on the accuracy columns and is still
+    # worth paying for.
+    aim = Targeting(escalated=esc, rate_base=base, rate_targeted=targeted,
+                    rate_blind=blind,
+                    escalated_usd_per_attempt=DEP_TOKENS / 1e6 * FRONTIER_USD_PER_MTOK,
+                    source="scripts/arc_through_the_ledger.py")
+
     # --- the ledger. Symbolic-only, hybrid at the measured f, model-only.
     price = Price()
     sym = System(name="federated symbolic resolver", components=(
@@ -242,17 +252,25 @@ def main() -> None:
     hybrid_rate = lvl["rate_abstain"] + f_esc * 1.0
     ledgers = [
         ledger(sym, cap(lvl["rate"], lvl["floor"]), price=price,
-               basis="measured"),
+               targeting=aim, basis="measured"),
         ledger(hybrid, cap(min(1.0, hybrid_rate), lvl["floor"]), price=price,
                basis="measured"),
         ledger(api, cap(1.0, lvl["floor"]), price=price, basis="measured"),
     ]
     print(ledger_table(ledgers))
 
-    print("\nThe column that matters is the LAST one. $/answer is a cost ratio "
-          "at assumed\nequal accuracy -- the assumption §6 says put four "
-          "earlier rows out of quotation.\n$/answer ABOVE FLOOR divides by what "
-          "the system bought that the floor did not.")
+    print("\nTWO columns matter and they disagree about the same row.\n"
+          "  $/answer is a cost ratio at assumed equal accuracy -- the "
+          "assumption §6 says\n    put four earlier rows out of quotation.\n"
+          "  $/answer ABOVE FLOOR divides by what the system bought that the "
+          "floor did not,\n    and for the symbolic resolver that is nothing: "
+          "it reads inf.\n"
+          "  aim x and $/pt price what it DOES buy -- knowing which of its "
+          "answers are\n    unsafe -- against a floor of spending the same "
+          "budget blindly.\n"
+          "A system can be worthless by the accuracy columns and worth paying "
+          "for by the\nlast two. That is not a contradiction; it is the "
+          "difference between producing\nan answer and certifying one.")
 
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(json.dumps(
