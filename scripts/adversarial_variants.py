@@ -16,6 +16,15 @@ Two things are being measured, and the second matters more:
   role where an empty vocabulary would have left it to elimination. Below the
   0.618 emptied-anchor floor means that happened.
 
+**The second question is not answerable by this arm, and that was found later.**
+`_verify_adversarial` below asserts no adversarial form contains a declared
+anchor, using the *same predicate* `_anchor_role` computes -- so the anchors
+cannot fire and this reduces to the emptied-anchor arm. The two agree CASE BY
+CASE (252/252 at 400 seeds), which is not a convergence but one computation.
+`scripts/misfiring_vocabulary.py` is the inversion that does answer it: -0.290.
+
+The printed 0.618 is also an n=34 reading; at 400 seeds the cell is 0.710.
+
 Run: uv run python -u scripts/adversarial_variants.py
 """
 

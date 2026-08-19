@@ -205,3 +205,28 @@ The finding's structure is unaffected: this is still the only arm invariant to
 both phrasing and arrangement, and the ablation showing content is load-bearing
 stands. What was wrong is the claim of exactness on a sample that could not
 support it.
+
+---
+
+## Correction, 2026-08-19: two of these numbers do not mean what they say
+
+**The 0.618 was 34 cases.** At 400 seeds the all-adversarial interleaved cell is
+**0.710**; grouped is stable (0.765 → 0.758). Two standard errors at n=34 is
+±0.17, so 0.618 and 0.710 are the same reading. The measured case for lexical
+generalisation on the interleaved surface is **0.290, not 0.382**.
+
+**"The anchors never misfire" was not measured.** `_verify_adversarial` asserts
+that no adversarial phrasing contains a declared anchor using
+`t.startswith(w)` over `re.findall(r"[a-z]+", …)` — exactly the predicate
+`_anchor_role` computes — so the anchors could not fire, and the arm reproduces
+the emptied-anchor arm **case by case**, 252 of 252. "Landing exactly on the
+emptied-anchor floor" is one computation reported as two agreeing measurements.
+
+Run properly, the answer inverts: phrasings that trip **one wrong** anchor score
+**0.468 / 0.421**, which is **−0.290** against the floor in both arrangements.
+A declared vocabulary is worse than none whenever it is confidently wrong, and
+"its failure mode is silence rather than error" holds only for phrasings
+constructed to keep it silent.
+
+See `2026-08-19-a-vocabulary-is-worse-than-none-when-it-is-confidently-wrong.md`
+and `notes/lessons/2026-08-19-a-verification-that-uses-the-mechanisms-own-predicate-decides-the-experiment.md`.

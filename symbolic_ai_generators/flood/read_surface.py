@@ -716,6 +716,23 @@ def read_content_roles_worlds(text: str, *, anchors: dict | None = None,
     certifies insensitivity of the wrong question. The role flag's
     over-conservatism is what guarantees the certificate is asked about the right
     graph, which makes it a **precondition** rather than an independent check.
+
+    **Soundness here is a property of the CHANNEL, not of this function.** Where
+    the read world can differ from the true one *only* in the role assignment,
+    two things follow structurally: all candidates agreeing implies the answer is
+    correct (the true assignment is among them), and a wrong collapse implies
+    they disagree (the collapsed assignment is among them too). Agreement is then
+    a sound **and complete** detector of role error, and no certificate can add
+    anything -- it can only remove coverage.
+
+    Measured 2026-08-19 at the lexical floor (every phrasing written to evade the
+    declared anchors, so the roles are unresolved on 252 of 252 cases): agreement
+    is **0 wrong at 0.361 coverage** and catches **all** 73 collapse failures,
+    while adding the certificate keeps 0 wrong and drops coverage to 0.056.
+    Turn the ``hard_distractors`` link channel back on -- one the enumeration
+    does not cover -- and the same agreement is **40 wrong of 114**. Choose the
+    check by which channels are live; `symbolic_ai_generators/audit.py` cannot
+    make that choice for you, because it scores both surfaces identically.
     """
     import itertools
 

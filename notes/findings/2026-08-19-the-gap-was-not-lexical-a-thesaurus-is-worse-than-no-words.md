@@ -106,3 +106,19 @@ name the text never used.
 - A precision-weighted expansion — keep an expanded token only if it is rare in
   the corpus outside its role's sentences — would test whether precision alone is
   the fixable part. Untried.
+
+---
+
+## Correction, 2026-08-19: the 0.618 baseline is 0.710 at 400 seeds
+
+Every row above quoting **0.618** is an n=34 reading of the all-adversarial
+interleaved cell, which is **0.710** at 400 seeds (grouped stable, 0.765 →
+0.758). The comparisons in this note are all *against* that baseline and all use
+the same 60 seeds, so the **rankings and the conclusion are unaffected** — but
+the absolute figures are 0.09 low, and the "exactly its no-vocabulary floor"
+identity is guaranteed by `_verify_adversarial` rather than measured.
+
+The thesaurus result is unchanged and is now better explained: a vocabulary that
+reaches a sentence it was not written for costs **−0.290** against having no
+vocabulary at all (`2026-08-19-a-vocabulary-is-worse-than-none-when-it-is-confidently-wrong.md`).
+"Worse than no words" is the general case, not a quirk of WordNet.

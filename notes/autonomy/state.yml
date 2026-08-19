@@ -40,6 +40,62 @@ measured:
     because the atom rule that keeps a pronoun with its antecedent -- required
     for the document to stay true -- preserves the demand binding; a property of
     the task, not a leak.
+  - EMITTING THE AMBIGUITY DETECTS EVERY ERROR AND RECOVERS NONE, and the
+    reason is a THEOREM not a measurement. At the lexical floor (every phrasing
+    written to evade the declared anchors, so roles unforced on 252/252, mean
+    2.48 candidate worlds), 400 seeds, interleaved: collapse 0.710 answering
+    everything; ROLE FLAG COVERAGE 0.000 -- it refuses every case, so a detector
+    calibrated where the vocabulary works has no discrimination where it fails;
+    EMIT-ON-AGREEMENT 0 wrong at 0.361 coverage; emit+certificate 0 wrong at
+    0.056. The 91 decided are a STRICT SUBSET of the cases collapse already got
+    right -- 0 of the 73 collapse failures have agreeing candidates.
+    THEOREM: where the read world can differ from the true one ONLY in the role
+    assignment, the true assignment and the collapsed one are both among the
+    candidates, so agreement => correct and wrong-collapse => disagreement.
+    Sound AND complete detector by construction; empirical content is only the
+    premise (504/504, bound 0.6%). COROLLARY: no certificate can improve
+    emission on such a channel, it can only remove coverage -- which is exactly
+    what 0.361 -> 0.056 is. Coverage is not a tunable; it IS the inert share.
+    CONTROL, the load-bearing half: turn hard_distractors back on -- INVENTED
+    LINKS, a channel enumeration does not cover -- and the same arm is 40 wrong
+    of 114, soundness 0.649; the certificate restores 1.000 at 0.127. GENERAL:
+    SOUNDNESS IS A PROPERTY OF THE PAIRING (channel, check), NEVER OF THE CHECK.
+    Warning in the certificate's direction: it certifies MORE on the hard
+    surface (0.127 vs 0.056) because phantom links add 2-edge-connectivity --
+    most willing exactly where the reader is least reliable.
+    FIRST THING THE AUDIT CANNOT PREDICT: audit_surface(prose=True) is IDENTICAL
+    on both surfaces (mass 0.640, same four prose signatures, same 280 flags)
+    while soundness differs 1.000 vs 0.649. The disused track carries the link
+    signature either way; only the generator's ENDPOINTS decide whether admitting
+    it is harmless. THE AUDIT PREDICTS WHICH CHANNELS ARE AMBIGUOUS, NOT WHICH
+    ARE ERRONEOUS.
+  - A VOCABULARY IS WORSE THAN NONE WHEN IT IS CONFIDENTLY WRONG, and the
+    control that was supposed to show otherwise COULD NOT FAIL.
+    adversarial_variants._verify_adversarial asserts no adversarial phrasing
+    contains a declared anchor using t.startswith(w) over
+    re.findall('[a-z]+', s.lower()) -- EXACTLY the predicate _anchor_role
+    computes -- so the anchors cannot fire and that arm reduces to the
+    emptied-anchor arm. They agree CASE BY CASE, 252/252 at 400 seeds and 34/34
+    at 60. "Landing exactly on the emptied-anchor floor, so the anchors never
+    misfire" is one computation reported as two agreeing measurements.
+    THE INVERSION (scripts/misfiring_vocabulary.py, verification asserts the
+    misfire EXISTS): phrasings tripping exactly ONE WRONG anchor score
+    0.468 grouped / 0.421 interleaved, -0.290 against the floor in BOTH cells.
+    Mechanism already in the code: elimination assigns only into an OPEN role,
+    so a misfire takes the slot AND pushes the true role down -- the failure the
+    comment records as scoring 0.000.
+    ASYMMETRY THAT SEPARATES THE TWO FAILURES: the misfire penalty is
+    ARRANGEMENT-INDEPENDENT (0.290 both cells); the silence penalty is NOT
+    (0.242 grouped, 0.290 interleaved), because silence hands the decision to
+    elimination which reads document order. SILENCE IS RECOVERABLE (emission
+    catches every such error), CONFIDENCE IS NOT (a misfired role is `forced`
+    and enumerates to one world).
+    CONSEQUENCE FOR THE FRONT: growing a hand-declared anchor list has a DOWNSIDE
+    OF THE SAME MAGNITUDE as its upside, realised whenever a new word reaches a
+    sentence it was not written for.
+    CORRECTION: the published all-adversarial floor 0.618 was n=34. At 400 seeds
+    it is 0.710 (grouped stable 0.765 -> 0.758), so the measured case for lexical
+    generalisation is 0.290, not 0.382 -- overstated by a third.
   - TASK DRIFT IS INVISIBLE TO EVERY WORLD-LEVEL CHECK. A weight restriction
     the world CANNOT express (admits light vehicles, refuses heavy) makes
     answers wrong 22/22, and is caught by role_assignment_forced 0/22, the
@@ -545,14 +601,16 @@ measured:
     one group it cannot -- scores 1.000 in ALL FOUR cells of phrasing x
     arrangement. First reader here invariant to both. Anchors were written into
     predictions.jsonl BEFORE the phrasing variants were read.
-    Control: emptying the anchors costs 1.000 -> 0.618 interleaved, so content is
+    Control: emptying the anchors costs 1.000 -> 0.710 interleaved (0.618 was
+    n=34), so content is
     load-bearing (+0.382). Which content: FLOODING ONLY. Removing flooded
     anchors costs most (0.853), removing needs costs NOTHING (1.000), depot
     between (0.941) -- because needs is pinned by adjacency (1.000 claim recall,
     no content) and depot is single-valued so elimination reaches it, while
     flooding is the MANY-VALUED role and elimination cannot pin a set whose size
     it does not know.
-    CORRECTION TO MY OWN EARLIER NOTE: the content-free floor is 0.618, not the
+    CORRECTION TO MY OWN EARLIER NOTE: the content-free floor is 0.710 (0.618
+    at n=34), not the
     0.000 published for "the empty cell". Two of the new arm's gains are
     content-free and were simply missing before -- adjacency for needs, and
     never defaulting an unresolved region to flooded (which CUTS THE NETWORK).
@@ -708,6 +766,37 @@ measured:
     32, so lifts across different n_eval are not comparable
 
 theory:
+  - name: enumeration_soundness
+    status: derived_premise_measured
+    formula: "theta* in Theta  =>  (all candidates agree => correct)  and  (collapse wrong => candidates disagree)"
+    variables:
+      theta: the parameter the reader could not settle (here, the role assignment)
+      Theta: the candidate set the reader emits
+    consequence: >
+      Where the read world can differ from the true one ONLY in theta, agreement
+      among the emitted candidates is a SOUND AND COMPLETE detector of error in
+      theta -- both directions follow because theta* and the collapsed choice are
+      both in Theta. Three things follow that are not obvious:
+      (1) no certificate can improve such an arm, it can only remove coverage
+      (measured: 0.361 -> 0.056, 0 wrong both);
+      (2) coverage is not a tunable, it IS the inert share of the ambiguity;
+      (3) emission recovers no ACCURACY at all -- the decided set is a strict
+      subset of what collapsing already got right (0 of 73 failures agree).
+    scope: >
+      The premise is the whole empirical content and it is CHECKABLE, not
+      assumed. Any reader error outside the enumerated channel breaks it:
+      turning the hard_distractors link channel on -- invented claims the role
+      enumeration does not cover -- takes the same arm from 0 wrong to 40 of
+      114 (soundness 0.649), and the link-deletion certificate restores 1.000 at
+      0.127 coverage.
+    predicts: >
+      SOUNDNESS IS A PROPERTY OF THE PAIRING (channel, check), NEVER OF THE
+      CHECK. For a new detector, ask which channels it enumerates or perturbs
+      and which the reader can err on; the difference is the blind spot, and it
+      is computable before running anything. Note this cannot be read off the
+      signature audit: audit_surface scores the two flood surfaces IDENTICALLY
+      (mass 0.640, same 280 prose flags) while soundness differs 1.000 vs 0.649.
+    evidence: runs/ambiguity_at_the_lexical_floor.json, tests/test_emission_soundness.py
   - name: cheap_kernel_is_a_complement
     status: empirical_two_domains
     formula: "aim = (share of expensive cost removed) / (share of instances removed)"
@@ -888,14 +977,25 @@ next_actions:
           phrasing built ADVERSARIALLY against the declared anchors would find
           the true floor. That is the honest next measurement and it is cheap.
           DONE TOO. Against four phrasings per role verified to contain no
-          declared anchor: 1.000 -> 0.794 (half adversarial) -> 0.618 (all),
-          landing EXACTLY on the emptied-anchor floor. So the 1.000 is a
-          CEILING -- the arm is invariant to the paraphrases it HAS WORDS FOR --
-          and the anchors never MISFIRE, so its failure mode is silence rather
-          than error. Lexical generalisation is now justified against a measured
+          declared anchor: 1.000 -> 0.794 (half adversarial) -> 0.710 (all,
+          at 400 seeds; the published 0.618 was n=34). So the 1.000 is a
+          CEILING -- the arm is invariant to the paraphrases it HAS WORDS FOR.
+          "LANDING EXACTLY ON THE EMPTIED-ANCHOR FLOOR, SO THE ANCHORS NEVER
+          MISFIRE" IS RETRACTED: _verify_adversarial asserts the same predicate
+          _anchor_role computes, so that arm IS the emptied-anchor arm, case by
+          case. Run properly (misfiring_vocabulary.py) a wrong-firing vocabulary
+          costs -0.290 against no vocabulary at all. Failure mode is silence
+          ONLY for phrasings constructed to keep it silent. Lexical generalisation is now justified against a measured
           gap of 0.382; enlarging the hand-declared list is NOT, because that
           memorises the generator one variant later.
-      (a2) THE LIVE EDGE: let the reader EMIT CONSEQUENCES and the kernel BIND
+      (a2) MEASURED AND ANSWERED for the enumeration form: emission detects
+          every role error and recovers no accuracy (0 wrong at 0.361 coverage
+          against a 0.710 collapsing reader), and the reason is structural.
+          What remains OPEN is the other half of this idea -- a reader that
+          emits a CONSEQUENCE the text supports ("this region is unusable")
+          rather than a role name, so the kernel binds a claim the reader could
+          not have named. That is not enumeration over roles and is untested.
+          THE LIVE EDGE was: let the reader EMIT CONSEQUENCES and the kernel BIND
           them. The reader can see a sentence says a region is unusable without
           knowing the word `flooded`; the routing kernel already knows an
           unusable region is what `flooded` means to it. That is a different
