@@ -2009,6 +2009,17 @@ active_work: >
   supersenses have been the wrong granularity here -- WordNet supplies a
   CATEGORY and these tasks need a FRAME.
 
+  AND THE VOLUME DIAGNOSIS IS HALF WRONG. Heaps' law fitted by subsampling the
+  168 articles: the token path between two mentions has beta 0.83-0.93, so the
+  frame inventory grows almost as fast as the data and NO corpus makes those
+  frames repeat -- parent's full paths would need ~1e9 instances for a mean count
+  of five. Keying on the LAST CONTENT WORD instead takes beta to 0.641 (parent)
+  and 0.702 (headquarters), singletons 0.912 -> 0.741, top-5 share 0.179 ->
+  0.463. Rebuilt on that, every relation moved on both columns for the first time
+  in six interventions: parent 0.101 -> 0.113, headquarters 0.173 -> 0.216
+  (precision 0.412 -> 0.507), country 0.145 -> 0.163. The representation was the
+  problem, not only the amount of text.
+
   PENDING, and the decisive experiment for the volume claim:
   `scripts/fetch_wikipedia_parents_scale.py` is fetching ~1,500 articles into
   data/artifacts/wikipedia_parents_scale.jsonl (Wikidata is rate-limiting to
