@@ -24,6 +24,7 @@ already made once and paid for.
 from __future__ import annotations
 
 import random
+import re
 
 from symbolic_ai_generators.flood.surface import Observation, Span
 
@@ -104,5 +105,76 @@ def unsaturate(obs: Observation, *, seed: int | None = None,
             by_claim.setdefault(s.claim, []).append(si)
     return Observation(text="\n\n".join(out_paras),
                        paragraphs=tuple(out_paras), spans=tuple(out_spans),
+                       seed=obs.seed,
+                       by_claim={k: tuple(v) for k, v in by_claim.items()})
+
+
+def _atoms(obs: Observation) -> list[tuple[int, int]]:
+    """Sentence ranges, with a pronoun sentence glued to its antecedent.
+
+    A pronoun whose antecedent has been shuffled away is not a harder reading
+    problem, it is a **false document**: nothing in the text supports the claim
+    any more, so the ground truth would be wrong rather than the reader. The
+    spans record which sentences carry a pronoun reference, so the glue is read
+    off the alignment rather than guessed from the wording.
+    """
+    text = obs.text
+    starts, at = [], 0
+    for para in obs.paragraphs:
+        for piece in re.split(r"(?<=\.)(\s+)", para):
+            if piece and not piece.isspace():
+                starts.append((at, at + len(piece)))
+            at += len(piece)
+        at += 2                                   # the "\n\n" separator
+
+    pronoun = [s for s in obs.spans if s.reference == "pronoun"]
+    out: list[tuple[int, int]] = []
+    for lo, hi in starts:
+        joins = any(lo <= s.start and s.end <= hi for s in pronoun)
+        if joins and out:
+            out[-1] = (out[-1][0], hi)
+        else:
+            out.append((lo, hi))
+    return out
+
+
+def interleave(obs: Observation, *, seed: int | None = None) -> Observation:
+    """Every sentence in one paragraph, in a seeded random order.
+
+    `unsaturate` removes the section headings and the paragraph *order*, and
+    `read_signature_roles` survives it by reading paragraph roles off content.
+    That leaves one template property standing: **grouping**. This generator puts
+    every road in one paragraph and every flood report in another, and a real
+    report does not.
+
+    So this destroys grouping as well, which is the strongest scramble the
+    ground truth can survive. Pronouns keep their antecedents -- see `_atoms` --
+    and nothing else is preserved.
+    """
+    text = obs.text
+    atoms = _atoms(obs)
+    order = list(range(len(atoms)))
+    random.Random(obs.seed if seed is None else seed).shuffle(order)
+
+    out_spans: list[Span] = []
+    parts: list[str] = []
+    at = 0
+    for ai in order:
+        lo, hi = atoms[ai]
+        body = text[lo:hi]
+        for s in obs.spans:
+            if s.start >= lo and s.end <= hi:
+                out_spans.append(Span(s.start - lo + at, s.end - lo + at,
+                                      s.claim, s.kind, s.entities, s.reference))
+        parts.append(body)
+        at += len(body) + 1
+    out = " ".join(parts)
+
+    out_spans.sort(key=lambda s: (s.start, s.end))
+    by_claim: dict[int, list[int]] = {}
+    for si, s in enumerate(out_spans):
+        if s.claim is not None:
+            by_claim.setdefault(s.claim, []).append(si)
+    return Observation(text=out, paragraphs=(out,), spans=tuple(out_spans),
                        seed=obs.seed,
                        by_claim={k: tuple(v) for k, v in by_claim.items()})
