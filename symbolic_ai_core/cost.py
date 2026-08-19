@@ -328,6 +328,44 @@ class Targeting:
         return self.escalated * self.escalated_usd_per_attempt
 
 
+def break_even_wrong_cost(rate: float, coverage: float,
+                          compute_multiple: float,
+                          certified_rate: float = 1.0) -> float:
+    """What a wrong answer must cost, relative to a right one, for refusing to pay.
+
+    ``usd_per_solved_above_floor`` counts **answers**, so a check that refuses
+    half of them makes the row worse however sound it is. This module's header
+    says the same thing about the targeting columns -- it "prices getting the
+    answer right and prices knowing you are right at zero". Three certificates
+    measured on 2026-08-19 have soundness as their entire value and none of them
+    is visible in the north star.
+
+    The fix is not another denominator; it is to make the caller's decision a
+    **number**. Answering everything earns ``rate - W(1 - rate)`` per case at
+    compute ``c0``. Certifying earns ``coverage * certified_rate`` at ``c1``,
+    refusing the rest for nothing. Equating cost per unit of earned utility:
+
+        W  >  [rate - coverage * certified_rate / m] / (1 - rate),   m = c1/c0
+
+    Returns that threshold. **Zero or below means the certificate is free** --
+    it earns at least as much utility per unit of compute even when a wrong
+    answer costs no more than a right one, so there is no trade to weigh.
+    ``inf`` when the system is never wrong and refusing can only lose.
+
+    It prices soundness against accuracy and **not** against the floor, so it is
+    a companion to ``usd_per_solved_above_floor`` rather than a replacement: a
+    system below its floor has bought nothing whatever a wrong answer costs.
+    """
+    if not 0.0 <= rate <= 1.0 or not 0.0 <= coverage <= 1.0:
+        raise ValueError("rate and coverage are fractions in [0, 1]")
+    if compute_multiple <= 0:
+        raise ValueError("compute_multiple must be > 0")
+    if rate >= 1.0:
+        return float("inf")               # never wrong; refusal only loses
+    earned = coverage * certified_rate / compute_multiple
+    return (rate - earned) / (1.0 - rate)
+
+
 @dataclass(frozen=True)
 class Ledger:
     """The computed row. One system, one capability, one price sheet."""
