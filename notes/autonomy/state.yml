@@ -35,20 +35,28 @@ theory:
       Do not optimise certification on low-accuracy systems. THREAD CLOSED.
     evidence: 5 independent rows, worst error 1.2%; the rest are identities
   - name: reader_survival
-    status: empirical_scaling_law
-    formula: "S = F + (1-F) q^k,  k = 9.35, F = 0.338, rmse 0.015"
-    variables: {q: per-claim recall, k: independently-required claims}
+    status: mechanistic_model   # promoted; both parameters have referents
+    formula: "S = F + (1-F) q^k;  non-empty answers: S = q^8.31, F = 0.014"
+    variables:
+      q: per-claim recall
+      k: the answer's DEPENDENCY SIZE, measurable by ablation without a sweep
+      F: the share of cases whose answer is corruption-proof (here, empty)
     consequence: >
-      Reader needs q = 0.983 for S = 0.90, not the ">= 90%" the sweep was read
-      as saying. k is additive across kinds: mass 2.31, capacity 2.16, link
-      1.61, demand 0.73, load_limit 0.68, flooded 0.28 -- so entity attributes
-      carry ~8x the leverage of the flooding relation. And S is more sensitive
-      to k than to q: halving k is worth more than a much better reader, which
-      argues for emitting ambiguity rather than for a bigger parser.
+      The published "floor" of 0.450 is exactly the empty-answer share (0.450
+      measured, 0.400 fitted) and is NOT a reasoning baseline. On cases with a
+      real answer there is no floor: a pure power law decaying to 0.018 at
+      q=0.5. Required recall on answer-critical claims is q = 0.987 for 90%
+      success on real cases, and at q = 0.90 the pipeline answers 41% of them.
+      Report the two populations SEPARATELY -- a pooled score here is 45% a
+      measure of the case mix. Entity attributes (mass 2.31, capacity 2.16)
+      carry ~8x the leverage of the flooding relation (0.28).
+    accuracy: >
+      ~30%, not 1%. Pooled ablation vs fit agrees to 0.9% but that is two
+      component errors cancelling; on non-empty cases mean d = 11.05 and
+      k_eff = 10.91 against a fitted 8.31.
     next_test: >
-      Does fitted k match the answer's DEPENDENCY SIZE, which the certificate
-      machinery can measure directly? Agreement promotes this toward a
-      mechanistic model; disagreement kills it.
+      Does the decomposition reproduce on scheduling or solvency? If their
+      floors are not their trivial-answer shares, F is not general.
 
 beliefs:
   - The reader must be near-perfect on answer-critical claims, and only those.
@@ -57,7 +65,8 @@ beliefs:
 unknowns:
   - What the template reader does under paraphrase. corrupt() perturbs the
     recovered world; nothing perturbs the TEXT. This is the front's true zero.
-  - Whether q^k transfers to a structurally different domain.
+  - Whether the F = trivial-answer-share decomposition transfers to another
+    domain.
   - Precision failures (invented/misread claims) are unswept; MISREADS exists.
 
 active_work: none -- turn ended after the theory pass
