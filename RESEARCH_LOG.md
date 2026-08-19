@@ -316,6 +316,32 @@ the clean one, because phantom links add 2-edge-connectivity.
 > comparing coverage across surfaces is a trap. Report it with the accuracy among
 > the certified, on the same surface, always.
 
+### And the explanation fabricates where the reader does
+
+Inspectability is one of the five properties, and it had only been checked on the
+easy surface. Rendering from the **read** world and checking every citation
+against the **true** one, 300 seeds:
+
+| renderer | surface | cites | **false / citation** | any false | **\| correct** | `ungrounded` |
+|---|---|---:|---:|---:|---:|---:|
+| template | clean | 2.01 | 0.0025 | 0.005 | **0.000** | **0.000** |
+| template | honest | 2.01 | 0.0025 | 0.005 | **0.000** | **0.000** |
+| complete | clean | 11.74 | 0.0117 | 0.066 | 0.052 | **0.000** |
+| **complete** | **honest** | 11.56 | **0.0388** | **0.378** | **0.076** | **0.000** |
+
+**A correct answer with a fabricated justification, at 1 in 13.** And it is not a
+volume effect — per citation the complete renderer is **15.5×** worse, because the
+extra facts it cites are the **load-bearing set computed from the read world**,
+which is exactly where a phantom link lives. Citing more is not the problem;
+citing *what the answer depends on* is, when the answer depends on something
+invented. The template renderer, citing two facts the reader gets right whatever
+the distractors do, is **surface-independent** at 0.000.
+
+`ungrounded` flags **none** of it, in every cell — its scope note with a number
+attached. And it reprices an earlier row: *"an explanation that omits nothing
+material, for 37% more words"* priced completeness in **length**; the currency is
+**truth**.
+
 ### What each channel admits, and what it costs
 
 Two responses to a claim the reader may have got wrong, and they are gated by

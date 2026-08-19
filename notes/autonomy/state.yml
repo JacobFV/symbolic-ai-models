@@ -40,6 +40,32 @@ measured:
     because the atom rule that keeps a pronoun with its antecedent -- required
     for the document to stay true -- preserves the demand binding; a property of
     the task, not a leak.
+  - COMPLETENESS OF EXPLANATION BUYS FABRICATION RISK. Inspectability -- one of
+    APPROACH.md's five properties -- checked on the HONEST surface for the first
+    time. 300 seeds, flood interleaved, rendered from the READ world with every
+    claim citation checked against the TRUE one:
+      renderer  surface   acc  cites  false/cite  any false  |correct  ungrounded
+      template  clean   0.985   2.01      0.0025      0.005     0.000       0.000
+      template  honest  0.673   2.01      0.0025      0.005     0.000       0.000
+      complete  clean   0.985  11.74      0.0117      0.066     0.052       0.000
+      complete  honest  0.673  11.56      0.0388      0.378     0.076       0.000
+    A CORRECT ANSWER WITH A FABRICATED JUSTIFICATION, 1 IN 13: the complete
+    renderer cites a false fact on 7.6% of the answers it got RIGHT.
+    NOT A VOLUME EFFECT -- 15.5x worse PER CITATION on the honest surface, because
+    its extra facts are the LOAD-BEARING SET COMPUTED FROM THE READ WORLD, exactly
+    where a phantom link lives. Citing more is not the problem; citing what the
+    answer DEPENDS ON is, when the answer depends on something invented.
+    THE TEMPLATE RENDERER IS SURFACE-INDEPENDENT: 0.0025 per citation on both and
+    0.000 fabrication on correct answers on both. It cites the demand and the
+    site, which the reader gets right whatever the distractors do.
+    ungrounded flags 0.000 IN EVERY CELL -- its scope note with a number, and the
+    SIXTH appearance of "a check that reads part of the world inherits that
+    part's errors".
+    REPRICES AN EARLIER FINDING: "omits nothing material, for 37% MORE WORDS"
+    priced completeness in LENGTH. The currency is TRUTH.
+    DEFECT RECORDED, NOT FIXED: the citation scheme is not uniform -- some sources
+    are a claim index, some a predicate name -- so an unresolvable citation cannot
+    be checked against anything. Fixing it would move every published offset.
   - OVER-SPLITTING AND OVER-DELETING ARE THE SAME FAILURE. "Clause, not
     sentence" answers WHICH OF TWO units, not whether there is an optimum. Five
     granularities:
