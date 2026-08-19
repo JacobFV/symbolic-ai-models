@@ -29,7 +29,22 @@ Fitted by subsampling the **new** corpus to 10%, 25%, 50% and 100%:
 
 **The content-word exponent replicates to three decimals** across a tenfold
 change in corpus size, which is the strongest evidence available that this is a
-property of the phenomenon and not of 168 articles. The one miss is the head
+property of the phenomenon and not of 168 articles.
+
+> **Corrected: the three decimals were luck.** Both fits subsample the corpus by
+> **prefix**, and the file is in CirrusSearch relevance order — prominent
+> companies first, whose frames are more canonical. Refitting on three shuffles
+> of the same corpus gives content-word β = **0.669, 0.728, 0.701** against the
+> published 0.648, and full-path β = 0.941, 0.959, 0.909 against 0.915. The
+> sampling spread is **±0.03**, so 0.641 against 0.648 is agreement inside a band
+> three times wider than the agreement. The honest numbers are **full-path
+> β ≈ 0.93** and **content-word β ≈ 0.69**, and file order flatters the
+> content-word figure by about 0.05.
+>
+> What survives, and it is the whole point of the table: **the gap between the
+> two representations is ~0.24 and is robust to ordering** — 0.93 against 0.69
+> shuffled, 0.915 against 0.648 in file order. The full path grows almost as fast
+> as the data under every ordering; the content word does not. The one miss is the head
 share: it **saturates near 0.44** rather than rising, because more text brings
 more distinct triggers as fast as it thickens the common ones. Mean count rises;
 concentration does not.
