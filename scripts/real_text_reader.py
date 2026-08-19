@@ -69,6 +69,18 @@ MIL = "--mil" in sys.argv
 #: untuned way to get the same generalisation: `subsidiary`, `division` and
 #: `unit` are all `noun.group`, and `owned` is `verb.possession`.
 WORDNET = "--wordnet" in sys.argv
+#: The claim the WordNet null left standing: what the hand reader knows is not
+#: that `subsidiary` is a group noun but that "X is a subsidiary of Y" puts Y in
+#: a slot. A FRAME is the token path BETWEEN two mentions, and it is derived from
+#: this corpus rather than written down -- no relation word appears in the source.
+FRAMES = "--frames" in sys.argv
+#: Down-weight the negative class, chosen per outer fold by inner
+#: cross-validation on the TRAINING articles only. The reader emits 0.54 parent
+#: claims per document and its oracle over its own proposals is 0.107 against an
+#: argmax of 0.101 -- it is not mis-ranking, it is abstaining, which is what an
+#: order-of-magnitude class imbalance does to a margin-based classifier.
+BALANCE = "--balance" in sys.argv
+NONE_WEIGHTS = (1.0, 0.5, 0.25, 0.12, 0.06)
 #: Longest gold string first, so `New Delhi, India` prefers the more specific
 #: relation when two fillers both occur in one sentence.
 RELS = ("parent", "headquarters", "country")
@@ -94,6 +106,109 @@ def supersense_features(u, mentions) -> list[str]:
     out += [f"ss2={a}|{b}" for i, a in enumerate(sorted(senses))
             for b in sorted(senses)[i + 1:]][:60]
     return out
+
+
+def frame_features(u, mentions) -> list[str]:
+    """The abstracted token path between consecutive mentions.
+
+    A bag of n-grams over a sentence knows which words occur; a frame knows which
+    words sit BETWEEN the two things being related. `is a subsidiary of` and
+    `is a division of` are the same shape with one word changed, and both are
+    invisible to a window feature that never anchors on the mentions.
+
+    Paths are capped at six tokens because a longer one is not a frame, it is a
+    sentence, and it would fire once in the corpus and never again.
+    """
+    if not mentions:
+        return []
+    ment = sorted(mentions, key=lambda m: m.start)
+    words = [t for t in u.tokens if t.kind in ("word", "num")]
+    inside = {i for m in ment for i in range(m.start, m.end)}
+    out: list[str] = []
+    for a, b in zip(ment, ment[1:]):
+        gap = [t.text.lower() for t in words
+               if a.end <= t.start < b.start and t.start not in inside]
+        if len(gap) > 6:
+            continue
+        path = "_".join(gap)
+        out.append(f"fr={path}")
+        out.append(f"fr.tail={'_'.join(gap[-2:])}")
+        out.append(f"fr.head={'_'.join(gap[:2])}")
+    first = ment[0]
+    lead = [t.text.lower() for t in words if t.start < first.start][:3]
+    out.append(f"fr.lead={'_'.join(lead)}")
+    out.append(f"fr.n={min(len(ment), 5)}")
+    return out
+
+
+def role_frame_features(pred, role, cands, j, u) -> list[str]:
+    """The words between this candidate and the mention before and after it.
+
+    The ranker's version of a frame, and the place the idea belongs: *X is a
+    subsidiary of Y* says which SLOT Y fills, not which kind of sentence this is.
+    Put in the sentence classifier first, where it bought nothing.
+    """
+    t = cands[j]
+    words = [w for w in u.tokens if w.kind in ("word", "num")]
+    before = [w.text.lower() for w in words if w.end <= t.start]
+    after = [w.text.lower() for w in words if w.start >= t.end]
+    prev_m = max((c.end for c in cands if c.end <= t.start), default=u.start)
+    left = [w.text.lower() for w in words if prev_m <= w.start < t.start]
+    out = [f"path={'_'.join(left[-6:])}", f"lead={'_'.join(before[:3])}",
+           f"tail={'_'.join(after[:2])}", f"nleft={min(len(left), 6)}"]
+    if left:
+        out.append(f"gate={left[-1]}|{len(left)}")
+    return out
+
+
+def extra() -> object:
+    """Whichever feature sources the flags asked for, composed."""
+    parts = ([supersense_features] if WORDNET else []) + \
+            ([frame_features] if FRAMES else [])
+    if not parts:
+        return None
+    return lambda u, m: [f for fn in parts for f in fn(u, m)]
+
+
+def fit_reader(train_docs, none_weight: float | None):
+    from symbolic_ai_core.reader.learned import NONE
+    w = None if none_weight is None else {
+        NONE: none_weight, **{r: 1.0 for r in RELS}}
+    return LearnedSpanReader(
+        mentions=CapitalisedMentions(), extra_features=extra(), weights=w,
+        extra_role_features=role_frame_features if FRAMES else None).fit(
+        [supervise_distant(d) for d in train_docs])
+
+
+def correct_share(reader, docs) -> float:
+    hit = n = 0
+    for d in docs:
+        got = answers(reader, d)
+        for rel in RELS:
+            gold = [g.lower() for g in (d.get(rel) or [])]
+            if not gold:
+                continue
+            n += 1
+            hit += rel in got and got[rel].lower() in gold
+    return hit / max(1, n)
+
+
+def choose_none_weight(train_docs) -> float:
+    """Inner 3-fold CV on the TRAINING articles. Never touches the outer test.
+
+    Selecting this on the evaluation would be the repo's oldest mistake wearing a
+    hyperparameter's clothes.
+    """
+    best, best_score = 1.0, -1.0
+    for w in NONE_WEIGHTS:
+        score = 0.0
+        for k in range(3):
+            inner_te = [d for i, d in enumerate(train_docs) if i % 3 == k]
+            inner_tr = [d for i, d in enumerate(train_docs) if i % 3 != k]
+            score += correct_share(fit_reader(inner_tr, w), inner_te)
+        if score > best_score:
+            best, best_score = w, score
+    return best
 
 
 def corpus() -> list[dict]:
@@ -214,7 +329,8 @@ def decomposition(docs) -> dict:
                                          for t in cm.find(u))
     train, test = docs[42:], docs[:42]
     reader = LearnedSpanReader(
-        mentions=cm, extra_features=supersense_features if WORDNET else None
+        mentions=cm, extra_features=extra(),
+        extra_role_features=role_frame_features if FRAMES else None
     ).fit([supervise_distant(d) for d in train])
     clf, clf_n, rank, rank_n = (defaultdict(int) for _ in range(4))
     for d in test:
@@ -256,7 +372,8 @@ def learning_curve(docs) -> dict:
     for share in (0.25, 0.5, 1.0):
         part = train[:max(1, int(len(train) * share))]
         reader = LearnedSpanReader(
-            mentions=cm, extra_features=supersense_features if WORDNET else None
+            mentions=cm, extra_features=extra(),
+            extra_role_features=role_frame_features if FRAMES else None
         ).fit([supervise_distant(d) for d in part])
         ok, n = defaultdict(int), defaultdict(int)
         for d in test:
@@ -290,12 +407,17 @@ def main() -> None:
             for u in doc:
                 if u.claim is not None:
                     supervised[u.claim.predicate] += 1
-        extra = supersense_features if WORDNET else None
-        reader = LearnedSpanReader(mentions=CapitalisedMentions(),
-                                   extra_features=extra).fit(units)
+        if BALANCE:
+            nw = choose_none_weight(train)
+            print(f"    fold {fold}: NONE weight {nw} chosen by inner CV",
+                  flush=True)
+            reader = fit_reader(train, nw)
+        else:
+            reader = fit_reader(train, None)
+        ex = extra()
         if MIL:
             reader = LearnedSpanReader(mentions=CapitalisedMentions(),
-                                       extra_features=extra).fit(
+                                       extra_features=ex).fit(
                 prune_to_best(reader, units))
         for d in test:
             got = answers(reader, d)
@@ -344,7 +466,8 @@ def main() -> None:
     print("\n    the number to beat on `parent` is the hand-written "
           "state-first reader:\n    coverage 0.601, correct 0.393, "
           "precision 0.653 -- tuned against this corpus.")
-    tag = ("_mil" if MIL else "") + ("_wordnet" if WORDNET else "")
+    tag = ("_mil" if MIL else "") + ("_wordnet" if WORDNET else "") + \
+        ("_frames" if FRAMES else "") + ("_balance" if BALANCE else "")
     if PARENTS.name != "wikipedia_parents.jsonl":
         tag += "_" + PARENTS.stem.replace("wikipedia_parents", "").strip("_")
     out_path = OUT.with_name(f"real_text_reader{tag}.json") if tag else OUT

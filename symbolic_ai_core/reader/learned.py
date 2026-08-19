@@ -306,7 +306,7 @@ def _unit_features(u: Unit, ments: Sequence[Token]) -> list[str]:
 
 
 def _role_features(pred: str, role: str, cands: Sequence[Token],
-                   j: int, u: Unit) -> list[str]:
+                   j: int, u: Unit, extra: Any = None) -> list[str]:
     """Why *this* candidate fills *this* role.
 
     Index among candidates of the same type covers the ordinal cases; the words
@@ -320,11 +320,14 @@ def _role_features(pred: str, role: str, cands: Sequence[Token],
     nxt = u.tokens[i + 1].text.lower() if i + 1 < len(u.tokens) else "$"
     prev2 = u.tokens[i - 2].text.lower() if i >= 2 else "^"
     base = f"{pred}:{role}"
-    return ["bias", f"{base}|idx={j}", f"{base}|idx={j}/{len(cands)}",
-            f"{base}|rev={len(cands) - 1 - j}",
-            f"{base}|prev={prev}", f"{base}|next={nxt}",
-            f"{base}|prev2={prev2}", f"{base}|prev,next={prev}|{nxt}",
-            f"{base}|first={1 if i == 0 else 0}"]
+    feats = ["bias", f"{base}|idx={j}", f"{base}|idx={j}/{len(cands)}",
+             f"{base}|rev={len(cands) - 1 - j}",
+             f"{base}|prev={prev}", f"{base}|next={nxt}",
+             f"{base}|prev2={prev2}", f"{base}|prev,next={prev}|{nxt}",
+             f"{base}|first={1 if i == 0 else 0}"]
+    if extra is not None:
+        feats += [f"{base}|{f}" for f in extra(pred, role, cands, j, u)]
+    return feats
 
 
 class _Ranker:
@@ -509,7 +512,8 @@ class LearnedSpanReader:
 
     def __init__(self, id: str = "learned.span@1", *, epochs: int = 8,
                  weights: Mapping[str, float] | None = None,
-                 mentions: Any = None, extra_features: Any = None) -> None:
+                 mentions: Any = None, extra_features: Any = None,
+                 extra_role_features: Any = None) -> None:
         """``weights`` maps a predicate to its downstream sensitivity.
 
         Measured by intervention, not by correlation --
@@ -531,6 +535,12 @@ class LearnedSpanReader:
         #: importing one. A corpus too small to learn that `subsidiary`,
         #: `division` and `unit` behave alike can be handed the fact.
         self.extra = extra_features
+        #: ``(pred, role, candidates, j, unit) -> [feature]``. The ranker's own
+        #: hook. A relation stated as *X is a subsidiary of Y* is a fact about
+        #: which SLOT Y fills, so the words between two mentions belong here and
+        #: not only in the sentence classifier -- which is where they were first
+        #: put, and why they bought nothing.
+        self.extra_role = extra_role_features
         self.lex = Lexicon()
         self.clf = Perceptron()
         self.rankers: dict[str, _Ranker] = defaultdict(_Ranker)
@@ -651,10 +661,20 @@ class LearnedSpanReader:
         return feats
 
     def _weight(self, label: str) -> float:
+        """The cost of getting this label wrong.
+
+        ``NONE`` may be named explicitly, and on a distantly supervised corpus it
+        has to be: the negative class outnumbers every relation by an order of
+        magnitude, so a margin-based classifier abstains almost everywhere and no
+        feature set can fix it. When it is not named it falls back to the mean,
+        which is the neutral choice for a corpus whose classes are balanced by
+        construction.
+        """
         if not self.weights:
             return 1.0
         if label == NONE:
-            return statistics.mean(self.weights.values())
+            return self.weights.get(NONE,
+                                    statistics.mean(self.weights.values()))
         return self.weights.get(label, 1.0)
 
     def _fit_rankers(self, units: Sequence[Unit]) -> None:
@@ -675,12 +695,15 @@ class LearnedSpanReader:
             for pred, spec, u, cands, gold in examples:
                 r = self.rankers[f"{pred}:{spec.role}"]
                 r.tick()
-                scores = [r.score(_role_features(pred, spec.role, cands, j, u))
+                scores = [r.score(_role_features(pred, spec.role, cands, j,
+                                                 u, self.extra_role))
                           for j in range(len(cands))]
                 best = max(range(len(cands)), key=lambda j: scores[j])
                 if best != gold:
-                    r.update(_role_features(pred, spec.role, cands, gold, u),
-                             _role_features(pred, spec.role, cands, best, u))
+                    r.update(_role_features(pred, spec.role, cands, gold, u,
+                                            self.extra_role),
+                             _role_features(pred, spec.role, cands, best, u,
+                                            self.extra_role))
         for r in self.rankers.values():
             r.average()
 
@@ -804,7 +827,8 @@ class LearnedSpanReader:
                 if r is not None and len(pool) > 1:
                     j = max(range(len(pool)),
                             key=lambda j: r.score(
-                                _role_features(pred, spec.role, pool, j, u)))
+                                _role_features(pred, spec.role, pool, j, u,
+                                               self.extra_role)))
                 else:
                     j = 0
                 tok = pool[j]
