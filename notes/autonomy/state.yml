@@ -1,6 +1,35 @@
 # Working memory. Guides the present; it does not reproduce the project history.
 # History lives in RESEARCH_LOG.md, notes/findings/, predictions.jsonl, git log.
 
+# STRATEGIC FRAME, set by the user 2026-08-19 after the reading session. This
+# outranks the task list and reorganises the next stretch.
+central_question: >
+  WHAT INFORMATION MUST BE RECOVERED FROM OBSERVATIONS, WITH WHAT FIDELITY, FOR
+  CHEAP STRUCTURED COMPUTATION TO REMAIN USEFUL?
+
+  The architectural pivot worked and is no longer in question: typed world IR,
+  flow DAG and heterogeneous kernels are viable, and multi-kernel reasoning over
+  a CORRECT world is not the bottleneck. World construction from observations is.
+
+  Explicitly NOT the work: the 179-lesson leaderboard; certification as a main
+  thread; another kernel because the registry accepts one; mass re-running of
+  historical numbers the honest surfaces invalidated. Dead branches may stay
+  historically wrong with an explicit supersession.
+
+  The organising formalism: X --R--> W_hat --K--> Y, and the equivalence
+  W1 ~_K W2 iff K(W1) = K(W2). World construction is plausibly X -> [W]_K rather
+  than X -> W: the reader need only reconstruct the world MODULO THE DISTINCTIONS
+  THE QUERY CARES ABOUT. That connects insensitivity certificates, critical-claim
+  recall, query-dependent parsing, ambiguity preservation and cost into one
+  question, and it is the abstraction to push toward.
+
+  Standing process corrections: compress several observations into ONE
+  transferable mechanism before promoting; a promotion threshold of "would this
+  change how a competent researcher allocates tomorrow"; a theory pass every 2-4
+  experiments, used to DELETE experiments; no open-class cue-list accumulation --
+  name the latent category instead; and classify a feature by the transformations
+  it SHOULD be invariant to rather than asking only whether shuffling breaks it.
+
 thesis: >
   Can this system construct enough of the right world from observations that its
   already-cheap structured reasoning becomes useful end-to-end?
