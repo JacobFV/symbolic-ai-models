@@ -529,6 +529,7 @@ both fell** — see §5. What is parked now:
 | "the corpus has no genuine two-source property conflict" (three findings) | **false**: four airports where openflights and geonames disagree on country and the disagreement survives ICAO agreement, name agreement and a self-incoherence filter — EUN, SMW, VIL (Western Sahara) and PRN (Kosovo). Broadest defensible count 8 |
 | "make dependency-certification a substrate-wide contract" (this handover's own §7 item 1, previous revision) | the **lower-value half** of the right idea. Every kernel reporting its read set is worth **0.3x–1.0x** per quarter, and the read set over-reads the actual dependency by up to **6,591x**. What pays is a **witness** plus a **minimal** dependency, and neither is producible by the generic mechanism |
 | "two unrelated arms, one axis — now worth treating as a property of the substrate rather than two observations" (mine) | **four**, and two of them **predate the session**. The existential/universal asymmetry was measured on this same route network before the certificate arm began (§3, 247x / 2.0x). What this session added is the *maintenance* economics and the appearance of the axis in plain set queries with no proof machinery at all — which is the better claim, and the one that answers `datalog/proof.py`'s stated open question |
+| five end-to-end query classes quoted with **no floor** (mine, across three findings) | audited with `scripts/query_floors.py`: **nothing retracts**, no floor meets its system. But `collaborators` had **28.8%** of its score bought by a query-blind popularity guess — read its lift as **0.297**, not 0.417 — and the other four lose 4–6%. `symbolic_ai_core/cost.py` had been enforcing `accuracy - floor` in code the whole time |
 | "the lever is the logical form of the claim" (mine, two hours later) | **wrong.** The lever is the *true dependency* of the claim. The 95x NP/coNP gap on set cover is real; the 8,932x version of it on shortest path collapses to **1.4x** once the optimality certificate is hand-derived, and the rest was the BFS over-reading |
 
 ## 6. Blocked, and it needs a human
@@ -598,7 +599,13 @@ has a demonstrated failure rate.
    conclusion stated three times the same day.
 8. ~~Find where completeness stops winning.~~ **Done — §3h**, including its own
    falsifier, which cut the headline from 95.1% to 8.1%.
-9. **The shrinking-corpus inversion.** One arm, and it is the falsifier for the
+9. ~~The shrinking-corpus inversion.~~ **Run — §3b. It narrows 93x → 72x and
+   does not invert; the belief held at 0.8 was false.**
+10. **Put this session's work through `symbolic_ai_core/cost.py`.** Everything
+    here was priced with hand-rolled arithmetic in scripts while the repo's own
+    ledger sat unused, and the floors now exist to make it computable. *Why it
+    matters:* a number on a different basis from the published ones is not
+    comparable with them, which is most of what a ledger is for. One arm, and it is the falsifier for the
    witness asymmetry rather than another confirmation of it.
 
 **What not to do:** more kernels (the data says stop at eight); more query

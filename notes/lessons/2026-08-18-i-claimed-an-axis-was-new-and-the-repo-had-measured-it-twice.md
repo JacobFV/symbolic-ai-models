@@ -76,3 +76,33 @@ And the reciprocal duty: **when a finding turns out to answer a question already
 posed somewhere in the repo, say so in the finding.** A result that closes a
 stated open question is worth more than one that arrives from nowhere, and this
 session had three of them and claimed none.
+
+## The same root cause, in code rather than in notes
+
+Hours later, checking whether my hand-rolled cost arithmetic agreed with the
+repo's, I read `symbolic_ai_core/cost.py` properly for the first time. It exists
+to compute exactly what I had been computing by hand all session, and it encodes
+a discipline I had skipped: it divides by **`accuracy - floor`**, never by
+`accuracy`, so a system at its floor reports *infinite* cost per unit of
+capability rather than a small one. `CLAUDE.md` states the same rule in words —
+*a lift is quoted against a floor or not quoted at all* — and I had published five
+end-to-end query classes with **no floor at all**.
+
+Audited: nothing retracted, but `collaborators` had **29%** of its score bought by
+a guess that ignores the query. And the extraction cost-per-correct bound survived
+only because that floor genuinely is 0.000 — dividing by accuracy happened to
+equal dividing by accuracy-above-floor. **By luck, not by discipline.**
+
+So the guard generalises past `notes/`:
+
+> **Before building an instrument, look for the one the repo already has.** Not
+> just for prior *findings* — for prior *code*. A module that computes your
+> quantity also encodes the conventions your number has to satisfy to be
+> comparable with everything already published, and rolling your own silently
+> opts out of them.
+
+The cheap version, and it costs one command:
+
+```bash
+ls symbolic_ai_core/ && grep -rl "<the quantity>" symbolic_ai_core/ symbolic_ai_kernels/
+```
