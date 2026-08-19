@@ -35,8 +35,9 @@ from __future__ import annotations
 
 import re
 
-__all__ = ["stale_by_tense", "stale_by_cancellation", "filter_stale",
-           "TENSE", "CANCELLING", "CANCELLING_V1"]
+__all__ = ["stale_by_tense", "stale_by_cancellation", "stale_by_verb",
+           "filter_stale", "TENSE", "CANCELLING", "CANCELLING_V1",
+           "TRANSITION_ROOTS"]
 
 #: Past-tense and perfect auxiliaries. A sentence in the past, nothing more.
 TENSE = ("was", "were", "had", "used to", "did")
@@ -139,3 +140,54 @@ def filter_stale(text: str, gate) -> str:
         kept = [s for s in sents if not gate(s)]
         out.append(" ".join(kept))
     return "\n\n".join(out)
+
+
+#: Taxonomic ancestors that denote cessation, departure or loss of possession.
+#: Chosen from WordNet's own hypernym closure -- not from the supersenses, which
+#: classify by **subject matter** rather than by aspect and cannot separate a
+#: verb that asserts a relation from one that ends it (``cease`` is
+#: *verb.stative*, ``divest`` is *verb.possession*, exactly like ``own``).
+TRANSITION_ROOTS = frozenset({"change", "end", "discontinue", "leave", "exit",
+                              "deprive", "transfer", "remove"})
+
+
+def stale_by_verb(sentence: str) -> bool:
+    """A token whose WordNet hypernym chain reaches a cessation ancestor.
+
+    The signal the cue lists cannot reach: *"sub_98 left the group in April"* is
+    stale because of what **leave** means, not because of any word on a list.
+
+    **It has no part-of-speech knowledge and that is the binding limit.** Every
+    token is tested as a verb, so *"the end of the study"* and *"a change in
+    protocol"* fire on their nouns. Measured on real prose the false-positive
+    rate is what decides whether this is usable, and it is reported beside the
+    recall rather than left out.
+
+    **Measured and NOT usable as a gate.** Kept because a dead end that is not
+    written down gets re-derived. On verbs held out from the set used to choose
+    the roots: recall **0.42** at 0.08 false positives with all eight roots,
+    **0.33** at **0.00** with the deep six. The design set read 0.86 and 0.64, so
+    a fifteen-verb negative class inflated it about twofold.
+
+    At the **sentence** level it fires on **0.522** of real scientific prose with
+    all eight roots and **0.058** with the deep six, against 0.003 for
+    `stale_by_cancellation`. And end to end on solvency it lifts the uncued floor
+    0.485 -> 0.635 while taking the clean surface **1.000 -> 0.650**, on one
+    word: ``dated``, a participial modifier in every filing sentence whose first
+    WordNet sense is the romantic one and whose chain reaches *leave*.
+
+    Two failure modes at once, and the diagnostic separates them: a nominal
+    filter (skip a token after *the*, *of*, *in*...) moves 0.522 -> 0.426 and
+    0.058 -> 0.045, so **part of speech is not the dominant problem -- ancestor
+    depth is**. ``change`` accounts for 6,899 token fires and ``transfer`` 2,191,
+    against ``leave`` 315, ``end`` 271, ``remove`` 91, ``exit`` 12, ``deprive``
+    5. See `scripts/verb_class_staleness.py`.
+    """
+    from .wordnet import hypernym_closure, is_verb_lemma
+    for token in re.findall(r"[A-Za-z][a-z]+", sentence):
+        low = token.lower()
+        if not is_verb_lemma(low):
+            continue
+        if TRANSITION_ROOTS & hypernym_closure(low):
+            return True
+    return False
