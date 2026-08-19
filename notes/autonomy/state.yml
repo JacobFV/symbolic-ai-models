@@ -1,727 +1,83 @@
-schema_version: 1
-# Working memory across autonomous invocations. Not a bureaucracy: updated when
-# the research state moves, not after every command. HANDOVER.md remains the
-# human-readable cold-start document; this is the machine-readable one.
-updated: 2026-08-18
+# Working memory. Guides the present; it does not reproduce the project history.
+# History lives in RESEARCH_LOG.md, notes/findings/, predictions.jsonl, git log.
 
-mission:
-  headline_correction_2026_08_18: >
-    Cost ratio at FIXED QUALITY is the comparison anyone would make. By that
-    measure the advantage is 1/f, and f -- the fraction of queries the system
-    cannot settle -- is a property of the DOMAIN'S STRUCTURE-PROVENANCE, not of
-    the technology. Filed structure (GLEIF, SEC): f = 0.216%, advantage 463x at
-    quality 1.0. Derived structure (OpenAlex affiliations): f = 56%, advantage
-    1.8x at quality 0.85. 259x between regimes, same formula and same code.
-    Quoting either number without naming the regime is the error, and the
-    repo's earlier million-fold figures were all measured in the filed regime.
-  north_star: >
-    $ per correct answer, an order of magnitude below neural inference, with the
-    reasoning inspectable rather than inferred. Priced against a *realistic*
-    opponent, not one handed the whole corpus.
-  current_thesis: >
-    The one capability that survived contact with a realistic retrieval opponent
-    is dependency certification: naming exactly what an answer rests on. A
-    retriever can certify determinacy in <=4 rounds but has no stopping rule and
-    over-fetches 46x. The open question is whether the certificate is worth
-    money, and the untested claim is that its value shows up not at query time
-    but at *maintenance* time -- work not done when the corpus updates.
+thesis: >
+  Can this system construct enough of the right world from observations that its
+  already-cheap structured reasoning becomes useful end-to-end?
 
-frontier:
-  current_question: >
-    Where else does an answer split into a half that has a witness and a half
-    that does not -- and can a kernel be made to report the witness? The
-    certificate ceiling is set by the LOGICAL FORM of the claim, and three
-    results in this repo now say the cheap half of a problem is the useful half.
-  why_it_matters: >
-    It is the only lever measured to move the ceiling by two orders of magnitude,
-    and it is a capability an LM has no analogue of: it cannot hand you a
-    witness whose continued existence you can check for 30 nanoseconds.
-  current_bottleneck: >
-    Kernels return claims and a delta; none of them returns a witness. The ASP
-    kernel already has the model in hand and throws it away.
-  expected_unlock: >
-    A witness field on KernelResult makes the 95x available to every solver
-    answer in the repo rather than to one script.
+frontier: text -> world IR -> multi-kernel flow -> structured output + text
+
+bottleneck: >
+  World construction from observations. The middle of the pipeline is
+  demonstrated -- typed world, explicit flow DAG, heterogeneous kernels,
+  multi-kernel composition verified against an oracle sharing no code. The
+  world is still RECEIVED from a generator rather than READ.
 
 measured:
-  - claim: "A query pays for the conflicts it reads; 4,992 conflicts cost <=1 read per query."
-    evidence: notes/findings/2026-08-18-a-query-pays-for-the-conflicts-it-reads-and-4992-of-them-cost-one.md
-    commit: 5c4e283
-  - claim: "The solver rung changes the answer on 15 of 3,044 hubs; the cheap bound is exact on 99.5%."
-    evidence: notes/findings/2026-08-18-the-solver-rung-is-needed-on-15-hubs-out-of-3044.md
-    commit: 467fa4d
-  - claim: "99,738x of the published advantage was the framing; four query classes land within 1.2x at ~5e7."
-    evidence: notes/findings/2026-08-18-the-advantage-curve-was-mostly-the-framing-and-what-is-left-is-a-constant.md
-    commit: a528890
-  - claim: "Ideal retrieval certifies determinacy in <=4 rounds; what it lacks is a stopping rule (1.128% silently wrong) and it over-fetches 46x."
-    evidence: notes/findings/2026-08-18-retrieval-can-certify-determinacy-in-four-rounds-what-it-lacks-is-a-stopping-rule.md
-    commit: 46e4a49
-  - claim: "SEC 13F is on disk as two filed snapshots -- dec2025 3,473,209 rows and a later 3,822,885 -- so the corpus delta is real, not synthetic."
-    evidence: data/sources/sec-edgar/commandagi-r2-2026-08-15/sec13f/
-    commit: 9dd6970
+  - flood flow: 3 kernels, world->reach->world2->routes->loads->fused, agrees
+    with a brute-force oracle that shares no code with the kernels
+  - flood reader (regex template): 300/300 worlds round-trip exactly, and its
+    own docstring says a human-written report would defeat it
+  - parse fidelity: exact-set 1.000 at p=0, 0.500 at p=0.15, crosses the
+    strongest floor (0.450) at p ~ 0.17
+  - per-kind fragility at p=0.20: mass 0.733, capacity 0.747, link 0.800,
+    demand 0.900, load_limit 0.907, flooded 0.960
+  - certification (CLOSED): aim <= 1/(1-accuracy); curriculum models 7.7-32.9%
+    accurate so their ceiling is 1.49x; federated arms 4.69x-57.5x
+  - episode-level floor peeks at eval answers: 0.483 at 4 eps/lesson, 0.297 at
+    32, so lifts across different n_eval are not comparable
 
-  - claim: "A read-set dependency certificate is worth 0.3x-1.0x per quarter and 37x-1,342x per filing on SEC 13F; its ceiling is 1/P_hit with P_hit ~ r * keys_per_update / total_keys, so dependency size is the ceiling and compute cost only decides whether it is reached."
-    evidence: notes/findings/2026-08-18-the-certificate-is-worth-nothing-per-quarter-and-1342x-per-filing.md
-    commit: 2000e97
-  - claim: "An optimum splits into an existential half with a 12-edge witness (P_hit 0.0300%, 3,309x) and a universal half that must read the complement (P_hit 2.8589%, 35.0x). 95x, and it buys a maintained bound rather than a maintained answer."
-    evidence: notes/findings/2026-08-18-an-optimum-is-two-claims-and-one-of-them-is-95x-cheaper-to-keep.md
-    commit: 7a0423b
-  - claim: "The corpus does contain a genuine two-source property conflict after all: four airports (EUN, SMW, VIL on Western Sahara; PRN on Kosovo) where openflights and geonames disagree on country, surviving ICAO and name agreement."
-    evidence: notes/findings/2026-08-18-the-corpus-does-contain-a-two-source-property-conflict-four-airports.md
-    commit: 9b327e8
-  - claim: "An existential claim's minimal dependency is the size of its witness (linear in the answer); its universal complement's is the excluded search space (grows with the ball). On the route network: 2.0x apart at d=2, 146x at d=6, 874x at d=10 where optimality is 32% of the corpus. On 13F's co-holding graph, which has no diameter, 0.2x."
-    evidence: notes/findings/2026-08-18-a-witness-grows-linearly-and-its-complement-grows-with-the-ball.md
-    commit: cf0f02f
-  - claim: "Seven openflights IATA nodes are two airports each. Blast radius: airport_country 0.117% of nodes but 0.234% of ANSWERS -- a merged node is also a neighbour, so counting dirty nodes understates damage by 2x. range_limited_routing 0. Nothing published moves: 1-NN 0.9078 -> 0.9098."
-    evidence: notes/findings/2026-08-18-seven-iata-nodes-are-two-airports-each-and-it-moves-the-headline-by-0-0021.md
-    commit: HEAD
-  - claim: "The 99,738x this repo retracted as 'just the framing' is the amortisation constant: breakeven = corpus_tokens/dependency_tokens = 4.08e6/41 = 99,512 queries, identical on both price sheets because our per-query cost is eleven orders below either. At 13F's 32% quarterly churn that is 350 queries/day to stay ahead of re-extraction."
-    evidence: notes/findings/2026-08-18-the-framing-factor-we-retracted-is-the-amortisation-constant.md
-    commit: pending
-  - claim: "No source on disk carries raw prose. All 19 are (id,label,kind,body,source_url) or (source_id,target_id,kind); the longest natural-language field in 14 GB is a patent title at 59.4 chars mean; patentsview bodies are 0 chars; courtlistener is a 77M-edge citation map with no text column."
-    evidence: scripts/extraction_breakeven.py docstring; verified across data/sources/
-    commit: pending
-  - claim: "The first arrow measured for the first time, on 5,000 OpenAlex works. Symbolic extraction from prose reaches F1 0.379 on unseen affiliation strings -- 52.9% of a 0.717 ceiling the task itself imposes, because OpenAlex labels institutions per AUTHOR not per string so the label is not a function of the input. Three principled improvements over a naive dictionary bought +0.077."
-    evidence: notes/findings/2026-08-18-the-first-arrow-is-cheap-and-bad.md
-    commit: d45c9c3
-  - claim: "Cost per CORRECT extraction favours the symbolic extractor by at least 1,766,210x whatever a model scores, since a model cannot exceed F1 1.0. First credential-free bound on the comparison ROADMAP 0b blocks."
-    evidence: same finding, section C
-    commit: 0cf99cd
-  - claim: "The crossover does NOT transfer across corpora: 5,242 on prose against GLEIF's 99,512, because corpus_tokens scales with corpus size. The transferable term is the dependency -- 302 tokens on prose against 41, i.e. 7.4x larger."
-    evidence: same finding, section A
-    commit: 0cf99cd
-  - claim: "A ZERO-SHOT ROR registry lookup beats a dictionary learned from 3,500 works on all three splits (+0.039, +0.103, +0.059) with no training data and at 41,668 ns against 96,915. 'External resources are givens' validated where it matters."
-    evidence: notes/findings/2026-08-18-a-zero-shot-registry-beats-a-learned-dictionary-and-both-plateau-at-62-percent.md
-    commit: 7722dd2
-  - claim: "Six symbolic extraction rungs plateau at 62.3% of a measured ~0.99 ceiling. Ordering identical on three splits and the tuned split is the WORST, so the tuning debt did not bite."
-    evidence: same finding
-    commit: 7722dd2
-  - claim: "The extraction residual is DISAMBIGUATION, not retrieval: 1 string in 6,489 produced no candidate, and 38.2% of true institutions are never proposed because a near-identical name was. 'University of Wisconsin' names 13 ROR campuses and the city that separates them is in the input string, unread."
-    evidence: same finding, error breakdown
-    commit: 7722dd2
-  - claim: "The 0.717 extraction ceiling I published was my own task construction (flattened authorships). Corrected: 0.988 F1 / 98.2% exact. The label IS a function of the input and the shortfall is genuine extraction failure, not label noise."
-    evidence: notes/findings/2026-08-18-the-first-arrow-is-cheap-and-bad.md section D bis
-    commit: fef77b3
-  - claim: "A geography view added to entity linking is worth nothing under three admission rules (-0.036, -0.007, -0.001 against abstaining). It recovers 81% of the damage that relaxing abstention does and never gets ahead. 65% of ambiguous components carry no geographic evidence."
-    evidence: notes/findings/2026-08-18-a-second-view-that-undoes-a-mistake-without-being-worth-making-one.md
-    commit: 1130169
-  - claim: "Extraction error amplifies 1.85x into aggregate queries, and recall is what dies: precision holds at 84-94% while collaborators recall falls to 20.4%, because an abstaining extractor builds a world with HALF the entities (2,270 vs 4,539). A count over it is off by 100%."
-    evidence: notes/findings/2026-08-18-the-extractor-that-wins-on-facts-loses-on-every-answer.md
-    commit: 61da9ea
-  - claim: "The extractor that wins on fact-level F1 by 0.121 LOSES on every aggregate query (collaborators +0.085, works_at +0.058, count error halved for the worse-on-facts one). Two defensible metrics rank the two extractors inversely, and the one this programme optimises corresponds to nothing a user asks for."
-    evidence: same finding
-    commit: 61da9ea
-  - claim: "Monotone queries (union, intersection) tolerate over-generation and the one non-monotone class tested (set difference, antitone in its second argument) does not: completeness wins +0.177 on intersection and loses -0.117 on difference. Same axis as the witness result."
-    evidence: notes/findings/2026-08-18-monotone-queries-repair-a-noisy-world-and-non-monotone-ones-cannot.md
-    commit: 4cbf891
-  - claim: "Intersection's noise filtering requires INDEPENDENT errors. works_at_both precision is 95.1% on co-occurring institution pairs and 8.1% on registry-CONFUSABLE ones -- below the 36.5% fact-level rate. Over-generation is free where disambiguation is not needed and ruinous where it is."
-    evidence: same finding, correction section
-    commit: f3d6010
-  - claim: "The Witness contract is carried by 4 kernels of 8 (asp, smt, lean, datalog-opt-in). The other four split three-way rather than two: egraph COULD carry one (its equivalent_form claim's witness is the rewrite sequence, unrecorded) and rigid/geo/economy have none to have, because a pose, a geodesic distance and a consolidated total are function evaluations rather than searches."
-    evidence: tests/test_witness.py::TestWitnessCoverage
-    commit: pending
-  - claim: "The cost advantage at FIXED QUALITY is 8.1x, not 10^6. Escalating the 12.3% of extraction cases where the symbolic layer produces nothing takes it from 2,061,364x to 8.1x; reaching 83.5% quality costs 2.0x. The advantage is 1/f where f is the escalated fraction, and the million-fold numbers exist only at f=0, i.e. at 52.6% quality."
-    evidence: notes/findings/2026-08-18-the-million-fold-advantage-is-8x-the-moment-you-escalate-anything.md
-    commit: pending
-  - claim: "The extractor cannot tell what it knows: its `certain` tier scores F1 0.666 against a pre-registered 0.7 threshold, and beats `ambiguous` by only +0.150. But SILENCE is a good escalation signal -- escalating it buys 1.00 quality per unit escalated against ambiguity's 0.48, because silent cases score 0.000 and nothing is re-bought."
-    evidence: same finding
-    commit: pending
-  - claim: "Scoping survives a dense graph. On the filed-real routing mixture: read p50 1, max 8, 0 refusals in 250 queries, anchor 179/179. What breaks is wall time -- 48.3 ms/query against GLEIF's 2.8 us -- and the governing variable is conflict rate x read footprint, not topology."
-    evidence: notes/findings/2026-08-18-scoping-survives-a-dense-graph-and-what-breaks-is-wall-time-not-refusal.md
-    commit: 2b8443d
+theory:
+  - name: certification_ceiling
+    status: exact_identity
+    formula: "realised = recall/f_flagged; ceiling = 1/f_needed"
+    consequence: >
+      Do not optimise certification on low-accuracy systems. THREAD CLOSED.
+    evidence: 5 independent rows, worst error 1.2%; the rest are identities
+  - name: reader_survival
+    status: empirical_scaling_law
+    formula: "S = F + (1-F) q^k,  k = 9.35, F = 0.338, rmse 0.015"
+    variables: {q: per-claim recall, k: independently-required claims}
+    consequence: >
+      Reader needs q = 0.983 for S = 0.90, not the ">= 90%" the sweep was read
+      as saying. k is additive across kinds: mass 2.31, capacity 2.16, link
+      1.61, demand 0.73, load_limit 0.68, flooded 0.28 -- so entity attributes
+      carry ~8x the leverage of the flooding relation. And S is more sensitive
+      to k than to q: halving k is worth more than a much better reader, which
+      argues for emitting ambiguity rather than for a bigger parser.
+    next_test: >
+      Does fitted k match the answer's DEPENDENCY SIZE, which the certificate
+      machinery can measure directly? Agreement promotes this toward a
+      mechanistic model; disagreement kills it.
 
 beliefs:
-  - claim: "The certificate results are stated against an opponent that re-derives everything per update. Against incremental view maintenance (DBSP, differential dataflow) the advantage would be far smaller and possibly inverted."
-    confidence: 0.85
-    basis: "IVM maintains the answer at delta cost instead of re-deriving it; the numbers here carry no claim against a database"
-    falsifier: "an IVM system that cannot maintain an answer produced by an external solver with no per-query delta rule"
-  # FALSIFIED 2026-08-18. Held at 0.8 and wrong. Reading the same two filed
-  # snapshots in the opposite order makes the corpus shrink for real, and the
-  # asymmetry narrows 93x -> 72x rather than inverting -- exactly the 23% rise
-  # in the deletion rate. Dependency size dominates; corpus direction is
-  # second-order. Kept here rather than deleted, because a belief recorded so a
-  # contradiction would be a finding should show the contradiction.
-  - claim: "Most kernels in this repo have a witness available and discard it. The ASP kernel holds the model and returns only claims."
-    confidence: 0.7
-    basis: "read of symbolic_ai_kernels/asp/kernel.py; the cover script had to re-extract picked filers by hand"
-    falsifier: "auditing the eight kernels and finding the answers are mostly not existential"
-  - claim: "airport_country's published accuracy is not quotable as it stands, because its ground truth IS openflights' in-country edge -- one side of the very disagreement it is scored against -- and openflights merges distinct airports sharing an IATA code."
-    confidence: 0.75
-    basis: "reported by the two-source conflict arm; blast radius under audit"
-    falsifier: "the audit finds the contaminated nodes never appear in the task's instances"
-
+  - The reader must be near-perfect on answer-critical claims, and only those.
+    Dependency-weighted recall is likely a better target than global recall.
+  - Ambiguity should be emitted, not collapsed. Kernels can branch or bound.
 unknowns:
-  - question: "Do openflights and geonames both carry a country for the same place, and do they disagree?"
-    importance: "Would be the first genuine two-source property conflict in the corpus; three findings in a row have said there is none."
-    cheapest_discriminating_test: "join on coordinates/IATA and diff the country field"
-  - question: "Does scoping buy anything on a dense graph?"
-    importance: "Parked with a prediction that it buys little; a contradiction is publishable."
-    cheapest_discriminating_test: "possible_answers_scoped over range_limited_routing on the route network"
-  - question: "Is the ~5e7 fact-in-kernel vs fact-in-prompt constant a property of 20-character identifiers?"
-    importance: "It is the whole cost argument's remaining constant."
-    cheapest_discriminating_test: "re-price on a prose corpus (gutenberg, stackexchange)"
+  - What the template reader does under paraphrase. corrupt() perturbs the
+    recovered world; nothing perturbs the TEXT. This is the front's true zero.
+  - Whether q^k transfers to a structurally different domain.
+  - Precision failures (invented/misread claims) are unswept; MISREADS exists.
 
-active_work: []
+active_work: none -- turn ended after the theory pass
 
-candidate_directions:
-  - id: cert-maintenance-13f
-    expected_information_gain: high
-    expected_capability_gain: high
-    strategic_leverage: high
-    estimated_cost: medium
-    reason: "Turns the certificate into a priced capability at maintenance time on a real filed delta."
-  - id: readset-substrate
-    expected_information_gain: low
-    expected_capability_gain: high
-    strategic_leverage: high
-    estimated_cost: low
-    reason: "Infrastructure demanded by the above; build only what it demands."
-  - id: two-source-property-conflict
-    expected_information_gain: high
-    expected_capability_gain: low
-    strategic_leverage: medium
-    estimated_cost: low
-    reason: "Cheap, and either produces the corpus's first real cross-source conflict or kills the hope."
+next_actions:
+  - Build the multi-paragraph observation surface with exact span->claim
+    alignment (5 paragraphs: actors, infrastructure, events, quantities, query).
+  - Then 3-5 cheap reader arms measured at WORLD level plus end-to-end, with
+    oracle-world as the ceiling and the gap decomposed into reader/kernel/
+    renderer loss.
+  - Test fitted k against measured dependency size (cheap, kills or promotes
+    the law).
 
 blockers:
-  - >
-    The 68x cross-source cliff is irreducible by modelling and needs ONE
-    crosswalk file linking SEC CIK to GLEIF LEI. Nothing on disk carries it:
-    SEC has no country, `same_as` is name-derived, and GLEIF's external
-    identifier is the local company-register number (NVIDIA: Delaware 2862596)
-    rather than the CIK (1045810). Candidate sources to try: SEC EDGAR
-    company-facts or 13F cover pages, which sometimes carry an LEI; GLEIF's
-    published relationship files; or an open crosswalk. This is the highest-value
-    acquisition available -- it would move the federated advantage from 7x toward
-    the 463x the single-source case already reaches.
+  - Paid API credentials for any accuracy comparison against a language model
+    (also gates the "lm parser ceiling" row of the reader table).
+  - Free CourtListener API token (v4 returns 401).
 
-  - "Every accuracy comparison against a language model is unrun and NOT QUOTABLE: needs paid API credentials. User's fork, ROADMAP item 0b."
-  - >
-    PARTLY CLEARED. Raw prose is on disk via OpenAlex and the first arrow is
-    measured. What remains blocked is the BETTER corpus: CourtListener's v4 API
-    returns 401 and both bulk listings are closed (404/403). It is the strongest
-    available test of this arrow because its 77M-edge citation map is ALREADY in
-    this repo as ground truth and citations appear in opinions as prose -- a
-    sentence-level extraction task, where OpenAlex offered only a short-string
-    one. The token is FREE but requires registering an account, which is an
-    outward-facing action under the user's identity. One signup unlocks the
-    strongest version of the programme's weakest measurement.
-
-research_debt:
-  - assumption: "HANDOVER.md section 3 is a complete-enough view of what is already measured."
-    load_bearing_for: ["every novelty claim an arriving agent makes"]
-    reason_to_revisit: >
-      FALSE, and it cost this session three mis-attributed findings. The two
-      prior witness findings were absent from section 3 and grep on
-      notes/findings/ would have found them in two seconds. The handover is a
-      CURATED view and curation is lossy; it says where the edge is, not what is
-      known. Restored to section 3 on 2026-08-18.
-
-  - assumption: "Every advantage ratio assumes the world already exists."
-    load_bearing_for: ["the ~5e7 constant", "every row of the cost table", "the certificate arm's maintenance advantages"]
-    reason_to_revisit: >
-      Measured this cycle: the build step costs 99,512 queries' worth of saving,
-      which is real but bounded and is met by construction for filed domains.
-      It is NOT met, and cannot currently be tested, for derived-from-observation
-      domains -- which is the target APPROACH.md names.
-  - assumption: "The cost rows are input-token lower bounds with perfect accuracy assumed for both sides."
-    load_bearing_for: ["every advantage ratio in HANDOVER section 3"]
-    reason_to_revisit: "If accuracy is ever measured and the symbolic side is not perfect, every ratio moves."
-
-calibration:
-  measured: 2026-08-18, over 36 hypotheses with recorded outcomes
-  confidence_works: >
-    Mean confidence 0.69 on the predictions that landed inside their band, 0.58
-    on the ones that were wrong. Do not adjust it.
-  magnitude_is_biased: >
-    13 over-optimistic, 1 mixed, 0 under-optimistic. I predict the magnitude a
-    mechanism would have if it were the only thing operating, and the world
-    supplies a second constraint I did not price -- coverage, correlation, a
-    selection effect, an offsetting cost.
-  guard: >
-    Before writing a range, name what would CAP it and say whether that is
-    measured. If the cap is unmeasured, state a bound rather than a band.
-    See notes/lessons/2026-08-18-my-magnitude-predictions-are-over-optimistic-thirteen-to-nil.md
-
-last_cycle:
-  action: >
-    Built the dependency-certificate substrate and priced it on the first real
-    corpus delta this repo has (two filed SEC 13F snapshots); ran two scouting
-    arms in parallel worktrees.
-  result: >
-    Four findings. The read-set certificate is worth 0.3x-1.0x per quarter and
-    37x-1,342x per filing; its ceiling is dependency size, not compute cost;
-    splitting an optimum into a witness half and an optimality half is worth a
-    further 95x. Both scouts contradicted a recorded prediction: the corpus DOES
-    have a two-source property conflict (four airports), and scoping DOES
-    survive a dense graph (wall time breaks first, not refusal).
-  belief_update_final: >
-    Four versions of the certificate claim in one day, three of them corrected
-    by the next experiment. The keeper: logical form decides the growth rate of
-    a claim's minimal dependency, and the instance decides whether you have gone
-    far enough along it to notice. Build witnesses; refuse to fake minimality
-    for universal claims.
-  belief_update: >
-    HANDOVER item 1 was the lower-value half of the right idea. Making every
-    kernel report its read set buys 0.3x-1.0x. What pays is the logical form of
-    the claim: report a WITNESS where the answer has one. Three results in this
-    repo now say the cheap half of a problem is the useful half.
-
-next:
-  preferred_action: leave-certification-it-is-closed-and-pick-an-unmeasured-axis
-  why_now: >
-    Certification is now closed as a line of work, and closed properly: the
-    theory is one expression (realised = recall/f_flagged, ceiling = 1/f_needed,
-    3b's 1/P_hit being the sound case), the instruments are built and validated
-    (Targeting, Sensitivity, two guards), and the numbers span 1.02x to
-    131.6x with the spread fully explained by f_needed.
-
-    There is nothing left to measure here that the algebra does not already
-    answer. On the curriculum, f_needed is 0.67-0.92 so the ceiling is 1.49x
-    whatever anyone does. On federated data the mechanism is understood and the
-    remaining gap is over-approximation, which needs an update stream nothing
-    here produces.
-  what_is_genuinely_unmeasured: >
-    Six cycles have all run on ONE axis: what a symbolic system is worth per
-    unit of expensive work avoided. The mandate's five properties in APPROACH.md
-    include several nothing this session touched -- and CLAUDE.md is explicit
-    that work moving the BENCHMARK toward those properties outranks work moving
-    a model up the existing table. Read APPROACH.md before choosing, because the
-    task list is a record of what looked worth doing when it was written.
-  do_not: >
-    Do not run another certification arm anywhere. Do not present a rearranged
-    definition as a confirmation -- check the two paths a validation row's
-    numbers came from before counting it.
-  previous_preferred_action: raise-base-accuracy-or-stop-pricing-certification-here
-  why_now: >
-    The back-off trade is measured and closed: real, and one-sided. It buys
-    +0.021 and +0.030 label_acc and costs 0.04x of a metric capped at 1.49x, and
-    for syllogism-001 that accuracy is the difference between beating its 0.143
-    floor and reading inf. 3t's consequence is true and economically irrelevant.
-
-    That exhausts the certification lens on this substrate, and the reason is
-    the law itself: aim <= 1/(1 - accuracy). These models are 7.7-32.9%
-    accurate, so NOTHING done to their abstention policy can be worth more than
-    1.49x. Certification is not a lever here; accuracy is the only lever, and
-    every certification question on the curriculum is answered in advance by the
-    bound.
-  the_real_consequence: >
-    The session's instruments are built and validated and they now say the same
-    thing three ways: the symbolic layer sells certification, certification is
-    worth 1/(1-accuracy), and this substrate is not accurate enough for that to
-    be worth anything. The next genuinely open question is not another
-    certification measurement -- it is whether base accuracy on the curriculum
-    can move at all, which is the repo's oldest question and the one 51 scored
-    models have been circling.
-  do_not: >
-    Do not run another certification arm on the curriculum. The bound answers it
-    before the experiment: at 33% accuracy the ceiling is 1.49x whatever the
-    abstention policy does. Record the prediction and spend the time on accuracy.
-  unreproduced_claim_worth_someones_time: >
-    symbolic.py's docstring credits the structural back-off with taking
-    ruleinduce from 0.076 to its current score. Toggling the flag today moves
-    its accuracy by 0.000. Whatever produced that gain, the flag alone does not
-    reproduce it. Not chased; recorded.
-  previous_preferred_action: price-the-backoff-tradeoff-accuracy-against-certifiability
-  why_now: >
-    The session now has one law rather than a pile of numbers. Certification
-    value obeys aim = (1 - acc_abstained)/(1 - base), the flagged share cancels
-    exactly, and therefore aim <= 1/(1 - accuracy). That single bound explains
-    every arm: curriculum models at 7.7-32.9% accuracy top out at 1.48x; the
-    federated resolver at 87.3% reached 4.69x; the maintenance oracle's 131.6x
-    is exactly 1/(1-0.9924). A model can only certify to the extent it is
-    usually right.
-
-    The immediate consequence is a trade nobody has priced. The ceiling is
-    attained only when abstained positions score ZERO. This repo deliberately
-    strengthened the structural back-off so that abstaining lands on the context
-    prior rather than the unigram -- which RAISED accuracy and, by the closed
-    form, LOWERED certifiability. Both effects are real and they pull opposite
-    ways, and the back-off is a flag (structural_fallback) so both arms exist.
-  the_experiment: >
-    Run the same ten models with structural_fallback on and off. On: higher
-    label_acc, higher a_abstained, lower aim. Off: lower label_acc, a_abstained
-    near the unigram, higher aim. The question is whether the product -- what a
-    hybrid actually costs at fixed quality -- prefers one. This is the first
-    time the repo's biggest deliberate harness decision can be scored on
-    something other than accuracy.
-  do_not: >
-    Do not read a determinacy gap as certification value. synth-001 has the
-    largest gap in the repo (+0.697) and is worth 1.02x. The gap is not the
-    quantity; 1/(1-accuracy) is the ceiling and a_abstained fixes where in it
-    you land.
-  previous_preferred_action: the-delta-type-now-has-two-motivations-find-it-a-producer
-  why_now: >
-    Soundness is priced and the answer is better than the first framing implied.
-    The XOR bound reaches aim 16.1x; a |delta count| bound, equally SOUND,
-    reaches 57.5x of an available 131.6x. So of the 8.2x looseness, 3.6x was the
-    XOR over-counting a count and only 2.3x is what no sound bound removes
-    without computing the answer. And the tighter sound bound BEATS every
-    unsound arm up to alpha=8 (which serves 0.44% of answers wrong) while
-    serving nothing wrong. You do not trade soundness for aim; you stop using a
-    loose bound.
-
-    Both of this cycle's results now point at the same missing piece. |delta
-    count| is not deployable from two snapshots -- computing len(new[k]) IS the
-    recompute it was meant to avoid -- so it needs signed adds and removes from
-    an update stream. That is the Delta type parked earlier today for having no
-    producer. It now has TWO independent motivations: flattening the 36.4
-    queries-per-key crossover (worth 2.91x flat) and closing 3.6x of bound
-    looseness. The blocker is unchanged and it is a PRODUCER, not a design.
-  the_producer_question: >
-    SEC publishes 13F filings as individual documents; the repo holds them only
-    as quarterly aggregates. A per-filing loader would emit adds and removes per
-    key naturally and would give the Delta type a real producer. That is a data
-    plumbing task, not a research one, and it is the first time this session
-    that the highest-value next step is plumbing.
-  do_not: >
-    Do not read aim x without the rate column. Do not put a bound in a ledger of
-    systems. Do not quote "soundness costs 8.2x" -- it costs 2.3x and the rest
-    was engineering.
-  previous_preferred_action: close-the-8x-with-a-tighter-sound-bound-not-by-giving-up-soundness
-  why_now: >
-    Soundness is now priced: the sound derived margin reaches 16.1x of an
-    available 131.6x, so it costs 8.2x of aim on this workload. Giving it up
-    recovers 4.77x at 0.62% of answers served wrong -- which is undetectable
-    from inside the answer, so the repo's answer to that trade stays no.
-
-    But 8.2x is NOT the price of soundness in general. It is the price of ONE
-    sound bound: moved_elements uses the symmetric difference, and an add and a
-    remove cancel in a count while not cancelling in a XOR. A sound bound that
-    tracked signed movement -- adds minus removes, which an update stream gives
-    directly -- would be exactly tight for a count and would reach the oracle's
-    131.6x while staying sound. The 8.2x is the looseness of the bound, not the
-    cost of exactness, and I conflated the two in framing the question.
-  the_specific_increment: >
-    Counted currently pairs a value with a Lipschitz constant. For a count the
-    honest bound is |adds - removes| rather than |adds + removes|, which needs
-    the delta to arrive SIGNED. That is the same Delta type parked in
-    notes/decisions/2026-08-18-not-building-a-delta-type-..., and it now has a
-    second reason to exist worth 8.2x rather than the 2.91x-flattening the first
-    reason was worth. Two independent motivations may be enough to reverse that
-    decision -- but the blocker is unchanged: nothing in this repo emits an
-    update stream.
-  do_not: >
-    Do not read aim x without the rate column. Do not put a bound in a ledger of
-    systems -- the oracle row suppressed the very warning it should have
-    triggered.
-  previous_preferred_action: make-the-delta-a-by-product-of-the-update-not-a-pass
-  why_now: >
-    The derived margin is the first arm in the certificate programme to exceed
-    1.0x on a real corpus update -- ceiling 2.91x against the read set's 1.05x --
-    but only above 36.4 queries per key, and it is a 20x LOSS (0.05x) if the
-    delta must be recomputed per query. The whole crossover is set by ONE
-    quantity: the delta pass costs 6,634ns/key against the digest pass's 853ns,
-    7.8x dearer.
-
-    And that pass should not exist. A corpus update IS a set of adds and removes;
-    |old XOR new| is its by-product, not something to be recovered by diffing two
-    snapshots after the fact. Removing the 6,634ns pushes the crossover from 36.4
-    queries per key toward ~1, which is the difference between a mechanism that
-    needs a service workload and one that pays on any workload at all.
-  what_that_needs: >
-    An update representation -- adds and removes per key -- rather than two
-    snapshots. symbolic_ai_core/runtime/certificate.py has changed_keys(old,new),
-    which is exactly the after-the-fact diff being charged for. The increment is
-    a Delta type that an ingest path produces directly and revalidate_sensitive
-    consumes, with the snapshot-diff kept as the fallback that prices itself
-    honestly.
-  do_not: >
-    Do not quote the 25x per-quality-point figure without the queries-per-key
-    condition beside it. And do not extend Counted to more operators before this:
-    more query shapes with slack are worth nothing while the pass that consumes
-    the slack costs more than it saves.
-  previous_preferred_action: extend-derived-sensitivity-past-counts-and-thresholds
-  why_now: >
-    Answered, and BUILT. The stability margin 3b called "the rung the recording
-    mechanism cannot produce" is derivable from the numeric intermediate the
-    computation already had. is_widely_held's invalidation rate falls 62.22% ->
-    6.16%, recovering 10.1x of the measured 79.8x over-approximation; aim_x
-    1.61x -> 16.23x and $/quality-point $8.67e-10 -> $3.46e-11, 25x cheaper.
-    The derived margin (6.16%) is TIGHTER than the hand-written rule (6.38%).
-    Zero false survivals, 78 parametrised soundness cases.
-
-    Counted covers counts and thresholds. Whether the approach reaches min/max,
-    top-k, ratios and set-size comparisons is unmeasured, and each needs its own
-    Lipschitz argument -- some will not have a cheap one. min_filers_covering is
-    the honest hard case: no cheap sound bound for a set cover's optimum, so it
-    stays at 100% flagged.
-  the_residual: >
-    7.9x remains and its cause is known: moved_elements uses the symmetric
-    difference, and an add and a remove cancel in a count but not in a XOR.
-    Closing it needs the query to declare its aggregate is a COUNT rather than a
-    general function of the set -- a strictly larger contract, and the next
-    obvious increment if it is worth 7.9x.
-  contract_update: >
-    HANDOVER 7 item 2's kernel contract -- "return a witness where your answer
-    has one, a minimal dependency where you can derive one" -- should now carry
-    a third clause: "and the slack your answer has, which you already computed".
-    Worth 10.1x on the one class here that has any, and it costs one integer.
-  previous_preferred_action: can-answer-sensitivity-be-computed-rather-than-hand-supplied
-  why_now: >
-    The certificate arm's open question is answered. What a certificate wastes is
-    a property of the ANSWER'S SENSITIVITY, not of compute cost or read-set size,
-    and it is invisible to any mechanism that records reads -- proved by two
-    query classes with byte-identical read sets, the same securities and 9ns of
-    cost between them differing 73x in over-approximation (1.1x vs 79.8x).
-
-    That immediately raises the buildable question. 3b said the stability margin
-    is "the rung the recording mechanism cannot produce" and treated it as
-    query-supplied. But sensitivity is a property of the answer FUNCTION, and the
-    function is available -- it is the thing being computed. For len(holders)>=k
-    the margin is |count - k| and it is derivable, not supplied. The question is
-    how far that generalises: which answer functions admit a cheap, sound,
-    automatically derived margin?
-  why_it_matters: >
-    A derived margin turns the 79.8x waste into recoverable value without a
-    per-query rule, which is exactly what the recording mechanism was supposed to
-    give and did not. And the measured ceiling is known: even the hand-built
-    margin over-approximates by 8.2x, so a derived one has a floor AND a ceiling
-    to be scored against.
-  do_not: >
-    Do not price another query class against recompute-always. The ratio to
-    report now is f_flagged/f_stale, and aim_x beside it.
-  previous_preferred_action: price-the-certificate-arms-own-economics-with-the-new-metric
-  why_now: >
-    The north-star hole is CLOSED, not merely noted. symbolic_ai_core/cost.py
-    now carries a Targeting denominator floored by blind escalation of the same
-    share, and the federated resolver reads inf on $/solved-above-floor and
-    4.69x at $1.31e-03 per quality point in the same row -- worthless at
-    producing answers above its floor, worth paying for at certifying them.
-    Validated against the two domains already measured, with the OpenAlex values
-    hand-computed and recorded BEFORE the implementation: silence 2.13x,
-    ambiguity 1.02x. The second is a sharper claim than 3i made -- the ambiguity
-    signal is worth NOTHING over random spending, not merely less.
-
-    The obvious next use is the one the new finding names as its own limit:
-    escalation targeting is the EASIEST use of certification to price, and it is
-    not the one the certificate arm (3b) has been measuring. A certificate that
-    lets a downstream consumer skip revalidation -- the 93x/72x maintenance
-    split, the 247x witness verification -- is worth something this column still
-    cannot see. Those numbers exist and have never been expressed as capability
-    per dollar against any floor.
-  the_specific_gap: >
-    Targeting prices "knowing which of MY answers are unsafe". The certificate
-    arm measures "letting SOMEONE ELSE avoid recomputing". Both are
-    certification and only the first is priced. The second needs a floor of its
-    own -- plausibly "revalidate everything on a schedule" -- and that floor has
-    never been written down.
-  previous_preferred_action: price-certification-in-the-north-star-metric
-  why_now: >
-    The arc now has one defensible capability number and one clear gap.
-
-    MEASURED: the federated resolver buys NO accuracy above a floor that shares
-    its candidate sets (-0.1% at group level; cost.py prints inf). But its
-    determinacy signal is nearly perfect -- settled 95.8% against unsettled
-    40.4% at group level, and settled 93.6% at entity level, which is AT the
-    93.0% candidate-recall ceiling. Priced where it acts: at a fixed 15.4%
-    escalation budget, targeting the unsettled cases buys +9.2 points against
-    blind escalation's +2.0. Certification is worth 4.69x.
-
-    THE GAP: $/solved-above-floor prices getting the answer right and prices
-    knowing-you-are-right at ZERO. The 4.69x appears in no column of the
-    ledger. That is a gap in the repo's north-star metric, and the certificate
-    arm (3b) measured exactly this property and was never connected to cost.
-    Closing it is the mandate's own live edge -- make dependency certificates
-    economically consequential -- and it is now backed by a measurement rather
-    than an intuition.
-  the_shape_of_the_fix: >
-    A capability whose value is targeting is priced by the SAVINGS it enables at
-    a fixed quality, not by the answers it gets right. Concretely: cost.py needs
-    a denominator for "USD per point of quality bought by escalation", against a
-    floor of blind escalation at the same budget. That is computable from what
-    Capability already carries plus the settled/unsettled split, and it would
-    have made the 4.69x visible in the same table that printed inf.
-  general_finding_to_carry: >
-    Determinacy is informative exactly when the candidate generator has high
-    recall. This reconciles 3i (+0.150 F1, "the extractor cannot tell what it
-    knows") with 3p (+55.4 points) using one mechanism: 93.0% candidate recall
-    here against a lossy gazetteer there. ALWAYS report candidate recall beside
-    a determinacy claim.
-  previous_preferred_action: rebuild-the-arc-on-capability-above-floor
-  why_now: >
-    HANDOVER §7 item 10 had stood unaddressed and it was right. Six arms this
-    session were priced with a hand-rolled advantage(f) that has NO SLOT for
-    accuracy, so "settled" was silently read as "correct". Run through
-    symbolic_ai_core/cost.py against a floor that picks at random among the same
-    candidate sets, the federated symbolic resolver scores +0.9% above floor at
-    entity level, -0.1% at group level, and DOES NOT BEAT ITS FLOOR -- the
-    module prints its cost per unit of capability as inf, unprompted.
-
-    The mechanism is clean and was invisible from inside the series: at group
-    level closure determines the answer BECAUSE all candidates share a root, and
-    if they share a root a random pick lands on it too. Determinacy is not
-    accuracy. What the symbolic layer buys is knowing when it is right --
-    certification, not capability -- worth 4.7x on $/capability-above-floor via
-    escalation, against the 6.8x-12.2x cost ratios published.
-
-    So the next work is not another arm. It is deciding what the programme
-    claims now that its strongest recent numbers have been restated an order of
-    magnitude down, and 4.7x is the first capability-above-floor number this
-    session has produced.
-  the_open_question: >
-    If the symbolic layer's value is CERTIFICATION rather than accuracy, then
-    the north star metric may itself be mismatched: $/solved-above-floor prices
-    getting the answer right, and prices knowing-you-are-right at zero. The
-    certificate arm (§3b) measured exactly that property and was never connected
-    to the cost ledger. That connection is the highest-value unbuilt thing, and
-    it is the mandate's own live edge -- make dependency certificates
-    economically consequential.
-  do_not: >
-    Do not run another arm on the SEC/GLEIF workload, and do not quote any
-    advantage from §3j-§3o without §3p beside it.
-  previous_preferred_action: leave-the-finance-workload-and-test-the-arc-elsewhere
-  why_now: >
-    The reach arc is RESOLVED and it resolved into a conditional, which is the
-    right shape. advantage = 1/f; f is set by reach; reach is purchasable
-    (saturates ONLY where the workload concentrates -- 96.9% for 13F dollars,
-    27.3% for GitHub events, a 3.5x span), derivable from recorded structure
-    (81.3% where recorded, 22.4% of hard cases), or absent. The tiers are not
-    independent: tiers 2 and 3 are gated by tier-1 identity coverage, which is
-    asymmetric in the DIRECTION of the query -- 66.3% of held value toward the
-    security, 23.2% toward the holder.
-
-    Six arms have now run on one SEC/GLEIF workload. The filer column is blocked
-    on data that is not on disk and that Form ADV does not supply (it carries
-    CRD, not LEI, and neither SEC nor the vendored GLEIF file has addresses to
-    join on). Grinding it further is the failure mode CLAUDE.md names.
-  what_to_do_instead: >
-    The arc produced three claims that are stated generally and measured on one
-    domain: (1) coverage is asymmetric in the direction of the query, (2)
-    crosswalk coverage is enriched toward the entities names cannot settle, (3)
-    closure settles ambiguity where structure was recorded. Each is a claim about
-    knowledge graphs, not about finance. patentsview (patent -> assignee),
-    openalex (work -> institution) and courtlistener all have the same bipartite
-    shape with an identity join and a name fallback. Porting the measurement is
-    cheap and turns three finance observations into three general findings -- or
-    kills them, which is worth more.
-  blocked_and_recorded: >
-    Filer-side identity coverage is 23.2% by AUM and cannot be improved from
-    anything on disk. Form ADV was considered and REJECTED before download: it
-    keys on CRD and SEC file number, carries no LEI, and the vendored GLEIF file
-    has no address column to fall back on -- so it cannot close the join it was
-    proposed for. Recorded here rather than tried.
-  previous_preferred_action: acquire-form-adv-and-close-the-filer-column
-  why_now: >
-    The reach arc is now resolved and it ends on an asymmetry: over the SAME 13F
-    edge, questions pointed at the security are 66.3% addressable by value and
-    questions pointed at the holder are 23.2%. The residual f of 8.17% lives on
-    the filer side, so it is NOT a tail phenomenon, and every lever tried so far
-    (a second crosswalk, a second structural source) has failed on exactly that
-    side.
-
-    The finding names its own refuter and it is unusually cheap: Form ADV is the
-    SEC's own registry of investment advisers -- the population wikidata misses
-    entirely -- it is public, it carries CRD and SEC file numbers alongside legal
-    and business names, and it is not on disk. If it lifts filer identity
-    coverage from 23.2%, the whole filer column moves and every number in 3j-3n
-    is recomputed on a better bridge. If it does not, identity coverage is a
-    genuine wall and the programme should stop trying to buy its way past it.
-  why_this_beats_the_alternatives: >
-    It is the only untried lever that targets the side the residual f actually
-    lives on. Every other candidate either re-measures the issuer side (already
-    at 66.3%) or adds structure that cannot be addressed (measured null, 1.01x).
-  acquisition_note: >
-    Public SEC download, no credential, no payment -- inside the mandate's
-    "download legally usable research data" clause. Check robots/terms and size
-    before fetching; wget rather than curl, per the GLEIF lesson.
-  previous_preferred_action: issuers-not-filers-does-identity-coverage-move
-  why_now: >
-    Federating a second structural source is a DEAD ARM: wikidata holds 4.3x
-    more ownership structure than GLEIF (1,279,720 edges to 296,491) and settles
-    3 more filers of 598, against a control settling ~1. Only 3,996 of those
-    edges are expressible about LEIs because only 1.58% of GLEIF entities carry
-    a wikidata twin. The tiers are NOT independent -- relief in tiers 2 and 3 is
-    gated by tier-1 identity coverage, and tier 1 saturates.
-
-    That null names its own cheapest refuter, and it is the next thing to run.
-    The workload here is 13F FILERS -- asset managers and funds, which is
-    exactly the population wikidata covers worst. The same machinery pointed at
-    ISSUERS (the securities held, which are large listed operating companies)
-    should show much higher QID coverage. If it does, the 1.58% is a property of
-    the population rather than of federation, and the dead arm is only dead for
-    filers. If it does not, the null generalises and identity coverage is the
-    single binding constraint on the whole reach programme.
-  screening_number: >
-    Before federating another source's structure, measure what fraction of the
-    target population carries that source's identity. 1.58% predicted the 1.01x
-    yield here without building anything.
-  previous_preferred_action: what-share-of-real-demand-is-group-level
-  why_now: >
-    Reach is now measured on all three tiers. Purchasable SATURATES (2,383 rows
-    reach 68.8% of $51.4T; 2,281,221 reach 75.0%; 1.06x apart normalised at each
-    crosswalk's own k). Derivable-from-recorded-structure WORKS at 81.3% and
-    reaches 22.4% of the hard cases. ABSENT is 90% of GLEIF entities and is not
-    a procurement problem. The two levers are near-orthogonal -- 1.49x and 1.22x
-    compose to 1.80x -- and the residual f of 8.17% lives in tier 3.
-
-    Everything in that paragraph is priced for a GROUP-LEVEL question. The 1.22x
-    from closure is earned only by queries that can be asked about the group
-    rather than the legal entity, and NOTHING measures what share of a real
-    workload those are. That single unmeasured fraction is what stands between
-    the three-tier result and a product claim, and it is the load-bearing
-    unknown of the whole reach arc.
-  blocked_note: >
-    The honest version needs a real question distribution, which the repo does
-    not have and cannot synthesise without assuming the answer. The tractable
-    proxy: 13F-derived questions that a fund manager actually asks (exposure by
-    group, by country, by sector) versus ones that require the legal entity
-    (regulatory filing obligations, jurisdiction of incorporation). Classify the
-    queries the vertical slice already answers before inventing new ones.
-  previous_preferred_action: can-structural-reach-be-manufactured-from-closure
-  why_now: >
-    Reach was split into PURCHASABLE and STRUCTURAL, and the purchasable half is
-    now measured and closed: it SATURATES. 2,383 curated crosswalk rows reach
-    68.8% of $51.4T of 13F value; 2,281,221 filed rows reach 75.0%. A file 957x
-    smaller answers 92% as much of what the workload weighs, and normalised
-    against an oracle at each crosswalk's own k the two are 1.06x apart -- so
-    neither is better targeted and the shape is pure value concentration. Buying
-    more mappings will not close the 68x cliff.
-
-    That leaves the structural half, and it is the half this repo's machinery is
-    actually FOR. The question nobody has asked: can transitive closure over
-    GLEIF's relationship graph REACH the 3,063 matched-but-unbridged filers from
-    the 1,015 bridged ones? A filer whose parent or subsidiary is bridged is
-    reachable by reasoning rather than by acquisition. If that works, symbolic
-    closure buys reach money cannot -- which is the programme's central claim,
-    tested on a real workload with a floor, rather than argued.
-  previous_preferred_action: match-the-question-to-the-data-shape
-  why_shipped_instead: >
-    witness-on-kernelresult is DONE: `Witness` is on the kernel ABI, the ASP
-    kernel returns its answer set instead of discarding it, and
-    `KernelResult.maintainable` is true exactly when a witness is present --
-    deliberately NOT for a proof of impossibility, however conclusive.
-  why: >
-    Monotonicity is now measured on the same axis four times -- twice before this
-    session (witness verifies 247x cheaper, optimality certificate 2.0x dearer
-    than re-solving) and twice in it (the 93x/72x maintenance split, and monotone
-    queries repairing a noisy world while the antitone one cannot). The design
-    consequence has been STATED and never built: world construction and answer
-    construction want opposite defaults, and nothing in the architecture says so.
-    The testable version is a ROUTER that reads a query's FORM -- monotone or
-    not, decided without seeing the answer -- and sends it to the precise world
-    or the complete one. That is also the mandate's stated long-term object,
-    routing computation across heterogeneous components, and this repo has never
-    measured a routing decision.
-  superseded_egraph: >
-    Deferred by decision: the cheap version is a trace, not a certificate, and
-    the real one is proof-producing congruence closure with no consumer today.
-    See notes/decisions/2026-08-18-deferring-the-egraph-witness-...md
-  superseded_geo: >
-    Ran and failed; see 3f. Do not repeat without sizing the signal first.
-  superseded_hub_labelling: >
-    It is the newest finding's own named refuter. Meet-in-the-middle may not be
-    the cheapest certificate for "no shorter path"; hub labelling and 2-hop
-    covers are a literature built for exactly that. If one stays small at d=10,
-    the witness/complement asymmetry weakens and the kernel contract just
-    shipped needs revisiting.
-  superseded_why: >
-    Three measurements now agree that a kernel should return a WITNESS and
-    should not pretend to return a minimal dependency for a universal claim.
-    The 95x and the 13,987x are currently properties of two scripts.
-    symbolic_ai_kernels/abi.py has the right shape already (check_entitlement)
-    and the ASP kernel holds the model it throws away.
-  alternatives:
-    - reprice-the-5e7-constant-on-a-prose-corpus
-    - shrinking-corpus-inverts-the-asymmetry
-    - wire-witness-into-the-remaining-seven-kernels
+calibration: >
+  Magnitude predictions ran 13 over-optimistic to 0 before deliberate low
+  shading; that then produced three under-calls. Recent failures were not
+  magnitude but SPECIFICATION -- predicting one number for a product of two,
+  and building a validation whose rows reproduced their own definitions.
