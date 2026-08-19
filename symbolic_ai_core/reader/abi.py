@@ -105,16 +105,30 @@ class ReadResult:
     def confidence_of(self, i: int) -> float:
         return float(self.belief.get(i, 1.0))
 
-    def delta(self, *, threshold: float = 0.5) -> WorldDelta:
+    def delta(self, *, threshold: float = 0.5,
+              thresholds: Mapping[str, float] | None = None) -> WorldDelta:
         """One reading, chosen here rather than assumed upstream.
 
-        Takes every claim believed at or above ``threshold``, then honours the
+        Takes every claim believed at or above its threshold, then honours the
         exclusive factors by keeping only each factor's best-believed member.
         That is a *policy*; a caller with a better one should write it, and the
         fact that it has to is the point.
+
+        ``thresholds`` gives a **per-predicate** cut, which is what the kernels
+        actually imply. Deleting a true claim and inventing a false one are not
+        equally costly, and the ratio differs by predicate: expected cost is
+        minimised at ``s⁺ / (s⁺ + s⁻)``, measured at 0.000 for a claim that only
+        supplies capacity and 0.608 for one that imposes a constraint. A single
+        0.5 for everything asserts the truth of a uniformity that was measured
+        and found false.
         """
+        def cut(i: int) -> float:
+            if thresholds is None:
+                return threshold
+            return float(thresholds.get(self.claims[i].predicate, threshold))
+
         keep = {i for i in range(len(self.claims))
-                if self.confidence_of(i) >= threshold}
+                if self.confidence_of(i) >= cut(i)}
         for f in self.factors:
             if not f.exclusive:
                 continue

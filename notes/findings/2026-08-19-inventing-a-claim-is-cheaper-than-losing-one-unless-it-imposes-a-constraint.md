@@ -99,10 +99,39 @@ Every θₚ landing near 0.5. Sensitivity would then genuinely cancel, a uniform
 rule would be optimal, and the `L_reader = Σ sᵢ Lᵢ` line should be closed rather
 than reformulated. The spread is 0.608 in flood, so it is not that.
 
-## What this does not yet show
+## Applied, and inert — for a reason that names the next requirement
 
-The thresholds are **derived and unapplied**. Whether asserting at θₚ on a
-calibrated belief beats asserting at 0.5 end-to-end is the next measurement, and
-it needs the calibrator that now exists on the reader plus a regime where the
-reader's beliefs are not all 1.0 — which on these surfaces means the unseen-
-phrasing split, since six documents saturate everything else.
+The thresholds were spent: reader fitted on three quarters of the training
+documents, calibrated on the remaining quarter, evaluated on the unseen-phrasing
+split where it makes real mistakes.
+
+| domain | rule | claim F1 | end-to-end |
+|---|---|---|---|
+| solvency | uniform 0.5 | 0.902 | 0.667 |
+| | derived θ | 0.902 | 0.667 |
+| scheduling | uniform 0.5 | 0.782 | 0.600 |
+| | derived θ | 0.782 | 0.600 |
+| flood | uniform 0.5 | 0.743 | 0.375 |
+| | derived θ | 0.743 | 0.375 |
+
+**Not one claim changed hands.** Predicted a gain, largest on flood; got exactly
+zero, three times.
+
+The belief distribution says why. Across ten held-out flood documents the
+calibrated beliefs take **two values**: 0.95 (267 claims) and 0.47 (20). Every
+θₚ except `flooded` (0.608), `bridge_on` (0.570) and `depot` (0.467) lies below
+0.47, so essentially every claim clears every threshold and the rule cannot
+express anything.
+
+That is not a fault in the thresholds — it is the same wall as the weighted
+objective, one level down. **An isotonic calibrator can only spread scores that
+vary**, and this perceptron's margins do not: on the units it labels at all it is
+either confident or one step from it, because six training documents already
+saturate these surfaces.
+
+So the derived-threshold mechanism is **correct, cheap, and unusable by this
+reader**, and that converts a preference into a requirement: the next reader must
+produce a genuinely graded posterior, not a margin with two modes. It is the most
+concrete argument yet for the neural encoder at step 3 of the critical path — not
+because a transformer reads better, but because a threshold derived from the
+kernels has nothing to act on without one.
