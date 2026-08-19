@@ -40,6 +40,24 @@ measured:
     because the atom rule that keeps a pronoun with its antecedent -- required
     for the document to stay true -- preserves the demand binding; a property of
     the task, not a leak.
+  - TIME AND ERROR LIVE IN DIFFERENT PLACES. Solvency's milestone completes the
+    set: filing recall 1.000, task acc 1.000, grounded 1.000 on all three
+    surfaces including interleaved, reader loss 0.000 (bounded 1.50% at n=200).
+    Third corner -- neither half expensive in ERROR.
+    BUT IT EXPOSED A METRIC GAP: solvency's reader takes 0.219 ms against a
+    decision costing 0.0021 ms, and $/correct prices KERNEL ARTIFACTS ONLY.
+    Read share of time: flood 1.9%, scheduling 0.9%, SOLVENCY 96.1%. So
+    $/correct captures 98% / 99% / 4% of each pipeline. Invisible where the
+    kernel dominates, the whole cost where it does not -- which is the regime
+    the thesis is about, since the argument is that reasoning is CHEAP.
+    THE TWO AXES: flood reading is 2% of time and ALL the error; scheduling
+    solving is 99% of time and all the error; solvency reading is 96% of time
+    and there is NO error. ERROR CONCENTRATES WHERE THE SIGNATURE IS AMBIGUOUS,
+    TIME WHERE THE DECISION IS HARD -- predicted separately by the audit's
+    ambiguity mass and by the decision's complexity, and neither predicts the
+    other.
+    NEXT: report reader time beside kernel cost in the milestone. Its SHARE is
+    the diagnostic -- 96% says the kernel is decorative.
   - A CERTIFICATE THAT CONSUMES NO GUESS. Built the fix named last cycle:
     require insensitivity for EVERY candidate role assignment rather than one
     collapse. 0 wrong at 48.8% coverage (123 answers, error bounded 2.44%),
