@@ -6,10 +6,14 @@ updated: 2026-08-18
 
 mission:
   headline_correction_2026_08_18: >
-    Cost ratio at FIXED QUALITY is the comparison anyone would make, and by that
-    measure the number is 2x-8x rather than 10^6. Every million-fold figure in
-    this repo prices a system nobody would deploy. cost.py's docstring said so
-    before the session began.
+    Cost ratio at FIXED QUALITY is the comparison anyone would make. By that
+    measure the advantage is 1/f, and f -- the fraction of queries the system
+    cannot settle -- is a property of the DOMAIN'S STRUCTURE-PROVENANCE, not of
+    the technology. Filed structure (GLEIF, SEC): f = 0.216%, advantage 463x at
+    quality 1.0. Derived structure (OpenAlex affiliations): f = 56%, advantage
+    1.8x at quality 0.85. 259x between regimes, same formula and same code.
+    Quoting either number without naming the regime is the error, and the
+    repo's earlier million-fold figures were all measured in the filed regime.
   north_star: >
     $ per correct answer, an order of magnitude below neural inference, with the
     reasoning inspectable rather than inferred. Priced against a *realistic*
@@ -238,7 +242,7 @@ last_cycle:
     repo now say the cheap half of a problem is the useful half.
 
 next:
-  preferred_action: route-by-monotonicity
+  preferred_action: point-the-work-at-filed-structure
   why_shipped_instead: >
     witness-on-kernelresult is DONE: `Witness` is on the kernel ABI, the ASP
     kernel returns its answer set instead of discarding it, and

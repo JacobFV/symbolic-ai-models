@@ -30,7 +30,23 @@ evidence needed to choose. A cheaper model tier is not ours; the opponent can us
 it too.
 
 > **At 0.85 quality the symbolic layer buys 1.8×.** The million-fold figures
-> price a system running at 53% quality that nobody would deploy. `symbolic_ai_core/cost.py` said this in
+> price a system running at 53% quality that nobody would deploy.
+
+**And then the same formula, applied where the structure was FILED rather than
+derived (§3j):**
+
+| regime | **f** | quality | **advantage** |
+|---|---:|---:|---:|
+| **FILED** — GLEIF `ultimate_parent` | **0.216%** | 1.00 | **463×** |
+| FILED — incl. closure-vs-filed conflicts | 4.274% | 1.00 | 23× |
+| **DERIVED** — OpenAlex affiliation → ROR | **56.0%** | 0.85 | **1.8×** |
+
+**259× between regimes.** So the advantage is a property of the domain's
+**structure-provenance**, not of the technology — and this reconciles the two
+halves of the session that looked contradictory. The repo's earlier advantages
+were measured on GLEIF and SEC, both **filed**, and they were real. The
+extraction arm's 1.8× is also real. One formula, two regimes; **quoting either
+without naming the regime is the error.** `symbolic_ai_core/cost.py` said this in
 its own docstring before the session started — *"cheap-and-incapable is not a
 point on the cost curve; it is a point off the capability axis entirely"* — and
 every cost row here ignored it until now.
@@ -540,6 +556,27 @@ per unit escalated** (those cases score 0.000, so nothing is re-bought);
 escalating the ambiguous tier buys **0.48**, wasting half the spend on cases
 already 0.516 right. **Escalate where the system produces nothing, not where it
 is unsure.**
+
+## 3j. The advantage is a property of provenance
+
+`notes/findings/2026-08-18-the-advantage-is-a-property-of-provenance-463x-filed-against-18x-derived.md`
+
+§3i's negative named its own escape hatch in one clause — *a task where `f` is
+naturally small, regulatory data, where structure is already filed* — and this
+tests it from numbers that were on disk before the session began. `f` is the
+fraction of queries the system cannot settle: in a derived domain that is
+everything the extractor got wrong (**56%** at 0.85 quality); in a filed domain
+there is no extraction step to fail, so it is only what the data itself leaves
+undetermined (**0.216%** / **4.274%**, `HANDOVER` §3).
+
+**259×** between regimes on the strict comparison, **13×** on the conservative
+one, from the same formula and the same code.
+
+Two caveats belong next to it. Quality 1.0 in the filed regime is relative to
+**the filing** — a better anchor than an automated extractor, still not truth.
+And `f` counts undetermined answers as escalations when this repo's ambiguity
+machinery returns the *alternatives enumerated*; a caller that can act on a
+retained mixture escalates none of them and `f` is lower still.
 
 ## 4. Believed, not measured. Do not inherit as fact.
 
