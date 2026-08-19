@@ -127,3 +127,53 @@ def test_the_costly_collision_is_the_one_that_breaks() -> None:
     # than a measured zero -- and the count is what says so
     harmless = costs[frozenset({"bridge_on", "link"})]
     assert harmless["permutable"] == 0, harmless
+
+
+# --- the blind spot: text that realises no claim ----------------------------
+
+def test_the_prose_scan_finds_floods_known_distractor_defect() -> None:
+    """Independently rediscovers a defect measured by hand: "A disused track
+    once ran from X to Z" carries the ``link`` signature, and flood's reader
+    admits one spurious link in every case."""
+    from symbolic_ai_generators.flood.read_surface import VALUE_REGISTRY
+    a = audit_surface(_flood(), registries=VALUE_REGISTRY, prose=True)
+    flagged = {frozenset(kinds) for kinds, _ in a.prose_collisions.values()}
+    assert frozenset({"bridge_on", "link"}) in flagged, flagged
+
+
+def test_solvency_prose_collides_with_nothing() -> None:
+    """Its threshold is (no entity, one money, no date) and its determination
+    date is (no entity, no money, one date); no claim kind occupies either. That
+    is *why* reading them by shape works, and the audit should say so rather
+    than a person checking by hand."""
+    a = audit_surface(_solvency(), entity=SOLVENCY_ENTITY, prose=True)
+    assert a.prose_collisions == {}, a.prose_collisions
+    assert a.prose_signatures, "prose was not scanned at all"
+
+
+def test_a_prose_flag_is_a_risk_not_a_defect() -> None:
+    """Scheduling's ``machine_90 is withdrawn`` carries the ``has_capability``
+    signature, so the audit flags it -- and the reader admits none of it,
+    because the capability vocabulary doubles as the distractor filter.
+
+    The scan is a risk register. Each flag costs one check against whatever
+    declared knowledge the reader holds.
+    """
+    from symbolic_ai_generators.scheduling import generate
+    from symbolic_ai_generators.scheduling.read_surface import read_signature
+    from symbolic_ai_generators.scheduling.surface import render_observation
+
+    a = audit_surface(_scheduling(), prose=True)
+    assert a.prose_collisions, "expected the distractors to be flagged"
+    for seed in range(12):
+        world = read_signature(render_observation(generate(seed),
+                                                  variants=4).text)
+        admitted = {e for c in world.claims for e in c.entities()}
+        assert not any(e.endswith("_90") for e in admitted), seed
+
+
+def test_prose_is_off_by_default() -> None:
+    """It needs the full text rather than the spans, so it is opt-in."""
+    a = audit_surface(_flood())
+    assert a.prose_signatures == {}
+    assert a.prose_collisions == {}

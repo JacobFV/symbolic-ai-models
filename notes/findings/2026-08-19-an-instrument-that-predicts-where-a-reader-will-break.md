@@ -155,3 +155,47 @@ real, and direct permutation in the true world settles what the real ones cost.
 Both are computable from the world and the surface with **no reader**, which is
 the property that makes the audit worth having — an instrument that needed a
 reader could not speak before one existed.
+
+---
+
+## The blind spot, closed (same day)
+
+This note recorded that the audit *"sees only claim spans"*, and that solvency's
+covenant threshold and determination date — prose the answer depends on — were
+checked **by hand**, which is exactly what an instrument exists to stop.
+
+Scoring every sentence, not only the ones realising claims, surfaces a second and
+different failure: **prose that shares a signature with a real claim kind**. That
+is not ambiguity between kinds, it is a false positive waiting to happen, because
+a reader typing sentences by shape cannot see the span table.
+
+Three flags across the three domains, and they resolve three different ways:
+
+| domain | flagged prose | signature reads as | verdict |
+|---|---|---|---|
+| flood | *"A disused track once ran from X to Z"* | link, bridge_on | **real defect** |
+| scheduling | *"machine_90 is withdrawn for maintenance"* | has_capability | neutralised |
+| flood | *"The relief operation covers 6 districts"* | load_limit | false alarm |
+
+- **Real.** Flood's reader admits **one spurious link in every one of 20 cases**
+  — the disused track. That defect was found by hand earlier; the audit
+  rediscovered it from the surface alone, without being told.
+- **Neutralised.** Scheduling's reader admits **0 of 20**. Its capability
+  vocabulary doubles as the distractor filter, exactly as flood's value registry
+  does. That symmetry is worth naming: **in both domains the declared external
+  knowledge does double duty — it settles signature collisions and it filters
+  distractors.**
+- **False alarm.** The audit counts any bare number; flood's reader requires the
+  unit (`\d+ kg`), so it never sees "6 districts". **The audit's notion of a
+  number is coarser than the reader's**, and it over-flags accordingly.
+
+So the prose scan is a **risk register, not a defect list**. Each flag costs one
+check against whatever declared knowledge the reader holds. That is a
+substantially better position than the alternative, which was me reading the
+generator and hoping I had noticed everything — and it caught a defect I had only
+found the hard way.
+
+Solvency, as predicted, collides with nothing: its threshold is *(no entity, one
+money, no date)* and its determination date *(no entity, no money, one date)*, and
+no claim kind occupies either. That is *why* reading them by shape works, and the
+audit can now say so.

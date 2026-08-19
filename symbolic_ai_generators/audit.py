@@ -70,6 +70,8 @@ class Audit:
     ambiguous_spans: int = 0
     #: how many spans each colliding signature accounts for
     mass_by_signature: dict = field(default_factory=dict)
+    #: signatures occupied by text that realises NO claim, and how often
+    prose_signatures: dict = field(default_factory=dict)
 
     @property
     def ambiguity_mass(self) -> float:
@@ -113,6 +115,23 @@ class Audit:
             if len(sigs) < len(kinds):
                 out[sig] = kinds
         return out
+
+    @property
+    def prose_collisions(self) -> dict:
+        """Signatures a claim kind shares with text realising no claim.
+
+        Not ambiguity between kinds but a **false-positive risk**: a reader
+        typing sentences by shape will read that prose as a claim. Flood's
+        "Districts X and Y lie outside the affected area" and "A disused track
+        once ran from X to Z" both carry the ``link`` signature, and the reader
+        is independently known to admit the disused track as a road.
+
+        Only populated when ``audit_surface`` is given ``prose=True``, since it
+        needs the full text rather than the spans.
+        """
+        return {sig: (self.by_signature[sig], n)
+                for sig, n in self.prose_signatures.items()
+                if sig in self.by_signature}
 
     @property
     def real_ambiguity_mass(self) -> float:
@@ -178,7 +197,8 @@ def signature_of(text: str, registries: dict | None = None,
 
 
 def audit_surface(observations, registries: dict | None = None,
-                  entity: str | None = None, worlds=None) -> Audit:
+                  entity: str | None = None, worlds=None,
+                  prose: bool = False) -> Audit:
     """Audit a corpus of rendered observations.
 
     Each observation supplies ``spans``; a span with a ``claim`` realises a
@@ -206,7 +226,30 @@ def audit_surface(observations, registries: dict | None = None,
         if len(out.by_signature[sig]) > 1:
             out.ambiguous_spans += 1
             out.mass_by_signature[sig] = out.mass_by_signature.get(sig, 0) + 1
+
+    if prose:
+        # Every sentence NOT covered by a claim span. A reader types sentences
+        # by shape and cannot see the span table, so prose sharing a claim
+        # kind's signature is a false positive waiting to happen -- a different
+        # failure from ambiguity between kinds, and invisible to the pass above.
+        for obs in observations:
+            covered = [(sp.start, sp.end) for sp in obs.spans
+                       if sp.claim is not None]
+            for sent, lo, hi in _sentences_with_offsets(obs.text):
+                if any(lo < e and hi > s0 for s0, e in covered):
+                    continue
+                sig = signature_of(sent, registries, entity)
+                out.prose_signatures[sig] = out.prose_signatures.get(sig, 0) + 1
     return out
+
+
+def _sentences_with_offsets(text: str):
+    """``(sentence, start, end)`` for every sentence in the document."""
+    at = 0
+    for piece in re.split(r"(?<=[.?])(\s+)", text):
+        if piece and not piece.isspace():
+            yield piece, at, at + len(piece)
+        at += len(piece)
 
 
 def role_signature(claim) -> frozenset:

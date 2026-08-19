@@ -447,13 +447,20 @@ next_actions:
           It also rhymes with the ambiguity machinery and directive 19: emit
           what is known, let the kernel decide, rather than collapsing to a role
           name the text never used.
-      (b) DONE for all three, and the audit is now cardinal -- see measured.
-          What remains open on the instrument: it sees only CLAIM spans, so
-          information the answer depends on that is rendered as PROSE
-          (solvency's covenant threshold and determination date) is invisible
-          to it. I checked those by hand, which is exactly what an instrument
-          is meant to stop. Scoring every sentence rather than only the ones
-          realising claims would close it and is cheap.
+      (b) DONE for all three, cardinal, and the prose blind spot is closed.
+          audit_surface(prose=True) scores every sentence and flags text that
+          shares a signature with a real claim kind -- a FALSE POSITIVE risk
+          rather than an ambiguity. It rediscovered flood's disused-track
+          defect unaided (the reader admits one spurious link in every one of
+          20 cases), confirmed solvency clean, and flagged scheduling's _90
+          distractors which its capability vocabulary already neutralises
+          (0/20). One flag is a false alarm because the audit counts any bare
+          number while the reader requires the unit -- the audit's notion of a
+          number is COARSER than the reader's. So the scan is a RISK REGISTER,
+          one check per flag.
+          General observation from it: in BOTH flood and scheduling the
+          declared external knowledge does DOUBLE DUTY -- settles signature
+          collisions AND filters distractors.
       (c) the rules arm survives arrangement and dies on paraphrase; the
           signature arm the reverse. A reader combining them is not obviously
           impossible -- the closure is about the residual, not the whole task.
