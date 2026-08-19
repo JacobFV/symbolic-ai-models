@@ -166,14 +166,22 @@ sentence pins it. **Insensitivity** proves the answer does not depend on the
 claim — sound but lossy, gated by the shape of the **decision**. Neither is a
 better check; they are answers to different questions.
 
-| domain, damaging channel | arity | detection | insensitivity | price |
-|---|---|---:|---:|---:|
-| flood, `link` (phantom road) | multi | **0.000** | 0 wrong at 48.8% | 13.4× → **1.0×** |
-| flood, roles (misfire) | single/multi | **0.774 – 0.976**, 0 false alarms | — | ~0 |
-| scheduling, `has_capability` | multi | **0.000** | 0 wrong at **52.5%**, 43.5% of it free | **4.62×** |
-| scheduling, `needs_capability` | **single** | **1.000** | — | ~0 |
-| solvency, `owns` | multi | **0.000** | 0 wrong at 48.5%, all of it free | ~0 |
-| solvency, `revenue` | multi | 0.000 | **none possible** — a sum moves on every term | — |
+| domain, damaging channel | arity | detection | insensitivity | compute | break-even `W` |
+|---|---|---:|---:|---:|---:|
+| flood, `link` (phantom road) | multi | **0.000** | 0 wrong at 48.8% | 1.0× | **0.60×** |
+| flood, roles (misfire) | single/multi | **0.774 – 0.976**, 0 false alarms | — | ~1× | — |
+| scheduling, `has_capability` | multi | **0.000** | 0 wrong at **52.5%**, 43.5% of it free | 3.07× | **2.95×** |
+| scheduling, `needs_capability` | **single** | **1.000** | — | ~1× | — |
+| solvency, `owns` | multi | **0.000** | 0 wrong at 48.5%, all of it free | 1.0× | **free** |
+| solvency, `revenue` | multi | 0.000 | **none possible** — a sum moves on every term | — | — |
+
+`W` is what **one wrong answer must cost in units of one right one** before
+refusing pays — `cost.break_even_wrong_cost`. It exists because
+`usd_per_solved_above_floor` counts answers, so a sound system that refuses half
+of them scores *worse*, which is the gap `cost.py`'s own header names. Solvency's
+certificate is free because its certified set **is** its correct set; flood's is
+not free despite costing nothing to run, because it keeps only 72% of the correct
+answers and something has to pay for the other 28%.
 
 Three readings worth carrying:
 

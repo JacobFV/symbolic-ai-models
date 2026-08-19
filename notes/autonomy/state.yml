@@ -40,6 +40,23 @@ measured:
     because the atom rule that keeps a pronoun with its antecedent -- required
     for the document to stay true -- preserves the demand binding; a property of
     the task, not a leak.
+  - SOUNDNESS IS PRICED AS A BREAK-EVEN, so "it depends what a wrong answer
+    costs" stops being a hedge. usd_per_solved_above_floor counts ANSWERS, so a
+    certificate that refuses half of them scores WORSE however sound it is --
+    cost.py's own header names that gap. SHIPPED cost.break_even_wrong_cost:
+    certifying pays iff W > [rate - coverage/m] / (1 - rate), m = compute
+    multiple, W = cost of one wrong answer in units of one right one.
+      solvency membership    acc 0.485  cover 0.485  1.00x  ->  FREE
+      flood role-independent     0.679        0.488  1.00x  ->  0.60x
+      scheduling capability      0.790        0.525  3.07x  ->  2.95x
+    CORRECTS MY OWN REASONING: I predicted flood AND solvency free, because each
+    certified set is a SUBSET of what the collapsing reader already got right.
+    True and NOT SUFFICIENT -- free needs coverage/m >= rate, so the certificate
+    must keep MOST of the correct answers. Flood keeps 0.488 of 0.679 and gives
+    up 28%. Solvency is free because coverage EQUALS accuracy: certified <=>
+    correct on that arm.
+    Prices soundness against ACCURACY, not the floor, so it is a COMPANION to
+    the north star: a system below its floor has bought nothing whatever W is.
   - THE INVISIBLE ERROR IS CERTIFIABLE, EVEN THOUGH IT IS UNDETECTABLE.
     Corrects this morning's own headline. scheduling has_capability is the worst
     channel of the day (0.210 lost, ALL 42 failures unsound, every detector
