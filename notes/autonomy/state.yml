@@ -1542,7 +1542,19 @@ theory:
       without appeal to aggregation -- its network has alternative routes.
       Selectivity changes redundancy; enumeration is one way to get it, not the
       thing itself. And VOI ~ d*(1-acc) is directionally right but quantitatively
-      weak: a gain ratio of 16.0 against a VOI ratio of 5.45. Flood, a selection over a
+      weak: a gain ratio of 16.0 against a VOI ratio of 5.45.
+      AND REDUNDANCY IS NOW A FORMULA, not a story. For a union query, dropping a
+      claim changes the answer only if it was some answer value's SOLE SUPPORT --
+      a min-cut of size one. parent: P(support=1) = 0.922 against a measured d of
+      0.866. country: P(support=1) = 0.000 (mean support 17.33) against d = 0.574,
+      because a country claim GATES rather than supplies -- it matters when the
+      company it admits was the sole support of its group AND that company's
+      parent was read, 0.922 * 0.589 = 0.543 against 0.574.
+      d(r) = P(a claim of r is a BRIDGE to some answer element) * PROD P(the rest
+      of its derivation path survives). A RELIABILITY QUANTITY, reached from data.
+      UNRUN PREDICTION: flood's link d should be the share of links that are
+      bridges in the admissible subgraph -- the same object certifies_insensitive
+      already tests by 2-edge-connectivity. One formula would then cover both. Flood, a selection over a
       redundant graph, sits at 0.236. THE VALUE OF TASK-WEIGHTED READING IS ~1/d,
       AND d IS SET BY THE QUERY'S AGGREGATION SHAPE -- knowable before a word is
       read. At d ~ 0.01 an existence query makes 99% of reading effort irrelevant;

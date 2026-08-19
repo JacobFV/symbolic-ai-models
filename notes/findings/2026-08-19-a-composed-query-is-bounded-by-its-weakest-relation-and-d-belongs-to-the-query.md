@@ -130,6 +130,42 @@ concentrated the value is.
 than only matching ones, so 0.099 is not comparable with the 0.866 above — same
 quantity, diluted denominator.)*
 
+## The formula, and it is a reliability quantity
+
+"Redundancy" was still a story. Making it precise: for a union query the answer is
+a set of **values**, each supported by some number of claims, so dropping a claim
+changes the answer only if it was that value's **sole support** — a min-cut of
+size one.
+
+| relation | answer values | **P(support = 1)** | mean support | **measured d** |
+|---|---:|---:|---:|---:|
+| `parent` | 64 | **0.922** | 1.09 | **0.866** |
+| `country` | 6 | **0.000** | 17.33 | **0.574** |
+
+**It works for `parent` and fails completely for `country`** — and the failure is
+the derivation. In this query the answer values *are* parent groups; a country
+claim never appears in the answer, it **gates** which companies reach it. So a
+country claim matters when the company it admits was the sole support of its
+group, *and* that company's parent was read at all:
+
+    d(country) ≈ P(sole support) × P(partner relation present)
+               = 0.922 × 0.589  =  0.543      (measured 0.574)
+
+Two terms, both measured elsewhere, agreeing to three points. And for `parent`,
+whose claim is itself the answer value, the second term is 1 by construction:
+0.922 against 0.866.
+
+> **`d(r) = P(a claim of r is a bridge to some answer element) × Π P(the rest of
+> its derivation path survives).`** It is a **reliability** quantity — the
+> probability a claim lies in a min-cut of size one, times the survival of the
+> path it sits on — not a property of aggregation shape.
+
+That is the network-reliability abstraction reached from data rather than borrowed.
+It also makes a prediction for the synthetic side that has not been run: flood's
+`d` for links should be the share of links that are **bridges in the admissible
+subgraph**, which is the same object `certifies_insensitive` already tests by
+2-edge-connectivity. If that lands, one formula covers both arms.
+
 ## What would refute this
 
 - The three shapes share a corpus and a reader, which is what makes them a
