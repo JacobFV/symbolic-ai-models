@@ -40,6 +40,34 @@ measured:
     because the atom rule that keeps a pronoun with its antecedent -- required
     for the document to stay true -- preserves the demand binding; a property of
     the task, not a leak.
+  - CANCELLATION, NOT TENSE -- AND IT FAILS WHERE THE PREDICATE IS A NEGATION.
+    The damaging channel in both domains is MULTI-VALUED, so no arity checks it
+    and no second SOURCE knows it. The only second reading available is of the
+    SAME sentence: does it take back what it says? Generators had confounded two
+    signals (every real phrasing present tense, every distractor past tense WITH
+    a cancelling clause), so both gates were built and separated by a third arm:
+    real claims rephrased in the PAST but STILL TRUE.
+      scheduling (200)            none   tense  cancel
+        clean                    1.000   1.000   1.000
+        HARD distractors         0.790   1.000   1.000
+        clean, real claims PAST  1.000   0.645   1.000
+      flood (400 seeds, 252)      none   tense  cancel
+        clean                    0.988   0.881   0.933
+        HARD distractors         0.679   0.659   0.933
+        clean, real claims PAST  0.988   0.317   0.933
+    (1) CANCELLATION IS THE SIGNAL. Both gates catch the scheduling distractor so
+    the catch decides nothing; the PAST arm decides it. And flood's "A disused
+    track ONCE RAN" has no past auxiliary, so tense misses it outright.
+    (2) FIRST COMPONENT HERE THAT TRANSFERS ACROSS DOMAINS UNCHANGED --
+    symbolic_ai_generators/staleness.py, closed-class and domain-independent,
+    repairing the channel arity, adjacency and enumeration all miss.
+    (3) NOT FREE, and the failure is the finding: flood clean 0.988 -> 0.933,
+    because it deletes the TRUE claim "Water rose through X and it is NO LONGER
+    passable". THE GATE CANNOT DISTINGUISH A SENTENCE THAT WITHDRAWS ITS OWN
+    CLAIM FROM ONE ASSERTING SOMETHING WAS WITHDRAWN, and flood's `flooded`
+    predicate IS a cancellation. Property of the PREDICATE, not of the cue list;
+    no words fix it. Mild here because deleting a flooded claim merely fails to
+    help, so the net on the honest surface is +0.254.
   - THE DETECTABLE ERROR IS THE HARMLESS ONE, and scheduling's distractors were
     defanged exactly as flood's disused track was. The withdrawn machine and
     cancelled job carry no capability and no quantity, and "no machine is set up
@@ -982,10 +1010,10 @@ beliefs:
     Dependency-weighted recall is likely a better target than global recall.
   - Ambiguity should be emitted, not collapsed. Kernels can branch or bound.
 unknowns:
-  - A SECOND READING OF A MULTI-VALUED FACT. Every detector built today keys on
-    redundancy that comes from ARITY, so multi-valued claims (flood's flooded,
-    scheduling's has_capability) are undetectable -- and in both domains that is
-    where the damage is. Nothing in this repo reads a multi-valued fact twice.
+  - ANSWERED for the sentence-internal form: a CANCELLATION gate reads the same
+    sentence twice and repairs both domains' multi-valued channel. Still open --
+    a second reading that is not sentence-internal, for a domain whose predicate
+    IS a negation (flood's `flooded`), where the gate provably cannot work.
   - What the template reader does under paraphrase. corrupt() perturbs the
     recovered world; nothing perturbs the TEXT. This is the front's true zero.
   - Whether the F = trivial-answer-share decomposition transfers to another
