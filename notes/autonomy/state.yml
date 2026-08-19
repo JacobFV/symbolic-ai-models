@@ -48,9 +48,17 @@ measured:
     -- and PREDICTED solvency at 0.000 when that domain had no reader at all.
     The reader built afterwards (solvency/read_surface.py, the module it was
     missing) scores 1.000 accuracy and 1.000 filing recall in all six cells of
-    V x arrangement. Honest at the ORDINAL level, over-counts at the cardinal:
-    judging which collisions a declared mechanism resolves is still human, and
-    ranking them by span mass is what makes that cheap.
+    V x arrangement.
+    NOW CARDINAL, and it did not need dependency weighting. A collision is real
+    ambiguity only if the colliding kinds share a ROLE SIGNATURE: link (a,b) vs
+    bridge_on (a,b,via) is flood's LARGEST collision at 456 spans per thousand
+    and has ZERO permutable cases -- structurally not ambiguity, because a
+    reader recovering the roles already has them apart. With that filter flood
+    reads 0.617 raw -> 0.161 real. Permuting the real ones in the TRUE world
+    gives their cost: depot+flooded+needs 0.625, capacity+load_limit 0.550 on
+    only 3.8% of spans. SPAN MASS IS THE WRONG WEIGHT -- it ranks these exactly
+    backwards. Both refinements need NO READER, which is what lets the audit
+    speak before one exists.
     NEAR MISS worth remembering: the first solvency reader scored 0.583 in all
     six cells -- identical across V and arrangement, exactly the signature of
     the structure-independence I was predicting. 0.583 is the MAJORITY-CLASS
@@ -439,12 +447,13 @@ next_actions:
           It also rhymes with the ambiguity machinery and directive 19: emit
           what is known, let the kernel decide, rather than collapsing to a role
           name the text never used.
-      (b) DONE for all three. Solvency now has its reader and audits clean.
-          The audit's own next step is DEPENDENCY WEIGHTING: it counts
-          collisions, not consequences, and link/bridge_on costs nothing while
-          depot/flooded costs everything. This repo already computes
-          ablation-measured dependency size, so weighting by it would turn the
-          instrument from ordinal to cardinal.
+      (b) DONE for all three, and the audit is now cardinal -- see measured.
+          What remains open on the instrument: it sees only CLAIM spans, so
+          information the answer depends on that is rendered as PROSE
+          (solvency's covenant threshold and determination date) is invisible
+          to it. I checked those by hand, which is exactly what an instrument
+          is meant to stop. Scoring every sentence rather than only the ones
+          realising claims would close it and is cheap.
       (c) the rules arm survives arrangement and dies on paraphrase; the
           signature arm the reverse. A reader combining them is not obviously
           impossible -- the closure is about the residual, not the whole task.
