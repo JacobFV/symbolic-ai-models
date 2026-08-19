@@ -52,7 +52,11 @@ from symbolic_ai_core.reader.learned import (CapitalisedMentions,
                                              LearnedSpanReader, Unit, _units)
 from symbolic_ai_core.world import Claim, EntityRef
 
-PARENTS = Path("data/artifacts/wikipedia_parents.jsonl")
+#: `--corpus <path>` swaps the article set. The default is the 168-article file
+#: every published real-text number is measured on and it is never written to.
+PARENTS = Path(sys.argv[sys.argv.index("--corpus") + 1]
+               if "--corpus" in sys.argv
+               else "data/artifacts/wikipedia_parents.jsonl")
 RELATIONS = Path("data/artifacts/company_relations.jsonl")
 OUT = Path("runs/real_text_reader.json")
 FOLDS = 4
@@ -98,7 +102,10 @@ def corpus() -> list[dict]:
     for line in PARENTS.read_text().splitlines():
         r = json.loads(line)
         intros[r["qid"]] = {"qid": r["qid"], "title": r["title"],
-                            "intro": r["intro"], "parent": list(r["current"])}
+                            "intro": r["intro"], "parent": list(r["current"]),
+                            "country": [], "headquarters": []}
+    if not RELATIONS.exists():
+        return [d for d in intros.values() if d["intro"]]
     for line in RELATIONS.read_text().splitlines():
         r = json.loads(line)
         if r["qid"] in intros:
@@ -338,6 +345,8 @@ def main() -> None:
           "state-first reader:\n    coverage 0.601, correct 0.393, "
           "precision 0.653 -- tuned against this corpus.")
     tag = ("_mil" if MIL else "") + ("_wordnet" if WORDNET else "")
+    if PARENTS.name != "wikipedia_parents.jsonl":
+        tag += "_" + PARENTS.stem.replace("wikipedia_parents", "").strip("_")
     out_path = OUT.with_name(f"real_text_reader{tag}.json") if tag else OUT
     OUT.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(json.dumps({"n_articles": len(docs), "folds": FOLDS,
