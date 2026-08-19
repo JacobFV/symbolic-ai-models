@@ -71,9 +71,23 @@ measured:
     to decide whether to give it is exactly what the collapsing reader spends,
     for the same twenty correct answers. The difference between 13.4x and 1.0x
     is the difference between CHECKING every candidate and PROVING none matters.
-    GENERALITY: needs a MONOTONE perturbation and a STRUCTURAL INVARIANT
-    standing in for the expensive computation. Covers DELETIONS only -- a
-    corrupted limit is not monotone and the free half of the argument goes.
+    GENERALITY TESTED ON SCHEDULING, AND ONLY ONE HALF TRANSFERS. Monotonicity
+    is general: deleting a has_capability can only make an instance infeasible,
+    so 43/60 infeasible instances are safe FOR FREE with 0 unsound, worth 57%
+    on its own (6.6 -> 2.9 mean solves). The STRUCTURAL INVARIANT does not
+    transfer: the closest analogue to two edge-disjoint routes -- every job has
+    two capable machines with room -- is UNSOUND ON 8 OF THE 9 instances it
+    fires on, because two capable machines guarantee the CAPABILITY survives and
+    say nothing about whether the PACKING still fits.
+    THE GENERAL STATEMENT: the pattern's reach is set by the COMPLEXITY OF THE
+    UNDERLYING DECISION, not by anything about readers or ambiguity.
+    Reachability characterises 'a route survives' in P; nothing characterises 'a
+    feasible packing survives' without solving it. In a NEW domain, ask whether
+    the kernel's decision has a polynomial structural characterisation -- if
+    yes, expect a free certificate; if no, expect the monotone half and budget
+    enumeration for the rest.
+    Covers DELETIONS only -- a corrupted limit is not monotone and even the free
+    half goes.
   - REFUSING TO COLLAPSE COSTS NOTHING HERE AND FLAGS EVERY ERROR. Nothing
     downstream of a reader can catch an invented claim, so the remaining
     response is directive 19's. The audit says offline that flood's (2 regions,
