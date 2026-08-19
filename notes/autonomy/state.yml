@@ -40,6 +40,25 @@ measured:
     because the atom rule that keeps a pronoun with its antecedent -- required
     for the document to stay true -- preserves the demand binding; a property of
     the task, not a leak.
+  - THE GAP IS NOT LEXICAL, AND A THESAURUS IS WORSE THAN NO WORDS. WordNet
+    installs; expanding the declared anchors by synset + direct hyponyms +
+    direct hypernyms + derivational forms takes 6/6/5 tokens to 507/224/593 and
+    RECOVERS NOTHING: adversarial phrasings 0.618 -> 0.588 (below the
+    no-vocabulary floor), original phrasings 1.000 -> 0.735. Dropping tokens
+    shared across roles helps the original slightly (0.794) and makes the
+    adversarial much worse (0.412), because shared-token ambiguity was a BRAKE
+    -- two roles matching falls through to elimination, one WRONG role is
+    assigned confidently.
+    Mechanism: the tight vocabulary's value was PRECISION, not coverage. For a
+    component feeding a symbolic pipeline -- wrong claims propagate, missing
+    ones merely fail to help -- precision dominates coverage, and automatic
+    expansion trades away the silence-not-error failure mode that was the arm's
+    virtue.
+    The adversarial phrasings name roles by CONSEQUENCE ("nothing gets through",
+    "where the fleet sleeps"). A thesaurus bridges flood->inundate, not
+    flood->nothing gets through. What settles them is what a role DOES, which is
+    the KERNEL's semantics rather than a dictionary's. NOT ruled out: a
+    DISTRIBUTIONAL resource, which is situational where WordNet is taxonomic.
   - THE EMPTY CELL IS FILLED, BY ONE VOCABULARY. read_content_roles -- type
     signature for everything it determines, a declared anchor vocabulary for the
     one group it cannot -- scores 1.000 in ALL FOUR cells of phrasing x
@@ -395,6 +414,14 @@ next_actions:
           than error. Lexical generalisation is now justified against a measured
           gap of 0.382; enlarging the hand-declared list is NOT, because that
           memorises the generator one variant later.
+      (a2) THE LIVE EDGE: let the reader EMIT CONSEQUENCES and the kernel BIND
+          them. The reader can see a sentence says a region is unusable without
+          knowing the word `flooded`; the routing kernel already knows an
+          unusable region is what `flooded` means to it. That is a different
+          mechanism from matching words and it is where the evidence now points.
+          It also rhymes with the ambiguity machinery and directive 19: emit
+          what is known, let the kernel decide, rather than collapsing to a role
+          name the text never used.
       (b) DONE for scheduling, and the answer reframed the question -- see
           measured. Solvency is still open and now has a sharper form: it has
           no committed reader module (its 1.000 came from a script), so the
