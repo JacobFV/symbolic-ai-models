@@ -120,6 +120,22 @@ weight. The concentration that makes the product cheap makes it fragile.
 > usually usable and often false.** A narrowed band must be quoted with `a^k`,
 > and `a` for a real model on this task is unmeasured — §6.
 
+**And the fix is the repo's own ethos: widen for the error rather than collapse.**
+If at most `m` of `k` lookups are wrong, widen both ends by the `m` largest
+resolved weights. At `a = 0.95`, `k = 10`:
+
+| m | coverage | median band |
+|---:|---:|---:|
+| 0 *(naive)* | 63.3% | 10.4% |
+| **1** | **96.9%** | **23.7%** |
+| 2 | 100.0% | 28.7% |
+
+So at the same **$0.045**: doing nothing is a 43.5% band always true; naive
+resolution is 10.4% and true 63% of the time; **widening for one error halves the
+band to 23.7% and stays true 96.9% of the time.** `additive_bounds` needed no
+change — only the right input. **Do not let an uncertain input collapse a certain
+output.**
+
 The advantage is a property of the domain's **structure-provenance**, not of the
 technology — and this reconciles the two
 halves of the session that looked contradictory. The repo's earlier advantages

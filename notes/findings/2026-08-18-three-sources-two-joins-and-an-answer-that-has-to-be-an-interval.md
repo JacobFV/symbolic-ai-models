@@ -241,6 +241,35 @@ and faster than the lookup's error rate suggests. A narrowed band has to be
 quoted with its reliability `a^k` — and nobody has `a` for a real model on this
 task, because that comparison is still blocked on credentials (`ROADMAP.md` 0b).
 
+### The fix, and it is this repo's own ethos: widen for the error rather than collapse
+
+Treating a lookup as having **settled** a position is exactly the collapse the
+ambiguity machinery exists to refuse. A lookup with accuracy `a` does not settle
+anything — it makes one alternative likelier. The honest construction feeds that
+back in: if `k` positions are resolved and at most `m` are wrong, **widen both
+ends by the sum of the `m` largest resolved weights.**
+
+At `a = 0.95`, `k = 10`, n = 615 filers:
+
+| m errors allowed | **coverage** | median band | binomial P(errors ≤ m) |
+|---:|---:|---:|---:|
+| 0 *(the naive product)* | **63.3%** | 10.4% | 59.9% |
+| **1** | **96.9%** | **23.7%** | 91.4% |
+| 2 | 100.0% | 28.7% | 98.8% |
+| 3 | 100.0% | 32.5% | 99.9% |
+
+Coverage beats the binomial tail because two errors can **cancel** rather than
+compound.
+
+> **The honest product, at the same $0.045:** doing nothing gives a **43.5%**
+> band that is always true; naive resolution gives **10.4%** and is true 63.3% of
+> the time; widening for one error gives **23.7%** and is true **96.9%** of the
+> time. **The band roughly halves against doing nothing while staying true** —
+> and the naive version should never ship.
+
+`additive_bounds` needed no change. It needed the right input: **do not let an
+uncertain input collapse a certain output.**
+
 ### A bug caught by an impossible shape
 
 The first version of this curve was **non-monotone**: 28.6% median band at 1
