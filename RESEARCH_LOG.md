@@ -111,6 +111,30 @@ number.
   it: 0.450, unchanged by every check. A test asserts this so the 1.000 above is
   not read as a solution.
 
+### And on real prose the signature carries almost nothing
+
+The instrument's floor, measured with the instrument. On the generated surfaces
+the biggest signature bucket holds **one** claim kind for scheduling and solvency
+— which is what an ambiguity mass of 0.000 looks like, and a bucket can be huge
+and still hold one kind: solvency's holds half of all its claim spans.
+
+On real prose the biggest bucket is the **empty** signature — no recognised
+entity, no number, no date — and it holds **44.2%** of 36,223 scientific
+sentences and **46.9%** of 75,555 narrative ones, expressing plainly different
+predicates. So **ambiguity mass on real prose is at least 0.44**, against the
+0.000 the repo cites when arguing a content-free reader can work.
+
+The reason is structural rather than an artefact of entity detection: **a
+signature over (entity counts, numbers, dates) never looks at the verb**, and the
+verb is where a real predicate lives. Signature determinacy is a property of
+surfaces whose claim kinds were *given* distinct arities.
+
+Worth recording as method: the first version of that measurement used **entropy**,
+which showed real abstracts carrying *more* signature entropy (3.65 bits) than any
+generated surface (2.26–2.61) and answered nothing. Entropy says how much a
+signature varies, not how much it determines. It was chosen because it needed no
+labels — which is exactly why it could not answer the question labels are for.
+
 ### And the signature audit predicts none of it
 
 `audit_surface` is credited with predicting four things — reader difficulty, where

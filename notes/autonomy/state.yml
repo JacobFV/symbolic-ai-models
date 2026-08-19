@@ -40,6 +40,32 @@ measured:
     because the atom rule that keeps a pronoun with its antecedent -- required
     for the document to stay true -- preserves the demand binding; a property of
     the task, not a leak.
+  - ENTROPY WAS THE WRONG STATISTIC AND THE NUMBERS SAID SO. Asked how much a
+    sentence signature tells you about English nobody here wrote, reached for
+    entropy because it needs no labels:
+      flood (gen) 2.59 bits / scheduling 2.26 / solvency 2.61
+      abstracts 3.65 / narrative 2.06
+    REAL ABSTRACTS CARRY MORE SIGNATURE ENTROPY THAN ANY GENERATED SURFACE --
+    my stated refutation condition, fired. And not an answer: entropy says how
+    much a signature VARIES, not how much it DETERMINES. Determinacy is a
+    property of the JOINT distribution of signature and predicate. I chose it
+    because it was computable without labels, which is exactly why it cannot
+    answer the question labels are for.
+    WHAT SURVIVES, exact where the spans carry their kind:
+      flood       top bucket 0.455  2 kinds  ->  mass 0.860 (known raw figure)
+      scheduling             0.291  1 kind   ->       0.000
+      solvency              0.509  1 kind   ->       0.000
+    A BUCKET CAN BE HUGE AND HOLD ONE KIND -- that is what a determinate surface
+    looks like. Real prose is not like that: the largest signature in BOTH
+    corpora is the EMPTY one (no entity, no number, no date), holding 44.2% of
+    abstract sentences and 46.9% of narrative ones, with samples that are plainly
+    different predicates. So AMBIGUITY MASS ON REAL PROSE IS AT LEAST 0.44
+    against the 0.000 scheduling and solvency post -- and 0.000 is the reading
+    this repo uses to argue a content-free reader can work.
+    DETECTOR-INDEPENDENT: a signature over (entity counts, numbers, dates) NEVER
+    LOOKS AT THE VERB, and the verb is where a real predicate lives. A better NER
+    moves sentences between buckets; it does not make "contributed to", "is
+    realized" and "include" distinguishable by shape.
   - SOUNDNESS IS PRICED AS A BREAK-EVEN, so "it depends what a wrong answer
     costs" stops being a hedge. usd_per_solved_above_floor counts ANSWERS, so a
     certificate that refuses half of them scores WORSE however sound it is --
