@@ -230,9 +230,10 @@ next_actions:
     where this same reader (position ablated) leaves 72 consistent worlds and a
     bound deciding 0.0% -- so it must EMIT ambiguity rather than resolve it.
   - Renderer for solvency, to give it a milestone row.
-  - Tighten grounding to ROLE level. Token-and-adjacency still passes a real
-    number asserted about the wrong entity, which is the same shape of gap the
-    ordering bug was.
+  - Grounding now has three levels -- token, route adjacency, and CONTRADICTION
+    against the structured answer -- and the renderer passes all three 40/40.
+    The remaining hole is a real quantity attached to the wrong entity when no
+    route or polarity claim is made; role-level binding would close it.
   - Ambiguity budget on solvency: is it again concentrated on the claim that
     SIZES the answer -- in flood the demand, here plausibly the threshold or
     the decision date? Measurable with what now exists.

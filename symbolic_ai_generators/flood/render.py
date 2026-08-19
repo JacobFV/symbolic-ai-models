@@ -243,13 +243,29 @@ def ungrounded(answer: Answer, case: Any, outputs: dict[str, Any]) -> list[str]:
         for r in routes:
             for a, b in r.get("edges") or []:
                 real_edges.add(frozenset((a, b)))
+    # Contradiction check. Token grounding and adjacency both pass a sentence
+    # that asserts the OPPOSITE of the structured answer using only real tokens
+    # on a real route -- "truck_1 runs <real path> and clears 4500 kg" when
+    # truck_1 is not in the decision. The whole separation between reasoning and
+    # generation is that the structured answer is canonical and the paragraph is
+    # downstream; that is worth nothing if the paragraph can disagree with it and
+    # nothing notices.
     bad: list[str] = []
+    can = set(answer.structured)
+    for m in re.finditer(r"(truck_\d+) (runs|cannot)", answer.text):
+        vehicle, verb = m.group(1), m.group(2)
+        asserted_able = verb == "runs"
+        if asserted_able != (vehicle in can):
+            bad.append(
+                f"paragraph says {vehicle} {verb!r} but the structured answer "
+                f"{'includes' if vehicle in can else 'excludes'} it")
     for m in re.finditer(r"((?:region_\d+)(?: to region_\d+)+)", answer.text):
         hops = m.group(1).split(" to ")
         for a, b in zip(hops, hops[1:]):
             if frozenset((a, b)) not in real_edges:
                 bad.append(f"route hop {a}->{b} is not an edge of any "
                            f"reported route")
+
     for tok in _NUM.findall(answer.text):
         if tok not in known_nums:
             bad.append(f"number {tok} appears in no claim or flow output")

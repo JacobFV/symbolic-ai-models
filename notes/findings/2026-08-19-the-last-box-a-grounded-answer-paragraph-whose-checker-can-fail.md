@@ -84,6 +84,28 @@ A groundedness metric that cannot detect an invented fact measures nothing, so
 three tests exist to make it fail: an invented quantity (`9999 kg`), an invented
 entity (`truck_77`), and the false ordering above. All three are caught.
 
+## TIGHTENED, 2026-08-19: the paragraph cannot contradict the decision
+
+The gap this note named — *"a real number asserted about the wrong entity would
+pass"* — has a sharper form than role bindings. **Token grounding and adjacency
+both pass a sentence that asserts the opposite of the structured answer**, using
+only real tokens on a real route: *"truck_1 runs region_0 to region_5 to
+region_3 and clears it"* when `truck_1` is not in the decision.
+
+That matters because the whole separation between reasoning and generation is
+that the structured answer is canonical and the paragraph is downstream. **The
+separation is worth nothing if the paragraph can disagree with the decision and
+nothing notices.**
+
+`ungrounded()` now checks polarity against the structured answer: every
+`<vehicle> runs` / `<vehicle> cannot` must agree with whether that vehicle is in
+it. Three tests make the check fail — claiming a refused vehicle runs, denying an
+able one, and confirming an honest paragraph is not flagged.
+
+**The renderer passes unchanged, 40/40**, so the milestone's `grounded 1.000`
+column was not overstated. What changed is that the checker can now see a class
+of falsehood it could not.
+
 ## What would refute it
 
 - **Grounding is token-and-adjacency, not semantic.** A sentence asserting a real

@@ -99,6 +99,56 @@ class TestTheCheckerCanFail:
             "a false ordering of real regions was not caught")
 
 
+class TestTheParagraphCannotContradictTheDecision:
+    """Token grounding and adjacency both pass a sentence that asserts the
+    OPPOSITE of the structured answer using only real tokens on a real route.
+    The separation between reasoning and generation is worth nothing if the
+    paragraph can disagree with the decision and nothing notices."""
+
+    @staticmethod
+    def _case_with_a_refused_vehicle(rendered):
+        for c, ans, outs, a in rendered:
+            refused = [v for v in outs["load_report"].value["per_vehicle"]
+                       if v not in ans]
+            if refused and ans:
+                return c, ans, outs, a, refused[0]
+        return None
+
+    def test_claiming_a_refused_vehicle_runs_is_caught(self, rendered):
+        pick = self._case_with_a_refused_vehicle(rendered)
+        assert pick is not None, "need a case with both an able and a refused vehicle"
+        c, ans, outs, a, refused = pick
+        # a real route, real limit, real vehicle -- only the POLARITY is false
+        real_path = None
+        for r in outs["load_report"].value["per_vehicle"][refused]:
+            edges = r.get("edges") or []
+            if edges:
+                real_path = " to ".join(
+                    dict.fromkeys([edges[0][0]] + [e[1] for e in edges]))
+                break
+        forged = Answer(
+            structured=ans,
+            text=a.text + f" {refused} runs and clears it.",
+            citations=a.citations)
+        bad = ungrounded(forged, c, outs)
+        assert any(refused in b and "structured answer" in b for b in bad), bad
+
+    def test_denying_an_able_vehicle_is_caught(self, rendered):
+        pick = self._case_with_a_refused_vehicle(rendered)
+        c, ans, outs, a, _ = pick
+        able = ans[0]
+        forged = Answer(structured=ans,
+                        text=a.text + f" {able} cannot after all.",
+                        citations=a.citations)
+        bad = ungrounded(forged, c, outs)
+        assert any(able in b and "structured answer" in b for b in bad), bad
+
+    def test_the_honest_paragraph_is_not_flagged(self, rendered):
+        for c, _, outs, a in rendered:
+            assert not [b for b in ungrounded(a, c, outs)
+                        if "structured answer" in b]
+
+
 class TestGenerationCannotContaminateReasoning:
     def test_the_structured_answer_is_exactly_what_the_flow_returned(self,
                                                                      rendered):
