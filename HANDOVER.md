@@ -11,66 +11,127 @@ were each paid for), `APPROACH.md` (the argument), then this, then `ROADMAP.md`.
 
 ---
 
-## 0a. The newest layer — 2026-08-19, late. Read before §0.
+## 0a. The state after 2026-08-19. Read this before anything else.
 
-A day spent on **what catches a reading error**, and the answer is uncomfortable
-enough to lead with:
+A long session on **what a reader gets wrong, what can catch it, and what any of
+it costs**. It supersedes §0 in several places and it changes what to do first.
 
-> **A check is sound over the channel it reads and blind to every other; whether
-> it can read a channel at all is set by that role's arity; and arity has nothing
-> to do with how much damage an error there does.** In both domains measured, the
-> most damaging reader error is the least detectable one.
+### The benchmark was easier than it looked, in all three domains
 
-- **Emission is a theorem, not a heuristic.** Where the read world can differ
-  from the true one *only* in the role assignment, agreement among the emitted
-  candidates ⇒ correct, and a wrong collapse ⇒ disagreement. Sound **and
-  complete** by construction. Consequences: **no certificate can improve such an
-  arm** (0.361 → 0.056 coverage, 0 wrong both), and **coverage is not a tunable**
-  — it is the inert share. Turn on a second channel (`hard_distractors`, invented
-  links) and the same arm is 40 wrong of 114.
-- **Emission recovers no accuracy.** At the lexical floor it decides 0.361 with
-  0 wrong, and every decided case is one the collapsing reader already got right.
-  You can know that you do not know; you cannot answer.
-- **The audit cannot make this call**, and that is the first thing it cannot
-  predict. `audit_surface(prose=True)` scores the two flood surfaces
-  **identically** (mass 0.640, the same 280 prose flags) while soundness differs
-  1.000 vs 0.649. It measures ambiguity of the **signature**, not fragility of
-  the **vocabulary**.
-- **A vocabulary can be worse than none: −0.290.** And the control that said
-  otherwise could not fail — `_verify_adversarial` asserts the same predicate
-  `_anchor_role` computes, so that arm *is* the emptied-anchor arm, case by case.
-  Run properly (`scripts/misfiring_vocabulary.py`), a wrong-firing vocabulary
-  costs more than the whole distance between having one and not.
-- **Three checks, three kinds of evidence, zero false alarms.**
-  `read_surface.evidence_conflict` — positional (`stolen`), cross-role
-  (`reassigned`), structural (`arity`). Together they cover all three flood
-  misfire directions; separately each is the unique coverer of one.
-- **Scheduling's distractors were defanged exactly like flood's.** One admitted
-  sentence takes it 1.000 → **0.790**, every failure in the **unsound**
-  direction, arity firing **0.000** — while the catchable side costs 0.035 and
-  fires 1.000. `hard_distractors` now exists there too, default `False`.
-- **One component transfers across domains unchanged**, the first here:
-  `symbolic_ai_generators/staleness.py`. **Cancellation, not tense** — the tense
-  gate destroys true claims phrased in the past (0.645, 0.317) and misses
-  *"a disused track once ran"*. The cancellation gate takes scheduling
-  0.790 → 1.000 and flood 0.679 → 0.933. **It costs 0.055 on flood's clean
-  surface** because it deletes *"…it is no longer passable"*: it cannot tell a
-  sentence that withdraws its own claim from one asserting something *was*
-  withdrawn, and flood's `flooded` predicate **is** a cancellation. A property of
-  the predicate; no cue list fixes it.
+**Every distractor was inert by construction.** Flood's disused track drew its
+endpoints from regions appearing nowhere else; scheduling's withdrawn machine
+carried no capability and its "anodising" sentence names a capability outside the
+vocabulary; solvency's divested `sub_99` appears nowhere else at all. Measured:
+flood's reader **admits** its distractor on 60/60 cases and the other two never
+even type theirs (0/60 each).
 
-**Numbers below that are now wrong:** the all-adversarial floor **0.618 was
-n=34**; at 400 seeds it is **0.710** (grouped stable at 0.758), so the measured
-case for lexical generalisation is **0.290, not 0.382**. And *"the anchors never
-misfire, so its failure mode is silence rather than error"* is retracted — it
-holds only for phrasings constructed to keep them silent.
+Point them at entities that matter — `hard_distractors=True`, now in all three
+generators, default `False` so published numbers keep their meaning:
 
-**Three method lessons, all from single experiments:** run the clean arm for
-**every** check, not just the treatment; ask what your **verification step**
-asserts about the mechanism under test; and construct a failure so it is
-**inexpressible** in the representation under test, or you are measuring luck.
+| domain | published | **honest** | with today's components |
+|---|---:|---:|---:|
+| flood | 0.988 | **0.679** | 0.933 |
+| scheduling | 1.000 | **0.790** | 1.000 |
+| solvency | 1.000 | **0.450** *(floor 0.550)* | 1.000 |
 
----
+Solvency on the honest surface is **worse than answering "no" every time**. Use
+the honest setting for anything new.
+
+### Two responses to a corrupt channel, and which one a domain permits
+
+**Detection** reads the fact a second time — sound *and* complete, gated by the
+role's **arity**. **Insensitivity** proves the answer does not depend on it —
+sound but lossy, gated by the shape of the **decision**.
+
+| channel | arity | detection | insensitivity | break-even `W` |
+|---|---|---:|---:|---:|
+| flood `link` | multi | 0.000 | 0 wrong @ 48.8% | 0.595 |
+| flood roles | single | 0.774–0.976 | — | — |
+| scheduling `has_capability` | multi | 0.000 | 0 wrong @ 52.5% | 2.948 |
+| scheduling `needs_capability` | **single** | 1.000 | — | — |
+| solvency `owns` | multi | 0.000 | 0 wrong @ 48.5% | free |
+| solvency `revenue` | multi | 0.000 | **none possible** | — |
+
+Three things to carry: **the detectable errors are the harmless ones**;
+**undetectable is not uncertifiable**; and **only an aggregating decision denies
+both** — which is why solvency's repair had to be in the reader.
+
+### The reader's own design rules, both measured
+
+- **Accumulate, do not branch.** A packed sentence (two claims, one sentence)
+  collapses a branching reader to its floor — solvency 1.000 → 0.567, scheduling
+  1.000 → 0.658. `read_signature_accumulating` in both recovers **1.000** and is
+  identical on every honest surface. Theorem: a signature is a function of the
+  sentence, so **no signature reader can be packing-robust**; the claims are still
+  there, and accumulation recovers the content the signature cannot classify.
+- **Cut at the clause, and no finer.** A sentence-level staleness gate takes a
+  reader from 0.925 to 0.625 on packed prose. `filter_stale(…, unit="clause")`
+  restores 1.000. Sweeping five granularities gives a **peak**: the finest split
+  reproduces the sentence split's numbers to three decimals, because cutting
+  through `a subsidiary **of** X` leaves no fragment matching the pattern.
+  **Over-splitting is over-deleting.**
+
+### Explanations are wrong more often than answers
+
+- Flood's complete renderer cites a false fact on **7.6%** of answers it got
+  **right**, and 15.5× worse per citation than the two-fact template — because its
+  extra facts are the load-bearing set computed from the **read** world.
+- Solvency is far worse: the stated consolidated total is wrong on **1.000** of
+  cases while the verdict is wrong on 0.485. Sweeping the perturbation, **at a
+  0.1% reading error the answer is perfect and the explanation is wrong 985 times
+  in 1,000** — the two are functions of different variables and the ratio diverges.
+- `ungrounded` flags **none** of it, in every cell. It certifies consistency with
+  the world *as read*.
+- **`render.uncorroborated` flags 88 of 88 false citations in 7.5% of them**, and
+  **a certified answer cites no link at all** — 0.022 falsehood against 0.378. One
+  check buys soundness *and* an honest account.
+- The general rule: **an explanation's error rate is not bounded by the answer's**;
+  inspectability is free only when the kernel uses claims **directly**.
+
+### Real text exists now, and it is where the ideas get tested
+
+`data/artifacts/wikipedia_parents.jsonl` — 168 companies, Wikidata `P749` against
+the Wikipedia intro, with **former** parents labelled by `P582`. Rebuild it with
+`scripts/fetch_wikipedia_parents.py`.
+
+- The gold parent is named in the intro on only **0.696** of articles; four
+  regexes get **0.369** at 0.626 precision.
+- **`agreement` transfers nothing** — 0.603–0.626 precision, flat, at 0.21 less
+  coverage. It tests *mutually exclusive alternatives*, and real prose supplies
+  none: *Sony Music Entertainment* and *Sony Music Group* are one answer at two
+  granularities.
+- **`corroboration` transfers** — 0.718 against 0.346, graded (0.375 / 0.500 /
+  0.857 / 0.784 by mention count), priced at **W = 0.242**, the lowest of the day.
+  The first component here to improve a real-text number.
+- The staleness gate's cue list was **85% false positives** on real English and
+  needed three corrections, each found by **adding a genre**, not by thinking
+  harder: the passive of *use* (53.5% of scientific fires), four temporal cues,
+  and `struck` (29.9% of narrative fires, two in 36k scientific sentences).
+- **Ambiguity mass on real prose is ≥ 0.44**, against the 0.000 that scheduling
+  and solvency post — a signature never looks at the **verb**.
+
+### What to do first
+
+1. **Use `hard_distractors=True` and the accumulating readers.** Anything measured
+   on the default surface with a branching reader is measuring the easy case.
+2. **Real text is the front.** One arm exists; the corroboration result says the
+   repo's ideas can pay there, and the agreement result says which ones will not.
+3. **A reader on real text needs entity resolution**, which nothing here has —
+   that is the concrete missing capability the emission failure names.
+4. Blocked: SEC EDGAR needs a contact **email** in the `User-Agent`, and financial
+   filings are the genre solvency imitates. One line from the user unblocks it.
+
+### Numbers below that are now wrong
+
+- The all-adversarial floor **0.618** was n=34; at 400 seeds it is **0.710**.
+- *"The anchors never misfire"* is retracted — the control asserted the same
+  predicate the mechanism computes. A misfiring vocabulary costs **−0.290**.
+- `break_even_wrong_cost` reported **0.103** for the corroboration filter; the
+  honest figure is **0.242** (the function assumed a baseline that answers
+  everything). The three certificates are unchanged.
+- Solvency's ownership paragraph was **decorative**: `read_signature` enrols a
+  member the moment it files, and deleting the paragraph changes **0 of 200**
+  answers.
 
 ## 0. Read this first — 2026-08-19, and it supersedes some of §1
 
