@@ -40,6 +40,30 @@ measured:
     because the atom rule that keeps a pronoun with its antecedent -- required
     for the document to stay true -- preserves the demand binding; a property of
     the task, not a leak.
+  - A PACKED SENTENCE IS AMBIGUOUS BY DEFINITION. Constructive half of the
+    Wikipedia result: each generator now takes a `packed` option rendering two
+    claims as ONE sentence with a span for each over the same text (default
+    False, so published numbers keep their meaning).
+      domain      packed  ambiguity mass  accuracy  floor
+      solvency        no           0.000     1.000  0.567
+      solvency       yes           0.741     0.567  0.567
+      scheduling      no           0.000     1.000  0.658
+      scheduling     yes           0.279     0.658  0.658
+    BOTH READERS COLLAPSE TO THEIR FLOOR EXACTLY. Mechanism in one diff --
+    scheduling seed 0 has_capability [(m0,cut),(m0,weld),(m1,cut),(m1,paint)] ->
+    [(m0,weld),(m1,paint)] with every capacity intact, because read_signature
+    branches on shape with an ELIF chain and the packed sentence matches the
+    capacity branch first.
+    THE AUDIT PREDICTS IT OFFLINE and ranks solvency worse -- the FIRST thing
+    today the instrument gets AHEAD of.
+    THEOREM, not measurement: a signature is a FUNCTION OF THE SENTENCE, so
+    ambiguity_mass >= the share of multi-claim sentences and NO SIGNATURE READER
+    CAN BE PACKING-ROBUST. Real prose is packed. Closes the loop from the
+    Wikipedia finding: the sentence is the wrong unit AND the signature is
+    defined on it.
+    THE ACTIONABLE RULE: ACCUMULATE, DO NOT BRANCH. Flood survives because
+    read_content_roles folds crossings into links rather than selecting a branch.
+    A property of CONTROL FLOW, which the audit is blind to.
   - ON REAL PROSE THE SENTENCE IS THE WRONG UNIT. First task here with real
     prose AND a real answer. Every structured source on disk (cfpb, senate-lda,
     sec-edgar, patentsview, cskg, gutenberg) is node/edge tables with the prose
@@ -1140,6 +1164,33 @@ measured:
     32, so lifts across different n_eval are not comparable
 
 theory:
+  - name: packing_ambiguity
+    status: derived_and_measured
+    formula: "ambiguity_mass >= share of sentences realising more than one claim kind"
+    consequence: >
+      A signature is a FUNCTION OF THE SENTENCE, so a sentence realising two claim
+      kinds maps to both and is ambiguous BY DEFINITION. NO SIGNATURE READER CAN
+      BE PACKING-ROBUST, and real prose is packed -- measured on 168 Wikipedia
+      intros, where a sentence-level staleness gate loses the answer along with
+      the distractor. The generated surfaces never packed, which is exactly why
+      they reported 0.000 mass and why every claim-level mechanism here (the
+      audit's spans, unconsumed, evidence_conflict, filter_stale) assumes one
+      claim per sentence.
+    measured: >
+      With a `packed` surface option: solvency mass 0.000 -> 0.741 and accuracy
+      1.000 -> 0.567, its floor EXACTLY; scheduling 0.000 -> 0.279 and
+      1.000 -> 0.658, its floor exactly. The audit predicts both OFFLINE and
+      ranks solvency worse, which is the first thing today it gets ahead of.
+    escape: >
+      ACCUMULATE, DO NOT BRANCH. Flood survives a packed sentence because
+      read_content_roles writes crossings into a dict and folds them into links
+      rather than selecting a branch -- it is not signature-based at that point.
+      A reader assigning into per-kind stores can take several claims from one
+      sentence; one selecting a branch per sentence cannot, and no signature
+      refinement changes that. This is a property of CONTROL FLOW, which the
+      audit cannot see, so the theorem and its escape sit either side of the
+      instrument's boundary.
+    evidence: runs/packed_surfaces.json, runs/wikipedia_parents.json, tests/test_packed_surfaces.py
   - name: detectability_from_arity
     status: empirical_three_domains
     formula: "a reader error is detectable only where the corrupted role carries a SECOND independent reading"

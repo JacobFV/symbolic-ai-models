@@ -187,6 +187,39 @@ while precision among answered is **0.63** against a 0.696 ceiling. On real text
 the staleness problem is a small slice of the error and the dominant one is that
 extraction is hard — perfect staleness handling moves accuracy 0.392 → 0.419.
 
+### And a packed sentence is ambiguous by definition
+
+The constructive half. Each generator now takes a **`packed`** option that renders
+two claims as one sentence, with a span for each over the same text — the
+granularity real prose has and none of these surfaces ever did.
+
+| domain | packed | ambiguity mass | accuracy | floor |
+|---|---|---:|---:|---:|
+| solvency | no | **0.000** | 1.000 | 0.567 |
+| solvency | **yes** | **0.741** | **0.567** | 0.567 |
+| scheduling | no | **0.000** | 1.000 | 0.658 |
+| scheduling | **yes** | **0.279** | **0.658** | 0.658 |
+
+**Both readers collapse to their floor, exactly**, and the mechanism is one diff:
+scheduling's `has_capability` goes from four claims to two while every capacity
+survives, because `read_signature` branches on shape with an `elif` chain and a
+packed sentence matches the capacity branch first.
+
+**The audit predicts it offline** and ranks solvency as the worse case — the first
+thing in this whole line that the instrument gets *ahead* of. It does so because
+packing is what it is about, and that is a theorem:
+
+> **A signature is a function of the sentence.** A sentence realising two claim
+> kinds maps to both, so `ambiguity_mass` is bounded below by the share of
+> multi-claim sentences and **no signature reader can be packing-robust**. Real
+> prose is packed.
+
+Flood is the control and gives the design rule: **accumulate, do not branch.**
+`read_content_roles` recovers both kinds from a packed sentence because it folds
+crossings into links rather than selecting a branch — which is a property of
+**control flow**, exactly what the audit cannot see. The theorem and its escape
+sit either side of the instrument's boundary.
+
 ### The floor is liftable by reading, in exactly one domain
 
 The uncued stale sentence — *"sub_98 left the group in April"* — is stale because
