@@ -2668,6 +2668,102 @@ Scripts: `bridged_join.py`, `vertical_slice_country_exposure.py`,
 `bound_attribution.py`. Notes: the 2026-08-18 findings under
 `three-sources-two-joins-...` and `the-advantage-is-a-property-of-provenance-...`.
 
+## The language boundary is learned, and the boundary is where it is hard
+
+The first reader here whose source contains **no domain lexicon**.
+`symbolic_ai_core/reader/learned.py` is given aligned `(sentence, claim)` pairs
+and induces the predicate inventory, what counts as a name, every role signature,
+each role's filler type, the unit of every quantity, the temporal envelope, and
+which roles are filled from earlier text. What stays in the code is knowledge of
+**English** — segmentation, a tokenizer, two date formats.
+
+On the three generated domains it reads at **1.000 claim F1 and 1.000 end to
+end**, above every hand-written reader (0.955 / 0.954 / 0.983 on claims;
+1.000 / 0.767 / 0.400 end to end).
+
+**And the renaming control takes all three to 0.000.** These corpora hold about
+ten distinct entity names, so nothing in the fit could establish that `region_*`
+is a *kind* of name. One augmentation — rename every entity per document, keep
+the originals — restores 0.955 / 1.000 / 0.994 with end-to-end 1.000. **Every
+number above is quoted for the union fit; the un-augmented reader is a
+vocabulary measurement.**
+
+Two mechanisms the surfaces forced, both induced rather than declared.
+**Minting**: flood's bridges are in the world and in no sentence, so an identity
+is minted from the mentions in the same unit, and `bridge_on` and `load_limit`
+mint the *same* id from different paragraphs without either naming it. Whether a
+role is minted or resolved by reference is learned from how often its filler is
+absent from the sentence versus from the whole document. **Schema is not
+reading**: which profile an entity carries, and that a vehicle declares a
+`payload` variable for the SMT step, appear in no sentence; they are induced from
+the training worlds and given to every arm alike.
+
+### The north star, with a learned boundary
+
+Priced as one system — reader plus the kernels it feeds, 120 held-out episodes a
+domain, $0.02/core-hour:
+
+| domain | accuracy | floor | read ms | kernel ms | **$/solved above floor** | dominant |
+|---|---|---|---|---|---|---|
+| solvency | 1.000 | 0.533 | 1.32 | 0.01 | **$1.59e-08** | reader |
+| scheduling | 1.000 | 0.642 | 1.51 | 0.02 | **$2.37e-08** | reader |
+| flood | 1.000 | 0.342 | 3.07 | 8.36 | **$9.65e-08** | **kernels** |
+
+A $3/Mtok API **at accuracy 1.000** costs 112,395x / 101,809x / 25,597x more per
+solved episode. Drawn at perfect accuracy so no capability claim is needed: **no
+accuracy measurement can close this gap.** The one-off fit ($1.2e-05 to $3.3e-05)
+repays after 0.01–0.02 episodes against the API.
+
+This also inverts a claim this file has carried: *"reading is 96.1% of solvency's
+wall clock"* strengthens to **99.2%** there and **reverses in flood**, where the
+kernels take 73%. It is a statement about the kernel, not about reading.
+
+### Persistence, and what a fair baseline costs
+
+Delivered sentence by sentence, an incrementally maintained world is
+**claim-for-claim identical** to re-reading the corpus at **8.3x less reading**,
+and the entire cross-document state required is the **mention history** — not the
+parses, not the claims, a list of names in order.
+
+On real text: ingesting 2,502 Wikipedia intros costs **$1.50e-04 once**. The
+honest comparison is not an API re-reading the corpus (that was the first and
+unfair one) but **iterative retrieval**, which fetches a handful of documents and
+pays for a handful: BM25 + two rounds costs **$6.32e-03 per query**. The world is
+cheaper **from the first query** (54.5x) and by 545,020x at ten thousand.
+
+What retrieval cannot do is more interesting than what it costs. On a two-hop
+question the second document is found **7.3%** of the time at k=1 from the
+question alone, because the question does not contain the answer to the first
+hop. The second retrieval must be **keyed on hop 1's extracted answer**, so an
+iterative loop inherits the same extraction factor the symbolic reader has.
+Multi-hop retrieval does not remove the extraction problem; it moves it inside
+the loop.
+
+### Where it is hard, measured rather than conceded
+
+On 2,502 real articles with **distant supervision only** — a sentence labelled if
+it *contains* a gold filler, no spans — the learned reader reaches **0.182** on
+`parent` against four hand-written patterns at **0.393**. Six levers were tried
+and closed: multi-instance pruning (worse), WordNet supersenses (nothing, and the
+second time supersenses came out at the wrong granularity — they give a category
+and these tasks need a frame), frames on the classifier (nothing), class
+balancing (inner CV chose no weighting at both corpus scales), answer aggregation
+(oracle only 0.012 above argmax), frames on the ranker (+33% on the ranker, +4%
+end to end). Only **ten times the text (+55%)** and **the query (+4%)** moved it.
+
+The mechanism is arithmetic. The token path between two mentions is a **singleton
+91% of the time** and its type inventory has a Heaps exponent of **0.915** — it
+grows as fast as the data, so no corpus makes those frames repeat. Keyed on the
+**last content word** the exponent is **0.648**, and that replicates to three
+decimals across a tenfold change in corpus size. It is **not** a constant of
+relation extraction: `country` comes out at 0.921, because a country is written
+*adjacent* to a city and has no lexical trigger at all.
+
+Extrapolating classifier recall at 1.54x per decade of text, matching four hand
+patterns needs roughly **10⁵–10⁶ articles** — which is the knowledge-acquisition
+bottleneck restated as an exchange rate, and it cuts both ways: the patterns cap
+out at 68% of the corpus ceiling.
+
 ## Awaiting independent challenge — the promotion queue
 
 `notes/` promotes into this file **only once something independent has tried to
@@ -2690,6 +2786,10 @@ finding that never gets challenged.
 | `notes/findings/2026-08-18-the-advantage-curve-was-mostly-the-framing-and-what-is-left-is-a-constant.md` plus its same-day correction | the ~5e7 constant, and the three factors any advantage figure must now name | ~~a second corpus~~ **DONE**: prose moves the *dependency* 7.4× (41 → 302.3 tokens) and the crossover does not transfer at all (99,512 → 5,242), because it scales with corpus size. Now superseded by the `1/f` section above |
 | the certificate arm — `the-certificate-is-worth-nothing-per-quarter-and-1342x-per-filing`, `an-optimum-is-two-claims-...`, `a-witness-grows-linearly-...` | a read-set certificate is worth 0.3–1.0× per quarter and 37×–1,342× per filing, with `advantage <= 1/P_hit` and `P_hit ~ r × keys_per_update / total_keys`; an optimum's witness half is 93× cheaper to keep than its optimality half, narrowing to 72× on a shrinking corpus | **an independent reader.** Every control here is author-designed and two of them failed on first run *in ways that flattered nothing* — but this repo has had author-designed controls pass while hollow. The specific thing to trace: whether the recorded read set is the *dependency* or the *search order*, since it over-approximated by 6,591× on one problem and was exact on another, with nothing in the mechanism distinguishing them |
 | `notes/findings/2026-08-18-a-zero-shot-registry-beats-a-learned-dictionary-and-both-plateau-at-62-percent.md` | a zero-shot ROR lookup beats a dictionary learned from 3,500 works on all three splits, at half the cost, with nothing to tune | **a second registry-backed task.** The claim "external resources are givens" is this repo's own principle and this is its first real test; one task is not a validation of a principle |
+
+| `notes/findings/2026-08-19-closing-the-corpus-doubled-the-chains-and-the-clumping-replicated.md` | a hand-written pattern reader **beats independence** on two-hop queries (ratio 1.93 then 1.56, p=0.025 and 0.042) because pattern success clumps on canonically-phrased articles, while the learned reader sits at ratio 1.00 | **already half-challenged and it survived**: replicated on an independent chain population at twice the events after the corpus was closed under the parent relation, with the learned reader as a negative control in the same measurement. What is missing is a third reader and a second relation — the effect is 20 events |
+| `notes/findings/2026-08-19-a-wrong-fact-is-amortised-too-and-the-hubs-read-worst.md` | a persistent world amortises its **errors** as well as its cost; hub articles read 0.126 against 0.197 and are consulted most | **not promotable as stated.** p=0.044 on 17 successes in 135 hub articles, and it would not survive correction for the four-bucket table beside it. The better-powered form — mean in-degree 0.124 for wrong articles against 0.076 for correct, over all 1,661 — is what to quote. Needs a corpus with real depth: the measured cost is 3.5% relative *because this graph is shallow* |
+| `notes/findings/2026-08-19-the-threshold-line-closes-three-estimates-agree-and-the-rule-still-loses.md` | `L_reader = Σ sᵢ Lᵢ` fails as a training weight (nine cells, one improvement) **and** as a decision rule (nine cells, zero), with its key input verified three ways | a **null**, and nulls need power rather than an adversary. It has it in the generated domains and not on real text. The transferable half — inventing a claim is cheaper than losing one *unless the claim imposes a constraint*, `flooded` and `bridge_on` being the only two — is a fact about constrained selection and wants a fourth domain |
 
 The one thing the queue must not become is a parking lot for results nobody
 intends to challenge. A finding that sits here unchallenged is not "pending"; it
@@ -2746,6 +2846,10 @@ Each of these was in the README as a result:
 | "the witness/complement asymmetry is a new axis, two arms converging" | **four** observations, and two predate the session: a witness verifies **247×** cheaper than solving and an optimality certificate **2.0×** *dearer* than re-solving, both already in `notes/findings/`. `HANDOVER.md` §3 omitted them, which is how the claim got made |
 | "bridge, then names where it misses — f 11.4%, 8.8×" (mine, one cycle later) | **invalid.** It multiplied the *coverage* of the CUSIP→LEI join by the *ambiguity* of the CIK→LEI **name** join. Different joins over different entity types, and a CUSIP has no name to fall back to |
 | "the crosswalk closes the 68× cliff" | acquired, and it buys **1.29×**. The bridge converts an ambiguity problem into a **coverage** problem, and coverage is larger. The cliff is not the absence of an identifier but the absence of one that **covers the workload** |
+| "the composition law holds to within 0.001" (mine, withdrawn the next day) | **six successes in 191 chains**, against 6.1 expected, inside a 95% interval of [0.014, 0.067] that admits ratios from 0.4 to 2.1. Agreement at a resolution the sample does not have. A third reader measured the next day gave k=4 and would have supported the opposite story. What survives is weaker and better founded: the learned reader is *consistent with* independence, now with a positive control in the same measurement |
+| "hand-written readers are the thing to beat, and the learned one beat them" (generated domains, 1.000 across the board) | true only **in distribution and in vocabulary**. Renaming every entity takes all three domains to **0.000**; the corpora hold ten distinct names and the fit memorised them |
+| "reading is 96.1% of solvency's wall clock" | strengthens to 99.2% with a learned reader **and reverses in flood**, where the kernels take 73%. The claim is about the kernel, not about reading |
+| "the persistent world is 9,050× cheaper than an API" (mine, same day) | against an API **re-reading the whole corpus per query**, which nobody deploys. Against iterative retrieval — a handful of documents, twice — it is **54.5×** at one query. The right comparison is smaller and still decisive |
 | "geography disambiguates entity linking" (promoted to the top of the roadmap on five printed examples) | **it does not.** Three constructions, all at or below abstaining (−0.036, −0.007, −0.001); geography recovers 81% of the damage that admitting ambiguous candidates does and never gets ahead. 65% of ambiguous components carry no geographic evidence at all |
 
 The pattern is worth naming: **six-lesson slices and weak floors both produce
