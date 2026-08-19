@@ -1989,6 +1989,82 @@ Scripts: `escalation_frontier.py`, `regime_dichotomy.py`, `session_ledger.py`,
 `the-million-fold-advantage-...`, `the-advantage-is-a-property-of-provenance-...`,
 `the-first-arrow-is-cheap-and-bad`, `the-extractor-that-wins-on-facts-...`.
 
+## Federation on identifiers, and why exactness is the product
+
+The `1/f` section above says the advantage collapses at the first identity
+boundary — 463× within one filed source, **7×** across two. Closing that looked
+like a data-acquisition problem, so the data was acquired: GLEIF's free daily
+**ISIN → LEI** mapping, where for US securities `isin[2:11]` *is* the CUSIP, and
+13F holdings are CUSIP-keyed. **The first join in this repo that goes through
+identifiers rather than names.**
+
+**It does not close the cliff. It converts it.** An identifier join is
+unambiguous by construction — **0 of 7,503** bridged CUSIPs map to more than one
+LEI — and what replaces ambiguity is **coverage**, which is the larger problem.
+A coverage gap escalates exactly as an ambiguity does, so the identifier join
+*alone* (f = 77.7% per security) is **worse** than the name join it was meant to
+improve on.
+
+**And coverage has four readings spanning 3.5×:**
+
+| denominator | coverage |
+|---|---:|
+| per distinct security | 22.3% |
+| per position held | 58.6% |
+| per dollar held, **aggregate** | **79.1%** |
+| per dollar held, **median filer** | **58.0%** |
+
+The aggregate describes a handful of giant filers holding large caps with LEIs,
+not a typical one. **Which denominator you quote decides the story**, and this
+repo now has that error recorded in three forms in a single session.
+
+### The vertical slice, and an answer that has to be an interval
+
+Three filed sources, two identifier joins, no names: 13F holdings → ISIN-LEI →
+GLEIF entities, answering *what is the country exposure of this filer's
+portfolio*. World built in **5.8 s**; **~260 µs** per portfolio. Most positions
+have unknown domicile, so *"of the ones we know, X% are US"* would quote a
+conditional as a share. `additive_bounds` returns **exact attained extremes**,
+and the lower bound carries a **witness** a reader checks by following two joins
+per position.
+
+| US exposure, value-weighted | p10 | p50 | p90 | band ≤ 20 points |
+|---|---:|---:|---:|---:|
+| interval width | **8.7%** | 42.1% | 88.2% | **25.2% of filers** |
+
+Value-weighting **doubles** the usable share (13.4% → 25.2%) and makes the worst
+cases worse (p90 71.0 → 88.2), because one large unbridged position dominates a
+portfolio that equal weighting had diluted. **One filer in four gets a band tight
+enough to act on.** Honest uncertainty rather than a point estimate that would
+have been a lie — and not yet a product.
+
+### And the sentence the whole session was working toward
+
+The bounds are wide because an unbridged position could be anywhere. The
+**identifier format** constrains it: a 9-character CUSIP is assigned to US and
+Canadian issuers, and foreign issuers get a **CINS** number beginning with a
+letter. 89.4% of held CUSIPs are digit-leading. Checked where ground truth
+exists, digit-leading CUSIPs resolve to US or CA **89.1%** of the time — the leak
+being US-listed foreign issuers and **Cayman**-domiciled holding companies (KY
+115, GB 127, JP 76) whose parent domicile is what GLEIF records.
+
+> **The format carries real information and not enough to bound.** A rule that
+> fails one time in nine produces intervals silently wrong 11% of the time —
+> exactly the lie the interval exists to avoid. An apparatus built on *exact
+> attained extremes* has no place for an 89% regularity.
+
+**So: structure in an identifier does real work for free, and not the work
+exactness needs.** Where the product is a **guarantee** rather than an estimate,
+an 89% regularity is unusable. That is a narrower and more defensible statement
+of what this substrate is for than "cheaper than neural inference", and it is
+what the cost work and the federation work agree on: **exact answers with
+certificates, at `1/f` the price, where `f` is how much of the workload your
+structure covers.**
+
+Scripts: `bridged_join.py`, `vertical_slice_country_exposure.py`. Notes: the
+2026-08-18 findings under `three-sources-two-joins-...` and
+`the-advantage-is-a-property-of-provenance-...`.
+
 ## Awaiting independent challenge — the promotion queue
 
 `notes/` promotes into this file **only once something independent has tried to
@@ -2065,6 +2141,8 @@ Each of these was in the README as a result:
 | "abstention beats guessing" (concluded three times in one day, on fact-level evidence) | true at the fact level, **backwards at the system level**. An abstaining extractor builds a world with half the entities, and aggregate queries pay for *completeness*: the extractor that wins on facts by 0.121 F1 loses on every aggregate query |
 | "F1 0.717 is a ceiling the affiliation task imposes" | **my own task construction.** The fetcher flattened authorships, labelling each raw string with every institution its author listed. Grouped correctly the ceiling is **0.988** — the label *is* a function of the input — and the shortfall is genuine extraction failure, not label noise |
 | "the witness/complement asymmetry is a new axis, two arms converging" | **four** observations, and two predate the session: a witness verifies **247×** cheaper than solving and an optimality certificate **2.0×** *dearer* than re-solving, both already in `notes/findings/`. `HANDOVER.md` §3 omitted them, which is how the claim got made |
+| "bridge, then names where it misses — f 11.4%, 8.8×" (mine, one cycle later) | **invalid.** It multiplied the *coverage* of the CUSIP→LEI join by the *ambiguity* of the CIK→LEI **name** join. Different joins over different entity types, and a CUSIP has no name to fall back to |
+| "the crosswalk closes the 68× cliff" | acquired, and it buys **1.29×**. The bridge converts an ambiguity problem into a **coverage** problem, and coverage is larger. The cliff is not the absence of an identifier but the absence of one that **covers the workload** |
 | "geography disambiguates entity linking" (promoted to the top of the roadmap on five printed examples) | **it does not.** Three constructions, all at or below abstaining (−0.036, −0.007, −0.001); geography recovers 81% of the damage that admitting ambiguous candidates does and never gets ahead. 65% of ambiguous components carry no geographic evidence at all |
 
 The pattern is worth naming: **six-lesson slices and weak floors both produce
