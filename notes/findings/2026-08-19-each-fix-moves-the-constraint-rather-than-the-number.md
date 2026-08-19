@@ -77,3 +77,39 @@ scale arrived.
 The query feature not helping — the subject is guessable from frequency, and if
 that guess were as good as the title the ABI's `query` port would be decoration.
 It recovers about half: 0.400 → 0.467 guessed, 0.533 known.
+
+## Two more levers, both closed at scale
+
+With the classifier binding again, the two cheapest remaining ideas were tested
+on the 1,661-article corpus and both are dead.
+
+**Class balancing.** The classifier abstains on most sentences and the negative
+class outnumbers `parent` ten to one, so down-weighting `NONE` is the textbook
+fix. Inner 3-fold cross-validation on the *training* articles chose a `NONE`
+weight of **1.0 — no down-weighting — in every one of the four outer folds**, at
+both corpus sizes. Tested twice, ten times apart in data; it is not the lever.
+
+**Answer aggregation.** The measured accuracy sits above the factor product, so
+document-level pooling recovers something and a better pool might recover more:
+
+| rule | correct | precision |
+|---|---|---|
+| argmax belief | 0.185 | 0.385 |
+| modal candidate | 0.183 | 0.380 |
+| belief-weighted vote | 0.185 | 0.385 |
+| **oracle over its own proposals** | **0.197** | 0.410 |
+
+The oracle is only **0.012** above argmax, because the reader emits **0.60
+proposals per document** — in most documents there is exactly one candidate and
+nothing to aggregate. No selection rule can win more than a point here.
+
+So the levers tried and closed on this arm now number six: multi-instance
+pruning (worse), WordNet supersenses (nothing), frames on the classifier
+(nothing), class balancing (nothing, twice), answer aggregation (0.012), and
+frames on the ranker (+33% on the ranker, +4% end to end). The two that moved the
+number were **ten times the text** (+55%) and **the query** (+4%).
+
+What is left is the sentence representation itself: whether a sentence states a
+relation, decided from features rather than from a model of the sentence. That is
+the same conclusion the threshold arm reached from the other side, and it is now
+supported by six closed alternatives rather than by preference.
