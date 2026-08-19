@@ -184,6 +184,17 @@ candidate_directions:
     reason: "Cheap, and either produces the corpus's first real cross-source conflict or kills the hope."
 
 blockers:
+  - >
+    The 68x cross-source cliff is irreducible by modelling and needs ONE
+    crosswalk file linking SEC CIK to GLEIF LEI. Nothing on disk carries it:
+    SEC has no country, `same_as` is name-derived, and GLEIF's external
+    identifier is the local company-register number (NVIDIA: Delaware 2862596)
+    rather than the CIK (1045810). Candidate sources to try: SEC EDGAR
+    company-facts or 13F cover pages, which sometimes carry an LEI; GLEIF's
+    published relationship files; or an open crosswalk. This is the highest-value
+    acquisition available -- it would move the federated advantage from 7x toward
+    the 463x the single-source case already reaches.
+
   - "Every accuracy comparison against a language model is unrun and NOT QUOTABLE: needs paid API credentials. User's fork, ROADMAP item 0b."
   - >
     PARTLY CLEARED. Raw prose is on disk via OpenAlex and the first arrow is
@@ -242,7 +253,7 @@ last_cycle:
     repo now say the cheap half of a problem is the useful half.
 
 next:
-  preferred_action: point-the-work-at-filed-structure
+  preferred_action: acquire-a-cik-lei-crosswalk
   why_shipped_instead: >
     witness-on-kernelresult is DONE: `Witness` is on the kernel ABI, the ASP
     kernel returns its answer set instead of discarding it, and

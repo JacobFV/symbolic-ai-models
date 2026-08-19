@@ -48,6 +48,16 @@ boundary, inside the filed regime**. And crossing boundaries is what a federated
 substrate is *for*: a system that answers only within one source does not need
 federation, and the moment it does, the advantage falls 463× → 7×.
 
+**And the cliff is irreducible by modelling.** 51.3% of ambiguous matches span
+more than one country, so country should halve `f` — but **SEC carries no
+country**, `same_as` is a name-derived key rather than a bridge, no file on disk
+links a CIK to an LEI, and GLEIF's own external identifier is the *Delaware
+register number* (NVIDIA: 2862596) rather than the CIK (1045810). Two filed
+sources fail to join **not for lack of identifiers but for a surplus of
+incompatible ones**, and the only attribute both hold is the name. Closing the
+68× cliff is a **data-acquisition** problem — one crosswalk file — not an
+algorithmic one, and it is now the highest-value acquisition available.
+
 The advantage is a property of the domain's **structure-provenance**, not of the
 technology — and this reconciles the two
 halves of the session that looked contradictory. The repo's earlier advantages

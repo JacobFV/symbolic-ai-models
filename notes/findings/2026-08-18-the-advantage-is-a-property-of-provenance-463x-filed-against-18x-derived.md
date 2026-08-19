@@ -89,6 +89,39 @@ identifiers, nothing is contested but genuine real-world disputes. Across two
 filed sources with no shared identifier, the join goes through names. From
 unstructured text, the whole structure has to be derived.
 
+## Can the 68× cliff be closed? Not by modelling.
+
+The obvious move: 51.3% of ambiguous matches span more than one country, so add
+country to the join key and `f` should roughly halve — 14.7% → ~7.2%, advantage
+7× → 14×. It cannot be done on available data, and the reason is structural.
+
+- **SEC entity records carry no country.** `body` is empty on all 44,328
+  `finance/13f` entities; `cik_name_2026` has only `id`, `label`, `kind`,
+  `same_as`.
+- **`same_as` is not a bridge.** It is populated 100% and points at
+  `kg:company:name:*` — a *name-derived* canonical key. It is the same name join
+  materialised, not an independent identifier.
+- **No file on disk links a CIK to an LEI.**
+- **GLEIF does carry the discriminator** — `jurisdiction`, `legalAddress`,
+  `headquartersAddress` — so the 51.3% country signal sits on exactly **one side**
+  of the join.
+- **And GLEIF carries an external identifier that is not the CIK.** For NVIDIA,
+  `registeredAs` is **2862596**, the Delaware register number; its SEC CIK is
+  **1045810**.
+
+> **Federation across two filed sources fails here not for lack of identifiers
+> but for a surplus of incompatible ones.** SEC identifies by CIK because it
+> files *who is filing*; GLEIF identifies by LEI plus a local company-register
+> number because it files *who the legal entity is*. Each is rich, neither
+> carries the other's key, and the only attribute both sides hold is the **name**
+> — which is exactly why `f` is 14.7%, and why it is not a matcher problem.
+
+So the 68× cliff is **irreducible by modelling**. Closing it is a **data
+acquisition** problem — a crosswalk — and that is a different kind of task from
+anything this repo has attempted. It is also the highest-value acquisition
+available: one bridge file would move the federated advantage from 7× toward the
+463× the single-source case already reaches.
+
 ## Two caveats that belong next to the number
 
 - **Quality 1.0 in the filed regime is relative to the filing.** The task's
