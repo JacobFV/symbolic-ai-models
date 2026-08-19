@@ -30,6 +30,11 @@ measured:
     recall 0.946, non-empty accuracy 0.318 at V=1,2,3,4. At V>=2 it is the only
     reader above zero. Regime crossover: hand-authored wins 1.000 vs 0.318 on a
     fixed surface, signature wins the moment the surface varies.
+  - TRANSFER: the reader machinery works unchanged on solvency, a structurally
+    opposite task (no routing, no subset answer, trivial kernel, bitemporal
+    core). Signature reader 1.000 at every V; flood's "take the latest value"
+    rule 0.850; first-filed 0.900; majority floor 0.583. Filing recall is 1.000
+    for ALL arms, so the 15-point gap is purely how transaction_time is used.
   - carrying ambiguity is ALWAYS SOUND (1.000 on every row) and rapidly
     vacuous: 4 worlds decide 75.8% of the fleet, 72 worlds decide 0.0%, and
     decidedness is NOT a function of world count -- 2 worlds of "bare" (which
@@ -123,8 +128,8 @@ unknowns:
   - Precision failures (invented/misread claims) are unswept; MISREADS exists.
 
 active_work: >
-  Type-signature reader built and diagnosed. Determinism boundary located:
-  signatures recover everything except meaning-mediated reference.
+  Second domain done: machinery transfers, heuristic inverts. Theory transfer
+  is next.
 
 built:
   - symbolic_ai_generators/flood/surface.py -- five-paragraph observation
@@ -141,9 +146,14 @@ next_actions:
     pattern arm did. This is the first place a lexical resource (WordNet is on
     disk) or a learned component is the only mechanism available, not a
     shortcut. Build it as an arm and measure at V=4.
-  - Ambiguity budget is measurable per GROUP before a reader is built, exactly
-    as dependency size is. Do that for a second domain and see whether the
-    expensive group is again the one the answer is sized by.
+  - Transfer the THEORY, not just the machinery. On solvency: is F again the
+    trivial-answer share (cases whose verdict is identical under every
+    reading)? Is the ambiguity budget again concentrated on the claim that
+    SIZES the answer -- in flood the demand, here plausibly the threshold or
+    the decision date? Both are measurable with what now exists.
+  - The temporal policy is hand-written per domain, which argues the reader
+    should EMIT the time and let a kernel decide rather than resolve it. That
+    is testable against the ambiguity machinery already built.
   - Then domain transfer (scheduling or solvency): does WORLD IR + FLOW +
     KERNEL survive a domain change, and does the F = trivial-answer-share
     decomposition reproduce?
