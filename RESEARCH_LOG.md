@@ -29,6 +29,104 @@ so the answers are exact and unannotated.
 Nineteen models, two families. Rule-based ones are the subject; six neural ones
 exist as a control and are off by default.
 
+## Every reader number in this repo was measured against distractors that could not bite
+
+**Status: measured, 2026-08-19 — three domains, each with a clean control, a
+single-distractor arm, and a repair; the size-dependent numbers carry their
+injection parameter. Not yet challenged by anyone who did not write it, though
+the sharpening below came from trying to refute it.**
+
+Each of the three world-IR domains ships distractor sentences whose stated
+purpose is to test whether the reader rejects text that is not a claim. In all
+three the distractor is inert **by construction**, and in two of the three the
+reader never even types it. The measurement that says so is one line per domain:
+does the read world contain the distractor?
+
+| domain | distractor | admitted as a claim | why it cannot bite |
+|---|---|---:|---|
+| flood | *"A disused track once ran from X to Z"* | **60/60** | endpoints drawn from regions appearing nowhere else |
+| scheduling | withdrawn machine, cancelled job, *"set up for anodising"* | **0/60** | no capability, no quantity, or a word outside the vocabulary |
+| solvency | *"A former subsidiary, sub_99, was divested"* | **0/60** | one entity, so no branch matches — and no filings anyway |
+
+So there are **two** kinds of defanging, not one. Flood's reader admits a false
+claim every single case and the generator makes it harmless. Scheduling's and
+solvency's readers never face the question, which matters because both were
+credited with a vocabulary that "does double duty — settles signature collisions
+**and** filters distractors". That credit was earned against sentences the
+vocabulary never had to work for.
+
+Pointing each distractor at entities that matter — a phantom road between two
+**real** regions, a machine capability the floor does **not** have, a divested
+subsidiary that **files** — gives the honest surface:
+
+| domain | published | honest surface | with the checks below |
+|---|---:|---:|---:|
+| flood (interleaved) | 0.988 | **0.679** | **0.933** |
+| scheduling | 1.000 | **0.790** | **1.000** |
+| solvency | 1.000 | **0.450** *(floor 0.550)* | **1.000** cued / **0.450** uncued |
+
+Solvency's is the worst and is worth stating plainly: on the honest surface the
+published pipeline is **worse than answering "no" every time**. That figure
+depends on the size of the injected filing — the dose-response is U-shaped,
+0.630 / 0.665 / 0.515 / 0.450 at 5% / 10% / 25% / 50% of the threshold, because
+a spurious figure dated at the determination date *replaces* the real one and so
+lowers the sum when small and raises it when large. Quote the injection with the
+number.
+
+### What the search for a repair turned up
+
+- **Solvency's ownership paragraph was decorative.** `read_signature` enrols a
+  member the moment it files, so deleting the entire first paragraph — one of the
+  domain's two claim kinds — changes the answer on **0 of 200** cases. The reader
+  was reported at 1.000 accuracy and 1.000 filing recall in all six cells of
+  V × arrangement without ever reading the group structure, because the generator
+  never files for a non-member. `read_signature_consolidated` is registered
+  beside it.
+- **The repairs are conjunctions, not alternatives.** For the divested filer the
+  staleness gate alone buys 0.035 and the consolidated reader alone buys nothing;
+  together they buy 0.550, because the entity is enrolled by *either* its filing
+  or its ownership sentence and each fix closes one route.
+- **One component transfers across domains unchanged** — the first here.
+  `symbolic_ai_generators/staleness.py` asks whether a sentence *withdraws* what
+  it asserts. **Cancellation, not tense**: a tense gate destroys true claims
+  phrased in the past (0.645 scheduling, 0.317 flood) and misses *"a disused
+  track once ran"* outright. Its cue list is closed-class and domain-independent,
+  which bounds how the risk grows rather than removing it.
+- **It fails where the predicate is itself a negation.** The gate deletes flood's
+  true *"…it is no longer passable"*, costing 0.055 on the clean surface, because
+  it cannot distinguish a sentence that withdraws its own claim from one asserting
+  that something *was* withdrawn — and `flooded` **is** a cancellation. A property
+  of the predicate; no cue list fixes it.
+- **The honest floor is the uncued arm.** *"sub_98 left the group in April"* is
+  semantically stale and carries no declared cue, and nothing built here repairs
+  it: 0.450, unchanged by every check. A test asserts this so the 1.000 above is
+  not read as a solution.
+
+### And the signature audit predicts none of it
+
+`audit_surface` is credited with predicting four things — reader difficulty, where
+error concentrates, payback, and maintenance. It predicts neither of the two
+failures above, and both were found the same day:
+
+- it scores the two flood surfaces **identically** (ambiguity mass 0.640, the same
+  280 prose flags) while emission soundness on them is 1.000 against 0.649;
+- it scores scheduling at **0.000 ambiguity mass**, and one admitted sentence takes
+  that domain from 1.000 to 0.790, every failure unsound.
+
+The reason is exact: **it measures ambiguity of the signature, not fragility of
+the vocabulary.** *"machine_0 was set up to paint"* carries the
+`(machine, capability)` signature unambiguously, and is false. Signature
+determinacy says a reader *can* type a claim; it says nothing about whether it
+*should*.
+
+### The rule this leaves
+
+> **A distractor that cannot be admitted, or that is admitted and cannot matter,
+> tests nothing.** Every rejection number in this repo predating 2026-08-19 was
+> measured against one of those two, and `hard_distractors=True` — now present in
+> all three generators, defaulting to `False` so published numbers keep their
+> meaning — is the setting new work should use.
+
 ## The substrate carries a task no single kernel can, at $2.15e-8 per solved episode above floor
 
 **Status: provisional, 2026-08-18 — measured, ablated against three controls,
