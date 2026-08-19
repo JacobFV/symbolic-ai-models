@@ -81,9 +81,18 @@ checks by following two joins per position.
 | US exposure, interval width | p10 **18.0%** | p50 **38.9%** | p90 71.0% |
 |---|---|---|---|
 
-**13.4%** of filers get a band ≤ 20 points (threshold set before the run). Honest
-uncertainty rather than a point estimate that would have been a lie — and **not
-yet a product**.
+**Value-weighted** (13F reports USD — established by summing AAPL to $3.06e12):
+width p10 **8.7%**, p50 42.1%, p90 **88.2%**, and **25.2%** of filers get a band
+≤ 20 points, up from 13.4% unweighted. It helps the filers already close and
+**hurts the ones that were not**.
+
+**Coverage has four readings spanning 3.5×** — 22.3% per distinct security, 58.6%
+per position, **79.1% per dollar aggregate, 58.0% per dollar for the median
+filer**. The aggregate describes Vanguard, not a typical filer; quoting it would
+be the slice-versus-population error in its third form.
+
+Honest uncertainty rather than a point estimate that would have been a lie — and
+**not yet a product**: one filer in four.
 
 The advantage is a property of the domain's **structure-provenance**, not of the
 technology — and this reconciles the two

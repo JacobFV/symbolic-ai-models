@@ -1,5 +1,5 @@
 ---
-title: Three filed sources, two identifier joins, 347 µs per portfolio — and the answer has to be an interval, 38.9 points wide at the median
+title: Three filed sources, two identifier joins — the answer has to be an interval, and value-weighting doubles the usable fraction to one filer in four while making the worst cases worse
 date: 2026-08-18
 author: lead
 status: provisional
@@ -78,6 +78,58 @@ different entity types**, and there is no name fallback for a CUSIP because
 CUSIPs are not names. The honest figure for CUSIP→LEI alone is `f = 1 − coverage`:
 **77.7%** per security, **41.2%** per position. The composite policy exists for
 the *filer* alignment and not for this one.
+
+## Value-weighted, because that is the question anyone asks
+
+The section above counts positions equally, which the *what would refute it* list
+named as its sharpest weakness: 13F reports **values**. Weighting by them first
+required establishing what the column is — summing every AAPL position gives
+**$3.06e12**, right for institutional ownership of a ~$3T company, where 3e12
+*shares* would be 200× the float. **It is USD.**
+
+**Coverage now has four readings, spanning 3.5×:**
+
+| denominator | coverage |
+|---|---:|
+| per distinct security | 22.3% |
+| per position held | 58.6% |
+| **per dollar held, aggregate** | **79.1%** ($4.16T of $5.26T) |
+| **per dollar held, median filer** | **58.0%** |
+
+The aggregate is a property of a handful of giant filers who hold mostly large
+caps with LEIs. **Quoting 79.1% as "the coverage" would describe Vanguard, not a
+typical filer** — the slice-versus-population error in its third form here, after
+the security-versus-position denominator.
+
+**What value-weighting buys:**
+
+| | unweighted | **value-weighted** |
+|---|---:|---:|
+| width p10 | 18.0% | **8.7%** |
+| width p50 | 38.9% | 42.1% |
+| width p90 | 71.0% | **88.2%** |
+| **band ≤ 20 points** | **13.4%** | **25.2%** |
+
+> **It helps the filers already close to actionable and hurts the ones that were
+> not.** The usable share doubles to **one filer in four**; the median is flat and
+> p90 gets *worse*, because one large unbridged position now dominates a portfolio
+> that equal weighting had diluted across many holdings.
+
+Better, still not a product, and the improvement is concentrated where it was
+least needed.
+
+### Two bugs, both caught by printing an example
+
+- **Amended filings double-count.** The same filer appears twice for the same
+  security (cik 2100119 holds AAPL at both 242.077e9 and 241.721e9). The value
+  per `(filer, security)` is now the **max**, not the sum.
+- **Filers with no reported values scored as perfectly determined.** Base 0 and
+  contributions 0 give a spurious **zero-width** band. Four of 500. Caught
+  because the "tightest" row printed as *1 position, 0 bridged,
+  [0.0%, 0.0%]* — an answer that cannot be right. Now dropped and counted.
+
+Printing a worked example next to a summary statistic found both. Neither would
+have failed a test.
 
 ## What would refute it
 
