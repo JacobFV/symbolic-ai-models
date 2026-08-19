@@ -158,6 +158,51 @@ plausible mechanism, which is exactly the kind this repo publishes — and I nea
 did. It was caught by checking that the shares summed to one. **Read the numbers
 from the run file, not from the terminal.**
 
+## The escalation side has no lever either, and that closes it
+
+The section above ends by naming the remaining lever: not the cheap half's
+accuracy but the **escalation cost**. Decomposing that:
+
+```
+advantage = model_full / (f x model_escalated + (1-f) x ours)
+```
+
+- **A cheaper model tier is not ours.** The opponent can use the same one, so the
+  ratio is unchanged. This is worth stating because it is the first idea anybody
+  has and it is structurally void.
+- **A smaller escalated prompt *would* be ours**, because producing the candidate
+  set is the symbolic work an opponent would have to do itself. If the escalated
+  prompt is `r` times shorter, the advantage is `r/f`.
+
+So everything rests on `r`. Measured on the 2,512 ambiguous strings, where the
+candidate sets have **k: p50 5, p90 8, mean 5.4, max 57**:
+
+| escalated prompt | tokens | **r** | can it disambiguate? |
+|---|---:|---:|---|
+| cold — the affiliation string alone | 68.3 | 1.00× | yes (it is the input) |
+| **narrowed — string + k candidate names** | **100.8** | **0.68×** | yes, and it is a k-way choice |
+| candidates only, no string | 32.5 | 2.11× | **no** — the city that separates them is in the string |
+| the ambiguous component only | 8.3 | 8.19× | **no** — same reason, context stripped |
+
+I predicted `r` of 1.5–3× and pre-registered *"r below 1.2 changes my mind"*. It
+is **0.68×**.
+
+> **You cannot both narrow the choice and shrink the prompt, because the
+> narrowing *is* information.** Adding k candidate names makes the prompt 1.5×
+> **larger**, and the two prompts that are genuinely shorter are exactly the two
+> that strip the evidence needed to choose.
+
+### The bottom line of the whole cost arc
+
+**Advantage = 1/f, and there is no lever on the escalation side.** At 0.85
+quality that is **1.8×**. The previous section showed the extractor's accuracy
+barely moves `f` at that quality; this one shows the model's side cannot be made
+cheaper in a way an opponent could not copy.
+
+The symbolic layer's contribution at deployable quality is **exactly the fraction
+of work it answers outright**, and nothing about how it hands over the rest
+improves the price.
+
 ## What would refute it
 
 - **The model is assumed perfect on escalated cases.** If it scores 0.9 rather

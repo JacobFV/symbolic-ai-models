@@ -21,9 +21,16 @@ development harness, not the benchmark. The live frontier is:
 > million-fold number this repo has published prices a system nobody would
 > deploy, and the moment anything escalates to a model the advantage is `1/f`.**
 
-Measured (§3i): escalating the **12.3%** of extraction cases where the symbolic
-layer produces nothing at all takes the advantage from **2,061,364× to 8.1×**.
-Reaching 83.5% quality costs **2.0×**. `symbolic_ai_core/cost.py` said this in
+Measured (§3i), and the arc is **closed**: the advantage is **`1/f`** where `f`
+is the escalated fraction, and **neither side has a lever**. Improving the
+extractor halved the silent tier (12.3% → 5.7%) and bought **nothing** at 0.85
+quality. Narrowing the escalated prompt is not available either — adding the
+candidate set makes it **1.5× larger**, and the two shorter prompts strip the
+evidence needed to choose. A cheaper model tier is not ours; the opponent can use
+it too.
+
+> **At 0.85 quality the symbolic layer buys 1.8×.** The million-fold figures
+> price a system running at 53% quality that nobody would deploy. `symbolic_ai_core/cost.py` said this in
 its own docstring before the session started — *"cheap-and-incapable is not a
 point on the cost curve; it is a point off the capability axis entirely"* — and
 every cost row here ignored it until now.
