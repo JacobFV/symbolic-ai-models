@@ -1552,9 +1552,20 @@ theory:
       parent was read, 0.922 * 0.589 = 0.543 against 0.574.
       d(r) = P(a claim of r is a BRIDGE to some answer element) * PROD P(the rest
       of its derivation path survives). A RELIABILITY QUANTITY, reached from data.
-      UNRUN PREDICTION: flood's link d should be the share of links that are
-      bridges in the admissible subgraph -- the same object certifies_insensitive
-      already tests by 2-edge-connectivity. One formula would then cover both. Flood, a selection over a
+      RUN, AND REFUTED IN THE PREDICTED DIRECTION. Three routes to flood's link
+      d: STRUCTURAL bridges over all real links, offline, no reader, 0.245;
+      influence of the READER'S ACTUAL ERRORS 0.169; audit.deletion_dependency
+      0.138. Predicted band 0.13-0.20, measured 0.245 -- higher, because A PHANTOM
+      LINK IS MORE LIKELY TO BE REDUNDANT THAN A REAL ONE (the distractor connects
+      two real regions in an already-connected network), so the reader's errors
+      are BIASED TOWARD INERT CLAIMS.
+      d IS NOT A PROPERTY OF THE WORLD ALONE. Bridgehood is structural; WHICH
+      claims are wrong is not. d = E over the ERROR DISTRIBUTION of [c is a
+      bridge]. The structural share is offline-computable and an UPPER BOUND,
+      exact only if the reader's errors are unbiased with respect to redundancy --
+      here it over-states by 1.4x.
+      THIRD NARROWING, each forced by a measurement: aggregation shape -> value
+      redundancy -> bridges -> bridges over the error distribution. Flood, a selection over a
       redundant graph, sits at 0.236. THE VALUE OF TASK-WEIGHTED READING IS ~1/d,
       AND d IS SET BY THE QUERY'S AGGREGATION SHAPE -- knowable before a word is
       read. At d ~ 0.01 an existence query makes 99% of reading effort irrelevant;

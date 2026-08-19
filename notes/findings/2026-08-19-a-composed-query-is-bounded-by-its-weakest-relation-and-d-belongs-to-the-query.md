@@ -161,10 +161,38 @@ whose claim is itself the answer value, the second term is 1 by construction:
 > path it sits on — not a property of aggregation shape.
 
 That is the network-reliability abstraction reached from data rather than borrowed.
-It also makes a prediction for the synthetic side that has not been run: flood's
-`d` for links should be the share of links that are **bridges in the admissible
-subgraph**, which is the same object `certifies_insensitive` already tests by
-2-edge-connectivity. If that lands, one formula covers both arms.
+
+### Run on flood, it is refuted in exactly the predicted direction
+
+The formula predicted flood's link `d` from a purely structural predicate:
+`load_bearing_cheap` computes, in one DFS per edge with no solve and no reader,
+whether removing a link disconnects depot from site in some vehicle's admissible
+subgraph. Three routes to the same quantity:
+
+| route | population | value |
+|---|---|---:|
+| **structural bridges**, true worlds, no reader | **all real links** | **0.245** |
+| influence of the reader's actual errors | the links the reader got wrong | **0.169** |
+| `audit.deletion_dependency`, offline | true-world link deletions | **0.138** |
+
+Predicted band 0.13–0.20; measured **0.245**, outside it and **higher** — which is
+the direction the refutation condition named. **A phantom link is more likely to
+be redundant than a real one**, because the distractor connects two real regions
+in a network that already has routes, so the reader's errors are *biased toward
+inert claims* relative to the world's claims.
+
+> **`d` is not a property of the world alone. Bridgehood is structural; *which*
+> claims are wrong is not.** The right object is
+> `d = E_{c ~ error distribution}[c is a bridge]` — the structural predicate
+> averaged over **where the reader errs**, not over the world.
+
+So the structural share is computable offline and is an **upper bound**, exact
+only when the reader's errors are unbiased with respect to redundancy. Here it
+over-states the influence of real errors by **1.4×**.
+
+That is the third narrowing of this claim, each forced by a measurement:
+aggregation shape → value redundancy → bridges → **bridges over the error
+distribution**.
 
 ## What would refute this
 
