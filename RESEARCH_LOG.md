@@ -2061,9 +2061,60 @@ what the cost work and the federation work agree on: **exact answers with
 certificates, at `1/f` the price, where `f` is how much of the workload your
 structure covers.**
 
-Scripts: `bridged_join.py`, `vertical_slice_country_exposure.py`. Notes: the
-2026-08-18 findings under `three-sources-two-joins-...` and
-`the-advantage-is-a-property-of-provenance-...`.
+### How the arm ends: an uncertain input must not collapse a certain output
+
+The bound was honest and usable for **23.7%** of filers. `additive_bounds` has
+always reported *where the width comes from* — `Bounds.width_by_subject`, widest
+first — and the slice ignored it. Settling unbridged positions widest-first, the
+**five widest carry 57.5%** of the width, and ten escalations put **77.5%** of
+filers inside a 20-point band for **$0.045**.
+
+**That product was illusory, and the check that killed it is the one the arm was
+built to make.** It reported *usability* and never *truth*. Tested on the bridged
+subset where the answer is known, a band narrowed by `k` lookups of accuracy `a`
+still contains the truth only:
+
+| lookup accuracy | k=0 | k=10 | k=20 |
+|---:|---:|---:|---:|
+| 1.00 | 100% | 100% | 100% |
+| **0.95** | 100% | **63.3%** | 42.3% |
+| 0.90 | 100% | 40.7% | 17.1% |
+
+**Coverage tracks `a^k`** — 0.95¹⁰ = 59.9% against an observed 63.3%. Any single
+wrong lookup breaks the band, because the policy resolves *widest-first* and one
+error displaces the band by that position's full weight. **The concentration that
+made the product cheap is what makes it fragile.**
+
+**The fix is this file's own ethos rather than a new mechanism.** Treating a
+lookup as having *settled* a position is exactly the collapse the ambiguity
+machinery exists to refuse. If at most `m` of `k` lookups are wrong, widen both
+ends by the `m` largest resolved weights:
+
+| m | coverage | median band |
+|---:|---:|---:|
+| 0 *(naive)* | 63.3% | 10.4% |
+| **1** | **96.9%** | **23.7%** |
+| 2 | 100.0% | 28.7% |
+
+So at the same $0.045: doing nothing is a **43.5%** band always true; naive
+resolution is **10.4%** and true 63% of the time; **widening for one error halves
+the band to 23.7% and stays true 96.9%.** `additive_bounds` needed no change —
+only the right input.
+
+> **An uncertain input must not collapse a certain output.** That is the
+> sharpest thing the federation arm produced, and it was reached by attacking
+> each previous step: an honest-but-unusable bound, an attribution that made it
+> cheap, a check that showed the cheap version false, and a construction that
+> recovers most of the gain while keeping the guarantee.
+
+**And it raises the blocker's priority.** The band's reliability is `a^k`, and
+`a` — the accuracy of a real model on this lookup — is unmeasured, because the
+comparison is still blocked on credentials (`ROADMAP.md` 0b). That blocker now
+bites a **product** claim, not only a cost row.
+
+Scripts: `bridged_join.py`, `vertical_slice_country_exposure.py`,
+`bound_attribution.py`. Notes: the 2026-08-18 findings under
+`three-sources-two-joins-...` and `the-advantage-is-a-property-of-provenance-...`.
 
 ## Awaiting independent challenge — the promotion queue
 

@@ -15,155 +15,39 @@ were each paid for), `APPROACH.md` (the argument), then this, then `ROADMAP.md`.
 
 The programme pivoted on 2026-08-18 from *model zoo + language curriculum* to a
 **typed world-program runtime over real federated data**. The curriculum is a
-development harness, not the benchmark. The live frontier is:
+development harness, not the benchmark.
 
-> **What the cost advantage is worth at fixed quality — because every
-> million-fold number this repo has published prices a system nobody would
-> deploy, and the moment anything escalates to a model the advantage is `1/f`.**
+**The cost question is answered and the arc is closed.** The advantage over a
+language model is **`1/f`**, where `f` is the fraction of queries the symbolic
+system cannot settle — and **neither side has a lever** (§3i). `f` is a property
+of **where the structure came from and how many identity boundaries the query
+crosses** (§3j):
 
-Measured (§3i), and the arc is **closed**: the advantage is **`1/f`** where `f`
-is the escalated fraction, and **neither side has a lever**. Improving the
-extractor halved the silent tier (12.3% → 5.7%) and bought **nothing** at 0.85
-quality. Narrowing the escalated prompt is not available either — adding the
-candidate set makes it **1.5× larger**, and the two shorter prompts strip the
-evidence needed to choose. A cheaper model tier is not ours; the opponent can use
-it too.
+| regime | `f` | advantage |
+|---|---:|---:|
+| filed, single-source | 0.216% | **463×** |
+| filed, **cross-source** | 14.7% | **7×** |
+| derived from text | 56.0% | **1.8×** |
 
-> **At 0.85 quality the symbolic layer buys 1.8×.** The million-fold figures
-> price a system running at 53% quality that nobody would deploy.
+**68× of that is the first identity boundary** — inside the filed regime, which
+is exactly where a federated substrate has to operate. Quoting any of these
+without naming the regime is the error, and this file did it for months.
 
-**And then the same formula, applied where the structure was FILED rather than
-derived (§3j):**
+**The capability question is where the live work is.** The first federated query
+runs — three filed sources, two identifier joins, ~260 µs per portfolio — and its
+answer is necessarily an **interval** (§3k). The arc there ends somewhere useful:
 
-| regime | **f** | quality | **advantage** |
-|---|---:|---:|---:|
-| **FILED** — GLEIF `ultimate_parent`, **single-source** | **0.216%** | 1.00 | **463×** |
-| FILED — incl. closure-vs-filed conflicts | 4.274% | 1.00 | 23× |
-| **FILED** — SEC → GLEIF, **CROSS-SOURCE** | **14.7%** | 1.00 | **7×** |
-| **DERIVED** — OpenAlex affiliation → ROR | **56.0%** | 0.85 | **1.8×** |
+> **An uncertain input must not collapse a certain output.** Resolving positions
+> by escalation makes a narrow band whose truth decays as `a^k`; widening for the
+> errors instead keeps **96.9%** coverage at half the width, for $0.045.
 
-**68× from single-source to cross-source; only 4× from cross-source to derived.**
-So the cliff is **not** at the filed/derived edge — it is at the **first identity
-boundary, inside the filed regime**. And crossing boundaries is what a federated
-substrate is *for*: a system that answers only within one source does not need
-federation, and the moment it does, the advantage falls 463× → 7×.
+**The one thing a human must do** is in §6: every accuracy comparison against a
+language model is still unrun for want of credentials, and that blocker has now
+bitten a **product** claim rather than only a cost row — `a`, the lookup accuracy
+the band's reliability depends on, is unmeasured.
 
-**And the cliff is irreducible by modelling.** 51.3% of ambiguous matches span
-more than one country, so country should halve `f` — but **SEC carries no
-country**, `same_as` is a name-derived key rather than a bridge, no file on disk
-links a CIK to an LEI, and GLEIF's own external identifier is the *Delaware
-register number* (NVIDIA: 2862596) rather than the CIK (1045810). Two filed
-sources fail to join **not for lack of identifiers but for a surplus of
-incompatible ones**, and the only attribute both hold is the name. Closing the
-68× cliff looked like a **data-acquisition** problem — one crosswalk file — and
-**that has now been tried and is mostly wrong.** GLEIF's free ISIN→LEI mapping is
-on disk (`data/sources/gleif-isin/`), gives an exact-identifier join to 13F's
-CUSIP-keyed holdings with **0.0000% ambiguity**, and covers only **22.3%** of
-held securities. A coverage gap escalates exactly as an ambiguity does, so the
-identifier join *alone* is **worse** than the names it replaced (f 77.7%, 1.3×);
-the cliff is not the absence of an identifier but the absence of one that
-**covers the workload** — and coverage has **two denominators**: 22.3% per
-distinct security, **58.8% per position held**, because portfolios concentrate on
-the large caps that carry LEIs. *(A "bridge-then-name" row first published here
-was invalid: it multiplied one join's coverage by a different join's ambiguity.
-See §3k.)*
-
-## 3k. The first federated query, and it answers in an interval
-
-`notes/findings/2026-08-18-three-sources-two-joins-and-an-answer-that-has-to-be-an-interval.md`
-
-Three filed sources, two **identifier** joins, no names: 13F holdings (CUSIP) →
-GLEIF ISIN-LEI → GLEIF entities (country). **World built in 5.8 s; 347 µs per
-portfolio answered.** The answer is necessarily an interval — `additive_bounds`
-gives exact attained extremes and the lower bound carries a **witness** a reader
-checks by following two joins per position.
-
-| US exposure, interval width | p10 **18.0%** | p50 **38.9%** | p90 71.0% |
-|---|---|---|---|
-
-**Value-weighted** (13F reports USD — established by summing AAPL to $3.06e12):
-width p10 **8.7%**, p50 42.1%, p90 **88.2%**, and **25.2%** of filers get a band
-≤ 20 points, up from 13.4% unweighted. It helps the filers already close and
-**hurts the ones that were not**.
-
-**Coverage has four readings spanning 3.5×** — 22.3% per distinct security, 58.6%
-per position, **79.1% per dollar aggregate, 58.0% per dollar for the median
-filer**. The aggregate describes Vanguard, not a typical filer; quoting it would
-be the slice-versus-population error in its third form.
-
-Honest uncertainty rather than a point estimate that would have been a lie — and
-**it becomes a product when the width is attributed.** `Bounds.width_by_subject`
-was already there and the slice ignored it; settling unbridged positions
-widest-first, the 5 widest carry **57.5%** of the width and:
-
-| lookups | median band | filers inside 20 points | $/portfolio |
-|---:|---:|---:|---:|
-| 0 | 43.5% | 23.7% | 0.000 |
-| **10** | **6.9%** | **77.5%** | **$0.045** |
-| 20 | 2.0% | 92.8% | $0.091 |
-
-**Ten escalations move one-in-four to three-in-four for four and a half cents** —
-on **usability**. **They do not preserve truth.** Tested on the bridged subset,
-the narrowed band still contains the truth only:
-
-| lookup accuracy | k=0 | **k=10** | k=20 |
-|---:|---:|---:|---:|
-| 1.00 | 100% | 100% | 100% |
-| **0.95** | 100% | **63.3%** | 42.3% |
-| 0.90 | 100% | 40.7% | 17.1% |
-
-**Coverage ≈ `a^k`**: any single wrong lookup breaks the band, because the policy
-resolves *widest-first* and one error displaces it by that position's full
-weight. The concentration that makes the product cheap makes it fragile.
-
-> **You can have a bound that is always true and rarely usable, or one that is
-> usually usable and often false.** A narrowed band must be quoted with `a^k`,
-> and `a` for a real model on this task is unmeasured — §6.
-
-**And the fix is the repo's own ethos: widen for the error rather than collapse.**
-If at most `m` of `k` lookups are wrong, widen both ends by the `m` largest
-resolved weights. At `a = 0.95`, `k = 10`:
-
-| m | coverage | median band |
-|---:|---:|---:|
-| 0 *(naive)* | 63.3% | 10.4% |
-| **1** | **96.9%** | **23.7%** |
-| 2 | 100.0% | 28.7% |
-
-So at the same **$0.045**: doing nothing is a 43.5% band always true; naive
-resolution is 10.4% and true 63% of the time; **widening for one error halves the
-band to 23.7% and stays true 96.9% of the time.** `additive_bounds` needed no
-change — only the right input. **Do not let an uncertain input collapse a certain
-output.**
-
-The advantage is a property of the domain's **structure-provenance**, not of the
-technology — and this reconciles the two
-halves of the session that looked contradictory. The repo's earlier advantages
-were measured on GLEIF and SEC, both **filed**, and they were real. The
-extraction arm's 1.8× is also real. One formula, two regimes; **quoting either
-without naming the regime is the error.** `symbolic_ai_core/cost.py` said this in
-its own docstring before the session started — *"cheap-and-incapable is not a
-point on the cost curve; it is a point off the capability axis entirely"* — and
-every cost row here ignored it until now.
-
-The previous frontier, which is measured and closed rather than abandoned:
-
-> *Maintaining an answer instead of re-deriving it: what an answer actually
-> depends on, how much smaller that is than what the computation read, and what
-> the difference is worth per corpus update.*
-
-That is a move from the previous revision's frontier ("computing with
-disagreements no source is entitled to settle"), which is not abandoned but is
-no longer where the open questions are. The move happened because the
-certificate arm found that the *only* claim of ours that survived a realistic
-opponent — naming what an answer rests on — is worth **0.3x to 1.0x** the way
-the previous handover proposed building it, and **13,987x** built differently.
-
-The corpus that made it measurable is new: **two filed SEC 13F snapshots**,
-December 2025 and the quarter after, 2,282,570 → 2,360,678 holdings edges,
-333,014 positions closed and 411,122 opened, 8,425 filings. It is the first real
-corpus *update* this repo has had, as against a corpus. Everything in §3b was
-measured on those bytes and nothing in it is injected.
+**Read next:** §3i–§3k for the above, §5 for what this session retracted
+(fourteen rows, most of them mine), §7 for what to do.
 
 ## 2. What is built
 
@@ -667,11 +551,144 @@ undetermined (**0.216%** / **4.274%**, `HANDOVER` §3).
 **259×** between regimes on the strict comparison, **13×** on the conservative
 one, from the same formula and the same code.
 
+**The ladder, and the cliff is not where the section title suggests:**
+
+| regime | **f** | quality | **advantage** |
+|---|---:|---:|---:|
+| **FILED** — GLEIF `ultimate_parent`, **single-source** | **0.216%** | 1.00 | **463×** |
+| FILED — incl. closure-vs-filed conflicts | 4.274% | 1.00 | 23× |
+| **FILED** — SEC → GLEIF, **CROSS-SOURCE** | **14.7%** | 1.00 | **7×** |
+| **DERIVED** — OpenAlex affiliation → ROR | **56.0%** | 0.85 | **1.8×** |
+
+**68× from single-source to cross-source; only 4× from cross-source to derived.**
+So the cliff is **not** at the filed/derived edge — it is at the **first identity
+boundary, inside the filed regime**. And crossing boundaries is what a federated
+substrate is *for*: a system that answers only within one source does not need
+federation, and the moment it does, the advantage falls 463× → 7×.
+
+**And the cliff is irreducible by modelling.** 51.3% of ambiguous matches span
+more than one country, so country should halve `f` — but **SEC carries no
+country**, `same_as` is a name-derived key rather than a bridge, no file on disk
+links a CIK to an LEI, and GLEIF's own external identifier is the *Delaware
+register number* (NVIDIA: 2862596) rather than the CIK (1045810). Two filed
+sources fail to join **not for lack of identifiers but for a surplus of
+incompatible ones**, and the only attribute both hold is the name. Closing the
+68× cliff looked like a **data-acquisition** problem — one crosswalk file — and
+**that has now been tried and is mostly wrong.** GLEIF's free ISIN→LEI mapping is
+on disk (`data/sources/gleif-isin/`), gives an exact-identifier join to 13F's
+CUSIP-keyed holdings with **0.0000% ambiguity**, and covers only **22.3%** of
+held securities. A coverage gap escalates exactly as an ambiguity does, so the
+identifier join *alone* is **worse** than the names it replaced (f 77.7%, 1.3×);
+the cliff is not the absence of an identifier but the absence of one that
+**covers the workload** — and coverage has **two denominators**: 22.3% per
+distinct security, **58.8% per position held**, because portfolios concentrate on
+the large caps that carry LEIs. *(A "bridge-then-name" row first published here
+was invalid: it multiplied one join's coverage by a different join's ambiguity.
+See §3k.)*
+
+
 Two caveats belong next to it. Quality 1.0 in the filed regime is relative to
 **the filing** — a better anchor than an automated extractor, still not truth.
 And `f` counts undetermined answers as escalations when this repo's ambiguity
 machinery returns the *alternatives enumerated*; a caller that can act on a
 retained mixture escalates none of them and `f` is lower still.
+
+## 3k. The first federated query, and it answers in an interval
+
+`notes/findings/2026-08-18-three-sources-two-joins-and-an-answer-that-has-to-be-an-interval.md`
+
+Three filed sources, two **identifier** joins, no names: 13F holdings (CUSIP) →
+GLEIF ISIN-LEI → GLEIF entities (country). **World built in 5.8 s; 347 µs per
+portfolio answered.** The answer is necessarily an interval — `additive_bounds`
+gives exact attained extremes and the lower bound carries a **witness** a reader
+checks by following two joins per position.
+
+| US exposure, interval width | p10 **18.0%** | p50 **38.9%** | p90 71.0% |
+|---|---|---|---|
+
+**Value-weighted** (13F reports USD — established by summing AAPL to $3.06e12):
+width p10 **8.7%**, p50 42.1%, p90 **88.2%**, and **25.2%** of filers get a band
+≤ 20 points, up from 13.4% unweighted. It helps the filers already close and
+**hurts the ones that were not**.
+
+**Coverage has four readings spanning 3.5×** — 22.3% per distinct security, 58.6%
+per position, **79.1% per dollar aggregate, 58.0% per dollar for the median
+filer**. The aggregate describes Vanguard, not a typical filer; quoting it would
+be the slice-versus-population error in its third form.
+
+Honest uncertainty rather than a point estimate that would have been a lie — and
+**it becomes a product when the width is attributed.** `Bounds.width_by_subject`
+was already there and the slice ignored it; settling unbridged positions
+widest-first, the 5 widest carry **57.5%** of the width and:
+
+| lookups | median band | filers inside 20 points | $/portfolio |
+|---:|---:|---:|---:|
+| 0 | 43.5% | 23.7% | 0.000 |
+| **10** | **6.9%** | **77.5%** | **$0.045** |
+| 20 | 2.0% | 92.8% | $0.091 |
+
+**Ten escalations move one-in-four to three-in-four for four and a half cents** —
+on **usability**. **They do not preserve truth.** Tested on the bridged subset,
+the narrowed band still contains the truth only:
+
+| lookup accuracy | k=0 | **k=10** | k=20 |
+|---:|---:|---:|---:|
+| 1.00 | 100% | 100% | 100% |
+| **0.95** | 100% | **63.3%** | 42.3% |
+| 0.90 | 100% | 40.7% | 17.1% |
+
+**Coverage ≈ `a^k`**: any single wrong lookup breaks the band, because the policy
+resolves *widest-first* and one error displaces it by that position's full
+weight. The concentration that makes the product cheap makes it fragile.
+
+> **You can have a bound that is always true and rarely usable, or one that is
+> usually usable and often false.** A narrowed band must be quoted with `a^k`,
+> and `a` for a real model on this task is unmeasured — §6.
+
+**And the fix is the repo's own ethos: widen for the error rather than collapse.**
+If at most `m` of `k` lookups are wrong, widen both ends by the `m` largest
+resolved weights. At `a = 0.95`, `k = 10`:
+
+| m | coverage | median band |
+|---:|---:|---:|
+| 0 *(naive)* | 63.3% | 10.4% |
+| **1** | **96.9%** | **23.7%** |
+| 2 | 100.0% | 28.7% |
+
+So at the same **$0.045**: doing nothing is a 43.5% band always true; naive
+resolution is 10.4% and true 63% of the time; **widening for one error halves the
+band to 23.7% and stays true 96.9% of the time.** `additive_bounds` needed no
+change — only the right input. **Do not let an uncertain input collapse a certain
+output.**
+
+The advantage is a property of the domain's **structure-provenance**, not of the
+technology — and this reconciles the two
+halves of the session that looked contradictory. The repo's earlier advantages
+were measured on GLEIF and SEC, both **filed**, and they were real. The
+extraction arm's 1.8× is also real. One formula, two regimes; **quoting either
+without naming the regime is the error.** `symbolic_ai_core/cost.py` said this in
+its own docstring before the session started — *"cheap-and-incapable is not a
+point on the cost curve; it is a point off the capability axis entirely"* — and
+every cost row here ignored it until now.
+
+The previous frontier, which is measured and closed rather than abandoned:
+
+> *Maintaining an answer instead of re-deriving it: what an answer actually
+> depends on, how much smaller that is than what the computation read, and what
+> the difference is worth per corpus update.*
+
+That is a move from the previous revision's frontier ("computing with
+disagreements no source is entitled to settle"), which is not abandoned but is
+no longer where the open questions are. The move happened because the
+certificate arm found that the *only* claim of ours that survived a realistic
+opponent — naming what an answer rests on — is worth **0.3x to 1.0x** the way
+the previous handover proposed building it, and **13,987x** built differently.
+
+The corpus that made it measurable is new: **two filed SEC 13F snapshots**,
+December 2025 and the quarter after, 2,282,570 → 2,360,678 holdings edges,
+333,014 positions closed and 411,122 opened, 8,425 filings. It is the first real
+corpus *update* this repo has had, as against a corpus. Everything in §3b was
+measured on those bytes and nothing in it is injected.
 
 ## 4. Believed, not measured. Do not inherit as fact.
 
