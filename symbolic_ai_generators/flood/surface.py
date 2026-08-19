@@ -196,8 +196,32 @@ def _q(claim: Claim) -> float:
     return float(v.value) if isinstance(v, Quantity) else float("nan")
 
 
+def _phantom_pair(world) -> tuple[str, str] | None:
+    """Two real regions with no road between them, for ``hard_distractors``.
+
+    Prefers the depot-to-site pair, which is the phantom edge most able to
+    change the answer -- a distractor that cannot possibly matter is not a
+    distractor, which is the whole point of the option.
+    """
+    links = {frozenset(c.entities()) for c in world.claims
+             if c.predicate == "link"}
+    regions = sorted({e for pair in links for e in pair})
+    depot = next((c.roles["where"].id for c in world.claims
+                  if c.predicate == "depot"), None)
+    needs = next((c.roles["where"].id for c in world.claims
+                  if c.predicate == "needs"), None)
+    if depot and needs and frozenset({depot, needs}) not in links:
+        return depot, needs
+    for a in regions:
+        for b in regions:
+            if a < b and frozenset({a, b}) not in links:
+                return a, b
+    return None
+
+
 def render_observation(case: Any, *, seed: int | None = None,
-                       variants: int = 1) -> Observation:
+                       variants: int = 1,
+                       hard_distractors: bool = False) -> Observation:
     """Render ``case`` as five aligned paragraphs.
 
     ``case`` is a :class:`~symbolic_ai_generators.flood.FloodCase`. The world is
@@ -254,7 +278,20 @@ def render_observation(case: Any, *, seed: int | None = None,
         doc.add(pick("link").format(a=a, b=b),
                 claim=li, kind="link", entities=(a, b))
     doc.glue(" ")
-    doc.add(f"A disused track once ran from {_OUTSIDE[0]} to {_OUTSIDE[2]}; it "
+    # ``hard_distractors`` points this sentence at two REAL regions with no road
+    # between them. It carries exactly the ``link`` signature -- two regions, no
+    # number -- so a reader typing sentences by shape admits it as a road, and
+    # the audit's prose scan flags it. With the default ``_OUTSIDE`` endpoints
+    # the phantom edge connects regions that appear nowhere else and therefore
+    # cannot change the answer, which MASKS the defect rather than preventing
+    # it: measured 2026-08-19, the signature+content reader scores 1.000 with
+    # the default and **0.367** with real endpoints, from this one substitution.
+    #
+    # Default False so every published number keeps its meaning. True is the
+    # honest setting and the one new work should use.
+    track = _phantom_pair(world) if hard_distractors else None
+    ta, tb = track if track else (_OUTSIDE[0], _OUTSIDE[2])
+    doc.add(f"A disused track once ran from {ta} to {tb}; it "
             f"has not carried traffic for years.")
     for bi in by_pred.get("bridge_on", []):
         a, b = ent(bi, "a"), ent(bi, "b")

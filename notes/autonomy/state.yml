@@ -40,6 +40,23 @@ measured:
     because the atom rule that keeps a pronoun with its antecedent -- required
     for the document to stay true -- preserves the demand binding; a property of
     the task, not a leak.
+  - THE READER'S 1.000 WAS PROPPED UP BY A DEFANGED DISTRACTOR. The prose scan
+    flagged that "A disused track once ran from X to Z" carries EXACTLY the link
+    signature; the reader admits it every case. It was inert only because the
+    generator drew its endpoints from _OUTSIDE, regions appearing nowhere else.
+    Pointed at two REAL unlinked regions -- nothing else changed -- the
+    signature+content reader falls 1.000 -> 0.367 grouped, 1.000 -> 0.383
+    interleaved. Two region ids in one sentence are worth -0.633.
+    The interleaved rows admit TWICE the spurious links and still scored 1.000
+    published, because both phantom edges are inert: the reader was scored on a
+    surface where its false claims could not matter.
+    UNIFICATION: no content-free observable separates a disused track from a
+    road, which is the SAME closure as depot vs flooded reached from another
+    direction. Distractor rejection is not a separate task from role assignment.
+    That is also why scheduling's capability vocabulary filters distractors --
+    it IS content.
+    SHIPPED: render_observation(hard_distractors=True), default False so every
+    published number keeps its meaning. True is the honest setting.
   - AN INSTRUMENT THAT PREDICTS WHERE A READER WILL BREAK, BEFORE IT EXISTS.
     symbolic_ai_generators/audit.py computes, from the surface alone, which
     claim kinds share a sentence signature. Reproduces both known answers --

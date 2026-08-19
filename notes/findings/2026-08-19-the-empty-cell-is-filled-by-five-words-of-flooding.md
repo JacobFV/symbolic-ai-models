@@ -165,3 +165,24 @@ It does **not** justify enlarging the hand-declared list. Adding *garaged*,
 *cut off* and *called in* would recover this particular adversarial set and
 demonstrate nothing — that is memorising the generator one variant later, and it
 is the trap the rules arm is already sitting in at V=1.
+
+---
+
+## Second correction (same day): the 1.000 had a second prop
+
+Above, the adversarial-phrasing test showed this arm's 1.000 is a **ceiling** —
+invariance to the paraphrases it has words for. A separate and unrelated prop has
+since been measured:
+[[2026-08-19-the-readers-1000-was-propped-up-by-a-defanged-distractor]].
+
+Flood's *"A disused track once ran from X to Z"* carries exactly the `link`
+signature and this reader admits it in every case. It is inert only because the
+generator draws its endpoints from regions appearing nowhere else. Pointed at two
+real unlinked regions — nothing else changed — the same reader falls from
+**1.000 to 0.367**.
+
+So the "1.000 in all four cells" is bounded twice over: by the phrasings it has
+words for, and by a distractor the generator declined to arm. Both are now
+measurable (`hard_distractors=True`, and the adversarial variant set), and the
+honest headline for this arm is **0.333–1.000 depending on which props are
+removed**.
