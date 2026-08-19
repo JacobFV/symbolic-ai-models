@@ -380,6 +380,52 @@ What survives: the ~62% plateau is now a **harder** number, because it withstood
 a serious attempt at its diagnosed cause. And **abstention won three times in one
 session** — v2's word-overlap fallback, B's relaxed admission, and this.
 
+## 3g. The two arrows priced together, and a metric inversion
+
+`notes/findings/2026-08-18-the-extractor-that-wins-on-facts-loses-on-every-answer.md`
+
+The first experiment in this repo that charges cost to the **system**, as
+`CLAUDE.md` requires. Two worlds over 5,000 OpenAlex works — the reference from
+OpenAlex's labels, the extracted from the zero-shot registry extractor.
+
+**Error amplifies 1.85x, and recall is what dies.**
+
+| query | Jaccard | precision | recall | amplification |
+|---|---:|---:|---:|---:|
+| `institutions_of(work)` | 0.544 | 83.9% | 43.8% | 1.00x |
+| `works_at(institution)` | 0.331 | 94.1% | 42.1% | 1.47x |
+| `collaborators(institution)` | **0.157** | 84.0% | **20.4%** | **1.85x** |
+| `works_at_count` | — | — | — | **100% median rel. error** |
+
+Precision holds; recall collapses, because the extracted world has **half the
+entities** (2,270 vs 4,539) — the extractor abstains on every ambiguity, and a
+collaborator never extracted anywhere is unreachable by any union.
+
+**So the operating point was chosen on the wrong metric.**
+
+| | v4 abstains | v4r high recall |
+|---|---:|---:|
+| fact-level F1 | **0.576** | 0.455 (**−0.121**) |
+| `collaborators` F1 | 0.328 | **0.413** (+0.085) |
+| `works_at` F1 | 0.582 | **0.640** (+0.058) |
+| count median rel. error | 100.0% | **50.0%** |
+
+> **The extractor that wins on facts by 0.121 F1 loses on every aggregate
+> query.** Aggregate queries pay for **completeness**, not precision.
+
+This inverts a conclusion stated three times in one session, each time on
+fact-level evidence alone. It is the repo's oldest trap in a new costume — *a
+ranking is a property of a metric* — and the metric this programme has been
+optimising corresponds to nothing a user asks for. **"No fallbacks — fail
+loudly" still stands** (it is about *silent* fallbacks), but **world
+construction and answer construction want opposite defaults**, and nothing in
+the architecture says so.
+
+**The ledger:** 0.9 s and **$5.08e-06** to build the world symbolically against
+**$19.03** for a model reading the same text — **3,746,454x** — and the world is
+57.6% right. Every advantage in §3, §3b and §3c is quoted over a world someone
+else built.
+
 ## 4. Believed, not measured. Do not inherit as fact.
 
 Recorded deliberately, with mechanisms, so a later contradiction is a finding
@@ -481,14 +527,17 @@ has a demonstrated failure rate.
 6. ~~Join geography to entity linking.~~ **Run, and it failed — §3f.** Do not
    repeat it without first sizing the signal on the population (65% of the
    cases it targets carry no geography at all).
-7. **Price the two arrows end to end.** Both are now measured separately —
-   extraction at ~62% of ceiling, reasoning at 37x–13,987x maintenance
-   advantage — and **nobody has asked what a 62%-correct world does to an exact
-   reasoner over it**. `CLAUDE.md` says cost is charged to the *system*; this is
-   the first experiment that could charge it. The repo has a measured precedent
-   for the shape: a composition amplified its inputs' errors ~13x on the route
-   network.
-8. **The shrinking-corpus inversion.** One arm, and it is the falsifier for the
+7. ~~Price the two arrows end to end.~~ **Done — §3g**, and it inverted a
+   conclusion stated three times the same day.
+8. **Find where completeness stops winning.** §3g's queries are all set
+   *unions* over an inverted index, which reward over-generation. A query that
+   **intersects**, or requires *all* of something, should punish it — and that
+   would sharpen "completeness wins" into "completeness wins for **existential**
+   queries", which is the shape this repo keeps finding (witnesses, bounds, the
+   cheap half of a problem). *Why this ranks first:* it is one script against an
+   existing world, and it decides whether §3g's design consequence is general or
+   an artefact of the query family.
+9. **The shrinking-corpus inversion.** One arm, and it is the falsifier for the
    witness asymmetry rather than another confirmation of it.
 
 **What not to do:** more kernels (the data says stop at eight); more query
