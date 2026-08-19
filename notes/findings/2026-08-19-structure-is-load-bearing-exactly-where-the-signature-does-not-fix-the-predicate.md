@@ -103,3 +103,50 @@ with a mechanism into a manipulation. That is the next test, and it is cheap.
 Until then this is **a mechanism confirmed by decomposition, on two domains**,
 not a law confirmed by manipulation. The decomposition is what does the work: the
 aggregate numbers are confounded and the per-kind table is not.
+
+---
+
+## Confirmed by manipulation (added same day)
+
+The test named above as "the next test, and it is cheap" was run. Flood's regions
+renamed so the prefix carries the role — `depot_3`, `flooded_1`, `site_2` —
+with the phrasings, the arrangement, the claims and the answer **identical**.
+Typed one role at a time, 40 cases, V=4:
+
+| typed roles | signature determinacy | grouped | interleaved |
+|---|---:|---:|---:|
+| none | 0.00 | 1.000 | **0.000** |
+| depot | 0.33 | 1.000 | **0.500** |
+| depot+flooded | 1.00 | 1.000 | **1.000** |
+| depot+flooded+needs | 1.00 | 1.000 | 1.000 |
+
+**Changing only the names moves interleaved accuracy 0.000 → 1.000.** The grouped
+column stays 1.000 throughout, which is the control: renaming buys nothing while
+the arrangement is still there to read. So arrangement was load-bearing *only*
+because the signature left the predicate open. The law is now causal, not
+correlational.
+
+### The shape is a partial cascade
+
+I predicted a threshold at 0.5 confidence, on the theory ledger's whole-kinds
+account, and wrote down the alternative — that adjacency might cascade from a
+single rename. Neither is right on its own.
+
+Typing `depot` alone recovers exactly **half**: `depot` comes from the prefix,
+`needs` from adjacency, `flooded` by elimination. But adjacency only fires
+sometimes — the same partiality that capped the enumerating arm at 0.324 decided.
+
+**Partial determinacy buys immunity only through a second mechanism, never on its
+own.** Two of three typed is already full determinacy by elimination, which is
+why the third rename adds nothing.
+
+### A broken control that nearly read as a result
+
+The first run scored **0.000 in every cell, including grouped**, which would have
+said "renaming does not help" — a false negative that confirms nothing and looks
+like a finding. The cause: I hand-rolled the claim assembly instead of importing
+`_assemble`. The reader was broken, not the hypothesis.
+
+The tell was the **control column**: grouped-with-full-typing must be ~1.000 by
+construction, and it was 0.000. A cell whose value is known in advance is worth
+including precisely so a broken arm announces itself.
