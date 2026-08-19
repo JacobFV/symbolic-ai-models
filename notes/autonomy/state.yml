@@ -40,6 +40,18 @@ measured:
     because the atom rule that keeps a pronoun with its antecedent -- required
     for the document to stay true -- preserves the demand binding; a property of
     the task, not a leak.
+  - STAGE ACCOUNTING CLOSED. Priced the third stage nobody had measured:
+    render share is 0.2% (flood), 0.1% (scheduling), 9.4% (solvency). MINOR
+    EVERYWHERE -- I predicted it would rival reading in solvency and it is a
+    tenth of it. All three stages now measured; the read/solve split is the
+    whole story.
+    KEEP THIS NUMBER: solvency's renderer costs 0.006 ms against a solver at
+    0.002 ms -- 3x more spent EXPLAINING the answer than COMPUTING it. With the
+    row: 97.2% of that pipeline is TEXT HANDLING (87.8% read, 9.4% render) and
+    2.8% is REASONING. The sharpest statement of what a symbolic pipeline costs
+    when reasoning is genuinely cheap, which is the regime the thesis describes.
+    CAVEAT: these renderers format a few sentences from a handful of claims. One
+    that had to SELECT what to say would not transfer.
   - THE LEDGER WAS PRICING 4% OF SOLVENCY. CLAUDE.md says cost is charged to
     the SYSTEM and cost.py's System exists because "sum is not optional" -- and
     every milestone priced KERNEL ARTIFACTS ONLY. Charging a reader component
