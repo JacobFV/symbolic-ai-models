@@ -102,6 +102,12 @@ measured:
   - claim: "The extractor that wins on fact-level F1 by 0.121 LOSES on every aggregate query (collaborators +0.085, works_at +0.058, count error halved for the worse-on-facts one). Two defensible metrics rank the two extractors inversely, and the one this programme optimises corresponds to nothing a user asks for."
     evidence: same finding
     commit: 61da9ea
+  - claim: "Monotone queries (union, intersection) tolerate over-generation and the one non-monotone class tested (set difference, antitone in its second argument) does not: completeness wins +0.177 on intersection and loses -0.117 on difference. Same axis as the witness result."
+    evidence: notes/findings/2026-08-18-monotone-queries-repair-a-noisy-world-and-non-monotone-ones-cannot.md
+    commit: 4cbf891
+  - claim: "Intersection's noise filtering requires INDEPENDENT errors. works_at_both precision is 95.1% on co-occurring institution pairs and 8.1% on registry-CONFUSABLE ones -- below the 36.5% fact-level rate. Over-generation is free where disambiguation is not needed and ruinous where it is."
+    evidence: same finding, correction section
+    commit: f3d6010
   - claim: "Scoping survives a dense graph. On the filed-real routing mixture: read p50 1, max 8, 0 refusals in 250 queries, anchor 179/179. What breaks is wall time -- 48.3 ms/query against GLEIF's 2.8 us -- and the governing variable is conflict rate x read footprint, not topology."
     evidence: notes/findings/2026-08-18-scoping-survives-a-dense-graph-and-what-breaks-is-wall-time-not-refusal.md
     commit: 2b8443d
@@ -208,21 +214,21 @@ last_cycle:
     repo now say the cheap half of a problem is the useful half.
 
 next:
-  preferred_action: find-where-completeness-stops-winning
+  preferred_action: wire-witness-into-the-remaining-seven-kernels
   why_shipped_instead: >
     witness-on-kernelresult is DONE: `Witness` is on the kernel ABI, the ASP
     kernel returns its answer set instead of discarding it, and
     `KernelResult.maintainable` is true exactly when a witness is present --
     deliberately NOT for a proof of impossibility, however conclusive.
   why: >
-    Every query in the end-to-end arm is a set UNION over an inverted index, and
-    unions reward over-generation. A query that INTERSECTS, or requires all of
-    something, should punish it. That would sharpen 'completeness wins' into
-    'completeness wins for EXISTENTIAL queries' -- which is the shape this repo
-    keeps finding, in witnesses, in additive bounds, and in the solver rung where
-    the cheap half of a problem is the useful half. One script against a world
-    that already exists, and it decides whether the design consequence just
-    published is general or an artefact of one query family.
+    The extraction arm has now produced six findings and three self-corrections
+    in a row and is showing diminishing returns per rung; per the mandate's
+    anti-obsession check it is time to bank the capability rather than add a
+    seventh rung. MONOTONICITY is now measured on the same axis in two unrelated
+    arms -- the witness/complement gap in the certificate work, and
+    monotone-vs-antitone queries over a noisy world -- so the Witness contract
+    already on KernelResult is the structure both results point at, and it is
+    currently populated by exactly one kernel of eight.
   superseded_geo: >
     Ran and failed; see 3f. Do not repeat without sizing the signal first.
   superseded_hub_labelling: >

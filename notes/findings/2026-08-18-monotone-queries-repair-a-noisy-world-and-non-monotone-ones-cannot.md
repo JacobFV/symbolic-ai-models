@@ -37,6 +37,10 @@ wrong about the mechanism.
 
 ## Intersection is a noise filter, and it is a very good one
 
+> **Read the CORRECTION below before quoting anything in this section.** The
+> 95.1% holds only for *independent* errors. On registry-confusable pairs the
+> same query gives **8.1%**, and this section as written overstates the result.
+
 Track the high-recall extractor's precision as the query gets more constrained:
 
 ```
@@ -73,7 +77,8 @@ can recover it — which is exactly what the numbers say: v4r's precision on the
 difference is **38.3%**, essentially the raw fact-level rate, **unfiltered**.
 
 > **Monotone queries tolerate and even repair over-generation. Non-monotone
-> queries cannot.**
+> queries cannot.** — *narrowed by the correction below to: monotone queries
+> repair **uncorrelated** over-generation.*
 
 ## Why this matters beyond the query family
 

@@ -426,6 +426,46 @@ the architecture says so.
 57.6% right. Every advantage in §3, §3b and §3c is quoted over a world someone
 else built.
 
+## 3h. Where completeness stops winning, and where the filter breaks
+
+`notes/findings/2026-08-18-monotone-queries-repair-a-noisy-world-and-non-monotone-ones-cannot.md`
+
+§3g's queries were all set **unions**, which reward over-generation by
+construction. Four classes chosen to punish it instead:
+
+| query class | winner | Δ F1 |
+|---|---|---:|
+| `works_at_both(A,B)` — intersection | completeness | **+0.177** |
+| `common_institutions(w1,w2)` — intersection *(n=26, no weight)* | completeness | +0.055 |
+| `institutions_unique_to(w1,w2)` — **difference** | **precision** | **−0.117** |
+| `is_single_institution(work)` — boolean *(inconclusive vs 65.8% floor)* | completeness | +0.033 |
+
+The one class precision wins is the only **non-monotone** one: `A − B` is
+antitone in `B`, so a spurious member of `B` **deletes** a true member of `A` and
+nothing recovers it. **Same axis as the witness result** (§3b) — monotone claims
+have small stable certificates and tolerate noise; their complements do neither.
+Two unrelated arms, one axis.
+
+**Then the falsifier, run the same hour.** The claim rests on error
+*independence*, so partition `works_at_both` by whether the two institutions are
+**registry-confusable** (a single ROR name maps to both; 4,604 institutions have
+such a sibling):
+
+| pair type | precision |
+|---|---:|
+| co-occurring (as first published) | **95.1%** |
+| **confusable — correlated errors** | **8.1%** |
+
+**95.1% → 8.1%**, below even the 36.5% fact-level rate.
+
+> **Intersection repairs uncorrelated over-generation and amplifies correlated
+> over-generation — and the extractor's noise is correlated with exactly the
+> entities anyone would want disambiguated. Over-generation is close to free
+> where you do not need disambiguation and ruinous where you do.**
+
+The finding carries a banner at the overstated section; do not quote it without
+the correction.
+
 ## 4. Believed, not measured. Do not inherit as fact.
 
 Recorded deliberately, with mechanisms, so a later contradiction is a finding
@@ -529,14 +569,8 @@ has a demonstrated failure rate.
    cases it targets carry no geography at all).
 7. ~~Price the two arrows end to end.~~ **Done — §3g**, and it inverted a
    conclusion stated three times the same day.
-8. **Find where completeness stops winning.** §3g's queries are all set
-   *unions* over an inverted index, which reward over-generation. A query that
-   **intersects**, or requires *all* of something, should punish it — and that
-   would sharpen "completeness wins" into "completeness wins for **existential**
-   queries", which is the shape this repo keeps finding (witnesses, bounds, the
-   cheap half of a problem). *Why this ranks first:* it is one script against an
-   existing world, and it decides whether §3g's design consequence is general or
-   an artefact of the query family.
+8. ~~Find where completeness stops winning.~~ **Done — §3h**, including its own
+   falsifier, which cut the headline from 95.1% to 8.1%.
 9. **The shrinking-corpus inversion.** One arm, and it is the falsifier for the
    witness asymmetry rather than another confirmation of it.
 
