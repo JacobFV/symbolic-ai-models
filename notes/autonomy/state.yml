@@ -40,6 +40,20 @@ measured:
     because the atom rule that keeps a pronoun with its antecedent -- required
     for the document to stay true -- preserves the demand binding; a property of
     the task, not a leak.
+  - TWO DETECTORS, NEITHER SOUND ALONE, SOUND TOGETHER. At 400 seeds on the
+    hard-distractor interleaved surface (252 non-empty): answer everything 81
+    wrong (0.679); role flag only 75 wrong (0.664) at 88.5% coverage;
+    CERTIFICATE ONLY 3 WRONG (0.9786) at 55.6%; BOTH 0 wrong (1.000) at 47.6%.
+    The certificate's three failures are seeds 64, 83, 92 -- THE SAME THREE that
+    broke the exactness audit -- all with role_assignment_forced=False and all
+    reading the DEPOT AS A FLOODED REGION. A misread role is not a link
+    deletion, so link-insensitivity cannot see it; the certificate's entire
+    failure set is the role flag's entire catch set. Complementarity shown
+    exactly, not statistically.
+    CORRECTS "refusing to collapse... soundness 1.000", which was N=60 and
+    bounds only 5%. 0 wrong in 120 bounds the error at 2.5%, NOT zero.
+    Coverage 47.6% is ~the product of the two conditions, so they are close to
+    independent. The pair converts 32% silent error into 52% refusal.
   - A FLAG THAT MEANS SOUND ON ONE SURFACE AND 0.664 ON ANOTHER. Built the
     refusing reader named last cycle: read_content_roles_checked returns
     (world, role_assignment_forced). On the published surface it removes 3 of 3

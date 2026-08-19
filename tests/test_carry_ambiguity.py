@@ -165,3 +165,64 @@ def test_the_certificate_needs_no_flow_solve() -> None:
         inspect.getsource(ic._read_world) + inspect.getsource(ic._connected)
     for forbidden in ("solve(", "get_kernel", "evaluate("):
         assert forbidden not in src, forbidden
+
+
+def test_the_certificate_alone_is_not_sound_on_the_hard_surface() -> None:
+    """It was reported sound at N=60. At 400 seeds it lets 3 through.
+
+    The three are role errors -- the depot read as a flooded region -- which
+    link-deletion insensitivity cannot see, because a misread role is not a
+    deletion. Asserting they EXIST keeps the pairing honest: if this ever passes
+    with zero, the certificate has been strengthened and the pair is redundant.
+    """
+    import sys
+    sys.path.insert(0, "scripts")
+    from insensitivity_certificate import certifies_insensitive
+
+    from symbolic_ai_generators.flood.read_surface import \
+        read_content_roles_checked
+
+    slipped = 0
+    for seed in range(200):
+        case = generate(seed)
+        want = solve(case.world)[0]
+        if not want:
+            continue
+        world, _ = read_content_roles_checked(_read_text(seed))
+        if certifies_insensitive(world) and solve(world)[0] != want:
+            slipped += 1
+    assert slipped > 0, "expected role errors to slip past the certificate"
+
+
+def test_the_pair_is_sound_where_neither_is_alone() -> None:
+    """Certificate for link sensitivity, role flag for role guessing.
+
+    0 wrong over 120 answers bounds the error at 2.5% -- not zero, and the
+    finding says so rather than rounding it away.
+    """
+    import sys
+    sys.path.insert(0, "scripts")
+    from insensitivity_certificate import certifies_insensitive
+
+    from symbolic_ai_generators.flood.read_surface import \
+        read_content_roles_checked
+
+    answered = wrong = 0
+    for seed in range(200):
+        case = generate(seed)
+        want = solve(case.world)[0]
+        if not want:
+            continue
+        world, forced = read_content_roles_checked(_read_text(seed))
+        if forced and certifies_insensitive(world):
+            answered += 1
+            wrong += solve(world)[0] != want
+    assert answered > 40, answered
+    assert wrong == 0, wrong
+
+
+def _read_text(seed: int) -> str:
+    from symbolic_ai_generators.flood.surface import render_observation
+    from symbolic_ai_generators.scramble import interleave, unsaturate
+    obs = render_observation(generate(seed), variants=4, hard_distractors=True)
+    return interleave(unsaturate(obs, headings=HEADINGS, shuffle=False)).text
