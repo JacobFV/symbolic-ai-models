@@ -40,6 +40,26 @@ measured:
     because the atom rule that keeps a pronoun with its antecedent -- required
     for the document to stay true -- preserves the demand binding; a property of
     the task, not a leak.
+  - A CERTIFIED ANSWER IS EXPLAINED HONESTLY, FOR FREE. The day's two threads
+    meet. 300 seeds, flood honest surface, complete renderer:
+      population       share  accuracy  any false  link cites  cites
+      all              1.000     0.673      0.378        0.48  11.56
+      certified        0.469     1.000      0.022        0.00  10.88
+      not certified    0.531     0.385      0.692        0.91  12.16
+    A CERTIFIED ANSWER CITES NO LINK AT ALL and its explanation contains a
+    falsehood 17x less often, from the SAME CHECK with no extra work. Predicted
+    0.05-0.10; measured 0.022.
+    STRUCTURAL, NOT COINCIDENTAL: certifies_insensitive holds when no single link
+    deletion changes the answer; render_complete cites the LOAD-BEARING set, the
+    claims whose deletion WOULD. On a certified case those sets cannot overlap on
+    links. That they agree was the refutation condition and it did not fire --
+    otherwise load_bearing_cheap and certifies_insensitive would be disagreeing
+    about what the answer depends on, and this repo ships them as complementary.
+    PRICE: break_even_wrong_cost put flood's certificate at W = 0.60, pricing
+    SOUNDNESS ONLY. The same refusal removes 94% of the explanation's falsehoods,
+    so any weight on the explanation being true LOWERS the threshold. TWO
+    PROPERTIES TREATED AS SEPARATE -- is the answer right, is the account of it
+    true -- ARE BOUGHT BY ONE CHECK, because both ask what the answer DEPENDS ON.
   - THE EXPLANATION IS WRONG MORE OFTEN THAN THE ANSWER. The conditional tested
     where it bites. Solvency's values FEED (summed) where flood's GATE, and its
     renderer states the consolidated total as its central sentence. 200 seeds,

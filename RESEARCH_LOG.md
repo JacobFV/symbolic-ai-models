@@ -417,6 +417,30 @@ magnitude while the verdict's climbs to 0.445 — they are functions of *differe
 variables*, and the ratio diverges as the perturbation shrinks rather than being
 merely greater than one.
 
+### And one check buys both
+
+Certification and explanation fidelity had been measured separately. They are the
+same cases. 300 seeds, honest surface, complete renderer:
+
+| population | share | accuracy | **any false citation** | **link citations** |
+|---|---:|---:|---:|---:|
+| all | 1.000 | 0.673 | 0.378 | 0.48 |
+| **certified** | 0.469 | **1.000** | **0.022** | **0.00** |
+| not certified | 0.531 | 0.385 | 0.692 | 0.91 |
+
+**A certified answer cites no link at all**, and its explanation contains a
+falsehood **17× less often**. The alignment is structural: `certifies_insensitive`
+holds when no single link deletion changes the answer, and `render_complete` cites
+the load-bearing set — the claims whose deletion *would* change it — so on a
+certified case those sets cannot overlap on links.
+
+That reprices the certificate. `break_even_wrong_cost` put flood's at **W = 0.60**,
+which valued **soundness only**; the same refusal also removes 94% of the
+explanation's falsehoods, so any weight on the account being true lowers the
+threshold. **Two properties this repo treats as separate — is the answer right,
+and is the account of it true — are bought by one check**, because both are
+questions about what the answer depends on.
+
 ### What each channel admits, and what it costs
 
 Two responses to a claim the reader may have got wrong, and they are gated by
