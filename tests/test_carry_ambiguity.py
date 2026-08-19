@@ -80,3 +80,49 @@ def test_collapsing_is_silently_wrong_where_this_abstains() -> None:
                 for s in range(N))
     assert wrong > N // 4, ("the collapsing reader should be wrong often here; "
                             f"only {wrong}/{N}")
+
+
+def test_it_discards_only_wrong_answers() -> None:
+    """The property that makes the price interpretable.
+
+    On this population the carrying policy answers fewer cases than the
+    collapsing reader but gets the SAME number right -- every case it refuses is
+    one the collapsing reader would have got wrong. That is why its $/correct
+    multiple equals its compute multiple exactly: the numerator does not move.
+    """
+    collapse_right = decided_right = decided = 0
+    for seed in range(N):
+        case = generate(seed)
+        want = solve(case.world)[0]
+        if not want:
+            continue
+        world = _read(case)
+        collapse_right += solve(world)[0] == want
+        answers = _answers(world)
+        if len(answers) == 1:
+            decided += 1
+            decided_right += next(iter(answers)) == want
+    assert decided_right == collapse_right, (decided_right, collapse_right)
+    assert decided < N, "it must refuse something, or there is nothing to price"
+
+
+def test_early_exit_does_not_change_the_decided_set() -> None:
+    """Stopping at the first disagreement is exact, not an approximation."""
+    from dataclasses import replace as _replace
+
+    for seed in range(N):
+        case = generate(seed)
+        world = _read(case)
+        full = len(_answers(world)) == 1
+
+        seen = {solve(world)[0]}
+        early = True
+        for i, c in enumerate(world.claims):
+            if c.predicate != "link":
+                continue
+            seen.add(solve(_replace(world, claims=tuple(
+                x for j, x in enumerate(world.claims) if j != i)))[0])
+            if len(seen) > 1:
+                early = False
+                break
+        assert early == full, seed

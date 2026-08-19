@@ -40,6 +40,18 @@ measured:
     because the atom rule that keeps a pronoun with its antecedent -- required
     for the document to stay true -- preserves the demand binding; a property of
     the task, not a leak.
+  - SOUNDNESS IS PRICED: 15.6x per correct answer, 13.4x with exact early exit.
+    34 non-empty cases: collapse answers 34 and is right 20 at $1.35e-08 each;
+    carry answers 20, is right 20, soundness 1.000, at $2.11e-07 each.
+    IT DISCARDS ONLY WRONG ANSWERS -- the same twenty correct, every refusal a
+    case collapse would have got wrong -- which is why the $/correct multiple
+    equals the compute multiple exactly: the numerator does not move. Measured,
+    not proven; the test names it as the fragile half.
+    Early exit is exact (decided set unchanged) but buys only 14%, mean solves
+    16.0 -> 13.7, because on an undecided case the disagreement appears LATE:
+    deletion dependency is 0.243 so the enumeration works through many inert
+    candidates first. The load-bearing claim is a needle. NEXT: order candidates
+    by measured deletion_dependency, which the audit already computes. Untried.
   - REFUSING TO COLLAPSE COSTS NOTHING HERE AND FLAGS EVERY ERROR. Nothing
     downstream of a reader can catch an invented claim, so the remaining
     response is directive 19's. The audit says offline that flood's (2 regions,
