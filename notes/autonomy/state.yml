@@ -387,7 +387,14 @@ next_actions:
           already dodges them and survives only through elimination. A fifth
           phrasing built ADVERSARIALLY against the declared anchors would find
           the true floor. That is the honest next measurement and it is cheap.
-          Note WordNet is NOT on disk (only `words`), and was not needed.
+          DONE TOO. Against four phrasings per role verified to contain no
+          declared anchor: 1.000 -> 0.794 (half adversarial) -> 0.618 (all),
+          landing EXACTLY on the emptied-anchor floor. So the 1.000 is a
+          CEILING -- the arm is invariant to the paraphrases it HAS WORDS FOR --
+          and the anchors never MISFIRE, so its failure mode is silence rather
+          than error. Lexical generalisation is now justified against a measured
+          gap of 0.382; enlarging the hand-declared list is NOT, because that
+          memorises the generator one variant later.
       (b) DONE for scheduling, and the answer reframed the question -- see
           measured. Solvency is still open and now has a sharper form: it has
           no committed reader module (its 1.000 came from a script), so the

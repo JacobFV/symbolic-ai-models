@@ -114,3 +114,54 @@ advance, close a cell that no amount of content-free machinery can.
   be marked flooded blindly, and requires the non-residual claim kinds to be
   **identical** with anchors emptied — so the arm cannot quietly start reading
   content for anything the signature already fixes.
+
+---
+
+## The adversarial test (same day): 1.000 is a ceiling, not a capability
+
+The refutation this note named — "a fifth phrasing that avoids water, flood,
+submerge, inundate, impassable and underwater" — was written and run. Four more
+phrasings per residual role, each **verified by assertion** to contain no
+declared anchor rather than checked by eye:
+
+> depot: *"Every lorry is garaged at {w} overnight."*
+> flooded: *"{w} is cut off and nothing may pass through it."*
+> needs: *"{w} has called in an order."*
+
+| phrasing set | grouped | interleaved |
+|---|---:|---:|
+| original 4 (published) | 1.000 | **1.000** |
+| 8, half adversarial | 0.853 | 0.794 |
+| 4, ALL adversarial | 0.765 | **0.618** |
+| *anchors emptied, for reference* | *0.765* | *0.618* |
+
+**Two results, and the second is the more interesting.**
+
+1. **The 1.000 is a ceiling.** Against wording written to evade the declared
+   vocabulary the arm falls to 0.618. The honest summary is that it is invariant
+   to the paraphrases *it has words for* — which is a much weaker claim than
+   "invariant to phrasing", and the one the evidence supports.
+
+2. **The anchors never misfire.** All-adversarial lands on **exactly** the
+   emptied-anchor floor, 0.765 / 0.618, to three decimals. The risk this test was
+   built to catch — a declared vocabulary being *worse* than none, by firing
+   confidently on a sentence it was not written for and pre-empting elimination —
+   does not occur. Degradation is graceful and monotone: 1.000 → 0.794 → 0.618 as
+   the adversarial share goes 0 → ½ → 1.
+
+So the arm's failure mode is *silence*, not error. That is the right failure mode
+for a component feeding a symbolic pipeline, and it is why the loss stops at the
+floor instead of going through it.
+
+## What this justifies, and what it does not
+
+It now justifies **lexical generalisation against a measured gap**: the 0.382
+between floor and ceiling is exactly the value of having the right word, and
+WordNet or a distributional resource would be earning its place against a number
+rather than being reached for first. That was the standard I set when declining
+to install it, and it is now met.
+
+It does **not** justify enlarging the hand-declared list. Adding *garaged*,
+*cut off* and *called in* would recover this particular adversarial set and
+demonstrate nothing — that is memorising the generator one variant later, and it
+is the trap the rules arm is already sitting in at V=1.
