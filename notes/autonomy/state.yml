@@ -14,6 +14,12 @@ bottleneck: >
   world is still RECEIVED from a generator rather than READ.
 
 measured:
+  - MILESTONE (V=4, non-empty population): oracle world 1.000 task acc at
+    $1.39e-08/correct; best reader (signature) 0.318 at $3.95e-08; rules,
+    lexical and template all 0.000. Kernel ablations from the oracle world: no
+    SMT 0.500, no datalog 0.818, no ASP search 0.864. READER LOSS 0.682 EXCEEDS
+    EVERY KERNEL LOSS (worst 0.500). Grounded paragraphs 1.000 everywhere the
+    renderer ran.
   - RENDERER: 40/40 flood cases produce a fully grounded answer paragraph, both
     polarities explained (including "no route reaches it at all: the network is
     cut by flooding in region_2 and region_4"). The checker is token AND
@@ -177,8 +183,9 @@ unknowns:
   - Precision failures (invented/misread claims) are unswept; MISREADS exists.
 
 active_work: >
-  The boxed pipeline is now complete on flood: text -> world IR -> multi-kernel
-  flow -> structured output + grounded paragraph. Renderer next on solvency.
+  MILESTONE DELIVERED on flood: report -> typed world -> three kernels ->
+  structured decision + grounded paragraph, with reader arms, kernel ablations
+  and $/correct in one table.
 
 built:
   - symbolic_ai_generators/flood/surface.py -- five-paragraph observation
@@ -201,9 +208,11 @@ next_actions:
     term. Deriving that would complete the unconditional curve.
   - The reader machinery on scheduling is still untried -- only the law was
     tested there.
-  - Renderer for solvency, and then the 16-milestone table end to end: a
-    multi-paragraph report -> reader -> world -> kernels -> structured decision
-    -> grounded paragraph, with reader arms and ablations in one table.
+  - The measured bottleneck is now unambiguous: reader loss 0.682 against a
+    worst kernel loss of 0.500, and the only reader that generalises sits at
+    0.318. Everything else is second-order until that moves. The failure is
+    known too -- superlative-mediated coreference -- and WordNet is on disk.
+  - Renderer for solvency, to give it a milestone row.
   - Tighten grounding to ROLE level. Token-and-adjacency still passes a real
     number asserted about the wrong entity, which is the same shape of gap the
     ordering bug was.
