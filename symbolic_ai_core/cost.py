@@ -623,11 +623,26 @@ def targeting_regime(rows: Iterable[Ledger]) -> tuple[Ledger, Ledger] | None:
     rows = [r for r in rows if r.targeting_lift is not None]
     if len(rows) < 2:
         return None
-    winner = max(rows, key=lambda r: r.targeting_lift or 0.0)
-    better = max(rows, key=lambda r: r.rate)
-    if better.rate > winner.rate:
-        return winner, better
-    return None
+    # ANY inverted pair, not just the global winners. A first version compared
+    # the best-aim row against the best-rate row, and missed the case that
+    # actually arises: two arms of the SAME system, where one aims better and
+    # answers worse, while some third row holds both global maxima. Measured on
+    # the structural back-off, `ilp-001` off aims 1.41x against on's 1.37x and
+    # answers 0.291 against 0.312 -- an inversion the global check could not see
+    # because `ruleinduce-001` off topped both columns.
+    #
+    # The sharpest inversion is reported rather than the first, so one line says
+    # how much the two columns disagree at their worst.
+    worst: tuple[Ledger, Ledger] | None = None
+    margin = 0.0
+    for a in rows:
+        for b in rows:
+            if a.rate >= b.rate:
+                continue
+            gain = (a.targeting_lift or 0.0) - (b.targeting_lift or 0.0)
+            if gain > margin:
+                margin, worst = gain, (a, b)
+    return worst
 
 
 def ledger_table(rows: Iterable[Ledger], *, min_rate: float | None = None) -> str:
@@ -704,11 +719,13 @@ def ledger_table(rows: Iterable[Ledger], *, min_rate: float | None = None) -> st
         w, b = aimed_pair
         lines.append("")
         lines.append(
-            f"  !! TARGETING REGIME: aim x ranks {w.system} (rate {w.rate:.4f}) "
-            f"above {b.system} (rate {b.rate:.4f}) -- aiming better by "
-            f"answering worse. Relaxing a certificate until it is UNSOUND "
-            f"raises aim x, because the flagged share falls faster than the "
-            f"quality does. Compare aim x only across rows at the SAME rate.")
+            f"  !! TARGETING REGIME: aim x ranks {w.system} "
+            f"({w.targeting_lift:.2f}x, rate {w.rate:.4f}) above {b.system} "
+            f"({b.targeting_lift:.2f}x, rate {b.rate:.4f}) -- aiming better by "
+            f"answering worse. aim x = (1 - a_flagged)/(1 - rate), so anything "
+            f"that lowers the rate raises it: relaxing a certificate until it "
+            f"is unsound, or weakening a back-off. Compare aim x only across "
+            f"rows at the SAME rate.")
 
     if min_rate is not None:
         pick = cheapest_above(rows, min_rate)

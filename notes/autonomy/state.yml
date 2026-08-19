@@ -268,7 +268,37 @@ last_cycle:
     repo now say the cheap half of a problem is the useful half.
 
 next:
-  preferred_action: price-the-backoff-tradeoff-accuracy-against-certifiability
+  preferred_action: raise-base-accuracy-or-stop-pricing-certification-here
+  why_now: >
+    The back-off trade is measured and closed: real, and one-sided. It buys
+    +0.021 and +0.030 label_acc and costs 0.04x of a metric capped at 1.49x, and
+    for syllogism-001 that accuracy is the difference between beating its 0.143
+    floor and reading inf. 3t's consequence is true and economically irrelevant.
+
+    That exhausts the certification lens on this substrate, and the reason is
+    the law itself: aim <= 1/(1 - accuracy). These models are 7.7-32.9%
+    accurate, so NOTHING done to their abstention policy can be worth more than
+    1.49x. Certification is not a lever here; accuracy is the only lever, and
+    every certification question on the curriculum is answered in advance by the
+    bound.
+  the_real_consequence: >
+    The session's instruments are built and validated and they now say the same
+    thing three ways: the symbolic layer sells certification, certification is
+    worth 1/(1-accuracy), and this substrate is not accurate enough for that to
+    be worth anything. The next genuinely open question is not another
+    certification measurement -- it is whether base accuracy on the curriculum
+    can move at all, which is the repo's oldest question and the one 51 scored
+    models have been circling.
+  do_not: >
+    Do not run another certification arm on the curriculum. The bound answers it
+    before the experiment: at 33% accuracy the ceiling is 1.49x whatever the
+    abstention policy does. Record the prediction and spend the time on accuracy.
+  unreproduced_claim_worth_someones_time: >
+    symbolic.py's docstring credits the structural back-off with taking
+    ruleinduce from 0.076 to its current score. Toggling the flag today moves
+    its accuracy by 0.000. Whatever produced that gain, the flag alone does not
+    reproduce it. Not chased; recorded.
+  previous_preferred_action: price-the-backoff-tradeoff-accuracy-against-certifiability
   why_now: >
     The session now has one law rather than a pile of numbers. Certification
     value obeys aim = (1 - acc_abstained)/(1 - base), the flagged share cancels

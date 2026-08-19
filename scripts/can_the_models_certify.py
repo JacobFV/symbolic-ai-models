@@ -66,7 +66,13 @@ SCRATCH = Path("/tmp/claude-1000/-home-brandonin-Documents-symbolic-ai-models/f8
 OUT = Path("runs/can_the_models_certify.json")
 
 
-def measure(name: str) -> dict:
+def measure(name: str, *, structural_fallback: bool | None = None) -> dict:
+    """Fit ``name`` on the shared config and split its accuracy by determinacy.
+
+    ``structural_fallback`` overrides the model's own setting when given, so the
+    same code can price the back-off both ways; ``None`` leaves the model's
+    default and reproduces the published behaviour exactly.
+    """
     cfg_dict = json.loads((BASE_RUN / "summary.json").read_text())["config"]
     fields = {f.name for f in TrainConfig.__dataclass_fields__.values()}
     cfg = TrainConfig(**{k: v for k, v in cfg_dict.items() if k in fields})
@@ -81,6 +87,8 @@ def measure(name: str) -> dict:
     tok = build_tokenizer(cfg, train_eps)
     tasks = {n: make_task(n, **_task_kwargs(cfg, n)) for n in cfg.tasks}
     model = make_model(cfg, len(tok))
+    if structural_fallback is not None:
+        model.structural_fallback = structural_fallback
     model.fit(FitContext(
         episodes=train_eps, tok=tok, tasks=tasks,
         task_weights=cfg.task_weights, steps=cfg.steps,
@@ -113,7 +121,8 @@ def measure(name: str) -> dict:
             abst_n += int((keep & ~committed).sum())
             abst_ok += int((ok & ~committed).sum())
 
-    row: dict = {"model": name, "voted_n": voted_n, "abstained_n": abst_n}
+    row: dict = {"model": name, "voted_n": voted_n, "abstained_n": abst_n,
+                 "structural_fallback": structural_fallback}
     if not has_channel:
         # Distinct from "never abstains", which is a RESULT. This means the
         # model does not go through the graph forward at all.

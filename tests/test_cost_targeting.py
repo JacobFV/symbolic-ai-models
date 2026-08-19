@@ -211,3 +211,58 @@ class TestTheTargetingColumnsHaveTheirOwnPerverseRegime:
             Capability(unit="answer", rate=1.0, floor=0.5, n=10,
                        tokens_per_attempt=1.0, source="t"))
         assert targeting_regime([plain, self._row("aimed", 0.0622, 1.0)]) is None
+
+
+class TestThePairwiseInversionTheGlobalCheckMissed:
+    """Measured on the structural back-off: `ilp-001` with the back-off off aims
+    1.41x against on's 1.37x while answering 0.291 against 0.312 -- and the
+    first version of `targeting_regime` missed it, because `ruleinduce-001` off
+    held both the best aim and the best rate."""
+
+    @staticmethod
+    def _row(name: str, aim_rate: tuple[float, float]):
+        from symbolic_ai_core.cost import Targeting
+        rate, flagged = aim_rate[0], 0.2
+        base = rate
+        # choose a_abstained so that aim comes out where we want it
+        aim = aim_rate[1]
+        a_abst = 1.0 - aim * (1.0 - base)
+        targeted = base + flagged * (1.0 - a_abst)
+        blind = base + flagged * (1.0 - base)
+        return ledger(
+            System(name=name, components=(cpu_component("r", 1e7,
+                                                        source="t"),)),
+            Capability(unit="label", rate=rate, floor=0.143, n=5233,
+                       tokens_per_attempt=1.0, source="t"),
+            targeting=Targeting(escalated=flagged, rate_base=base,
+                                rate_targeted=targeted, rate_blind=blind,
+                                escalated_usd_per_attempt=1e-9))
+
+    def _table(self):
+        return [self._row("ruleinduce-off", (0.329, 1.49)),
+                self._row("ruleinduce-on", (0.329, 1.45)),
+                self._row("ilp-on", (0.312, 1.37)),
+                self._row("ilp-off", (0.291, 1.41))]
+
+    def test_the_inversion_is_found_even_when_a_third_row_tops_both_columns(self):
+        from symbolic_ai_core.cost import targeting_regime
+        rows = self._table()
+        top_aim = max(rows, key=lambda r: r.targeting_lift)
+        top_rate = max(rows, key=lambda r: r.rate)
+        assert top_aim.system == top_rate.system   # the global check sees nothing
+        pair = targeting_regime(rows)
+        assert pair is not None
+        w, b = pair
+        assert w.targeting_lift > b.targeting_lift and w.rate < b.rate
+
+    def test_the_table_warns_on_the_real_shape(self):
+        from symbolic_ai_core.cost import ledger_table
+        out = ledger_table(self._table())
+        assert "TARGETING REGIME" in out
+        assert "aiming better by answering worse" in out
+
+    def test_a_concordant_table_still_says_nothing(self):
+        from symbolic_ai_core.cost import ledger_table, targeting_regime
+        rows = [self._row("good", (0.900, 3.0)), self._row("worse", (0.500, 1.2))]
+        assert targeting_regime(rows) is None
+        assert "TARGETING REGIME" not in ledger_table(rows)

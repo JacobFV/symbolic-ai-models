@@ -1220,9 +1220,43 @@ spread is one quantity: **how often the system is already right.** It also
 explains §3p's candidate-recall result — recall sets the base, the base sets the
 ceiling.
 
-**A consequence nobody has priced:** the ceiling is attained only when abstained
-positions score **0**. Strengthening the structural back-off — which this repo did
-deliberately, and which raised accuracy — **lowers** certification value.
+**A consequence, now priced.** The ceiling is attained only when abstained
+positions score **0**, so strengthening the structural back-off lowers
+certification value.
+`notes/findings/2026-08-18-the-backoff-trade-is-real-and-one-sided.md` measured
+it on four models at the repo's standard config:
+
+| model | back-off | label_acc | acc\|abst | **aim** | $/solved>floor |
+|---|---|---:|---:|---:|---:|
+| **ilp-001** | **on** | **0.312** | 0.059 | 1.37× | **$3.28e-12** |
+| ilp-001 | off | 0.291 | 0.001 | **1.41×** | $3.76e-12 |
+| **syllogism-001** | **on** | **0.146** | 0.068 | 1.09× | **$1.98e-10** |
+| syllogism-001 | off | 0.116 | 0.001 | **1.13×** | **inf** |
+| ruleinduce-001 | on/off | 0.329 / 0.329 | 0.030 / 0.003 | 1.45× / 1.49× | — |
+| routes-001 | on/off | identical | | 1.48× | — |
+
+> **The trade is real and one-sided.** The back-off buys **+0.021** and
+> **+0.030** accuracy and costs **0.04×** of a metric capped at **1.49×** — and
+> for `syllogism-001` that accuracy is the difference between beating its 0.143
+> floor and reading **inf**. §3t's consequence is true and economically
+> irrelevant.
+
+`ruleinduce-001` shows the mechanism exactly: `label_acc` is **identical** both
+ways because the prior **helps where the model abstains** (0.003 → 0.030) and
+**hurts where it votes** (0.397 → 0.391). It is attached at *every* hidden node,
+not only abstained ones.
+
+**Instrument finding: the guard did not fire.** `targeting_regime()` compared the
+*global* aim winner against the *global* rate winner, and `ruleinduce-001` off
+held both — while the real inversions are **pairwise within a model**. It now
+finds any inverted pair and reports the sharpest. **Third strengthening of a
+ratio guard this session**, and the second found by using the instrument on real
+rows rather than a fixture.
+
+**Also unreproduced:** `symbolic.py`'s docstring credits the back-off with taking
+`ruleinduce` from 0.076 to its current score. Toggling the flag today moves its
+accuracy by **0.000**. Whatever produced that gain, the flag alone does not
+reproduce it; not chased.
 
 ## 4. Believed, not measured. Do not inherit as fact.
 
