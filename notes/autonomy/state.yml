@@ -23,6 +23,10 @@ measured:
     stated in every case and without it nothing can be sized.
   - distractors are cheap: admitting all of them costs precision 1.000 ->
     0.823 and only 1.000 -> 0.682 end to end.
+  - generalisation: with 4 phrasings per claim kind drawn per case, the rules
+    arm goes 1.000 -> 0.000 at V=2 (recall only halves, 1.000 -> 0.542) and the
+    lexical arm 0.136 -> 0.000. Recall tracks 1/V. No hand-authored reader
+    survives the words changing; the benchmark has full headroom at V >= 2.
   - flood flow: 3 kernels, world->reach->world2->routes->loads->fused, agrees
     with a brute-force oracle that shares no code with the kernels
   - flood reader (regex template): 300/300 worlds round-trip exactly, and its
@@ -66,6 +70,12 @@ theory:
       component errors cancelling; on non-empty cases mean d = 11.05 and
       k_eff = 10.91 against a fitted 8.31.
     superseded_by: "S = prod_kind q_kind^d_kind, d_kind from ablation"
+    when_it_works: >
+      Confirmed where the loss is PURE RECALL. One pattern set against V
+      phrasings gives q_kind = 1/V for every kind, so S ~ V^-6.95: at V=2 that
+      is 0.008 and the measurement is 0.000. It over-predicts when a reader
+      recovers claims with the WRONG VALUE (lexical arm, 0.476 predicted vs
+      0.136 measured).
     why_demoted: >
       Tested predictively on four reader arms. The flat form is QUALITATIVELY
       wrong on the no-coreference arm: 0.835 dependency recall predicts 0.222
@@ -91,8 +101,8 @@ unknowns:
   - Precision failures (invented/misread claims) are unswept; MISREADS exists.
 
 active_work: >
-  Reader arms 0-4 measured. Dominant failure identified: coreference. Next is
-  either a harder surface where rules cannot reach 1.000, or a second domain.
+  Surface hardened with per-case phrasing variants; every hand-authored reader
+  now scores 0.000 at V>=2. Next arm must generalise across phrasings.
 
 built:
   - symbolic_ai_generators/flood/surface.py -- five-paragraph observation
@@ -104,13 +114,14 @@ built:
     population, with oracle-world as ceiling.
 
 next_actions:
-  - The rules arm reaches 1.000, so THIS surface no longer discriminates at the
-    top. Either harden it (paraphrase variation per case, so no fixed pattern
-    set can win) or move to a second domain -- the architecture-transfer
-    question matters more than another arm here.
-  - Chase coreference: it is the whole gap. A reader arm whose only difference
-    is a real reference-resolution mechanism, rather than a hand-written
-    antecedent rule, is the informative one.
+  - A reader arm that generalises across phrasings. The measured failure is
+    lexical brittleness, so the candidates are: a synonym/registry-backed cue
+    router, distributional matching against the repo's parser machinery, or a
+    small learned span->claim model. Evaluate at V=4 where everything so far
+    scores 0.000.
+  - Then domain transfer (scheduling or solvency): does WORLD IR + FLOW +
+    KERNEL survive a domain change, and does the F = trivial-answer-share
+    decomposition reproduce?
   - Renderer: structured answer -> grounded answer paragraph, kept separate from
     the canonical answer so generation quality cannot contaminate reasoning
     evaluation.

@@ -51,6 +51,73 @@ __all__ = ["Span", "Observation", "render_observation"]
 #: harvests every `region_N` token will invent links and pay in precision.
 _OUTSIDE = ("region_88", "region_91", "region_94")
 
+#: Alternative phrasings per claim kind. ``variants=1`` uses only the first of
+#: each and reproduces the original surface exactly; higher values draw one per
+#: case, deterministically.
+#:
+#: The lexicon varies, not just the word order -- *weighs* / *kerb weight* /
+#: *unladen* / *tare*. A reader keyed to any one of them loses the kind on the
+#: cases that use another, which is the point: a pattern set that scores 1.000
+#: on the surface it was written for has demonstrated nothing about reading.
+_VARIANTS = {
+    "mass": (
+        "{v} weighs {n:.0f} kg empty.",
+        "The kerb weight of {v} is {n:.0f} kg.",
+        "{v}, unladen, comes in at {n:.0f} kg.",
+        "Tare for {v}: {n:.0f} kg.",
+    ),
+    "link": (
+        "{a} and {b} are joined by a surfaced road.",
+        "There is a made road between {a} and {b}.",
+        "A carriageway connects {a} with {b}.",
+        "{a} adjoins {b} by road.",
+    ),
+    "bridge_on": (
+        "The {a}-{b} road runs over a river crossing.",
+        "Between {a} and {b} the road bridges the river.",
+        "A span carries the {a}-{b} route over water.",
+        "The route from {a} to {b} includes a bridge.",
+    ),
+    "flooded": (
+        "Water rose through {w} during the night and it is no longer "
+        "passable; nothing may be routed through it.",
+        "{w} went under overnight and cannot be entered at all.",
+        "Nothing can move through {w}: it is submerged.",
+        "{w} is inundated and closed to every movement.",
+    ),
+    "load_limit": (
+        "The {a}-{b} crossing is rated for {n:.0f} kg.",
+        "The {a}-{b} span will bear {n:.0f} kg.",
+        "A {n:.0f} kg limit applies on the {a}-{b} crossing.",
+        "Do not exceed {n:.0f} kg on the {a}-{b} bridge.",
+    ),
+    "capacity_named": (
+        "The vehicle listed as {v} can take a further {n:.0f} kg.",
+        "{v} has {n:.0f} kg of payload available.",
+        "Load {v} with up to {n:.0f} kg.",
+        "{v} accepts a further {n:.0f} kg.",
+    ),
+    "depot": (
+        "Depot operations are run out of {w}, which is where every vehicle "
+        "starts the day.",
+        "Every vehicle is based at {w} and returns there.",
+        "The operating base for the fleet is {w}.",
+        "Vehicles are dispatched from {w}.",
+    ),
+    "needs": (
+        "A request has come in from {w}.",
+        "{w} has put in a request.",
+        "There is an outstanding call from {w}.",
+        "{w} is asking for resupply.",
+    ),
+}
+
+
+def _pick(kind: str, rng, variants: int) -> str:
+    """One phrasing for ``kind``, drawn deterministically."""
+    forms = _VARIANTS[kind]
+    return forms[rng.randrange(min(variants, len(forms)))]
+
 
 @dataclass(frozen=True)
 class Span:
@@ -129,7 +196,8 @@ def _q(claim: Claim) -> float:
     return float(v.value) if isinstance(v, Quantity) else float("nan")
 
 
-def render_observation(case: Any, *, seed: int | None = None) -> Observation:
+def render_observation(case: Any, *, seed: int | None = None,
+                       variants: int = 1) -> Observation:
     """Render ``case`` as five aligned paragraphs.
 
     ``case`` is a :class:`~symbolic_ai_generators.flood.FloodCase`. The world is
@@ -139,6 +207,7 @@ def render_observation(case: Any, *, seed: int | None = None) -> Observation:
     """
     world = case.world
     rng = random.Random(case.seed if seed is None else seed)
+    pick = lambda kind: _pick(kind, rng, variants)   # noqa: E731
     idx = _index(world)
     doc = _Doc()
 
@@ -158,8 +227,7 @@ def render_observation(case: Any, *, seed: int | None = None) -> Observation:
     doc.add(f"SITUATION REPORT. The relief operation covers {len(regions)} "
             f"districts in the valley.")
     doc.glue(" ")
-    doc.add(f"Depot operations are run out of {depot}, which is where every "
-            f"vehicle starts the day.", claim=depot_i, kind="depot",
+    doc.add(pick("depot").format(w=depot), claim=depot_i, kind="depot",
             entities=(depot,))
     doc.glue(" ")
     doc.add(f"Districts {_OUTSIDE[0]} and {_OUTSIDE[1]} lie outside the "
@@ -170,7 +238,7 @@ def render_observation(case: Any, *, seed: int | None = None) -> Observation:
                                   key=lambda i: ent(i, "of"))):
         v = ent(mi, "of")
         doc.glue(" ")
-        doc.add(f"{v} weighs {_q(world.claims[mi]):.0f} kg empty.",
+        doc.add(pick("mass").format(v=v, n=_q(world.claims[mi])),
                 claim=mi, kind="mass", entities=(v,))
         if n == 0:
             doc.glue(" ")
@@ -183,7 +251,7 @@ def render_observation(case: Any, *, seed: int | None = None) -> Observation:
     for li in by_pred.get("link", []):
         a, b = ent(li, "a"), ent(li, "b")
         doc.glue(" ")
-        doc.add(f"{a} and {b} are joined by a surfaced road.",
+        doc.add(pick("link").format(a=a, b=b),
                 claim=li, kind="link", entities=(a, b))
     doc.glue(" ")
     doc.add(f"A disused track once ran from {_OUTSIDE[0]} to {_OUTSIDE[2]}; it "
@@ -191,7 +259,7 @@ def render_observation(case: Any, *, seed: int | None = None) -> Observation:
     for bi in by_pred.get("bridge_on", []):
         a, b = ent(bi, "a"), ent(bi, "b")
         doc.glue(" ")
-        doc.add(f"The {a}-{b} road runs over a river crossing.",
+        doc.add(pick("bridge_on").format(a=a, b=b),
                 claim=bi, kind="bridge_on", entities=(a, b))
 
     # ---- 3. current events, failures, changes --------------------------
@@ -200,8 +268,7 @@ def render_observation(case: Any, *, seed: int | None = None) -> Observation:
     for fi in by_pred.get("flooded", []):
         w = ent(fi, "where")
         doc.glue(" ")
-        doc.add(f"Water rose through {w} during the night and it is no longer "
-                f"passable; nothing may be routed through it.",
+        doc.add(pick("flooded").format(w=w),
                 claim=fi, kind="flooded", entities=(w,))
     doc.glue(" ")
     doc.add("Two footbridges were also lost, neither of them on a road used by "
@@ -235,7 +302,7 @@ def render_observation(case: Any, *, seed: int | None = None) -> Observation:
             doc.add(f"it is now rated for {kg:.0f} kg.", claim=li,
                     kind="load_limit", entities=(br,), reference="pronoun")
         else:
-            doc.add(f"The {a}-{b} crossing is rated for {kg:.0f} kg.",
+            doc.add(pick("load_limit").format(a=a, b=b, n=kg),
                     claim=li, kind="load_limit", entities=(br,),
                     reference="definite")
     doc.glue(" ")
@@ -264,8 +331,8 @@ def render_observation(case: Any, *, seed: int | None = None) -> Observation:
                     f"top of its own weight.", claim=ci, kind="capacity",
                     entities=(v,), reference="pronoun")
         else:
-            doc.add(f"The vehicle listed as {v} can take a further "
-                    f"{_q(world.claims[ci]):.0f} kg.", claim=ci,
+            doc.add(pick("capacity_named").format(
+                        v=v, n=_q(world.claims[ci])), claim=ci,
                     kind="capacity", entities=(v,), reference="definite")
 
     # ---- 5. query context ----------------------------------------------
@@ -275,7 +342,7 @@ def render_observation(case: Any, *, seed: int | None = None) -> Observation:
     site = ent(needs_i, "where")
     doc.add("TASKING.")
     doc.glue(" ")
-    doc.add(f"A request has come in from {site}.", claim=needs_i,
+    doc.add(pick("needs").format(w=site), claim=needs_i,
             kind="needs", entities=(site,))
     doc.glue(" ")
     doc.add(f"It is for {_q(world.claims[dem_i]):.0f} kg of supplies.",
