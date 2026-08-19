@@ -144,6 +144,73 @@ def main() -> None:
               f"({fallback-fl:+.1%} vs floor)   <- what a deployed system does")
         print(f"  random-candidate floor            {fl:>7.1%}\n")
 
+    # --- Is the determinacy signal INFORMATIVE? The rows above say the
+    # resolver buys no accuracy above floor. That is not the whole question: if
+    # settling predicts being right, an escalation policy can target the wrong
+    # answers instead of guessing at them, and THAT is worth money the
+    # above-floor column cannot see -- it prices getting the answer right and
+    # prices knowing you are right at zero.
+    #
+    # `notes/findings/2026-08-18-the-million-fold-advantage-...md` asked exactly
+    # this in the OpenAlex domain and found the confident tier at F1 0.666 --
+    # the extractor could not tell what it knew. Two domains agreeing would make
+    # it a property of the approach rather than of one extractor.
+    print("is DETERMINACY informative about CORRECTNESS?\n")
+    print(f"  {'level':<8} {'settled n':>10} {'acc|settled':>12} "
+          f"{'unsettled n':>12} {'acc|unsettled':>14} {'gap':>8}")
+    informative = {}
+    for name, level in (("entity", lambda e: e), ("group", group)):
+        s_n = s_hit = u_n = u_hit = 0
+        for f, r in scored.items():
+            vals = {level(c.entity) for c in r.candidates}
+            if len(vals) == 1:
+                s_n += 1
+                s_hit += vals.pop() == level(truth[f])
+            else:
+                u_n += 1
+                pick = rng.choice([c.entity for c in r.candidates])
+                u_hit += level(pick) == level(truth[f])
+        sa = s_hit / max(1, s_n)
+        ua = u_hit / max(1, u_n)
+        informative[name] = {"settled_n": s_n, "acc_settled": sa,
+                             "unsettled_n": u_n, "acc_unsettled": ua,
+                             "gap": sa - ua}
+        print(f"  {name:<8} {s_n:>10,} {sa:>11.1%} {u_n:>12,} {ua:>13.1%} "
+              f"{sa-ua:>+7.1%}")
+    g = informative["group"]["gap"]
+    print(f"\n  -> determinacy is {'INFORMATIVE' if g > 0.15 else 'NOT informative'}: "
+          f"a {g:+.1%} gap at group level.")
+    if g > 0.15:
+        print(f"     Escalating only the unsettled cases targets errors rather "
+              f"than guessing at\n     them, and that is value the above-floor "
+              f"column cannot see.")
+    else:
+        print(f"     The layer buys NOTHING -- not accuracy, not certification. "
+              f"That is the\n     starkest reading available and it should end "
+              f"the arc.")
+
+    # --- and now PRICE it. The above-floor column cannot see certification, so
+    # measure it where it acts: escalation TARGETING. Same budget, two policies.
+    base = rows["group"]["rate"]
+    esc = 1.0 - rows["group"]["settled"]
+    targeted = rows["group"]["rate_abstain"] + esc * 1.0
+    blind = base + esc * (1.0 - base)
+    print(f"what certification is worth, at a fixed escalation budget of "
+          f"{esc:.1%}:\n")
+    print(f"  escalate the UNSETTLED cases   {targeted:>6.1%}  "
+          f"({targeted-base:+.1%})")
+    print(f"  escalate a RANDOM {esc:.1%} instead {blind:>6.1%}  "
+          f"({blind-base:+.1%})")
+    print(f"  no escalation                  {base:>6.1%}")
+    lift = (targeted - base) / max(1e-9, blind - base)
+    print(f"\n  -> knowing WHICH answers are unsafe is worth {lift:.2f}x more "
+          f"quality per dollar\n     of escalation than spending the same "
+          f"dollar blindly. That is the symbolic\n     layer's real "
+          f"contribution, and no column in the ledger above shows it.")
+    targeting = {"escalation_budget": esc, "targeted": targeted,
+                 "blind": blind, "base": base, "targeting_lift": lift}
+    print()
+
     # --- the ledger. Symbolic-only, hybrid at the measured f, model-only.
     price = Price()
     sym = System(name="federated symbolic resolver", components=(
@@ -191,6 +258,7 @@ def main() -> None:
     OUT.write_text(json.dumps(
         {"seed": SEED, "n_scored": len(scored), "ceiling_recall": recall / len(scored),
          "levels": rows, "escalated_share": f_esc,
+         "informative": informative, "targeting": targeting,
          "ledgers": [x.as_dict() for x in ledgers]}, indent=2))
     print(f"\nwrote {OUT}")
 

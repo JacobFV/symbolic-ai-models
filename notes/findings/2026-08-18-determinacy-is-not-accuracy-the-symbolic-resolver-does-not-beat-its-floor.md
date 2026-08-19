@@ -96,6 +96,62 @@ among the largest measured effects in this repo's history. The fix is to score
 both: abstain (−7.5%) and fall back (+0.9%), and the gap between them **is** the
 effect.
 
+## What the layer buys instead, measured: 4.69x on escalation targeting
+
+"Buys no accuracy above floor" is not the whole question. If **settling predicts
+being right**, an escalation policy can target the wrong answers rather than
+guess at them — and that is worth money no column in the ledger above can see.
+
+| level | settled n | **acc \| settled** | unsettled n | **acc \| unsettled** | gap |
+|---|---:|---:|---:|---:|---:|
+| entity | 817 | **93.6%** | 198 | 32.3% | **+61.3%** |
+| group | 859 | **95.8%** | 156 | 40.4% | **+55.4%** |
+
+Settled accuracy at entity level (93.6%) sits **at the 93.0% ceiling**. The
+signal is not weak; it is nearly perfect.
+
+Priced where it acts — a fixed escalation budget of 15.4%, two policies:
+
+| policy | accuracy | gain |
+|---|---:|---:|
+| escalate the **unsettled** cases | **96.5%** | **+9.2%** |
+| escalate a random 15.4% instead | 89.2% | +2.0% |
+| no escalation | 87.3% | — |
+
+> **Knowing *which* answers are unsafe is worth 4.69× more quality per dollar of
+> escalation than spending the same dollar blindly.** That is the symbolic
+> layer's real contribution — certification, priced — and it is a capability
+> number with a floor behind it, unlike the cost ratios it replaces.
+
+### And it contradicts the other domain, which is the useful part
+
+`notes/findings/2026-08-18-the-million-fold-advantage-is-8x-...md` asked exactly
+this question on OpenAlex affiliations and found the confident tier beating the
+ambiguous one by only **+0.150 F1**, concluding *"the extractor is confident and
+wrong a third of the time"*. Here the gap is **+55 to +61 points**.
+
+Both tierings are **structural**, not learned, so the difference is not
+confidence-versus-structure. It is **candidate recall**: the true answer is in the
+GLEIF candidate set 93.0% of the time (an exact canonical-name match against a
+registry), and the ROR gazetteer match is lossy.
+
+> **Determinacy is informative exactly when the candidate generator has high
+> recall.** A certificate can only certify what the generator retrieved — if the
+> right answer was never a candidate, unanimity among the wrong ones is
+> confident and wrong.
+
+That reconciles two contradictory measurements with one mechanism instead of
+picking a winner, and it makes candidate recall the quantity to report beside any
+determinacy claim.
+
+### The gap this opens in the north star
+
+`$/solved-above-floor` prices **getting the answer right** and prices **knowing
+you are right at zero**. The 4.69× is invisible in every column of the ledger
+above. That is a gap in the repo's north-star metric, not in the measurement —
+and it is the same property the certificate arm (§3b) measured and never
+connected to cost.
+
 ## What would refute it
 
 - **The ground truth is one bridge**, and it agrees with the name join only

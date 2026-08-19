@@ -268,7 +268,39 @@ last_cycle:
     repo now say the cheap half of a problem is the useful half.
 
 next:
-  preferred_action: rebuild-the-arc-on-capability-above-floor
+  preferred_action: price-certification-in-the-north-star-metric
+  why_now: >
+    The arc now has one defensible capability number and one clear gap.
+
+    MEASURED: the federated resolver buys NO accuracy above a floor that shares
+    its candidate sets (-0.1% at group level; cost.py prints inf). But its
+    determinacy signal is nearly perfect -- settled 95.8% against unsettled
+    40.4% at group level, and settled 93.6% at entity level, which is AT the
+    93.0% candidate-recall ceiling. Priced where it acts: at a fixed 15.4%
+    escalation budget, targeting the unsettled cases buys +9.2 points against
+    blind escalation's +2.0. Certification is worth 4.69x.
+
+    THE GAP: $/solved-above-floor prices getting the answer right and prices
+    knowing-you-are-right at ZERO. The 4.69x appears in no column of the
+    ledger. That is a gap in the repo's north-star metric, and the certificate
+    arm (3b) measured exactly this property and was never connected to cost.
+    Closing it is the mandate's own live edge -- make dependency certificates
+    economically consequential -- and it is now backed by a measurement rather
+    than an intuition.
+  the_shape_of_the_fix: >
+    A capability whose value is targeting is priced by the SAVINGS it enables at
+    a fixed quality, not by the answers it gets right. Concretely: cost.py needs
+    a denominator for "USD per point of quality bought by escalation", against a
+    floor of blind escalation at the same budget. That is computable from what
+    Capability already carries plus the settled/unsettled split, and it would
+    have made the 4.69x visible in the same table that printed inf.
+  general_finding_to_carry: >
+    Determinacy is informative exactly when the candidate generator has high
+    recall. This reconciles 3i (+0.150 F1, "the extractor cannot tell what it
+    knows") with 3p (+55.4 points) using one mechanism: 93.0% candidate recall
+    here against a lossy gazetteer there. ALWAYS report candidate recall beside
+    a determinacy claim.
+  previous_preferred_action: rebuild-the-arc-on-capability-above-floor
   why_now: >
     HANDOVER §7 item 10 had stood unaddressed and it was right. Six arms this
     session were priced with a hand-rolled advantage(f) that has NO SLOT for

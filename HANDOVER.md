@@ -956,6 +956,31 @@ abstention as zero and reported the layer at **−7.5% below floor** — compari
 system that refuses to guess against a floor that always guesses. Score both; the
 gap between them *is* the effect.
 
+**But that is not the whole question, and the rest is good news.** Determinacy is
+**highly informative** about correctness — entity level settled **93.6%** (at the
+93.0% ceiling) against unsettled 32.3%; group level **95.8%** against 40.4%.
+Priced at a fixed 15.4% escalation budget:
+
+| policy | accuracy | gain |
+|---|---:|---:|
+| escalate the **unsettled** cases | **96.5%** | **+9.2%** |
+| escalate a random 15.4% | 89.2% | +2.0% |
+
+> **Knowing which answers are unsafe is worth 4.69× more quality per escalation
+> dollar than spending it blindly.** That is the layer's real contribution, and
+> it is the first capability number this session produced with a floor behind it.
+
+**This contradicts §3i**, where the confident tier beat the ambiguous one by only
++0.150 F1 on OpenAlex. Both tierings are structural, so the difference is
+**candidate recall** — 93.0% here against a lossy gazetteer there.
+**Determinacy is informative exactly when the candidate generator has high
+recall**; a certificate can only certify what the generator retrieved. Report
+candidate recall beside any determinacy claim.
+
+**And it exposes a gap in the north star:** `$/solved-above-floor` prices getting
+the answer right and prices knowing-you-are-right at **zero**. The 4.69× appears
+in no column of the ledger.
+
 ## 4. Believed, not measured. Do not inherit as fact.
 
 Recorded deliberately, with mechanisms, so a later contradiction is a finding
