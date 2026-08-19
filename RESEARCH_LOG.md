@@ -119,6 +119,35 @@ the vocabulary.** *"machine_0 was set up to paint"* carries the
 determinacy says a reader *can* type a claim; it says nothing about whether it
 *should*.
 
+### The floor, and the one thing that lifts part of it
+
+The uncued arm is where every **detector** stops. What moves it is the other kind
+of response — not deciding whether the claim is true, but proving the answer does
+not depend on it. `symbolic_ai_generators/solvency/certificate.py` asks whether
+the verdict survives removing **any single member**, and on the uncued arm
+**certified ⟺ correct, exactly**: 0.485 accuracy with 103 silent errors becomes
+0.485 coverage with **zero**.
+
+It is only the **monotone half**, and the mechanism is not the one predicted.
+Removing a member can only *lower* the sum, so a `False` verdict survives every
+deletion for free: the check fires on **1.000** of false verdicts and **0.000** of
+true ones, and its clean-surface coverage of 0.550 *is* the false-verdict share.
+Fourth appearance of the same asymmetry here — what is cheap to prove is the
+negative.
+
+And it carries a warning that generalises past this domain. Add a spurious
+*filing* — a channel the membership hypothesis does not cover — and coverage
+**rises** 0.485 → 0.935 while accuracy among the certified falls to 0.481. It
+rises *because* the corruption is larger: the spurious figure pushes the sum
+clear of the threshold, so no member deletion can flip it. Flood's certificate
+does the same, firing on 12.7% of the `hard_distractors` surface against 5.6% of
+the clean one, because phantom links add 2-edge-connectivity.
+
+> **A certificate that asks "would a small perturbation change the answer?" reads
+> a large error as stability.** Coverage is not a measure of reliability, and
+> comparing coverage across surfaces is a trap. Report it with the accuracy among
+> the certified, on the same surface, always.
+
 ### The rule this leaves
 
 > **A distractor that cannot be admitted, or that is admitted and cannot matter,
