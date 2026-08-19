@@ -43,6 +43,9 @@ THETA = Path("runs/asymmetric_sensitivity.json")
 OUT = Path("runs/derived_thresholds.json")
 N_TRAIN = 400
 N_TEST = 120
+#: "perceptron" reproduces the inert result; "logistic" emits a probability
+#: rather than a margin, which is the condition a threshold needs to act at all.
+MODELS = ("perceptron", "logistic")
 
 
 def evaluate(reader, dom, test, schema, thresholds) -> dict:
@@ -82,19 +85,36 @@ def main() -> None:
         docs = [supervise(t, o.spans, c.world.claims) for c, o, t in train]
         fit_part = [d for i, d in enumerate(docs) if i % 4]
         cal_part = [d for i, d in enumerate(docs) if not i % 4]
-        reader = LearnedSpanReader().fit(fit_part)
-        reader.calibrate(cal_part)
 
-        rows = {"uniform 0.5": evaluate(reader, dom, test, schema, None),
-                "derived theta": evaluate(reader, dom, test, schema, theta)}
-        print(f"    {'rule':<16} {'claim F1':>9} {'end-to-end':>11} {'correct':>9}")
-        for k, v in rows.items():
-            print(f"    {k:<16} {v['f1']:9.3f} {v['acc']:11.3f} "
-                  f"{v['n_correct']:4d}/{v['n']}")
-        d_acc = rows["derived theta"]["acc"] - rows["uniform 0.5"]["acc"]
-        d_f1 = rows["derived theta"]["f1"] - rows["uniform 0.5"]["f1"]
-        print(f"    delta  claim F1 {d_f1:+.3f}   end-to-end {d_acc:+.3f}")
-        results[name] = {"theta": theta, **rows, "d_acc": d_acc, "d_f1": d_f1}
+        rows = {}
+        print(f"    {'model / rule':<26} {'claim F1':>9} {'end-to-end':>11} "
+              f"{'beliefs':>8}")
+        # A logistic score is ALREADY a probability. Passing it through the
+        # isotonic calibrator re-bins it into at most eight levels and, with
+        # near-perfect training accuracy, collapses it to one or two -- which is
+        # the failure the calibrator was brought in to fix, reintroduced by
+        # applying it where it was not needed.
+        for model, cal in (("perceptron", True), ("logistic", True),
+                           ("logistic uncal", False)):
+            reader = LearnedSpanReader(
+                model="logistic" if model.startswith("logistic")
+                else model).fit(fit_part)
+            if cal:
+                reader.calibrate(cal_part)
+            spread = set()
+            for c, o, t in test[:10]:
+                r = reader.run(t)
+                spread |= {round(r.confidence_of(i), 2)
+                           for i in range(len(r.claims))}
+            for rule, th in (("uniform 0.5", None), ("derived theta", theta)):
+                v = evaluate(reader, dom, test, schema, th)
+                v["distinct_beliefs"] = len(spread)
+                rows[f"{model} / {rule}"] = v
+                print(f"    {model + ' / ' + rule:<26} {v['f1']:9.3f} "
+                      f"{v['acc']:11.3f} {len(spread):8d}")
+        results[name] = {"theta": theta, **rows,
+                         "d_acc_logistic": rows["logistic / derived theta"]["acc"]
+                         - rows["logistic / uniform 0.5"]["acc"]}
 
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(json.dumps(results, indent=2))

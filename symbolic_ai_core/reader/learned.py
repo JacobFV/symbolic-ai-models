@@ -266,6 +266,74 @@ class Perceptron:
                 w[y] = total / max(1, self._t)
 
 
+class Logistic:
+    """Multinomial logistic regression over sparse features, fitted by SGD.
+
+    The perceptron it stands beside is a *margin* machine: its score is an
+    arbitrary scale, and squashing or isotonically calibrating it produced a
+    belief with **two values** on these corpora -- 0.95 and 0.47 -- which is
+    enough to rank two readings of one sentence and not enough for any threshold
+    to act on. Measured: per-predicate assertion thresholds derived from the
+    kernels changed exactly zero claims in three domains.
+
+    This emits a probability by construction. It is the cheapest way to get a
+    graded posterior and it is not a neural network -- the point is calibration,
+    not capacity.
+    """
+
+    def __init__(self, epochs: int = 12, lr: float = 0.2,
+                 l2: float = 1e-6) -> None:
+        self.w: dict[str, dict[str, float]] = defaultdict(dict)
+        self.labels: list[str] = []
+        self.epochs = epochs
+        self.lr = lr
+        self.l2 = l2
+
+    def score(self, feats: Iterable[str]) -> dict[str, float]:
+        out = {y: 0.0 for y in self.labels}
+        for f in feats:
+            for y, v in self.w.get(f, {}).items():
+                out[y] += v
+        return out
+
+    def probs(self, feats: Sequence[str]) -> dict[str, float]:
+        s = self.score(feats)
+        if not s:
+            return {}
+        top = max(s.values())
+        exp = {y: math.exp(min(30.0, v - top)) for y, v in s.items()}
+        z = sum(exp.values()) or 1.0
+        return {y: v / z for y, v in exp.items()}
+
+    def predict(self, feats: Sequence[str]) -> tuple[str, float]:
+        """``(label, P(label))`` -- the second value is already a probability,
+        which is the whole reason this class exists."""
+        p = self.probs(feats)
+        if not p:
+            return NONE, 0.0
+        best = max(p, key=lambda y: (p[y], y))
+        return best, p[best]
+
+    def fit(self, data: Sequence[tuple[Sequence[str], str]],
+            weights: Mapping[str, float] | None = None) -> "Logistic":
+        self.labels = sorted({y for _, y in data})
+        for epoch in range(self.epochs):
+            lr = self.lr / (1.0 + epoch)
+            for feats, gold in data:
+                p = self.probs(feats)
+                w = 1.0 if weights is None else float(weights.get(gold, 1.0))
+                for f in feats:
+                    row = self.w[f]
+                    for y in self.labels:
+                        g = ((1.0 if y == gold else 0.0) - p.get(y, 0.0))
+                        row[y] = (row.get(y, 0.0) * (1.0 - lr * self.l2)
+                                  + lr * w * g)
+        return self
+
+    def average(self) -> None:                # symmetry with Perceptron
+        return None
+
+
 def _unit_features(u: Unit, ments: Sequence[Token]) -> list[str]:
     """Abstracted n-grams plus the signature.
 
@@ -513,7 +581,8 @@ class LearnedSpanReader:
     def __init__(self, id: str = "learned.span@1", *, epochs: int = 8,
                  weights: Mapping[str, float] | None = None,
                  mentions: Any = None, extra_features: Any = None,
-                 extra_role_features: Any = None) -> None:
+                 extra_role_features: Any = None, model: str = "perceptron"
+                 ) -> None:
         """``weights`` maps a predicate to its downstream sensitivity.
 
         Measured by intervention, not by correlation --
@@ -529,6 +598,13 @@ class LearnedSpanReader:
         self.id = id
         self.epochs = epochs
         self.weights = dict(weights or {})
+        #: "perceptron" keeps every published number; "logistic" emits a
+        #: probability instead of a margin, which is what a derived threshold
+        #: needs in order to act at all.
+        self.model = model
+        if model not in ("perceptron", "logistic"):
+            raise ValueError(f"unknown model {model!r}; "
+                             "expected 'perceptron' or 'logistic'")
         self.mentions = mentions
         #: ``(unit, mentions) -> [feature]``. The place an external lexical
         #: resource enters -- WordNet supersenses, say -- without the reader
@@ -551,7 +627,8 @@ class LearnedSpanReader:
         #: abstains gains on every relation.
         self.calibrators: dict[str, Any] = {}
         self.lex = Lexicon()
-        self.clf = Perceptron()
+        self.clf: Any = (Logistic(epochs=epochs) if model == "logistic"
+                         else Perceptron())
         self.rankers: dict[str, _Ranker] = defaultdict(_Ranker)
         self.specs: dict[str, list[_RoleSpec]] = {}
         self.envelope: dict[str, tuple[Interval, Interval]] = {}
@@ -649,6 +726,9 @@ class LearnedSpanReader:
         data = [(self.features(u),
                  u.claim.predicate if u.claim is not None else NONE)
                 for d in docs for u in d]
+        if isinstance(self.clf, Logistic):
+            self.clf.fit(data, self.weights or None)
+            return
         self.clf.labels = sorted({y for _, y in data})
         for _ in range(self.epochs):
             for feats, gold in data:
@@ -690,9 +770,11 @@ class LearnedSpanReader:
 
     def _belief(self, pred: str, margin: float) -> float:
         cal = self.calibrators.get(pred)
-        if cal is None:
-            return _sigmoid(margin)
-        return float(cal(margin))
+        if cal is not None:
+            return float(cal(margin))
+        # A logistic score IS a probability; squashing it again would flatten
+        # exactly the gradation this model exists to provide.
+        return margin if isinstance(self.clf, Logistic) else _sigmoid(margin)
 
     def features(self, u: Unit) -> list[str]:
         """Every feature of one unit, including whatever a resource adds."""
