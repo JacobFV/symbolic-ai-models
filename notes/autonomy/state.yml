@@ -40,6 +40,19 @@ measured:
     because the atom rule that keeps a pronoun with its antecedent -- required
     for the document to stay true -- preserves the demand binding; a property of
     the task, not a leak.
+  - THE CONTENT-FREE FRONT IS CLOSED ON ITS RESIDUAL. In the V=4 interleaved
+    cell the blocker is depot vs flooded, both one-region/no-number/no-vehicle.
+    Fingerprints DIFFER in 93.3% of cases -- but on node degree in a random road
+    network, which is asymmetry, not information: the rule "depot is the
+    highest-degree lone region" scores 33.3% against 28.5% chance. The
+    architecture-independent test settles it -- rank-normalised observation ->
+    role is NOT A FUNCTION, 21/21 role-slots ambiguous, all 7 distinct
+    observations carrying all three roles. So no deterministic reader consuming
+    entity types, numbers and registry membership can settle it, and the
+    enumerating arm's 32.4% decided is a CEILING rather than an implementation
+    limit. CONTENT IS REQUIRED -- the first place in this programme where a
+    lexical resource is measured to be a necessity rather than assumed to be a
+    shortcut.
   - ROUTING (directive 13) ANSWERED, NEGATIVELY, WITH NUMBERS. The escalation
     rule p*L > c1-c0 prices the cheap arm as a SUBSTITUTE; in both domains it
     is a COMPLEMENT and c1 depends on whether c0 ran. Flood: dropping datalog
@@ -328,16 +341,23 @@ next_actions:
     value vocabulary and domain invariants were all tried. Closing it needs
     relational knowledge (a depot is where vehicles start, flooding is an
     event), a different kind of external knowledge from a value list.
-  - THE SURFACE IS NO LONGER THE PROBLEM; THE MISSING INVARIANCE IS. Headings
-    and paragraph order are now removable (unsaturate) and grouping too
-    (interleave), with the alignment tested to survive both. The open item is a
-    reader that is invariant to PHRASING and ARRANGEMENT at once -- the empty
-    cell of the 2x2. Candidate mechanisms, none tried: signature matching that
-    scores partial type overlap rather than requiring an exact shape; binding
-    by discourse role rather than paragraph membership; or accepting the
-    enumerating arm as the answer and spending the effort on shrinking 2.5
-    worlds to 1 with a second knowledge source rather than on a collapsing
-    reader at all.
+  - THE FRONT IS NOW A CONTENT READER, AND THAT IS MEASURED RATHER THAN
+    ASSUMED. Headings and paragraph order are removable (unsaturate) and
+    grouping too (interleave), alignment tested to survive both. The empty cell
+    of the 2x2 is CLOSED to content-free reading -- see measured -- so the two
+    candidate content-free mechanisms are struck: they would be built against a
+    proof. What remains, in order:
+      (a) a reader that reads CONTENT for the residual only -- depot vs flooded
+          -- and keeps the type signature for everything else. WordNet is on
+          disk. The measurement to beat is 32.4% decided at 2.5 worlds, and the
+          honest target is decidedness at soundness 1.000, not accuracy.
+      (b) whether the SAME closure holds on solvency and scheduling: is there
+          always a residual that no content-free observable settles, or is
+          flood's depot/flooded special? The collision test is cheap and
+          transfers directly.
+      (c) the rules arm survives arrangement and dies on paraphrase; the
+          signature arm the reverse. A reader combining them is not obviously
+          impossible -- the closure is about the residual, not the whole task.
   - A THIRD ANSWER TYPE (a number, a ranking) would test whether "one shared
     check per answer type" is a real decomposition or an artefact of having
     only boolean and set.
