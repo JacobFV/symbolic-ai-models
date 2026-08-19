@@ -126,8 +126,8 @@ HARD_OWNS = {
     "uncued": "sub_98 left the {g} in April.",
 }
 HARD_FILING = {
-    "cued": "sub_0's earlier draft of {n:.2f} USD, dated {d}, was withdrawn.",
-    "uncued": "An unaudited memorandum from sub_0 on {d} shows {n:.2f} USD.",
+    "cued": "{m}'s earlier draft of {n:.2f} USD, dated {d}, was withdrawn.",
+    "uncued": "An unaudited memorandum from {m} on {d} shows {n:.2f} USD.",
 }
 
 
@@ -135,6 +135,7 @@ def render_observation(case: Any, *, seed: int | None = None,
                        variants: int = 1,
                        hard_distractors: bool | str = False,
                        cue: str = "cued", hard_scale: float = 0.5,
+                       hard_relative: float | None = None,
                        packed: bool = False,
                        stale_clause: bool = False) -> Observation:
     """Render a :class:`SolvencyCase` as four aligned paragraphs.
@@ -163,6 +164,13 @@ def render_observation(case: Any, *, seed: int | None = None,
     does this constantly and none of the generated surfaces did, which is why a
     sentence-level staleness gate reads as free here and loses the answer on
     Wikipedia. Default ``False`` so published numbers keep their meaning.
+
+    ``hard_relative`` sets the spurious figure as a **relative perturbation of
+    the filer's own latest figure** instead, which is the only way to make the
+    perturbation small. Under ``hard_scale`` the injected value REPLACES the real
+    one, so the perturbation is ``injected - real`` and is *largest* when the
+    injection is smallest -- the U-shaped dose-response. With ``hard_relative``
+    the perturbation is ``d`` by construction.
 
     ``hard_scale`` is the spurious figure as a fraction of the threshold, and it
     sets how much damage the distractor does. **Quote it with any number taken
@@ -269,7 +277,22 @@ def render_observation(case: Any, *, seed: int | None = None,
                                      d=_date(case.decision_date, style)))
     if "filing" in _sides:
         doc.glue(" ")
-        doc.add(HARD_FILING[cue].format(n=case.threshold * hard_scale,
+        # The filer has to be a member with a figure already usable at the
+        # determination date, or a "relative" perturbation is not relative to
+        # anything -- an empty fallback to the threshold silently turns a 0.1%
+        # perturbation into a 100% one, which is exactly what it did.
+        usable = sorted((k, v, m) for m, v, k in case.filings
+                        if m in case.members and k <= case.decision_date)
+        filer = usable[-1][2] if usable else "sub_0"
+        if hard_relative is None:
+            value = case.threshold * hard_scale
+        else:
+            own = [v for k, v, m in usable if m == filer]
+            if not own:
+                raise ValueError("hard_relative needs a usable filing to "
+                                 "perturb; none found")
+            value = own[-1] * (1 + hard_relative)
+        doc.add(HARD_FILING[cue].format(m=filer, n=value,
                                         d=_date(case.decision_date, style)))
 
     # ---- 3. revisions --------------------------------------------------

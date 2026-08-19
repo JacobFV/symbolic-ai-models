@@ -81,3 +81,50 @@ def test_ungrounded_cannot_see_it():
     """The spurious figure IS in the world as read, so the number it states is
     'supported'. The same scope error, in its worst form."""
     assert not any(u for _, _, _, u in _rows("filing"))
+
+
+def test_explanation_error_is_independent_of_the_perturbation():
+    """The law at its extreme. A 0.1% reading error leaves the verdict PERFECT
+    and makes the stated total wrong on 0.985 of cases -- and that rate is
+    constant across four orders of magnitude while the verdict error is not."""
+    def sweep(d):
+        wrong_verdict = wrong_total = n = 0
+        for s in range(SEEDS):
+            case = generate(s)
+            want = decide(case, as_of=case.decision_date)[0]
+            text = S.render_observation(case, variants=4,
+                                        hard_distractors="filing", cue="cued",
+                                        hard_relative=d).text
+            reading = read_signature_accumulating(text)
+            got = decide_reading(reading)
+            shim = SimpleNamespace(members=sorted(reading.members),
+                                   filings=list(reading.filings),
+                                   threshold=reading.threshold,
+                                   decision_date=reading.decision_date,
+                                   world=WorldSnapshot(entities={}, claims=()))
+            answer = render_answer(shim, bool(got))
+            stated = next((float(answer.text[c.start:c.end])
+                           for c in answer.citations
+                           if c.source == "derived:sum_of_usable_filings"), None)
+            if stated is None:
+                continue
+            n += 1
+            wrong_verdict += got != want
+            wrong_total += abs(stated - _truth_total(case)) > 0.005
+        return wrong_verdict / n, wrong_total / n
+
+    tiny_v, tiny_t = sweep(0.001)
+    big_v, big_t = sweep(1.0)
+    assert tiny_v == 0.0, tiny_v          # the answer is untouched
+    assert tiny_t > 0.9, tiny_t           # the explanation is not
+    assert big_v > 0.3, big_v             # the answer degrades with magnitude
+    assert abs(big_t - tiny_t) < 0.05     # the explanation does not
+
+
+def test_the_relative_distractor_refuses_to_fall_back():
+    """The harness bug that produced a misleading first sweep: an empty
+    fallback to the threshold turned a 0.1% perturbation into a 100% one. It
+    raises now instead of quietly injecting something enormous."""
+    import inspect
+    src = inspect.getsource(S.render_observation)
+    assert "raise ValueError" in src

@@ -67,6 +67,46 @@ used. It is free only when the kernel uses claims directly. Every layer of
 arithmetic between a claim and the answer is a layer where the explanation can be
 wrong while the answer is right.
 
+## The law at its extreme: sweep the perturbation and only one curve moves
+
+The two error rates are governed by different things, and a magnitude sweep shows
+it directly. `hard_relative` sets the spurious figure as a **relative
+perturbation of the filer's own latest figure**, so the perturbation is `d` by
+construction:
+
+| relative perturbation | verdict wrong | **stated total wrong** | mean \|error\| |
+|---|---:|---:|---:|
+| none (clean) | 0.000 | 0.000 | 0.00000 |
+| **0.001** | **0.000** | **0.985** | 0.00022 |
+| 0.01 | 0.020 | 0.985 | 0.00224 |
+| 0.05 | 0.075 | 0.985 | 0.01120 |
+| 0.2 | 0.285 | 0.985 | 0.04481 |
+| 1.0 | 0.445 | 0.985 | 0.22407 |
+
+**At a 0.1% reading error the answer is perfect and the explanation is wrong 985
+times in 1,000.** The explanation's error rate is **constant at 0.985 across four
+orders of magnitude** while the verdict's climbs 0.000 → 0.445.
+
+So the two are not merely unequal; they are **functions of different variables**.
+The explanation is wrong iff *any* input is wrong, which is independent of
+magnitude. The answer is wrong iff the error *crosses the boundary*, which is
+entirely magnitude. The ratio does not have a bound — it diverges as the
+perturbation shrinks.
+
+## A harness bug worth recording, because it produced a confident wrong sweep
+
+The first version of this sweep set the injected figure to
+`own[-1] if own else case.threshold`. When the chosen filer had no figure usable
+at the determination date, that **silently fell back to the threshold** — turning
+a 0.1% perturbation into a 100% one. The sweep reported a mean error of 0.21 at
+`d = 0.001` and a verdict-error rate of 0.06, and the shape looked like noise
+rather than a law.
+
+It now picks a filer that *has* a usable figure and **raises** if none does. That
+is `notes/`'s standing rule — *no fallbacks, fail loudly* — biting in experiment
+code rather than in the pipeline, where it is just as expensive and much easier to
+miss.
+
 ## What would refute this
 
 - One renderer and one distractor family. The 1.000 is because the injected figure
