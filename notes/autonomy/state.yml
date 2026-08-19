@@ -40,6 +40,27 @@ measured:
     because the atom rule that keeps a pronoun with its antecedent -- required
     for the document to stay true -- preserves the demand binding; a property of
     the task, not a leak.
+  - ACCUMULATE, DO NOT BRANCH -- BUILT DELIBERATELY, AND IT STRICTLY DOMINATES.
+    The rule came from flood surviving packing BY ACCIDENT, which is a hypothesis
+    until built somewhere it did not hold. SHIPPED read_signature_accumulating in
+    solvency and scheduling: extract EVERY claim pattern per sentence instead of
+    selecting one branch by shape. Solvency binds a filing to the entity NEAREST
+    THE MONEY -- in "group owns sub_0, which reported 105.87 USD" the filer is
+    sub_0, beside the number and not the subject; positional, content-free, the
+    signal flood already uses for its demand.
+      reader                  unpacked  packed
+      solvency branch            1.000   0.567  (its floor)
+      solvency consolidated      1.000   0.567
+      solvency ACCUMULATE        1.000   1.000
+      scheduling branch          1.000   0.658  (its floor)
+      scheduling ACCUMULATE      1.000   1.000
+    IDENTICAL ON EVERY HONEST SURFACE: solvency 1.000/0.475/0.475/0.433 across
+    clean, owns-cued, owns-uncued, both-uncued; scheduling 1.000/0.767/0.967. So
+    no precision cost -- the failure mode this repo keeps finding does not appear.
+    IT SHARPENS THE THEOREM: packing_ambiguity says no reader can decide a packed
+    sentence's kind FROM ITS SIGNATURE. It does NOT say the claims are
+    unrecoverable. THE SIGNATURE LOSES THE CLASSIFICATION; ACCUMULATION RECOVERS
+    THE CONTENT.
   - A PACKED SENTENCE IS AMBIGUOUS BY DEFINITION. Constructive half of the
     Wikipedia result: each generator now takes a `packed` option rendering two
     claims as ONE sentence with a span for each over the same text (default
@@ -1182,9 +1203,15 @@ theory:
       1.000 -> 0.658, its floor exactly. The audit predicts both OFFLINE and
       ranks solvency worse, which is the first thing today it gets ahead of.
     escape: >
-      ACCUMULATE, DO NOT BRANCH. Flood survives a packed sentence because
-      read_content_roles writes crossings into a dict and folds them into links
-      rather than selecting a branch -- it is not signature-based at that point.
+      ACCUMULATE, DO NOT BRANCH -- and it is now BUILT, not merely observed.
+      read_signature_accumulating in solvency and scheduling recovers 1.000 on
+      the packed surface and is IDENTICAL to the branching reader on every honest
+      one, so it strictly dominates. The theorem forbids deciding a packed
+      sentence's kind from its SIGNATURE; it does not make the claims
+      unrecoverable. The signature loses the CLASSIFICATION, accumulation
+      recovers the CONTENT.
+      Flood survived by accident, because read_content_roles writes crossings
+      into a dict and folds them into links rather than selecting a branch.
       A reader assigning into per-kind stores can take several claims from one
       sentence; one selecting a branch per sentence cannot, and no signature
       refinement changes that. This is a property of CONTROL FLOW, which the

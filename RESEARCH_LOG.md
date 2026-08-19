@@ -220,6 +220,18 @@ crossings into links rather than selecting a branch — which is a property of
 **control flow**, exactly what the audit cannot see. The theorem and its escape
 sit either side of the instrument's boundary.
 
+**Built deliberately, it strictly dominates.** `read_signature_accumulating` in
+both collapsed domains extracts every claim pattern per sentence rather than
+selecting one branch, binding a solvency filing to the entity *nearest the money*
+— positional and content-free. Packed: **1.000** in place of 0.567 and 0.658.
+Unpacked and on every honest distractor surface: **identical** to the branching
+readers (solvency 1.000 / 0.475 / 0.475 / 0.433, scheduling 1.000 / 0.767 /
+0.967), so the extra permissiveness admits nothing the branching reader refused.
+
+That sharpens the theorem rather than escaping it: **the signature loses the
+classification; accumulation recovers the content.** No reader can decide a packed
+sentence's kind from its signature, and the claims were never gone.
+
 ### The floor is liftable by reading, in exactly one domain
 
 The uncued stale sentence — *"sub_98 left the group in April"* — is stale because
