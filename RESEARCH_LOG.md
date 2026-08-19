@@ -152,6 +152,41 @@ the vocabulary.** *"machine_0 was set up to paint"* carries the
 determinacy says a reader *can* type a claim; it says nothing about whether it
 *should*.
 
+### The floor is liftable by reading, in exactly one domain
+
+The uncued stale sentence — *"sub_98 left the group in April"* — is stale because
+of what **leave** means, and `symbolic_ai_generators/wordnet.py` reads WordNet
+from the distributed archive with the standard library only. Three corrections
+were needed and each is a scope statement about the resource:
+
+- **supersenses classify by subject matter, not aspect** — `cease` is
+  *verb.stative* and `divest` is *verb.possession*, exactly like `own`;
+- **ancestor depth decides the false-positive rate** — `change` and `transfer`
+  sit near the root and account for 9,090 of 9,584 token fires on real prose;
+- **sense dominance, not sense priority** — first-sense selection fires on
+  `dated`, whose first WordNet sense is the romantic one.
+
+With all three, solvency's uncued arm goes **0.475 → 1.000 at no cost on the
+clean surface** — the first thing that moves that arm by *reading* rather than by
+refusing.
+
+And the same gate takes **flood from 0.589 to 0.014** and scheduling from 0.767
+to 0.675. `can` is what kills flood: WordNet has it as a verb — *"terminate the
+employment of"* — so one of its two senses reaches `remove`, and it appears 90
+times in thirty documents. Sense dominance protects against a *rare* wrong sense
+and not against a *low-sense-count* word one of whose readings is a transition.
+
+| | `stale_by_cancellation` | `stale_by_verb` |
+|---|---|---|
+| vocabulary | **closed-class**, 11 cues | **open-class**, 11,529 lemmas |
+| real prose firing | **0.004** | **0.156** |
+| three generated surfaces | **byte-identical** | +0.525 / −0.092 / −0.575 |
+
+> **A closed-class feature transfers; an open-class lexicon does not.** Its
+> false-positive rate grows with the vocabulary it draws on, and a *deletion*
+> gate's damage grows with the claim density of the surface — and the two
+> multiply.
+
 ### The floor, and the one thing that lifts part of it
 
 The uncued arm is where every **detector** stops. What moves it is the other kind

@@ -40,6 +40,41 @@ measured:
     because the atom rule that keeps a pronoun with its antecedent -- required
     for the document to stay true -- preserves the demand binding; a property of
     the task, not a leak.
+  - A CLOSED-CLASS FEATURE TRANSFERS; AN OPEN-CLASS LEXICON DOES NOT. Two more
+    corrections made the verb gate WORK, and then showed it works only where it
+    was tuned.
+    SENSE DOMINANCE NOT SENSE PRIORITY: requiring the transition reading on >20%
+    of a lemma's senses removes `dated` (0.20 -- WordNet's first sense of `date`
+    is the ROMANTIC one, whose chain reaches `leave`, and it is in every solvency
+    filing sentence) while every genuine transition verb sits at 0.27+ and every
+    relation verb at 0.00. Threshold set by ONE false positive and labelled
+    fitted; it costs nothing, held-out recall being 0.33 with it and 0.33 with
+    the first-sense rule it replaces.
+      solvency  clean 1.000  owns UNCUED 0.475 -> 1.000  owns+filing 0.492
+    THE DAY'S DECLARED FLOOR IS LIFTED, 0.475 -> 1.000 at no clean-surface cost --
+    the first thing that moves that arm by READING rather than by refusing. The
+    remaining arm is 0.492 because its distractor is NOT STALE: an unofficial
+    figure was never true rather than withdrawn, which is insensitivity's job.
+    AND THEN IT DESTROYS THE OTHERS: flood 0.589 -> 0.014, scheduling
+    0.767 -> 0.675. `can` KILLS FLOOD -- WordNet has it as a verb ("terminate the
+    employment of"), one of two senses reaches `remove`, fraction 0.5, 90
+    occurrences in thirty documents. SENSE DOMINANCE PROTECTS AGAINST A RARE
+    WRONG SENSE AND NOT AGAINST A LOW-SENSE-COUNT WORD: `dated` 1 of 5 caught,
+    `can` 1 of 2 not.
+    THE CONTRAST IS THE FINDING:
+                        cancellation            verb
+      vocabulary    closed-class, 11 cues   open, 11,529 lemmas
+      real prose            0.004                0.156
+      three surfaces   BYTE-IDENTICAL   +0.525 / -0.092 / -0.575
+    A closed-class feature's FP rate is bounded by its vocabulary; an open-class
+    one's grows with it, and a DELETION gate's damage grows with the surface's
+    CLAIM DENSITY. The two multiply. stale_by_verb kept, fully documented, and
+    WIRED INTO NO DEFAULT PATH.
+    TOOLING TRAP: `uv add nltk` then `uv remove nltk` SILENTLY DROPPED THE
+    `solvers` EXTRA, taking z3-solver and clingo out of the environment.
+    pyproject.toml was never modified so nothing was committed wrong;
+    `uv sync --extra solvers` restores it. A plain `uv run` re-syncs to DEFAULT
+    extras, so name the extra after any dependency change.
   - WORDNET SUPPLIES THE SEMANTICS; THE ANCESTOR'S DEPTH DECIDES EVERYTHING.
     Attacked the day's floor (the UNCUED stale sentence) with the resource on
     disk. SHIPPED symbolic_ai_generators/wordnet.py -- reads the distributed
