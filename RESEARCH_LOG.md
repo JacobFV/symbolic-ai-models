@@ -476,6 +476,24 @@ signature discipline works at all only because entities are named `region_0`.
 **Entity resolution and entity typing are the missing capability for real text**,
 now named from three directions rather than argued from one.
 
+**But supplying crude typing does not rescue the ranker** — it moves it 0.535 →
+0.543 and costs first-match 0.626 → 0.609 — and chasing why produced the sharper
+result. Precision by the candidate's **position** in the intro runs **0.626 /
+0.375 / 0.278 / 0.286**, monotone, and position dominates every content-based idea
+tried: typing 0.609, agreement 0.603, mention-count ranking 0.535. The only thing
+that beats it, corroboration at 0.718, is a **filter over** first-match rather than
+a replacement for it.
+
+> **Position was an artefact there and is a signal here.** In a generated surface
+> the ordering is imposed by a template — destroyed by shuffling, and therefore a
+> leak, which is exactly what the `read_signature` finding established. In an
+> encyclopedia intro it is **editorial convention**, stable across documents
+> written by different people, and therefore a feature. The separating test is the
+> one this repo already runs: *does shuffling destroy it?*
+
+The repo's instinct — position is a crutch, content is the real thing — is half
+right, and the wrong half is the half that applies to real text.
+
 The enumeration theorem is untouched — its premise is that wrong candidates give a
 **different answer**, and that is the half real text breaks. **Emission needs an
 equivalence relation on answers, and on real prose that relation is entity

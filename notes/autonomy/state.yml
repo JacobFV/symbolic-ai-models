@@ -40,6 +40,28 @@ measured:
     because the atom rule that keeps a pronoun with its antecedent -- required
     for the document to stay true -- preserves the demand binding; a property of
     the task, not a leak.
+  - POSITION WAS AN ARTEFACT THERE AND IS A SIGNAL HERE. Crude entity typing
+    (reject single-word nationality adjectives and bare acronyms) does NOT rescue
+    the ranker -- it moves it 0.535 -> 0.543 and COSTS first-match 0.626 -> 0.609,
+    with coverage down 7 articles because the acronym rule rejects real
+    single-word company names along with CPR. Refutation condition fired, so the
+    nationality examples were vivid but not the bulk of the deficit.
+    WHAT IS ACTUALLY CARRYING THE TASK -- precision by the candidate's POSITION:
+      rank 1 -> 0.626 (n=99), 2 -> 0.375 (40), 3 -> 0.278 (18), 4 -> 0.286 (7)
+    Monotone; the first is 1.7x the second. POSITION DOMINATES EVERY CONTENT-BASED
+    IDEA TRIED: position 0.626, crude typing 0.609, agreement 0.603, mention-count
+    ranking 0.535. The only thing that beats it -- corroboration at 0.718 -- is a
+    FILTER OVER first-match, not a replacement. EVERYTHING THAT REPLACED POSITION
+    LOST.
+    THE REFRAME: flood's headline was that read_signature's 1.000 was PROPPED UP
+    BY POSITION and shuffling took it to 0.000, after which the repo built
+    content-based readers to remove the crutch. In a GENERATED surface the order
+    is imposed by a template -- destroyed by shuffling, therefore a LEAK. In an
+    encyclopedia intro it is EDITORIAL CONVENTION, stable across documents written
+    by different people, therefore a FEATURE. The separating test is the one this
+    repo already runs: DOES SHUFFLING DESTROY IT? The instinct that position is a
+    crutch and content is the real thing is HALF RIGHT, and the wrong half is the
+    half that applies to real text.
   - CORROBORATION COUNTS STRINGS, NOT ENTITIES -- so it is a threshold and not a
     ranker. Spending the same information better should have worked and does not:
       policy                            coverage  correct  precision
