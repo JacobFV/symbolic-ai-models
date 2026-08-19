@@ -124,10 +124,18 @@ def main() -> None:
     ingest_s = time.perf_counter() - t0
     for d in docs:
         read[d["qid"]]["hand"] = read_parent(d["intro"])
+        # The union the gap-filler finding recommends: patterns where they
+        # answer, the classifier where they abstain. Its composed-query
+        # behaviour is not predictable from its parts -- the two readers have
+        # DIFFERENT failure correlations (hand clumps at 1.56, learned is
+        # independent at 1.00), and which one the union inherits is the
+        # question.
+        read[d["qid"]]["union"] = (read[d["qid"]]["hand"]
+                                   or read[d["qid"]].get("learned"))
 
     # ---- one hop, then two ----------------------------------------------
     out = {}
-    for arm in ("learned", "hand"):
+    for arm in ("learned", "hand", "union"):
         hop1 = hop2 = linked = both_right = 0
         for q, p, g in chains:
             gold1 = [norm(x) for x in (by_qid[q].get("current") or [])]
