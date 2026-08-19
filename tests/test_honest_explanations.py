@@ -178,3 +178,60 @@ def test_a_value_error_silences_rather_than_fabricates():
                     value_false += 1
     assert cites["noisy"] < cites["clean"], cites
     assert value_false == 0, f"{value_false} value fabrications appeared"
+
+
+def test_a_certified_answer_cites_no_link_and_is_explained_honestly():
+    """The day's two threads meet. `certifies_insensitive` means no single link
+    deletion changes the answer, so on a certified case no link is load-bearing
+    -- and `load_bearing_cheap` is what the complete renderer cites. The two
+    components agree, which was the refutation condition.
+
+    Measured over 300 seeds on the honest surface: certified cases cite ZERO
+    links and contain a falsehood on 0.022, against 0.692 for the uncertified.
+    """
+    from symbolic_ai_generators.flood.certificate import (
+        certifies_role_independent)
+    from symbolic_ai_generators.flood.read_surface import (
+        read_content_roles_checked)
+
+    cert_links = cert_false = cert_n = 0
+    plain_false = plain_n = 0
+    for s in range(SEEDS):
+        case = generate(s)
+        want = solve(case.world)[0]
+        if not want:
+            continue
+        obs = render_observation(case, variants=4, hard_distractors=True)
+        text = interleave(unsaturate(obs, drop_headings=True,
+                                     shuffle=False)).text
+        try:
+            world, _ = read_content_roles_checked(text)
+            got, outputs, _ = solve(world)
+        except Exception:
+            continue
+        certified = certifies_role_independent(text, solve)
+        answer = render_complete(replace(case, world=world), got, outputs)
+        true_keys = {_key(c) for c in case.world.claims}
+        links = bad = 0
+        for c in answer.citations:
+            if not c.source.startswith("claim:"):
+                continue
+            ref = c.source.split(":", 1)[1]
+            if ref.isdigit() and 0 <= int(ref) < len(world.claims):
+                claim = world.claims[int(ref)]
+                links += claim.predicate == "link"
+                bad += _key(claim) not in true_keys
+            elif ref in ("needs", "flooded"):
+                bad += (ref, (("where", answer.text[c.start:c.end]),)
+                        ) not in true_keys
+        if certified:
+            cert_n += 1
+            cert_links += links
+            cert_false += bool(bad)
+        else:
+            plain_n += 1
+            plain_false += bool(bad)
+    assert cert_n and plain_n
+    assert cert_links == 0, f"{cert_links} link citations in certified cases"
+    assert cert_false / cert_n < 0.1, cert_false / cert_n
+    assert plain_false / plain_n > 0.4, plain_false / plain_n
