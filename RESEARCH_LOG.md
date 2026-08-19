@@ -182,6 +182,15 @@ the one naming the live one.
 > **granularity**, and `audit`'s spans, `unconsumed`, `evidence_conflict` and
 > `filter_stale` all rest on the same assumption.
 
+**And the unit is a real object, not a slider.** Sweeping five granularities gives
+a **peak** on both corpora, and the ends fail identically: on Wikipedia the
+*finest* split reproduces the *sentence* split's numbers to three decimals in
+every column — 0.542 / 0.327 / 0.024 — because a splitter that cuts through
+`a subsidiary **of** X` leaves no fragment matching the pattern, which is
+indistinguishable from deleting the sentence. **Over-splitting is over-deleting
+by another route**, so the fix has a principled stopping point: cut at boundaries
+the patterns do not cross.
+
 **Reproduced in the benchmark, and fixed.** `stale_clause` prefixes a real
 member's filing with a former-parent clause — *"sub_0, formerly a subsidiary of
 sub_97, reported 105.87 USD, filed 29 May 2026"*. Over 120 seeds the sentence gate

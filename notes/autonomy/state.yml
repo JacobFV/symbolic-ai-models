@@ -40,6 +40,28 @@ measured:
     because the atom rule that keeps a pronoun with its antecedent -- required
     for the document to stay true -- preserves the demand binding; a property of
     the task, not a leak.
+  - OVER-SPLITTING AND OVER-DELETING ARE THE SAME FAILURE. "Clause, not
+    sentence" answers WHICH OF TWO units, not whether there is an optimum. Five
+    granularities:
+      WIKIPEDIA (168)   answers  accuracy  picks former
+      document            0.589     0.369         0.024
+      sentence            0.542     0.327         0.024
+      clause              0.583     0.357         0.018
+      fine                0.589     0.375         0.018
+      finest              0.542     0.327         0.024
+      SOLVENCY stale_clause, accumulating reader, 120 seeds:
+      document 0.925 | sentence 0.592 | clause 1.000 | fine 1.000 | finest 0.925
+    A PEAK ON BOTH. THE FINEST SPLIT REPRODUCES THE SENTENCE SPLIT'S NUMBERS TO
+    THREE DECIMALS IN EVERY COLUMN -- a splitter fine enough to cut THROUGH the
+    pattern ("a subsidiary OF X" spans an of-boundary) leaves no fragment
+    matching it, which is indistinguishable from deleting the sentence. So the
+    unit is a REAL LINGUISTIC OBJECT rather than a slider, and the fix has a
+    principled stopping point: cut at boundaries the patterns do not cross.
+    NOT RESOLVED AT n=168: clause vs fine, three articles apart and tied at 1.000
+    on the generated case. `fine` is the only arm that BEATS no filtering at all
+    (0.375 vs 0.369) while halving the former-parent error, and that is ONE
+    article -- so no third option shipped. filter_stale keeps sentence (default)
+    and clause.
   - A SENTENCE GATE TAKES A RIGHT ANSWER AND MAKES IT WRONG. The Miramax failure,
     reproduced in the benchmark. SHIPPED solvency `stale_clause`: prefixes a REAL
     member's filing with a former-parent clause -- "sub_0, formerly a subsidiary
