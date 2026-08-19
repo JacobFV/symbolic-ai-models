@@ -268,7 +268,28 @@ last_cycle:
     repo now say the cheap half of a problem is the useful half.
 
 next:
-  preferred_action: what-share-of-real-demand-is-group-level
+  preferred_action: issuers-not-filers-does-identity-coverage-move
+  why_now: >
+    Federating a second structural source is a DEAD ARM: wikidata holds 4.3x
+    more ownership structure than GLEIF (1,279,720 edges to 296,491) and settles
+    3 more filers of 598, against a control settling ~1. Only 3,996 of those
+    edges are expressible about LEIs because only 1.58% of GLEIF entities carry
+    a wikidata twin. The tiers are NOT independent -- relief in tiers 2 and 3 is
+    gated by tier-1 identity coverage, and tier 1 saturates.
+
+    That null names its own cheapest refuter, and it is the next thing to run.
+    The workload here is 13F FILERS -- asset managers and funds, which is
+    exactly the population wikidata covers worst. The same machinery pointed at
+    ISSUERS (the securities held, which are large listed operating companies)
+    should show much higher QID coverage. If it does, the 1.58% is a property of
+    the population rather than of federation, and the dead arm is only dead for
+    filers. If it does not, the null generalises and identity coverage is the
+    single binding constraint on the whole reach programme.
+  screening_number: >
+    Before federating another source's structure, measure what fraction of the
+    target population carries that source's identity. 1.58% predicted the 1.01x
+    yield here without building anything.
+  previous_preferred_action: what-share-of-real-demand-is-group-level
   why_now: >
     Reach is now measured on all three tiers. Purchasable SATURATES (2,383 rows
     reach 68.8% of $51.4T; 2,281,221 reach 75.0%; 1.06x apart normalised at each

@@ -809,6 +809,40 @@ group spans countries. Matching the question to the data's shape is worth
 **1.22×**, free — the first time this repo has priced that thesis rather than
 asserting it.
 
+## 3m. Structural federation is gated by identity federation, and that saturates
+
+`notes/findings/2026-08-18-structural-federation-is-gated-by-identity-federation-and-that-saturates.md`.
+§3l placed the residual `f` in tier 3 and called it "not a procurement problem".
+The obvious consequence — a second source's structure reaches what GLEIF never
+recorded — was tested and is a **null**.
+
+| arm | ownership edges | ambiguous filers determined | control |
+|---|---:|---:|---:|
+| GLEIF only | 296,491 | 109/598 = 18.2% | 0.0% |
+| wikidata only | **1,279,720** | 6/598 = 1.0% | 0.0% |
+| UNION | 1,573,678 | 112/598 = 18.7% | 0.2% |
+
+**3 filers settled that GLEIF could not**, against a control settling ~1 —
+noise-adjacent, and a slice. The second source buys **1.01×**. Why:
+
+| | |
+|---|---:|
+| wikidata edges with **both** ends expressible about an LEI | **3,996** of 1,279,720 |
+| GLEIF entities carrying a wikidata twin | **52,860 / 3,348,427 = 1.58%** |
+| ambiguous filers whose candidates all carry a QID | 11/598 = 1.8% |
+
+> **A second source holds 4.3× more ownership structure than the first and 0.3%
+> of it can be said about the entities in question.** The structure is abundant
+> and *unaddressable*. **Relief in tiers 2 and 3 is gated by tier-1 identity
+> coverage, and tier 1 saturates** — so the residual 8.17% does not yield to more
+> sources, only to more identity.
+
+**Screening number before federating another source's structure:** what fraction
+of the target population carries that source's identity. Here 1.58%, and it
+predicts the 1.01× without building anything.
+
+**Do not quote** the 54.5% conditional determinacy from that run: n = 11.
+
 ## 4. Believed, not measured. Do not inherit as fact.
 
 Recorded deliberately, with mechanisms, so a later contradiction is a finding

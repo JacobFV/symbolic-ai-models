@@ -135,3 +135,20 @@ uv run python -u scripts/manufactured_reach.py
 
 `runs/manufactured_reach.json`; prediction and outcome in
 `notes/autonomy/predictions.jsonl` under `manufactured-reach-by-closure`.
+
+## AMENDMENT, one cycle later: the tiers are not independent
+
+This note treats the three tiers as independent levers and says tier 3 is "not a
+procurement problem". `notes/findings/2026-08-18-structural-federation-is-gated-by-identity-federation-and-that-saturates.md`
+tested the obvious consequence — that a second source's structure would reach
+what GLEIF never recorded — and it is a **null**: wikidata holds **4.3×** more
+ownership structure (1,279,720 edges to GLEIF's 296,491) and settles **3** more
+filers of 598, against a control that settles ~1.
+
+The reason is that only **3,996** of those edges are expressible about LEIs,
+because only **52,860 of 3,348,427** GLEIF entities (**1.58%**) carry a wikidata
+twin.
+
+> **Relief in tiers 2 and 3 is gated by tier-1 identity coverage, and tier 1
+> saturates.** The residual `f` of 8.17% is therefore *more* robust than this
+> note implied: it does not yield to more sources, only to more identity.
