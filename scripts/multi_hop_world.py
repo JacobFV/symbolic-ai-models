@@ -56,8 +56,14 @@ from symbolic_ai_core.world import EntityRef
 import scripts.real_text_reader as R
 from scripts.multi_relation_world import norm, read_parent
 
-CORPUS = Path("data/artifacts/wikipedia_parents_scale.jsonl")
-OUT = Path("runs/multi_hop_world.json")
+#: `--corpus <path>` swaps the article set; the default is the 1,661-article
+#: scale corpus every published multi-hop number was measured on.
+CORPUS = Path(sys.argv[sys.argv.index("--corpus") + 1]
+              if "--corpus" in sys.argv
+              else "data/artifacts/wikipedia_parents_scale.jsonl")
+OUT = Path("runs/multi_hop_world.json"
+           if CORPUS.stem.endswith("scale")
+           else f"runs/multi_hop_{CORPUS.stem.split('_')[-1]}.json")
 FOLDS = 4
 
 
@@ -145,9 +151,9 @@ def main() -> None:
                     "link_rate": linked / max(1, hop1),
                     "both_hops_right": both_right / n}
         print(f"\n    {arm}")
-        print(f"      one hop            {p1:.3f}")
-        print(f"      two hop            {hop2 / n:.3f}   "
-              f"(independent prediction {p1 * p1:.3f})")
+        print(f"      one hop            {p1:.3f}   ({hop1}/{n})")
+        print(f"      two hop            {hop2 / n:.3f}   ({hop2}/{n}, "
+              f"independent prediction {p1 * p1:.3f} = {p1 * p1 * n:.1f})")
         print(f"      linked | hop1 ok   {linked / max(1, hop1):.3f}")
         print(f"      both hops read ok  {both_right / n:.3f}")
 
