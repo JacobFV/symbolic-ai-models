@@ -42,6 +42,49 @@ def _rng(seed: int, slack: float) -> random.Random:
     return random.Random(int.from_bytes(h.digest(), "big"))
 
 
+#: Where the solver is both NECESSARY and EXPENSIVE, measured 2026-08-19.
+#:
+#: Three things have to hold at once, and only one cell satisfies all of them.
+#:
+#: 1. **The capacity gate must be silent.** At negative slack it fires on 6/6
+#:    instances -- total demand exceeds total capacity, which is O(n) arithmetic
+#:    -- and those are precisely the cells where clingo is slowest (198.6 ms at
+#:    20 jobs / -0.02, 1047.5 ms at 30 / -0.05). **The expensive negatives are
+#:    the easy negatives.** A hard regime chosen there measures work nobody needs
+#:    to do.
+#: 2. **The solver must be non-trivial.** At slack +0.02 and above, clingo
+#:    settles everything in ~1.2 ms whatever the size, so cost needs the
+#:    boundary; and at 6 jobs the space is 3^6 = 729 and nothing is hard at all.
+#: 3. **Ground truth must be affordable.** ``feasible_by_search`` degenerates at
+#:    exactly slack 0 -- the capacity bound is tight and prunes nothing --
+#:    costing 0.027 s per case at 20 jobs and 1.60 s at 30.
+#:
+#: Slack 0 at 20 jobs is the intersection: the gate fires on only 3/6, the
+#: gate-silent instances still cost 15.7 ms, and the oracle stays affordable.
+#: Going to 30 jobs raises solver cost to 168.7 ms on the gate-silent instances
+#: but makes ground truth cost 1.60 s per case.
+#:
+#: An earlier version of this constant was ``slack: 0.02`` at 6 jobs, chosen
+#: because a greedy heuristic could not settle that band. That was the wrong
+#: measurement -- it is the *cheapest* cell in the grid at 0.6 ms, and it
+#: measured the weakness of the heuristic rather than the hardness of the
+#: instance.
+#:
+#: The default is deliberately unchanged: every published scheduling number
+#: depends on it. This is a documented starting point, not a new default.
+HARD_REGIME = {"n_jobs": 20, "n_machines": 3, "slack": 0.0}
+
+
+def generate_hard(seed: int, **overrides):
+    """A case from the regime where the solver is necessary AND expensive.
+
+    ``generate_hard(s)`` is ``generate(s, **HARD_REGIME)``; overrides vary the
+    shape while staying at the boundary. Raising ``n_jobs`` raises solver cost
+    and raises the oracle's cost faster -- see ``HARD_REGIME``.
+    """
+    return generate(seed, **{**HARD_REGIME, **overrides})
+
+
 def generate(seed: int, *, n_jobs: int = 6, n_machines: int = 3,
              slack: float = 0.15) -> SchedulingCase:
     """One instance. ``slack`` is the decision margin knob.

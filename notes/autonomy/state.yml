@@ -40,6 +40,24 @@ measured:
     because the atom rule that keeps a pronoun with its antecedent -- required
     for the document to stay true -- preserves the demand binding; a property of
     the task, not a leak.
+  - THE EXPENSIVE NEGATIVES ARE THE EASY NEGATIVES. Corrects the headline
+    below. Clingo costs 0.6ms in the band my greedy could not settle -- the
+    CHEAPEST cell in the grid -- so that band measured heuristic weakness, not
+    instance hardness (at 6 jobs the space is 3^6=729). Cost needs SIZE and
+    NEGATIVE slack: 198.6ms at 20 jobs/-0.02, 1047.5ms at 30/-0.05, 1502.5ms at
+    40/-0.05, against 1.2ms at +0.02 whatever the size.
+    AND EVERY EXPENSIVE NEGATIVE-SLACK CELL IS SETTLED 6/6 BY THE CAPACITY GATE.
+    The regions where clingo is slowest are exactly the regions where nobody
+    needs to run it. What survives the gate is cheap for the solver; what is
+    expensive for the solver is free for the gate.
+    THE ONE REAL CELL is slack ~ 0, exact fit, where the gate cannot fire and
+    the packing is tight: 15.7ms at 20 jobs gate-silent, 168.7ms at 30. That is
+    ALSO where feasible_by_search degenerates (0.027s/case at 20 jobs, 1.60s at
+    30), so THE ONLY REGIME WHERE THE SOLVER IS BOTH NECESSARY AND EXPENSIVE IS
+    THE ONE WHERE GROUND TRUTH IS ALSO EXPENSIVE. A constraint on the benchmark,
+    not a defect.
+    HARD_REGIME = 20 jobs / 3 machines / slack 0.0, corrected from 6/+0.02,
+    with the three simultaneous constraints documented and tested.
   - THE KERNELS EARN THEIR KEEP PROVING NEGATIVES. A two-sided POLYNOMIAL
     procedure -- capacity gate proves infeasible, greedy placement proves
     feasible, both one-sided sound and both asserted by tests -- settles only

@@ -16,8 +16,8 @@ slack between total demand and total capacity, and it is a generator parameter.
 
 from __future__ import annotations
 
-from .world import (CORRUPTIONS, SchedulingCase, corrupt, feasible_by_search,
-                    generate)
+from .world import (CORRUPTIONS, HARD_REGIME, SchedulingCase, corrupt,
+                    feasible_by_search, generate, generate_hard)
 
-__all__ = ["SchedulingCase", "generate", "feasible_by_search", "corrupt",
-           "CORRUPTIONS"]
+__all__ = ["SchedulingCase", "generate", "generate_hard", "HARD_REGIME",
+           "feasible_by_search", "corrupt", "CORRUPTIONS"]

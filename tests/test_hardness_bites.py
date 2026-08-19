@@ -65,3 +65,31 @@ def test_search_is_still_needed_at_the_default() -> None:
         settled += (not need_search) or greedy_feasible(case.jobs,
                                                         case.machines)
     assert settled / N < 0.6, settled / N
+
+
+def test_the_hard_regime_is_not_gate_settleable() -> None:
+    """The point of the constant. At negative slack the capacity gate fires on
+    everything, and those are exactly the cells where clingo is slowest -- so a
+    hard regime chosen there would measure work nobody needs to do."""
+    from symbolic_ai_generators.scheduling import HARD_REGIME, generate_hard
+
+    fired = sum(not capacity_gate(generate_hard(s).world)[0] for s in range(20))
+    assert fired < 14, f"gate settles {fired}/20 of the hard regime"
+
+    negative = sum(not capacity_gate(
+        generate(s, **{**HARD_REGIME, "slack": -0.02}).world)[0]
+        for s in range(20))
+    assert negative == 20, negative
+
+
+def test_the_hard_regime_keeps_ground_truth_affordable() -> None:
+    """It sits at exact fit, where the oracle's capacity bound stops pruning.
+    20 jobs is affordable and 30 is not -- see HARD_REGIME."""
+    import time
+
+    from symbolic_ai_generators.scheduling import generate_hard
+
+    t0 = time.perf_counter()
+    for seed in range(3):
+        generate_hard(seed)
+    assert time.perf_counter() - t0 < 2.0
