@@ -40,6 +40,24 @@ measured:
     because the atom rule that keeps a pronoun with its antecedent -- required
     for the document to stay true -- preserves the demand binding; a property of
     the task, not a leak.
+  - FLOOD IS A POLYNOMIAL TASK WEARING THREE KERNELS. A max-min Dijkstra
+    (maximise the minimum bridge limit from depot to site over non-flooded
+    regions; a vehicle qualifies iff capacity >= demand and mass+demand <=
+    bottleneck) reproduces the full datalog+ASP+SMT answer on 200 OF 200 CASES.
+    symbolic_ai_generators/flood/widest.py, with a control asserting that
+    flooding and limits BOTH change the bottleneck so the equivalence is not
+    two sides ignoring the hard parts.
+    REFRAMES: "a certificate makes soundness free" is true but the mechanism is
+    that the certificate IS the decision, not the monotonicity argument. And
+    flood's $/correct, kernel ablations and price-of-soundness measure THE
+    PIPELINE, not THE TASK -- real costs of the system built, not evidence that
+    heterogeneous kernels are needed here.
+    LEAVES STANDING: everything about READING (reader arms, audit, closure,
+    decidedness law, the honest milestone's decomposition), none of which
+    depends on how the answer is computed once the world is known. And
+    SCHEDULING, whose feasibility is genuinely NP-hard -- which is exactly why
+    the structural half of the certificate failed there.
+    USE FLOOD FOR READING, NOT FOR ARGUING KERNELS ARE NECESSARY.
   - SOUNDNESS IS PRICED: 15.6x per correct answer, 13.4x with exact early exit.
     34 non-empty cases: collapse answers 34 and is right 20 at $1.35e-08 each;
     carry answers 20, is right 20, soundness 1.000, at $2.11e-07 each.
