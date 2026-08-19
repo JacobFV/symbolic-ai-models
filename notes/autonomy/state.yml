@@ -50,8 +50,22 @@ measured:
     Early exit is exact (decided set unchanged) but buys only 14%, mean solves
     16.0 -> 13.7, because on an undecided case the disagreement appears LATE:
     deletion dependency is 0.243 so the enumeration works through many inert
-    candidates first. The load-bearing claim is a needle. NEXT: order candidates
-    by measured deletion_dependency, which the audit already computes. Untried.
+    candidates first. The load-bearing claim is a needle.
+    ORDERING IS A DEAD END, measured. "Order by deletion_dependency" was wrong
+    as stated -- that number is per KIND and every candidate is the same kind.
+    A per-claim proxy (does this deletion disconnect depot->site?) saves 0.0%
+    and NEVER FIRES: 0 of 270 deletions disconnect, because the read graph is
+    redundant; the 3.7% that change the answer act through LOAD LIMITS.
+    AND THE DIRECTION IS CAPPED AT 25% ANYWAY -- an oracle ordering still runs
+    every candidate on a DECIDED case, since agreement must be proven, and
+    decided cases are the majority (20/34). 13.7 -> 10.2 mean solves, 13.4x ->
+    10.0x. Should have computed that bound before writing a proxy.
+    THE REAL DIRECTION: the cost is that PROVING AGREEMENT REQUIRES EXHAUSTING
+    THE CANDIDATES. A CERTIFICATE that no single deletion can change the answer
+    would settle a decided case in ONE solve instead of sixteen.
+    symbolic_ai_core/runtime/certificate.py already carries Sensitivity and
+    slack machinery for exactly that question. UNTRIED, and it is the highest
+    remaining lever on the price of soundness.
   - REFUSING TO COLLAPSE COSTS NOTHING HERE AND FLAGS EVERY ERROR. Nothing
     downstream of a reader can catch an invented claim, so the remaining
     response is directive 19's. The audit says offline that flood's (2 regions,
