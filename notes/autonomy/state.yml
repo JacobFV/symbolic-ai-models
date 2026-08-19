@@ -1965,9 +1965,31 @@ unknowns:
   - Precision failures (invented/misread claims) are unswept; MISREADS exists.
 
 active_work: >
-  Pipeline complete on ALL THREE domains: flood (set answer, 2 expensive
-  kernels), solvency (boolean, bitemporal), scheduling (boolean, NP-hard
-  kernel). Surface + reader + renderer + grounding on each.
+  CRITICAL PATH STEPS 1-6 DONE. The learned reader exists
+  (symbolic_ai_core/reader/learned.py): ONE implementation, NO domain lexicon in
+  its source, fitted three times from aligned (sentence, claim) pairs. In
+  distribution it reads all three domains at 1.000 claim F1 and 1.000 end to end,
+  above every hand-written reader -- and renaming every entity to an unseen form
+  takes all three to 0.000, because these corpora contain about ten distinct
+  names and the fit memorised them. One augmentation (rename per document) makes
+  the shape a_9 productive and restores 0.955 / 1.000 / 0.994 with end-to-end
+  1.000; the UNION fit is the one that holds both ends, because augmenting alone
+  costs solvency its unnumbered parent `group`.
+
+  Step 5 (sensitivity) and step 6 (the weighted objective) are measured. s_p by
+  intervention, spread 6.6x in flood, and rate-matched s_eff where the reader's
+  own share is deleted rather than one claim -- flood's `link` 0.150 -> 0.625.
+  The weighted objective is NEGATIVE: one cell of nine improves end to end, three
+  lose 0.075-0.200, and the mechanism is that a margin-scaled update
+  over-predicts the upweighted class, so the objective protects a critical claim
+  by inventing it (flood `needs` precision 1.00 -> 0.79). It is refuted as a
+  per-example margin scale, not as an objective; it needs a calibrated loss and a
+  separate, higher price on false positives.
+
+  BOUNDING EVERYTHING ABOVE: six training documents reach 1.000 F1 in all three
+  domains. There is no regime here where this reader makes graded errors, so
+  these surfaces can no longer discriminate reader designs. The next real test
+  needs harder text, not a better fit.
 prior_active_work: >
   Pipeline complete on TWO domains now: flood (surface, 5 reader arms, 3
   kernels, grounded paragraph) and solvency (surface, readers, kernel, grounded
