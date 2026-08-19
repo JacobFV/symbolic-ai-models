@@ -354,8 +354,21 @@ So `render.uncorroborated()` marks the citations nothing here can check —
 made honest; it can stop presenting eleven facts as one kind of thing.
 *"Here are eleven facts, four of which nothing corroborates"* is a third option
 beside the two-fact summary and the eleven-fact account, and it is the honest one.
-Precision is 0.51, and the recall is 1.000 only because no reader error here lands
-on a value — the registry stops that, and the registry is a generator artefact.
+Precision is 0.51. The recall is 1.000 because no reader error here lands on a
+value — and testing *why* produced something better than the caveat. Overlapping
+the value registry, as a real vocabulary would be, takes accuracy **0.673 → 0.189
+→ 0.000** and produces **no** value falsehood at any setting: **a value error
+silences rather than fabricates**, because a mis-slotted mass disqualifies a
+vehicle so nothing is cited about it. Citations fall 2,266 → 1,452 → 280 and the
+`link` fabrications vanish with them.
+
+Two things fall out. **The value registry is worth the entire capability on the
+honest surface** — 0.673 → 0.000, where it had only been priced as a ceiling on
+the easy one. And **fabrication counts fall as capability falls**, 88 → 27 → 27,
+so the most broken reader fabricates least in absolute terms because it says
+almost nothing: report fabrication against coverage or not at all. The conditional
+to carry is that values which **gate** qualification silence, and values which
+**feed** the computation fabricate — and there the marker would miss them.
 
 ### What each channel admits, and what it costs
 

@@ -40,6 +40,27 @@ measured:
     because the atom rule that keeps a pronoun with its antecedent -- required
     for the document to stay true -- preserves the demand binding; a property of
     the task, not a leak.
+  - A VALUE ERROR SILENCES RATHER THAN FABRICATES, and the registry is worth
+    EVERYTHING. Tested the limit I stated on my own marker by overlapping flood's
+    VALUE_REGISTRY, whose docstring already called its sets "unusually clean".
+      registry            accuracy  citations  false  flagged  marker recall
+      clean (published)      0.673       2266     88    0.075          1.000
+      overlapping            0.189       1452     27    0.061          1.000
+      none                   0.000        280     27    0.361          1.000
+    PREDICTION REFUTED: I expected recall 0.5-0.8 as value fabrications appeared.
+    It stays 1.000 and NO mass/capacity falsehood appears at any registry. A
+    mis-slotted mass makes a vehicle FAIL TO QUALIFY, so no route is computed and
+    nothing is cited -- citations fall 2266 -> 1452 -> 280 and the link
+    fabrications vanish with them (61 -> 0 -> 0), not because the reader improved
+    but because it stopped answering. Refutation condition written down first.
+    THE VALUE REGISTRY IS WORTH THE ENTIRE CAPABILITY on the honest surface,
+    0.673 -> 0.000. Only ever priced as a CEILING on the easy one. Every flood
+    number here rests on eleven numbers being exactly right.
+    METHODOLOGICAL CATCH: FABRICATION COUNTS FALL AS CAPABILITY FALLS -- 88 -> 27
+    -> 27 against accuracy 0.673 -> 0.189 -> 0.000. Per citation 0.039 -> 0.019 ->
+    0.096, not even monotone. REPORT FABRICATION AGAINST COVERAGE OR NOT AT ALL.
+    CONDITIONAL TO CARRY: values that GATE qualification silence; values that FEED
+    the computation fabricate, and there the marker would miss it silently.
   - AN EXPLANATION CAN SAY WHERE IT IS NOT HONEST. False citations by predicate,
     300 seeds, 2,266 citations on the honest surface:
       mass 0/528  capacity 0/528  needs 0/392  demand 0/196

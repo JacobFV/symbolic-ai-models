@@ -180,6 +180,12 @@ When a heredoc really is the right shape — several coordinated edits, or
 generated text — then `assert s.count(old) == 1` before every single one. That
 assert caught the second of the three and cost one line.
 
+And when that assert fires *because there really are two*, **scope to the
+function, not to the first occurrence**. `evidence_conflict` and
+`read_content_roles_checked` both contain the line `ev = _scan(text, anchors)`,
+and "patch the first one" put the change in the wrong reader — a `NameError` the
+tests caught, but only because that reader happened to have tests.
+
 And the guard that catches what neither does, because two of the three were
 invisible to the suite: **after touching anything shared, re-run one unchanged
 model and diff its row.** See
