@@ -163,3 +163,30 @@ def test_the_lookback_stops_at_the_clause_boundary():
     a genuine habitual."""
     assert stale_by_cancellation(
         "All during this May that we have been having, I used to run down.")
+
+
+def test_the_verb_gate_lifts_solvency_and_would_destroy_flood():
+    """Both halves, because the second is why it is not shipped as a component.
+
+    `can` is a WordNet verb -- "terminate the employment of" -- so one of its two
+    senses reaches `remove` and the sense fraction is 0.5. It appears in almost
+    every flood document.
+    """
+    from symbolic_ai_generators.staleness import stale_by_verb
+    assert stale_by_verb("sub_98 left the group in April.")
+    assert stale_by_verb("The subsidiary was divested before the period.")
+    # the false positive that decides it
+    assert stale_by_verb("It can take a further 2500 kg on top of its own weight.")
+    # and the one sense dominance does protect against
+    assert not stale_by_verb("A statement from group dated 23 May 2026 gives "
+                             "80.99 USD.")
+
+
+def test_sense_dominance_beats_sense_priority_on_dated():
+    from symbolic_ai_generators.staleness import (TRANSITION_ROOTS,
+                                                  TRANSITION_SENSE_SHARE)
+    from symbolic_ai_generators.wordnet import (hypernym_closure,
+                                                sense_fraction_reaching)
+    assert TRANSITION_ROOTS & hypernym_closure("dated")          # first sense
+    assert sense_fraction_reaching("dated", TRANSITION_ROOTS) <= (
+        TRANSITION_SENSE_SHARE)                                  # dominance

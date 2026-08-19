@@ -147,47 +147,83 @@ def filter_stale(text: str, gate) -> str:
 #: classify by **subject matter** rather than by aspect and cannot separate a
 #: verb that asserts a relation from one that ends it (``cease`` is
 #: *verb.stative*, ``divest`` is *verb.possession*, exactly like ``own``).
-TRANSITION_ROOTS = frozenset({"change", "end", "discontinue", "leave", "exit",
-                              "deprive", "transfer", "remove"})
+#:
+#: ``change`` and ``transfer`` are **excluded** and that is the whole difference
+#: between a usable feature and an unusable one: they sit near the root of the
+#: verb hierarchy, so *increase*, *add*, *process* and *update* reach them, and
+#: they account for 9,090 of the 9,584 token fires on real prose.
+TRANSITION_ROOTS = frozenset({"end", "discontinue", "leave", "exit", "deprive",
+                              "remove"})
+
+#: A lemma counts as a transition verb when **more than this share of its senses**
+#: reaches a root. Dominance rather than priority: taking the first sense fires on
+#: ``dated`` -- "go on a date with" -- which appears in every solvency filing
+#: sentence and cost that surface 1.000 -> 0.650.
+#:
+#: **This constant was set by one false positive** (``dated`` reaches a root on
+#: 0.20 of its senses) and is labelled as fitted for that reason. What makes it
+#: defensible rather than arbitrary is that it costs nothing: held-out recall is
+#: 0.33 at this threshold and 0.33 for the first-sense rule it replaces, so the
+#: fraction rule strictly dominates. The margin is also wide -- every genuine
+#: transition verb measured sits at 0.27 or above and every relation verb at 0.00.
+TRANSITION_SENSE_SHARE = 0.2
 
 
 def stale_by_verb(sentence: str) -> bool:
-    """A token whose WordNet hypernym chain reaches a cessation ancestor.
+    """A token whose WordNet senses **mostly** denote cessation or departure.
 
-    The signal the cue lists cannot reach: *"sub_98 left the group in April"* is
-    stale because of what **leave** means, not because of any word on a list.
+    The signal no cue list reaches: *"sub_98 left the group in April"* is stale
+    because of what **leave** means. Measured on solvency's uncued arm, this takes
+    accuracy **0.475 -> 1.000 with no cost on the clean surface** -- the first
+    thing that moves that arm by reading rather than by refusing.
 
-    **It has no part-of-speech knowledge and that is the binding limit.** Every
-    token is tested as a verb, so *"the end of the study"* and *"a change in
-    protocol"* fire on their nouns. Measured on real prose the false-positive
-    rate is what decides whether this is usable, and it is reported beside the
-    recall rather than left out.
+    Three findings are folded into the two constants above and neither is
+    optional:
 
-    **Measured and NOT usable as a gate.** Kept because a dead end that is not
-    written down gets re-derived. On verbs held out from the set used to choose
-    the roots: recall **0.42** at 0.08 false positives with all eight roots,
-    **0.33** at **0.00** with the deep six. The design set read 0.86 and 0.64, so
-    a fifteen-verb negative class inflated it about twofold.
+    - **supersenses cannot do this.** They classify by subject matter, so
+      ``cease`` is *verb.stative* and ``divest`` is *verb.possession*, like
+      ``own``.
+    - **ancestor depth decides the false-positive rate.** With ``change`` and
+      ``transfer`` included this fires on 0.522 of real scientific prose; without
+      them, 0.057.
+    - **sense dominance, not sense priority.** First-sense selection fires on
+      ``dated`` and costs solvency's clean surface 0.350.
 
-    At the **sentence** level it fires on **0.522** of real scientific prose with
-    all eight roots and **0.058** with the deep six, against 0.003 for
-    `stale_by_cancellation`. And end to end on solvency it lifts the uncued floor
-    0.485 -> 0.635 while taking the clean surface **1.000 -> 0.650**, on one
-    word: ``dated``, a participial modifier in every filing sentence whose first
-    WordNet sense is the romantic one and whose chain reaches *leave*.
+    **DOMAIN-SPECIFIC, AND NOT WIRED INTO ANY DEFAULT PATH.** It is not the
+    counterpart of `stale_by_cancellation`, which is closed-class, fires on 0.004
+    of real prose, and leaves all three generated surfaces byte-identical. This
+    one draws on 11,529 open-class lemmas, fires on **0.156** of real prose, and
+    end to end::
 
-    Two failure modes at once, and the diagnostic separates them: a nominal
-    filter (skip a token after *the*, *of*, *in*...) moves 0.522 -> 0.426 and
-    0.058 -> 0.045, so **part of speech is not the dominant problem -- ancestor
-    depth is**. ``change`` accounts for 6,899 token fires and ``transfer`` 2,191,
-    against ``leave`` 315, ``end`` 271, ``remove`` 91, ``exit`` 12, ``deprive``
-    5. See `scripts/verb_class_staleness.py`.
+        solvency, uncued owns     0.475 -> 1.000     (clean surface unchanged)
+        scheduling, hard machine  0.767 -> 0.675
+        flood, hard distractors   0.589 -> 0.014
+
+    **`can` is what kills flood.** WordNet has it as a verb -- *"terminate the
+    employment of"* -- so one of its two senses reaches ``remove`` and the
+    fraction is 0.5. It appears 90 times in thirty flood documents. Sense
+    dominance protects against a **rare** wrong sense (``dated``, 1 of 5) and not
+    against a **low-sense-count** word where one reading happens to be a
+    transition. ``empty``, ``complete`` and ``laden`` fail the same way.
+
+    The damage also scales with **claim density**: flood realises a claim in
+    almost every sentence, so deleting 13% of them destroys the world, while
+    solvency's ownership paragraph survives.
+
+    Held-out recall is **0.33** besides -- a distractor built on *revoke*,
+    *rescind*, *annul*, *forfeit* or *disband* is not caught -- so the 1.000 is a
+    ceiling for the verbs it has, exactly as the declared anchors' 1.000 was. And
+    it addresses **staleness** only: a claim that was never true, such as an
+    unofficial figure, is a different failure and belongs to the insensitivity
+    response.
+
+    No part-of-speech tagger. One was tried, and removed: restricting to ``VB*``
+    takes real-prose firing 0.057 -> 0.017 under the any-sense rule and buys
+    **nothing** end to end once sense dominance is in place.
     """
-    from .wordnet import hypernym_closure, is_verb_lemma
+    from .wordnet import sense_fraction_reaching
     for token in re.findall(r"[A-Za-z][a-z]+", sentence):
-        low = token.lower()
-        if not is_verb_lemma(low):
-            continue
-        if TRANSITION_ROOTS & hypernym_closure(low):
+        if sense_fraction_reaching(token.lower(),
+                                   TRANSITION_ROOTS) > TRANSITION_SENSE_SHARE:
             return True
     return False

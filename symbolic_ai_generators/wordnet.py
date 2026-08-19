@@ -25,7 +25,8 @@ import zipfile
 from pathlib import Path
 
 __all__ = ["verb_supersenses", "first_sense_supersense",
-           "hypernym_closure", "is_verb_lemma", "SUPERSENSES", "wordnet_path"]
+           "hypernym_closure", "sense_fraction_reaching", "is_verb_lemma",
+           "SUPERSENSES", "wordnet_path"]
 
 _CANDIDATES = (
     Path.home() / "nltk_data" / "corpora" / "wordnet.zip",
@@ -202,6 +203,46 @@ def hypernym_closure(token: str, *, first_sense_only: bool = True
             out.add(word)
         frontier.extend(parents)
     return frozenset(out)
+
+
+def sense_fraction_reaching(token: str, roots) -> float:
+    """Share of the lemma's senses whose hypernym chain reaches one of ``roots``.
+
+    **Dominance, not priority.** Taking the *first* sense is disambiguation by
+    prior and it fails on exactly the words that matter: ``dated`` reaches
+    ``leave`` on its first sense -- "go on a date with" -- and on **one of five**
+    senses overall, while every genuine transition verb measured reaches a root
+    on 60% to 100% of its senses and every relation verb on **none**. The margin
+    is 0.20 against 0.60, which is what makes a threshold defensible rather than
+    fitted.
+
+    Returns 0.0 for a token that is not a WordNet verb.
+    """
+    lemma_offsets, _, _ = _tables()
+    ups = _hypernyms()
+    for cand in _candidates(token):
+        offs = lemma_offsets.get(cand)
+        if offs:
+            break
+    else:
+        return 0.0
+    hits = 0
+    for off in offs:
+        seen: set[str] = set()
+        frontier = [off]
+        words: set[str] = set()
+        while frontier:
+            o = frontier.pop()
+            if o in seen:
+                continue
+            seen.add(o)
+            parents, word = ups.get(o, ((), ""))
+            if word:
+                words.add(word)
+            frontier.extend(parents)
+        if roots & words:
+            hits += 1
+    return hits / len(offs)
 
 
 def is_verb_lemma(token: str) -> bool:
