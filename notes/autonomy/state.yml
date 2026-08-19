@@ -2020,6 +2020,26 @@ active_work: >
   (precision 0.412 -> 0.507), country 0.145 -> 0.163. The representation was the
   problem, not only the amount of text.
 
+  THE NORTH STAR IS COMPUTED WITH A LEARNED BOUNDARY, for the first time. Every
+  previous $/solved-episode-above-floor had hand-written patterns at the front.
+  Priced as one system -- learned reader (union fit, the only configuration that
+  survives renaming) plus the kernels it feeds, 120 held-out episodes a domain:
+  solvency $1.59e-08, scheduling $2.37e-08, flood $9.65e-08. A $3/Mtok API AT
+  ACCURACY 1.000 costs 112,395x / 101,809x / 25,597x more per solved episode, so
+  NO ACCURACY NUMBER CAN CLOSE THE GAP and the comparison is not about capability.
+  The fit ($1.2e-05 to $3.3e-05, once) repays after 0.01-0.02 episodes against
+  the API and ~1,700 against a free reader. And "reading is 96.1% of solvency's
+  wall clock" strengthens to 99.2% there and INVERTS in flood, where the kernels
+  take 73% -- that claim is about the kernel, not about reading.
+
+  THE SENSITIVITY/THRESHOLD LINE IS CLOSED. L_reader = sum s_i L_i failed as a
+  training weight (nine cells, one improvement) and as a decision rule (nine
+  cells, zero improvements), with its key input verified three ways. Reopening
+  needs the cost of an error SET drawn from the reader's own error distribution.
+  What stands is a fact about the TASKS: `flooded` and `bridge_on` are the only
+  predicates whose invented claims cost more than their lost ones, and they are
+  exactly the ones that impose constraints rather than supply capacity.
+
   PENDING, and the decisive experiment for the volume claim:
   `scripts/fetch_wikipedia_parents_scale.py` is fetching ~1,500 articles into
   data/artifacts/wikipedia_parents_scale.jsonl (Wikidata is rate-limiting to
