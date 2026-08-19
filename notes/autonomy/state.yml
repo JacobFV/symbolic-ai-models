@@ -40,6 +40,50 @@ measured:
     because the atom rule that keeps a pronoun with its antecedent -- required
     for the document to stay true -- preserves the demand binding; a property of
     the task, not a leak.
+  - EVERY READER NUMBER HERE WAS MEASURED AGAINST DISTRACTORS THAT COULD NOT
+    BITE. Promoted to RESEARCH_LOG.md. Three domains, and the refuter SHARPENED
+    it: there are TWO kinds of defanging, not one.
+      flood      disused track          ADMITTED 60/60, endpoints outside the net
+      scheduling withdrawn machine etc  ADMITTED 0/60, no capability / no quantity
+      solvency   divested sub_99        ADMITTED 0/60, one entity, and no filings
+    Scheduling and solvency were credited with a vocabulary that "does double
+    duty -- settles collisions AND filters distractors". That credit was earned
+    against sentences the vocabulary never had to work for.
+    HONEST SURFACE vs PUBLISHED, and with today's checks:
+      flood       0.988 -> 0.679 -> 0.933
+      scheduling  1.000 -> 0.790 -> 1.000
+      solvency    1.000 -> 0.450 -> 1.000 cued / 0.450 UNCUED   (floor 0.550)
+    Solvency on the honest surface is WORSE THAN ANSWERING NO EVERY TIME.
+    SOLVENCY'S OWNERSHIP PARAGRAPH WAS DECORATIVE: read_signature enrols a member
+    the moment it FILES, so deleting the whole first paragraph -- one of the
+    domain's two claim kinds -- changes 0 OF 200 answers. Reported 1.000 accuracy
+    and 1.000 filing recall in all six cells without ever reading the group
+    structure. read_signature_consolidated registered beside it.
+    THE REPAIRS ARE A CONJUNCTION: gate alone +0.035, consolidated reader alone
+    +0.000, together +0.550 -- the divested filer is enrolled by EITHER its
+    filing or its ownership sentence and each fix closes one route.
+    HONEST FLOOR: the UNCUED arm ("sub_98 left the group in April") is
+    unrepairable at 0.450 by everything built today. Asserted by a test.
+    DOSE-RESPONSE IS U-SHAPED: 0.05 -> 0.630 (4 false-TRUE, 70 false-FALSE),
+    0.10 -> 0.665 (33/34), 0.25 -> 0.515 (97/0), 0.50 -> 0.450 (110/0), because
+    the spurious figure is dated the determination date and REPLACES the real one
+    under latest-by-date. QUOTE THE INJECTION WITH THE NUMBER.
+  - PRICED IN THE REPO'S OWN CURRENCY, and one row changes KIND not degree.
+    Honest surface, every stage charged (gate + reader + kernel):
+      flood        0.669 -> 0.915   gate  0.5% of time   1.124e-07 -> 8.688e-08
+      scheduling   0.790 -> 1.000   gate  4.9%           7.527e-08 -> 3.249e-08
+      solvency     0.450 -> 1.000   gate 44.0%                 INF -> 1.306e-09
+    SOLVENCY WAS BELOW ITS OWN FLOOR (0.450 vs 0.550) so its cost per unit of
+    capability was INFINITE -- it bought nothing and the ledger said so. The
+    checks make it finite. Only qualitative move in the table.
+    THE FLOOR AMPLIFIES: scheduling accuracy 1.27x -> $/above-floor 2.32x,
+    because (1.000-0.645)/(0.790-0.645) = 2.45. Quoting $/correct would have
+    shown 1.20x and understated the gain by half.
+    THE GATE IS NOT FREE WHERE READING DOMINATES -- 44% of solvency's pipeline,
+    predicted ~29%. filter_stale RE-SPLITS AND RE-SCANS the sentences the reader
+    is about to split and scan, paying tokenisation twice. Folding it into each
+    reader's loop would bound it by cue matching alone; NOT DONE, because the
+    component's whole claim is that it transfers UNCHANGED. Trade named.
   - CANCELLATION, NOT TENSE -- AND IT FAILS WHERE THE PREDICATE IS A NEGATION.
     The damaging channel in both domains is MULTI-VALUED, so no arity checks it
     and no second SOURCE knows it. The only second reading available is of the
@@ -857,6 +901,37 @@ measured:
     32, so lifts across different n_eval are not comparable
 
 theory:
+  - name: detectability_from_arity
+    status: empirical_three_domains
+    formula: "a reader error is detectable only where the corrupted role carries a SECOND independent reading"
+    consequence: >
+      Detection needs redundancy; redundancy comes from the role's ARITY and from
+      whether some other sentence pins the same fact; and NONE of that is
+      correlated with how much damage an error there does. Measured the wrong way
+      round in every domain tried: flood's undetectable misfire direction costs
+      0.655 and its most detectable costs 0.865; scheduling's undetectable
+      has_capability costs 0.210 with every failure UNSOUND while its detectable
+      needs_capability costs 0.035; solvency's `owns` is multi-valued and its
+      damage is the largest of the three. A system built to catch its own reading
+      errors catches the ones it could most afford to make.
+    sources: >
+      Three kinds, and each covers what the others cannot because each reads a
+      DIFFERENT FACT -- positional (a quantity sits beside its site), cross-role
+      (that site was given away), structural (the domain says this role holds one
+      region). Where no other source exists, the only reading left is of the SAME
+      sentence: does it withdraw what it asserts (staleness.py).
+    scope: >
+      The sentence-internal gate fails where the predicate IS a negation -- it
+      cannot tell a sentence that withdraws its own claim from one asserting
+      something WAS withdrawn, and flood's `flooded` is a cancellation. Property
+      of the predicate, not of the cue list.
+    floor: >
+      A semantically stale sentence carrying NO lexical cue defeats everything
+      built: solvency's uncued arm is 0.450 under every combination. Closing it
+      needs verb semantics (a past change-of-state whose result contradicts the
+      claim), which is the first place an external lexical resource is the only
+      mechanism rather than a shortcut.
+    evidence: runs/contradicting_evidence.json, runs/scheduling_hard_distractors.json, runs/solvency_hard_distractors.json, runs/staleness_gate.json
   - name: enumeration_soundness
     status: derived_premise_measured
     formula: "theta* in Theta  =>  (all candidates agree => correct)  and  (collapse wrong => candidates disagree)"
