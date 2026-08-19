@@ -40,6 +40,21 @@ measured:
     because the atom rule that keeps a pronoun with its antecedent -- required
     for the document to stay true -- preserves the demand binding; a property of
     the task, not a leak.
+  - NO ACCURACY CLOSES THE PRICE GAP, and the comparison was only half
+    blocked. Credentials block a model's ACCURACY, not its published PRICE, and
+    cost.py has api_component for that. Break-even accuracy -- what a model
+    would need to match our $/solved -- is 1,109 (flood), 337 (scheduling),
+    66,742 (solvency) at $0.15/Mtok, and 22,174 / 6,748 / 1,334,849 at $3/Mtok.
+    Accuracy cannot exceed 1. Insensitive to our own accuracy: flood at 0.500
+    on the honest surface halves its break-even to ~554.
+    THE CLAIM IS NARROW AND EVERY QUALIFIER IS LOAD-BEARING: per answer, at
+    inference time, ON A TASK A READER ALREADY EXISTS FOR. It says nothing
+    about a task nobody has written a reader for, which is what a general model
+    is bought for. The ledger charges the reader's RUNTIME, not its
+    DEVELOPMENT.
+    THE MISSING HALF, and it is the next thing: at 337x minimum a great deal of
+    engineering amortises, so the break-even EPISODE COUNT is development cost
+    over per-answer saving. Development cost is measured NOWHERE in this repo.
   - omits_load_bearing IS A LOWER BOUND. It tests SINGLE-claim deletion, and
     flood has jointly-critical pairs -- changing the answer together while
     neither changes it alone -- in 5 of 14 non-empty cases, up to ten each,
