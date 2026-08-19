@@ -1,4 +1,4 @@
-# Handover — 2026-08-18 (second revision, after the certificate arm)
+# Handover — 2026-08-19 (third revision, after the detection arm)
 
 For the next agent picking this repo up cold. `ROADMAP.md` says what the work
 *is*; `CLAUDE.md` says how to work here; this says **where the live edge is, what
@@ -8,6 +8,67 @@ you do not inherit it as fact.**
 Read in this order: `CLAUDE.md` (working agreements — they are binding and they
 were each paid for), `APPROACH.md` (the argument), then this, then `ROADMAP.md`.
 `notes/lessons/` is the shortest path to not repeating six specific mistakes.
+
+---
+
+## 0a. The newest layer — 2026-08-19, late. Read before §0.
+
+A day spent on **what catches a reading error**, and the answer is uncomfortable
+enough to lead with:
+
+> **A check is sound over the channel it reads and blind to every other; whether
+> it can read a channel at all is set by that role's arity; and arity has nothing
+> to do with how much damage an error there does.** In both domains measured, the
+> most damaging reader error is the least detectable one.
+
+- **Emission is a theorem, not a heuristic.** Where the read world can differ
+  from the true one *only* in the role assignment, agreement among the emitted
+  candidates ⇒ correct, and a wrong collapse ⇒ disagreement. Sound **and
+  complete** by construction. Consequences: **no certificate can improve such an
+  arm** (0.361 → 0.056 coverage, 0 wrong both), and **coverage is not a tunable**
+  — it is the inert share. Turn on a second channel (`hard_distractors`, invented
+  links) and the same arm is 40 wrong of 114.
+- **Emission recovers no accuracy.** At the lexical floor it decides 0.361 with
+  0 wrong, and every decided case is one the collapsing reader already got right.
+  You can know that you do not know; you cannot answer.
+- **The audit cannot make this call**, and that is the first thing it cannot
+  predict. `audit_surface(prose=True)` scores the two flood surfaces
+  **identically** (mass 0.640, the same 280 prose flags) while soundness differs
+  1.000 vs 0.649. It measures ambiguity of the **signature**, not fragility of
+  the **vocabulary**.
+- **A vocabulary can be worse than none: −0.290.** And the control that said
+  otherwise could not fail — `_verify_adversarial` asserts the same predicate
+  `_anchor_role` computes, so that arm *is* the emptied-anchor arm, case by case.
+  Run properly (`scripts/misfiring_vocabulary.py`), a wrong-firing vocabulary
+  costs more than the whole distance between having one and not.
+- **Three checks, three kinds of evidence, zero false alarms.**
+  `read_surface.evidence_conflict` — positional (`stolen`), cross-role
+  (`reassigned`), structural (`arity`). Together they cover all three flood
+  misfire directions; separately each is the unique coverer of one.
+- **Scheduling's distractors were defanged exactly like flood's.** One admitted
+  sentence takes it 1.000 → **0.790**, every failure in the **unsound**
+  direction, arity firing **0.000** — while the catchable side costs 0.035 and
+  fires 1.000. `hard_distractors` now exists there too, default `False`.
+- **One component transfers across domains unchanged**, the first here:
+  `symbolic_ai_generators/staleness.py`. **Cancellation, not tense** — the tense
+  gate destroys true claims phrased in the past (0.645, 0.317) and misses
+  *"a disused track once ran"*. The cancellation gate takes scheduling
+  0.790 → 1.000 and flood 0.679 → 0.933. **It costs 0.055 on flood's clean
+  surface** because it deletes *"…it is no longer passable"*: it cannot tell a
+  sentence that withdraws its own claim from one asserting something *was*
+  withdrawn, and flood's `flooded` predicate **is** a cancellation. A property of
+  the predicate; no cue list fixes it.
+
+**Numbers below that are now wrong:** the all-adversarial floor **0.618 was
+n=34**; at 400 seeds it is **0.710** (grouped stable at 0.758), so the measured
+case for lexical generalisation is **0.290, not 0.382**. And *"the anchors never
+misfire, so its failure mode is silence rather than error"* is retracted — it
+holds only for phrasings constructed to keep them silent.
+
+**Three method lessons, all from single experiments:** run the clean arm for
+**every** check, not just the treatment; ask what your **verification step**
+asserts about the mechanism under test; and construct a failure so it is
+**inexpressible** in the representation under test, or you are measuring luck.
 
 ---
 
