@@ -32,13 +32,22 @@ from symbolic_ai_core.reader.learned import CapitalisedMentions, LearnedSpanRead
 from symbolic_ai_core.world import EntityRef
 
 import scripts.real_text_reader as R
-from scripts.multi_relation_world import norm, read_parent
+from scripts.multi_relation_world import (norm, read_country, read_hq,
+                                          read_parent)
 
 CORPUS = Path(sys.argv[sys.argv.index("--corpus") + 1]
               if "--corpus" in sys.argv
               else "data/artifacts/wikipedia_parents_closed.jsonl")
 OUT = Path("runs/neighbour_correlation.json")
 FOLDS = 4
+#: The hand reader for each relation, and the gold field it is scored against.
+#: `country` is the discriminating case: `read_country` keys on a CLOSED CLASS of
+#: nationality adjectives applied uniformly, not on phrasing style, so if the
+#: clumping story is right -- patterns succeed on a KIND of article -- it should
+#: clump least here.
+RELATIONS = {"parent": (read_parent, "current"),
+             "country": (read_country, "country"),
+             "headquarters": (read_hq, "headquarters")}
 
 
 def main() -> None:
@@ -49,7 +58,9 @@ def main() -> None:
              if edge.get(q) in by_qid and edge.get(edge[q])]
 
     R.PARENTS = CORPUS
+    R.RELATIONS = Path("data/artifacts/company_relations_scale.jsonl")
     docs = R.corpus()
+    gold = {d["qid"]: d for d in docs}
     read: dict[str, dict[str, str | None]] = {}
     for fold in range(FOLDS):
         te = [d for i, d in enumerate(docs) if i % FOLDS == fold]
@@ -66,40 +77,55 @@ def main() -> None:
                 if c.predicate == "parent" and isinstance(v, EntityRef):
                     if best is None or res.confidence_of(i) > best[0]:
                         best = (res.confidence_of(i), v.id)
-            read.setdefault(d["qid"], {})["learned"] = best[1] if best else None
+            for rel in RELATIONS:
+                b = None
+                for i, c in enumerate(res.claims):
+                    v = c.roles.get("value")
+                    if c.predicate == rel and isinstance(v, EntityRef):
+                        if b is None or res.confidence_of(i) > b[0]:
+                            b = (res.confidence_of(i), v.id)
+                read.setdefault(d["qid"], {})[f"learned:{rel}"] = (
+                    b[1] if b else None)
     for d in docs:
-        read.setdefault(d["qid"], {})["hand"] = read_parent(d["intro"])
+        for rel, (fn, _) in RELATIONS.items():
+            read.setdefault(d["qid"], {})[f"hand:{rel}"] = fn(d["intro"])
 
-    def ok(arm: str, q: str) -> bool:
-        a = read.get(q, {}).get(arm)
-        return bool(a) and norm(a) in [norm(x)
-                                       for x in (by_qid[q].get("current") or [])]
+    def ok(arm: str, rel: str, q: str) -> bool:
+        a = read.get(q, {}).get(f"{arm}:{rel}")
+        if not a:
+            return False
+        field = RELATIONS[rel][1]
+        want = (by_qid[q].get(field) if rel == "parent"
+                else (gold.get(q, {}).get(rel) or []))
+        return norm(a) in [norm(x) for x in (want or [])]
 
     print(f"{len(pairs)} (child, parent) pairs with both articles present\n")
-    print(f"    {'reader':<10}{'P(parent)':>11}{'| child ok':>12}"
-          f"{'| child bad':>13}{'odds ratio':>12}{'chi2 p':>9}")
+    print(f"    {'relation':<14}{'reader':<9}{'P(par)':>8}{'| child ok':>12}"
+          f"{'| child bad':>13}{'odds':>7}{'chi2 p':>9}{'n both':>8}")
     out = {}
-    for arm in ("learned", "hand"):
+    for rel in RELATIONS:
+      for arm in ("learned", "hand"):
         a = b = c = d = 0
         for q, p in pairs:
-            ci, pi = ok(arm, q), ok(arm, p)
+            ci, pi = ok(arm, rel, q), ok(arm, rel, p)
             a, b, c, d = (a + (ci and pi), b + (ci and not pi),
                           c + (not ci and pi), d + (not ci and not pi))
         n = a + b + c + d
-        # Yates-corrected chi-square: the smallest cell here is 6.
+        # Yates-corrected chi-square; the count of the smallest cell is printed
+        # beside every row, because a rate here without its numerator is not a
+        # result -- see notes/lessons/2026-08-19-a-rate-without-its-numerator.
         num = n * (abs(a * d - b * c) - n / 2) ** 2
         den = (a + b) * (c + d) * (a + c) * (b + d)
         chi = num / den if den else 0.0
         pv = math.erfc(math.sqrt(chi / 2)) if chi > 0 else 1.0
         odds = (a * d) / (b * c) if b * c else float("inf")
-        print(f"    {arm:<10}{(a + c) / n:11.3f}{a / max(1, a + b):12.3f}"
-              f"{c / max(1, c + d):13.3f}{odds:12.2f}{pv:9.3f}")
-        print(f"      2x2: both {a}, child only {b}, parent only {c}, "
-              f"neither {d}")
-        out[arm] = {"both": a, "child_only": b, "parent_only": c, "neither": d,
-                    "marginal": (a + c) / n, "cond_child_ok": a / max(1, a + b),
-                    "cond_child_bad": c / max(1, c + d), "odds_ratio": odds,
-                    "chi2_p": pv}
+        print(f"    {rel:<14}{arm:<9}{(a + c) / n:8.3f}{a / max(1, a + b):12.3f}"
+              f"{c / max(1, c + d):13.3f}{odds:7.2f}{pv:9.3f}{a:8d}")
+        out[f"{rel}:{arm}"] = {
+            "both": a, "child_only": b, "parent_only": c, "neither": d,
+            "marginal": (a + c) / n, "cond_child_ok": a / max(1, a + b),
+            "cond_child_bad": c / max(1, c + d), "odds_ratio": odds,
+            "chi2_p": pv}
 
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(json.dumps({"pairs": len(pairs), "arms": out}, indent=2))
