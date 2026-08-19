@@ -698,6 +698,7 @@ def _scan(text: str, anchors: dict) -> dict:
     order: list[str] = []
     anchored: dict[str, str] = {}
     by_region: dict[str, str] = {}
+    claims_by_role: dict[str, list[str]] = {}
     depot = needs = adjacent = ""
     demand = None
 
@@ -724,6 +725,7 @@ def _scan(text: str, anchors: dict) -> dict:
                 if role:
                     anchored.setdefault(role, regions[0])
                     by_region.setdefault(regions[0], role)
+                    claims_by_role.setdefault(role, []).append(regions[0])
                 if role == "depot" and not depot:
                     depot = regions[0]
                 elif role == "flooded":
@@ -749,8 +751,15 @@ def _scan(text: str, anchors: dict) -> dict:
     return {"links": links, "crossings": crossings, "vehicles": vehicles,
             "flooded": flooded, "unresolved": unresolved, "order": order,
             "anchored": anchored, "by_region": by_region,
+            "claims_by_role": claims_by_role,
             "depot": depot, "needs": needs,
             "adjacent": adjacent, "demand": demand}
+
+
+#: Roles the domain allows exactly one region to hold. `flooded` is not one of
+#: them, which is why an extra flooded region violates no arity and needs the
+#: adjacency signal instead.
+_SINGLE_VALUED = frozenset({"depot", "needs"})
 
 
 def evidence_conflict(text: str, *, anchors: dict | None = None) -> dict:
@@ -769,10 +778,15 @@ def evidence_conflict(text: str, *, anchors: dict | None = None) -> dict:
     its sentence is consumed, so `audit.unconsumed` sees nothing; and the
     certificate builds its graph from the roles, so it inherits the error.
 
-    Two forms of the same disagreement, and both are needed:
+    Three forms, and they are complementary rather than redundant:
 
     - ``"stolen"`` -- an anchor named a **different** region as the needs site;
-    - ``"reassigned"`` -- an anchor gave the adjacent region **another** role.
+    - ``"reassigned"`` -- an anchor gave the adjacent region **another** role;
+    - ``"arity"`` -- two regions claimed one **single-valued** role. This needs
+      no second signal at all, only the domain's own arity, and it is what sees
+      a misfire onto *depot* -- the direction adjacency is blind to, because
+      nothing content-free corroborates a depot. The reader currently takes the
+      first claimant silently (``if role == "depot" and not depot``).
 
     The second matters more than it looks. A needs sentence tripping the
     flooding vocabulary marks the destination impassable, which is the single
@@ -795,6 +809,10 @@ def evidence_conflict(text: str, *, anchors: dict | None = None) -> dict:
     other = ev["by_region"].get(b, "") if b else ""
     if other and other != "needs":
         out["reassigned"] = (b, other)
+    over = {role: sorted(set(rs)) for role, rs in ev["claims_by_role"].items()
+            if role in _SINGLE_VALUED and len(set(rs)) > 1}
+    if over:
+        out["arity"] = over
     return out
 
 

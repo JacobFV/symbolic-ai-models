@@ -63,8 +63,9 @@ def run(variants) -> dict:
                 got = solve(read_content_roles(text))[0]
             except Exception:
                 got = ()
+            conf = evidence_conflict(text)
             rows.append({"seed": s, "wrong": got != want,
-                         "conflict": bool(evidence_conflict(text))})
+                         "conflict": bool(conf), "forms": sorted(conf)})
     finally:
         S._VARIANTS.clear()
         S._VARIANTS.update(original)
@@ -74,7 +75,10 @@ def run(variants) -> dict:
     right = [r for r in rows if not r["wrong"]]
     fired = [r for r in rows if r["conflict"]]
     caught = [r for r in wrong if r["conflict"]]
-    return {"n": n, "wrong": len(wrong), "fires": len(fired),
+    forms = {}
+    for f in ("stolen", "reassigned", "arity"):
+        forms[f] = sum(1 for r in rows if f in r["forms"]) / n if n else 0.0
+    return {"n": n, "wrong": len(wrong), "fires": len(fired), "forms": forms,
             "accuracy": len(right) / n,
             "recall": len(caught) / len(wrong) if wrong else float("nan"),
             "false_alarm": (len(fired) - len(caught)) / len(right)
@@ -99,13 +103,15 @@ def main() -> None:
             "misfiring: all three": MISFIRING}
     del only, base
     out = {}
-    print(f"{'surface':<38} {'acc':>7} {'fires':>7} {'fire rate':>10}")
-    print("-" * 66)
+    print(f"{'surface':<38} {'acc':>7} {'any':>7} {'stolen':>8} "
+          f"{'reassign':>9} {'arity':>7}")
+    print("-" * 80)
     for name, variants in arms.items():
         r = run(variants)
         out[name] = r
-        print(f"{name:<38} {r['accuracy']:>7.3f} {r['fires']:>7} "
-              f"{r['fires'] / r['n']:>10.3f}")
+        f = r["forms"]
+        print(f"{name:<38} {r['accuracy']:>7.3f} {r['fires'] / r['n']:>7.3f} "
+              f"{f['stolen']:>8.3f} {f['reassigned']:>9.3f} {f['arity']:>7.3f}")
 
     print("\nThe check detects the CONDITION (an anchor fired on a sentence it")
     print("was not written for), not the consequence. A misfire does not always")

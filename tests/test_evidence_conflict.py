@@ -5,17 +5,15 @@ adjacency to the bare demand quantity -- and consults the second only when the
 first stayed silent. `evidence_conflict` recovers the discarded disagreement,
 which is the **only** signal measured that sees a *misfire*.
 
-The blind spot is asserted alongside the catches, because it is the point: the
-check covers exactly the role that HAS a second signal. A misfire onto depot
-with no needs sentence involved costs 0.655 accuracy and fires nothing.
+Three forms, each the unique coverer of one misfire direction, none of them a
+stronger check than the others -- each reads a **different fact**. Tests below
+pin both the catches and the reason each form cannot cover the others.
 """
 
 from __future__ import annotations
 
 import sys
 from pathlib import Path
-
-import pytest
 
 from symbolic_ai_generators.flood import generate
 from symbolic_ai_generators.flood import surface as S
@@ -82,10 +80,45 @@ def test_catches_the_worst_misfire_which_steals_no_slot():
     assert "reassigned" in forms, forms
 
 
-def test_the_blind_spot_is_real_and_stays_asserted():
-    """No content-free signal corroborates depot or flooding, so a misfire
-    between them is invisible. Asserted so it cannot be read as general."""
-    fired, n = _fire_rate({"flooded": MISFIRING["flooded"]})
-    assert fired == 0, (
-        f"{fired}/{n} -- if this now fires, a second signal for depot has "
-        "appeared and the scope note on evidence_conflict is stale")
+
+
+def test_arity_closes_the_depot_blind_spot():
+    """Two regions claiming one single-valued role needs no second signal at
+    all, only the domain's arity -- and it is what sees a misfire onto depot,
+    the direction adjacency cannot reach. 0.833 at 400 seeds."""
+    original = dict(S._VARIANTS)
+    S._VARIANTS["flooded"] = MISFIRING["flooded"]
+    try:
+        fired = n = 0
+        for s in range(SEEDS):
+            case = generate(s)
+            if not solve(case.world)[0]:
+                continue
+            obs = S.render_observation(case, variants=4)
+            flat = unsaturate(obs, drop_headings=True, shuffle=False)
+            n += 1
+            fired += "arity" in evidence_conflict(interleave(flat).text)
+    finally:
+        S._VARIANTS.clear()
+        S._VARIANTS.update(original)
+    assert fired > n * 0.5, f"only {fired}/{n}"
+
+
+def test_arity_is_silent_where_the_role_is_multi_valued():
+    """`flooded` holds any number of regions, so a needs sentence tripping the
+    flooding vocabulary violates no arity. That is why `reassigned` exists."""
+    original = dict(S._VARIANTS)
+    S._VARIANTS["needs"] = MISFIRING["needs"]
+    try:
+        fired = 0
+        for s in range(SEEDS):
+            case = generate(s)
+            if not solve(case.world)[0]:
+                continue
+            obs = S.render_observation(case, variants=4)
+            flat = unsaturate(obs, drop_headings=True, shuffle=False)
+            fired += "arity" in evidence_conflict(interleave(flat).text)
+    finally:
+        S._VARIANTS.clear()
+        S._VARIANTS.update(original)
+    assert fired == 0, f"arity fired {fired} times on a multi-valued role"

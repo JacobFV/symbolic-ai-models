@@ -40,6 +40,40 @@ measured:
     because the atom rule that keeps a pronoun with its antecedent -- required
     for the document to stay true -- preserves the demand binding; a property of
     the task, not a leak.
+  - THE ONLY SIGNAL THAT SEES A MISFIRE WAS BEING THROWN AWAY, and asking
+    "what else knows this?" answered three times without one new word.
+    A misfire is invisible to everything built here: it reads as `forced` so
+    enumeration gives one world, its sentence IS consumed so unconsumed sees
+    nothing, and the certificate builds its graph from the roles so it inherits
+    the error. But the reader has TWO signals for the needs site -- the lexical
+    anchor and POSITIONAL ADJACENCY to the bare demand quantity -- and consults
+    the second only when the first stayed silent, discarding the disagreement.
+    SHIPPED read_surface.evidence_conflict with three forms. 400 seeds, 252
+    non-empty, interleaved, fire rate (stolen / reassigned / arity):
+      published            acc 0.988   0.000 0.000 0.000
+      evading (silent)         0.710   0.000 0.000 0.000
+      depot -> needs           0.865   0.774 0.000 0.492   (any 0.988)
+      flooding -> depot        0.655   0.000 0.000 0.833
+      needs -> flooding        0.151   0.000 0.976 0.000
+      all three                0.421   0.988 0.976 0.452   (any 1.000)
+    ALL THREE MISFIRE DIRECTIONS COVERED AT ZERO FALSE ALARMS, and the forms
+    are COMPLEMENTARY not nested -- on depot->needs neither reaches 0.988 alone.
+    THREE SIGNALS OF THREE DIFFERENT KINDS: positional (a quantity sits beside
+    its site), cross-role (that site was given away), structural (the domain
+    says this role holds ONE region -- `flooded` is multi-valued, which is
+    exactly why arity is blind to needs->flooding). None is a stronger check;
+    each reads a DIFFERENT FACT. Constructive form of the pairing law: to make
+    a failure detectable, give the thing it corrupts a second independent
+    reading.
+    TWO CORRECTIONS INSIDE THE RUN. (1) The metric was wrong -- framed as recall
+    over WRONG answers it reads 0.993 recall at 0.981 false alarm and looks
+    useless; it detects the CONDITION, and a misfire changes the answer only 58%
+    of the time. (2) The first version scored 0.000 on the WORST arm, because
+    needs->flooding marks the DESTINATION impassable without stealing the needs
+    slot. (3) arity 0.492 not ~1.0 on depot->needs because only two of the four
+    original needs phrasings trip an anchor at all -- found by inspection.
+    NON-MONOTONICITY: all three misfiring (0.421) is BETTER than needs alone
+    (0.151). Reader errors are not independent and multiplicative.
   - EMITTING THE AMBIGUITY DETECTS EVERY ERROR AND RECOVERS NONE, and the
     reason is a THEOREM not a measurement. At the lexical floor (every phrasing
     written to evade the declared anchors, so roles unforced on 252/252, mean

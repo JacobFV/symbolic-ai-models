@@ -27,8 +27,9 @@ if not needs and adjacent and adjacent in unresolved:
 ```
 
 so whenever they disagree, **the disagreement is discarded**. `evidence_conflict`
-recovers it, in two forms: `stolen` (an anchor named a different region as the
-needs site) and `reassigned` (an anchor gave the adjacent region another role).
+recovers it — as `stolen` (an anchor named a different region as the needs site)
+and `reassigned` (an anchor gave the adjacent region another role) — and a third
+form, `arity`, falls out of the same question asked once more.
 
 ## Measured, 400 seeds, 252 non-empty, interleaved
 
@@ -51,20 +52,52 @@ than all three misfiring at once — and it does not take the needs slot, so the
 `stolen` form is silent on it. The first version of this check scored 0.000
 there.
 
-## The blind spot is the finding
+## The blind spot named a third signal, and it closed
 
-**The check covers exactly the role that has a second signal.** Flooding
-sentences misfiring onto depot cost 0.655 accuracy and fire **nothing**, because
-neither depot nor flooding has any content-free corroboration on this surface —
-vehicles are described in a paragraph that names no region, and a wrongly-named
-depot is a real region that is usually still connected.
+Flooding sentences misfiring onto depot cost 0.655 accuracy and fired
+**nothing**: neither depot nor flooding has content-free corroboration on this
+surface. But **depot and needs are single-valued**, and the reader takes the
+first claimant silently (`if role == "depot" and not depot`). Two regions
+claiming one single-valued role is a contradiction the domain's own **arity**
+supplies, with no second evidence source at all.
 
-So this is the constructive form of the pairing law measured this morning
+| surface | accuracy | any | `stolen` | `reassigned` | `arity` |
+|---|---:|---:|---:|---:|---:|
+| published | 0.988 | **0.000** | 0.000 | 0.000 | 0.000 |
+| evading | 0.710 | 0.000 | 0.000 | 0.000 | 0.000 |
+| depot → needs | 0.865 | **0.988** | 0.774 | 0.000 | 0.492 |
+| flooding → depot | 0.655 | **0.833** | 0.000 | 0.000 | **0.833** |
+| needs → flooding | 0.151 | **0.976** | 0.000 | **0.976** | 0.000 |
+| all three | 0.421 | **1.000** | 0.988 | 0.976 | 0.452 |
+
+**All three misfire directions are covered, at zero false alarms**, and each form
+is the unique coverer of one of them. They are complementary rather than nested:
+on depot → needs neither `stolen` (0.774) nor `arity` (0.492) reaches the 0.988
+they reach together.
+
+`arity` is silent on needs → flooding because **`flooded` is multi-valued** — an
+extra flooded region violates no arity, which is exactly why that direction needs
+the adjacency signal instead. And `arity` reaches only 0.492 on depot → needs
+because it needs the *true* needs sentence to claim the role too, and only **two
+of the four** original needs phrasings trip an anchor at all (`outstanding call`
+and `asking for resupply` are the documented misses — `supply` does not reach
+*resupply*). Checked by inspection, not inferred from the number.
+
+## The general shape
+
+This is the constructive form of the pairing law measured this morning
 (*soundness is a property of the pairing (channel, check)*): **to make a failure
-detectable, give the thing it corrupts a second, independent signal.** Not a
-better check — a second reading of the same fact by different evidence. The needs
-site has one because a quantity sits beside it; depot and flooding have none, and
-nothing about the check can fix that.
+detectable, give the thing it corrupts a second, independent reading.** The three
+sources here are of three different kinds and that is the point —
+
+- a **positional** signal (a quantity sits beside its site),
+- a **cross-role** signal (that site was given away to something else),
+- a **structural** signal (the domain says this role holds one region).
+
+None is a better check than the others; each covers what the others cannot,
+because each reads a different fact. Asking "what else knows this?" is a cheaper
+question than "what stronger check exists?", and on this surface it was answerable
+three times without adding a single word of vocabulary.
 
 ## A non-monotonicity worth recording
 
