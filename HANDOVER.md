@@ -1,4 +1,4 @@
-# Handover — 2026-08-19 (third revision, after the detection arm)
+# Handover — 2026-08-19 (fourth revision, after the learned reader)
 
 For the next agent picking this repo up cold. `ROADMAP.md` says what the work
 *is*; `CLAUDE.md` says how to work here; this says **where the live edge is, what
@@ -8,6 +8,112 @@ you do not inherit it as fact.**
 Read in this order: `CLAUDE.md` (working agreements — they are binding and they
 were each paid for), `APPROACH.md` (the argument), then this, then `ROADMAP.md`.
 `notes/lessons/` is the shortest path to not repeating six specific mistakes.
+
+---
+
+## 0. The state after the learned-reader session. Read this first of all.
+
+*Programme-level version:
+`notes/status/2026-08-19-the-boundary-is-built-priced-and-bounded.md`. This is the
+operational one. §0a below is the previous revision and is still true; it is no
+longer the edge.*
+
+**The language boundary is built, priced, and bounded.** The edge is no longer
+"can this be read" — it is a fork about what to build next, stated at the end of
+this section.
+
+### What exists now that did not
+
+`symbolic_ai_core/reader/learned.py` — **one reader, no domain lexicon in its
+source**, fitted from aligned `(sentence, claim)` pairs. It induces the predicate
+inventory, what counts as a name, every role signature, filler types, quantity
+units, the temporal envelope, and which roles are filled from earlier text. Two
+models: an averaged perceptron (default, reproduces every published number) and
+`model="logistic"` (a probability rather than a margin). `CapitalisedMentions`
+swaps identifier corpora for English prose. `calibrate()` fits a held-out
+score→accuracy map. `Reader.run(query=...)` carries the document subject.
+
+**Use the union fit.** Fitted on documents alone it reads all three generated
+domains at 1.000 and collapses to **0.000** when entities are renamed — it
+memorised ten names. Refit with a per-document renaming *added* to the original
+documents and it holds both ends (0.955 / 1.000 / 0.992). Anything quoting the
+1.000 without the augmentation is quoting a vocabulary measurement.
+
+### Numbers already measured. Do not re-derive these.
+
+| | |
+|---|---|
+| **north star, learned pipeline** | $1.59e-08 / $2.37e-08 / $9.65e-08 per solved episode above floor (solvency / scheduling / flood) |
+| **against a $3/Mtok API at accuracy 1.000** | 112,395x / 101,809x / 25,597x more expensive per solved episode |
+| **generated surfaces are saturated** | six training documents reach 1.000 F1 in all three domains |
+| **incremental ingestion** | claim-identical world at 8.3x less reading; the whole cross-document state is the **mention history** |
+| **real text, learned** | `parent` 0.182 correct against four hand patterns at 0.393 |
+| **real text, union** | learned fills gaps: 20–41% of its correct answers are ones the patterns miss; `headquarters` 0.241 → 0.327 |
+| **multi-hop (191 chains)** | learned 0.031 against `p₁²` = 0.032 — independent to 0.001; hand 0.058 against 0.030 — its errors clump |
+| **persistence economics** | ingest 1,661 articles $1.16e-04 **once** vs iterative RAG $6.32e-03 **per query**; cheaper from query 1 |
+| **retrieval** | hop-2 article found 0.073 at k=1, 0.492 at k=5; the second retrieval is keyed on hop 1's answer, so RAG inherits `p₁` |
+| **Heaps exponents** | full token path 0.915, last content word **0.648** (0.641 at a tenth the data — replicates) |
+| **crossover** | four hand patterns ≈ 10⁵–10⁶ articles of distant supervision |
+
+### Lines that are CLOSED. Do not reopen them in this form.
+
+- **`L_reader = Σ sᵢ Lᵢ`.** Failed as a training weight (nine cells, one
+  improvement) and as a decision rule (nine cells, zero), with its key input
+  verified three ways. A margin-scaled update **over-predicts the upweighted
+  class**, so the objective protects a critical claim by inventing one.
+  Reopening needs the cost of an error *set*, not of single claims.
+- **Six real-text levers**: multi-instance pruning (worse), WordNet supersenses
+  (nothing, and *the second time* supersenses came out at the wrong
+  granularity — they give a category and these tasks need a frame), frames on the
+  classifier (nothing), class balancing (inner CV chose no weighting at both
+  corpus scales), answer aggregation (oracle only 0.012 above argmax), frames on
+  the ranker (+33% ranker, +4% end to end).
+
+What *did* move real text: ten times the corpus (+55%) and the query (+4%).
+
+### The fork, and it is the user's call
+
+Both arms point at the same missing component from opposite directions — the
+threshold arm because a kernel-derived rule needs a graded posterior, the
+real-text arm because six feature-level levers are closed. That component is a
+**learned sentence encoder**, and `CLAUDE.md` scopes the neural half as *a
+control, off by default, not to be invested in*. **The evidence and the scope
+disagree.** Options: extend the scope to a small CPU encoder; accept 0.182 on
+real text and spend effort where the numbers are strong (kernels, persistence
+economics); or change the task so features suffice. Do not resolve this by
+drifting into it.
+
+### Blocked
+
+- **No LLM accuracy has been measured anywhere.** Every comparison is a price
+  sheet plus the symbolic side's own accuracy. No API key and spending money is
+  out of scope. State it as a limit in anything published.
+- **Wikidata/Wikipedia rate-limit hard.** The fix is batching, not backoff:
+  `wbgetentities` takes 50 ids and `prop=extracts&exlimit=20` takes 20 titles.
+  `scripts/fetch_wikipedia_parents_batched.py` does ~170 requests where the
+  one-at-a-time version did ~4,900 and spent hours on 49 articles.
+
+### Traps that cost this session hours
+
+1. **`pkill -f <pattern>` matches your own shell**, whose command line contains
+   the pattern. It killed two sessions. Bracket a character: `fetch_[w]ikipedia`.
+2. **Calibrating on the training distribution returns a constant.** Holding out
+   *documents* is not holding out the *shift*; the model is near-perfect on the
+   phrasings it was fitted on, so isotonic regression correctly says score does
+   not predict accuracy — and every downstream threshold goes inert for a reason
+   that has nothing to do with thresholds. Calibrate on the deployment
+   distribution (dev seeds 500,000+).
+3. **Renaming a corpus by string substitution shifts every span offset after it**
+   and reads as catastrophic reader failure. Rename the *case* and re-render.
+4. **`functools.lru_cache(maxsize=1)` becomes a bug the moment the function takes
+   a parameter.** Alternating verb/noun lookups re-parsed the WordNet archive per
+   token: 72 s for 4,400 lookups against 0.19 s.
+5. **Token-level membership tests break multi-word names.** `Ministry of
+   Communications` is never one token, so role induction called every such filler
+   *latent* and answered with a minted skolem: 0.000 exact against 0.149 lenient.
+6. **An averaged perceptron's clock must count examples, not mistakes.** Counting
+   mistakes stops the clock at convergence and the average is dominated by the
+   first chaotic updates — 0.796 F1 against 1.000, fixed in one line.
 
 ---
 
