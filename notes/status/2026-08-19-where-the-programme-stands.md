@@ -165,11 +165,60 @@ looks at the **verb**.
 
 ---
 
+## 4b. Addendum, after the strategic correction: the reader's target is an equivalence class
+
+The frame was reset mid-session to a single question — *what information must be
+recovered, with what fidelity, for cheap structured computation to remain useful?*
+— with the formalism `X --R--> Ŵ --K--> Y` and `W₁ ~_K W₂ ⟺ K(W₁) = K(W₂)`. Four
+arms followed, and they changed the shape of the argument more than anything
+earlier in the day.
+
+**The standard extraction metrics are worthless for this.** On 130 flood cases,
+claim recall, claim precision and raw symmetric-difference size all rank a correct
+answer ahead of a wrong one at **AUC 0.506 / 0.473 / 0.506** — chance. The reader
+makes 2.2 errors on the cases it gets right and 2.3 on the ones it gets wrong.
+**Critical error mass** — influential claims in the symmetric difference — reaches
+**0.946**, and one direction is exact: **zero mass ⇒ correct, 82/82**. That is a
+characterisation of `[W]_K`, not a predictor of it.
+
+**The milestone was met.** 168 independently authored intros → three relation
+families → one world → a composed query (`parent JOIN country`) whose answer no
+sentence states. It scores **F1 0.138**, against per-relation accuracies of 0.819
+(country), 0.327 (parent) and 0.241 (headquarters). Two things fall out: **a
+composed query is bounded by its weakest relation**, and **set-valued composition
+degrades faster than the product of its parts** — 0.268 expected per company, 0.138
+achieved, because misses and false positives accumulate on both sides rather than
+averaging.
+
+**And the controlling quantity took three narrowings, each forced by a
+measurement.** `d`, the share of claims whose loss changes the answer, spans
+**0.010 to 0.866 on identical claims** across existence / argmax / union queries —
+so the value of task-weighted reading is ≈ `1/d`, and at `d ≈ 0.01` an existence
+query makes 99% of reading effort irrelevant. But *why* moved three times:
+
+1. **aggregation shape** — refuted, because `d` did not swap when the enumerated
+   and filtering relations were exchanged;
+2. **value redundancy** — right variable, wrong form: `P(sole support)` predicts
+   `parent` (0.922 vs 0.866) and fails completely for `country` (0.000 vs 0.574);
+3. **bridges times path survival** — `d(country) ≈ 0.922 × 0.589 = 0.543` against a
+   measured 0.574, a reliability quantity rather than an aggregation property;
+4. and finally **bridges over the *error* distribution**, because the structural
+   share on flood is **0.245** against **0.169** for the reader's actual errors —
+   a phantom link is more likely to be redundant than a real one, so the offline
+   number is an upper bound and over-states by 1.4×.
+
+**What did not survive contact:** entity resolution supplied as a given buys
+nothing — only **1.2%** of candidate pairs are the same entity, so the granularity
+story behind three earlier conclusions was unrepresentative. And the value-of-
+information rule `d·(1−acc)` is directionally right and quantitatively weak: a
+measured gain ratio of **16.0** against a predicted **5.45**.
+
 ## 5. Where the next stretch should go
 
-1. **Entity resolution as a given, not a build.** Wikidata as a gazetteer for *is
-   this string an organisation*. Three results say this is the blocker and none of
-   the cheap substitutes worked.
+1. ~~**Entity resolution as a given.**~~ **Done, and it buys nothing** — 1.2% of
+   candidate pairs are the same entity. Entity **typing** helps a little (the
+   ranker's largest single gain, 0.535 → 0.638) and the missing primitive is
+   **relation** typing: current versus former, parent versus sibling versus child.
 2. **A second real genre.** Every correction to the shared components came from
    *adding a genre*, never from thinking harder: the cue list was 85% false
    positives on real English and needed three passes, each surfacing a different
