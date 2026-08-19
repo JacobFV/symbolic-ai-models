@@ -58,6 +58,26 @@ measured:
     solvency revenue is the one cell admitting NEITHER a second reading
     (multi-valued) NOR insensitivity (a sum). This is what that cell costs when
     someone reads the explanation.
+    THE LAW AT ITS EXTREME, sweeping the perturbation (hard_relative sets the
+    spurious figure as a relative perturbation of the filer's own latest one):
+      perturbation   verdict wrong   stated total wrong   mean |err|
+      clean                  0.000                0.000      0.00000
+      0.001                  0.000                0.985      0.00022
+      0.01                   0.020                0.985      0.00224
+      0.05                   0.075                0.985      0.01120
+      0.2                    0.285                0.985      0.04481
+      1.0                    0.445                0.985      0.22407
+    AT A 0.1% READING ERROR THE ANSWER IS PERFECT AND THE EXPLANATION IS WRONG
+    985 TIMES IN 1,000. The explanation's rate is CONSTANT across four orders of
+    magnitude while the verdict's climbs 0.000 -> 0.445. FUNCTIONS OF DIFFERENT
+    VARIABLES: wrong-iff-any-input-wrong (magnitude-independent) against
+    wrong-iff-the-error-crosses-the-boundary (entirely magnitude). The ratio has
+    no bound; it DIVERGES as the perturbation shrinks.
+    HARNESS BUG THAT HID IT: the first sweep used `own[-1] if own else
+    case.threshold`, silently turning a 0.1% perturbation into a 100% one when
+    the filer had no usable figure. Reported mean |err| 0.21 at d=0.001 and
+    looked like noise. Now raises. "No fallbacks, fail loudly" in EXPERIMENT
+    code, where it is just as expensive and much easier to miss.
     GENERAL: AN EXPLANATION'S ERROR RATE IS NOT BOUNDED BY THE ANSWER'S. A
     derived figure is wrong whenever ANY input is; the answer is wrong only when
     the error crosses a decision boundary. The gap GROWS with how much

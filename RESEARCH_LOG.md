@@ -400,6 +400,23 @@ reading nor insensitivity.
 > between the claims and the verdict, so **inspectability is a free property of a
 > symbolic pipeline only when the kernel uses claims directly.**
 
+Sweeping the perturbation makes that exact. With the spurious figure set as a
+relative perturbation of the filer's own latest one:
+
+| perturbation | verdict wrong | **stated total wrong** |
+|---:|---:|---:|
+| 0.001 | **0.000** | **0.985** |
+| 0.01 | 0.020 | 0.985 |
+| 0.05 | 0.075 | 0.985 |
+| 0.2 | 0.285 | 0.985 |
+| 1.0 | 0.445 | 0.985 |
+
+**At a 0.1% reading error the answer is perfect and the explanation is wrong 985
+times in 1,000.** The explanation's rate is constant across four orders of
+magnitude while the verdict's climbs to 0.445 — they are functions of *different
+variables*, and the ratio diverges as the perturbation shrinks rather than being
+merely greater than one.
+
 ### What each channel admits, and what it costs
 
 Two responses to a claim the reader may have got wrong, and they are gated by
