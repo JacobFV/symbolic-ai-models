@@ -152,6 +152,41 @@ the vocabulary.** *"machine_0 was set up to paint"* carries the
 determinacy says a reader *can* type a claim; it says nothing about whether it
 *should*.
 
+### And on real prose the sentence is the wrong unit
+
+The first task here with real prose **and** a real answer: Wikidata's `P749`
+(*parent organization*) against the English Wikipedia intro, 148 companies. A
+`P749` statement carrying an end time names a parent the company *used to* have,
+so this is a labelled **staleness** set.
+
+Context before any arm. The current parent is named in the intro on only
+**0.696** of articles. `stale_by_cancellation` flags a sentence on **0.338** of
+them — against 0.004 of scientific abstracts — because company prose is dense in
+cancellation language.
+
+| arm | answers | correct | precision | picks a **former** parent |
+|---|---:|---:|---:|---:|
+| naive patterns | 0.622 | **0.392** | 0.630 | 0.027 |
+| + sentence gate | **0.568** | **0.351** | 0.619 | 0.027 |
+| + clause gate | 0.615 | 0.378 | 0.615 | **0.020** |
+
+**The sentence gate loses coverage and accuracy and removes no staleness at all.**
+*Miramax* is the worked example — current *beIN Media Group* / *Paramount*, former
+*Filmyard* / *The Walt Disney Company* — where the sentence gate answers *"Walt
+Disney Company"*, because it kept the sentence naming the dead owner and deleted
+the one naming the live one.
+
+> **The unit of staleness is a clause, not a sentence, and the generated surfaces
+> could not have shown that** — one sentence carries one claim there, which is why
+> the gate leaves all three byte-identical. That is a defect in the benchmark's
+> **granularity**, and `audit`'s spans, `unconsumed`, `evidence_conflict` and
+> `filter_stale` all rest on the same assumption.
+
+And the proportion is sobering: the former-parent error is **2.7%** of articles
+while precision among answered is **0.63** against a 0.696 ceiling. On real text
+the staleness problem is a small slice of the error and the dominant one is that
+extraction is hard — perfect staleness handling moves accuracy 0.392 → 0.419.
+
 ### The floor is liftable by reading, in exactly one domain
 
 The uncued stale sentence — *"sub_98 left the group in April"* — is stale because

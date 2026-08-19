@@ -40,6 +40,37 @@ measured:
     because the atom rule that keeps a pronoun with its antecedent -- required
     for the document to stay true -- preserves the demand binding; a property of
     the task, not a leak.
+  - ON REAL PROSE THE SENTENCE IS THE WRONG UNIT. First task here with real
+    prose AND a real answer. Every structured source on disk (cfpb, senate-lda,
+    sec-edgar, patentsview, cskg, gutenberg) is node/edge tables with the prose
+    stripped -- CHECKED. Wikidata P749 + the Wikipedia intro is paired, and a
+    P749 statement with an END TIME (P582) names a parent the company USED TO
+    have, so it is a labelled STALENESS set. 148 companies, fetched via
+    CirrusSearch + the entity API because WDQS was limiting to 1 req/min.
+    CONTEXT FIRST: the current parent is named in the intro on only 0.696 of
+    articles; a former parent is listed for 0.149 and named on 0.115; and
+    stale_by_cancellation flags a sentence on 0.338 of these articles against
+    0.004 of scientific abstracts -- company prose is DENSE in cancellation
+    language, which is exactly when a sentence-level gate is dangerous.
+      arm             answers  correct  precision  picks a FORMER parent
+      naive             0.622    0.392      0.630                  0.027
+      + sentence gate   0.568    0.351      0.619                  0.027
+      + clause gate     0.615    0.378      0.615                  0.020
+    THE SENTENCE GATE LOSES COVERAGE AND ACCURACY AND REMOVES NO STALENESS AT
+    ALL. The clause gate keeps coverage and is the only arm that reduces the
+    error the gates exist for. MIRAMAX is the worked example (current
+    beIN/Paramount, former Filmyard/Walt Disney): the sentence gate answers
+    "Walt Disney Company" because it kept the sentence naming the DEAD owner and
+    deleted the one naming the LIVE one. Three more go from an answer to NONE.
+    THE UNIT OF STALENESS IS A CLAUSE, NOT A SENTENCE, AND THE GENERATED
+    SURFACES COULD NOT HAVE SHOWN THAT -- one sentence carries one claim there,
+    so the gate left all three byte-identical. A defect in the BENCHMARK'S
+    GRANULARITY, not in the gate. The audit's spans, unconsumed,
+    evidence_conflict and filter_stale ALL assume one claim per sentence.
+    AND THE PROPORTION IS SOBERING: former-parent error is 2.7% of articles;
+    precision among answered is 0.63 against a 0.696 ceiling. On real text the
+    staleness problem that took a day is a SMALL SLICE; the dominant error is
+    that extraction is hard. Perfect staleness handling moves 0.392 -> 0.419.
   - A CLOSED-CLASS FEATURE TRANSFERS; AN OPEN-CLASS LEXICON DOES NOT. Two more
     corrections made the verb gate WORK, and then showed it works only where it
     was tuned.
@@ -1305,6 +1336,10 @@ beliefs:
     Dependency-weighted recall is likely a better target than global recall.
   - Ambiguity should be emitted, not collapsed. Kernels can branch or bound.
 unknowns:
+  - WHETHER THE ONE-CLAIM-PER-SENTENCE ASSUMPTION SURVIVES ANYWHERE. Measured
+    false on real prose (see the Wikipedia arm) and it is baked into the audit's
+    spans, unconsumed, evidence_conflict and filter_stale. Nothing here has a
+    clause-level claim model, and the clause gate above is a comma split.
   - WHETHER ANY OF THIS SURVIVES TEXT NOBODY HERE WROTE. 37 GB in data/sources/
     and every number is self-generated. The one component testable without ground
     truth was 85% false positives on real prose. A READER on real text needs
