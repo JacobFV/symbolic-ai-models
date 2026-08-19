@@ -1,5 +1,5 @@
 ---
-title: Intersection raises a noisy extractor's precision from 36.5% to 95.1% — monotone queries repair an over-generated world, non-monotone ones cannot, and it is the same axis as the witness result
+title: Intersection raises a noisy extractor's precision from 36.5% to 95.1% on independent errors and drops it to 8.1% on correlated ones — monotone queries repair uncorrelated over-generation only, which is free exactly where disambiguation is not needed
 date: 2026-08-18
 author: lead
 status: provisional
@@ -94,6 +94,53 @@ substrate rather than as two observations.
   the workload"** — and a system serving mixed workloads may genuinely need both
   worlds, which nothing in the architecture currently expresses.
 
+## CORRECTION, run immediately: the filter needs independent errors, and 8.1%
+
+The section above names its own falsifier — *"the filtering claim assumes error
+independence; a corpus where the same wording recurs across the works being
+intersected would correlate the errors and the filter would fail"* — so it was
+run rather than left for someone else.
+
+Define **confusable**: two ROR ids that a single registry name maps to together.
+That is exactly the correlation at issue, and **4,604 institutions have at least
+one such sibling**. Partitioning `works_at_both(A,B)` by it:
+
+| institution pair | n | **precision** | recall | F1 |
+|---|---:|---:|---:|---:|
+| co-occurring — **as published above** | 3,000 | **95.1%** | 32.6% | 0.486 |
+| **CONFUSABLE** (correlated errors) | 800 (356 non-empty) | **8.1%** | 57.7% | 0.143 |
+| unrelated | 800 (only 9 non-empty) | 30.0% | 27.3% | 0.286 |
+
+**95.1% → 8.1%**, which is not merely a collapse but a fall *below* the 36.5%
+fact-level rate. I predicted 40–70%.
+
+**So the 95.1% is real and is not a property of intersection.** It is a property
+of intersecting *independent* things. The pairs it was measured on were sampled
+from institutions that **actually co-occur** — genuine collaborators, which are
+overwhelmingly not registry siblings. On confusable pairs, intersection
+**amplifies** the noise instead of filtering it, because the extractor puts all
+thirteen Wisconsins on every Wisconsin work and every one of them then
+co-occurs with every other.
+
+> **Intersection repairs uncorrelated over-generation and amplifies correlated
+> over-generation — and the extractor's noise is correlated with precisely the
+> entities anyone would want disambiguated. Over-generation is close to free
+> where you do not need disambiguation, and ruinous where you do.**
+
+The monotonicity result stands; the *scope* of "repair" does not. Read the rule
+as **monotone queries repair independent noise**, and check the correlation
+structure of the workload before relying on it.
+
+### A slip worth recording
+
+My first attempt at this falsifier **tested the wrong query**. I partitioned work
+pairs by shared affiliation *string* and measured `common_institutions(w1,w2)` —
+intersecting two works' institution sets — when the 95.1% came from
+`works_at_both(A,B)`, which intersects two institutions' *work* sets. Two
+different intersections carrying the same word. It returned 43.7% against 33.8%,
+a null, and I nearly recorded it as one. The partition that matters is registry
+**confusability of the institution pair**, and it gives 8.1%.
+
 ## What would refute it
 
 - **`common_institutions` has n = 26.** Random work pairs almost never share an
@@ -107,11 +154,11 @@ substrate rather than as two observations.
   and the interior was not searched.
 - **One corpus, one extractor family, and the anchor is agreement with
   OpenAlex**, not truth.
-- **The filtering claim assumes error independence between two sets.** It held
-  here at 95.1%; a corpus where the same wording recurs across the works being
-  intersected would correlate the errors and the filter would fail. That is a
-  cheap experiment — intersect works that *share* an affiliation string — and it
-  is the sharpest thing anyone could do to this finding.
+- ~~The filtering claim assumes error independence.~~ **Run — see the correction
+  above. It does, and the filter fails at 8.1%.**
+- **The unrelated-pair row is uninformative**: only 9 of 800 pairs have a
+  non-empty true answer, because two randomly chosen institutions almost never
+  co-occur. It is reported to show that, not as evidence.
 
 ## Reproduce
 
