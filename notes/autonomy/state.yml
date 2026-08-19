@@ -40,6 +40,35 @@ measured:
     because the atom rule that keeps a pronoun with its antecedent -- required
     for the document to stay true -- preserves the demand binding; a property of
     the task, not a leak.
+  - THE DETECTABLE ERROR IS THE HARMLESS ONE, and scheduling's distractors were
+    defanged exactly as flood's disused track was. The withdrawn machine and
+    cancelled job carry no capability and no quantity, and "no machine is set up
+    for anodising" names a capability OUTSIDE the vocabulary. Point one at a real
+    entity with an in-vocabulary word and the reader must admit it.
+    200 cases, default regime (6x3, slack 0.15):
+      default distractors (published)   acc 1.000   0 wrong        arity 0.000
+      hard MACHINE (has_capability)         0.790   42 false-FEAS  arity 0.000
+      hard JOB (needs_capability)           0.965   2 FF / 5 FI    arity 1.000
+      hard both                             0.780   42 FF / 2 FI   arity 1.000
+    Asymmetry established BEFORE the run: each job needs exactly ONE capability,
+    a machine holds one to three, so only the job side violates arity. What was
+    not predicted is which side hurts -- the damaging error is INVISIBLE (0.210,
+    every failure UNSOUND, arity 0.000) and the visible one is HARMLESS (0.035,
+    arity 1.000). I predicted the job side would cost 0.25-0.50; over-called 6x,
+    because machines hold several capabilities so some machine usually has both.
+    SECOND THING THE AUDIT CANNOT PREDICT: scheduling is the 0.000-ambiguity-mass
+    domain and one sentence takes it 1.000 -> 0.790 while the audit calls the
+    surface clean. It measures ambiguity of the SIGNATURE, not fragility of the
+    VOCABULARY -- "machine_0 was set up to paint" carries the (machine,
+    capability) signature unambiguously and is FALSE.
+    GENERAL: DETECTABILITY COMES FROM REDUNDANCY, REDUNDANCY IS A PROPERTY OF THE
+    ROLE'S ARITY, AND ARITY HAS NOTHING TO DO WITH HOW MUCH DAMAGE AN ERROR THERE
+    DOES. Wrong way round in both domains today (flood's undetectable direction
+    costs 0.655, its most detectable one 0.865). A system built to catch its own
+    reading errors catches the ones it could most afford to make. Closing it needs
+    a SECOND READING OF A MULTI-VALUED FACT, which nothing here has.
+    hard_distractors defaults False so published numbers keep meaning; the
+    published scheduling 1.000 is now a statement about the EASY surface.
   - THE ONLY SIGNAL THAT SEES A MISFIRE WAS BEING THROWN AWAY, and asking
     "what else knows this?" answered three times without one new word.
     A misfire is invisible to everything built here: it reads as `forced` so
@@ -953,6 +982,10 @@ beliefs:
     Dependency-weighted recall is likely a better target than global recall.
   - Ambiguity should be emitted, not collapsed. Kernels can branch or bound.
 unknowns:
+  - A SECOND READING OF A MULTI-VALUED FACT. Every detector built today keys on
+    redundancy that comes from ARITY, so multi-valued claims (flood's flooded,
+    scheduling's has_capability) are undetectable -- and in both domains that is
+    where the damage is. Nothing in this repo reads a multi-valued fact twice.
   - What the template reader does under paraphrase. corrupt() perturbs the
     recovered world; nothing perturbs the TEXT. This is the front's true zero.
   - Whether the F = trivial-answer-share decomposition transfers to another
