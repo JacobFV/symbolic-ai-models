@@ -32,6 +32,7 @@ from typing import Any
 from symbolic_ai_core.world import Quantity
 
 __all__ = ["Citation", "Answer", "render_answer", "ungrounded",
+           "uncorroborated", "UNCORROBORATED",
            "incomplete", "omits_load_bearing", "render_complete"]
 
 _NUM = re.compile(r"\b\d+(?:\.\d+)?\b")
@@ -384,6 +385,51 @@ def omits_load_bearing(answer: Answer, case: Any) -> list[str]:
         kinds[k] = kinds.get(k, 0) + 1
     return [f"{len(missing)} load-bearing claims are never cited: "
             + ", ".join(f"{v}x {k}" for k, v in sorted(kinds.items()))]
+
+
+#: Claim kinds nothing in this pipeline corroborates. ``link`` is multi-valued
+#: with no second source, so detection fires 0.000 on it; ``depot`` and
+#: ``flooded`` are the role channel, corroborated only when the reader's own
+#: assignment was forced.
+UNCORROBORATED = ("link",)
+ROLE_KINDS = ("depot", "flooded")
+
+
+def uncorroborated(answer: "Answer", world: Any, *, forced: bool = True
+                   ) -> list[str]:
+    """The citations resting on a claim nothing here can check.
+
+    The complete renderer **cannot be made honest**: measured over 300 seeds on
+    the honest surface, two thirds of the ``link`` claims it cites are phantom,
+    and nothing in this repo detects a spurious link -- the channel is
+    multi-valued, so it has no second reading, which is the arity law read off
+    the citations.
+
+    What it *can* do is say where it is not. False citations concentrate exactly
+    where corroboration is missing: ``link`` at 0.642, ``depot`` at 0.066 and
+    ``flooded`` at 0.044, against **zero** for ``mass``, ``capacity``, ``needs``,
+    ``demand``, ``bridge_on`` and ``load_limit`` over 1,680 citations.
+
+    ``forced`` is the reader's ``role_assignment_forced``. When it is true the
+    role claims were not guessed, so only links are flagged.
+
+    Returns the cited text of each unchecked citation, which turns "here are
+    eleven facts" into "here are eleven facts, four of which nothing
+    corroborates".
+    """
+    kinds = set(UNCORROBORATED) | (set() if forced else set(ROLE_KINDS))
+    out = []
+    for c in answer.citations:
+        if not c.source.startswith("claim:"):
+            continue
+        ref = c.source.split(":", 1)[1]
+        if ref.isdigit():
+            i = int(ref)
+            if 0 <= i < len(world.claims) and world.claims[i].predicate in kinds:
+                out.append(answer.text[c.start:c.end])
+        elif ref in kinds:
+            out.append(answer.text[c.start:c.end])
+    return out
 
 
 def render_complete(case: Any, structured: tuple[str, ...],

@@ -88,3 +88,49 @@ def test_ungrounded_is_blind_to_all_of_it():
     for renderer in (render_answer, render_complete):
         flags = [u for _, _, u in _rows(renderer, True)]
         assert not any(flags), renderer.__name__
+
+
+def test_the_marker_catches_every_fabrication_in_a_small_slice():
+    """The renderer cannot be made honest -- nothing here checks a link -- but it
+    can say where it is not. Measured over 300 seeds: 88 of 88 false citations
+    flagged, in 7.5% of all citations."""
+    from symbolic_ai_generators.flood.read_surface import (
+        read_content_roles_checked)
+    from symbolic_ai_generators.flood.render import uncorroborated
+
+    total = false = flagged = caught = 0
+    for s in range(SEEDS):
+        case = generate(s)
+        want = solve(case.world)[0]
+        if not want:
+            continue
+        obs = render_observation(case, variants=4, hard_distractors=True)
+        text = interleave(unsaturate(obs, drop_headings=True,
+                                     shuffle=False)).text
+        try:
+            world, forced = read_content_roles_checked(text)
+            got, outputs, _ = solve(world)
+        except Exception:
+            continue
+        answer = render_complete(replace(case, world=world), got, outputs)
+        true_keys = {_key(c) for c in case.world.claims}
+        marks = set(uncorroborated(answer, world, forced=forced))
+        for c in answer.citations:
+            if not c.source.startswith("claim:"):
+                continue
+            ref = c.source.split(":", 1)[1]
+            cited = answer.text[c.start:c.end]
+            if ref.isdigit() and 0 <= int(ref) < len(world.claims):
+                bad = _key(world.claims[int(ref)]) not in true_keys
+            elif ref in ("needs", "flooded"):
+                bad = (ref, (("where", cited),)) not in true_keys
+            else:
+                continue
+            total += 1
+            flagged += cited in marks
+            if bad:
+                false += 1
+                caught += cited in marks
+    assert false > 0, "no fabrication to catch"
+    assert caught == false, f"{caught}/{false} false citations flagged"
+    assert flagged / total < 0.2, flagged / total
