@@ -318,7 +318,7 @@ not, fix it or say plainly that it is broken — but the default is merge.
 passing it again makes `-qq` and pytest prints **no summary line at all** — you
 get an exit code and no test count. The exit code is a real signal (non-zero on
 any failure, 5 if nothing was collected), but it cannot tell a green suite from
-a silently shrinking one. Report the count: it is **3,786** as of 2026-08-19 (10 skipped). That number goes stale every time a test is added — if yours disagrees, check that it disagrees *upward* and update this line, because a count that fell is the signal this sentence exists to give you.
+a silently shrinking one. Report the count: it is **3,792** as of 2026-08-19 (10 skipped). That number goes stale every time a test is added — if yours disagrees, check that it disagrees *upward* and update this line, because a count that fell is the signal this sentence exists to give you.
 
 Two traps this repo has already hit:
 
