@@ -14,6 +14,24 @@ bottleneck: >
   world is still RECEIVED from a generator rather than READ.
 
 measured:
+  - ROUTING (directive 13) ANSWERED, NEGATIVELY, WITH NUMBERS. The escalation
+    rule p*L > c1-c0 prices the cheap arm as a SUBSTITUTE; in both domains it
+    is a COMPLEMENT and c1 depends on whether c0 ran. Flood: dropping datalog
+    made the flow 1.78x MORE EXPENSIVE and less accurate, threshold NEGATIVE
+    (-3.30e-08 USD). The two genuinely cheaper arms need a wrong answer to cost
+    under 9.37e-09 / 2.63e-09 USD to be worth taking; per-case spread p50 1.08x,
+    max 2.14x. Scheduling: the sound one-sided capacity gate removes 87.7% of
+    solver time on 50.0% of instances -- 1.75x its fire rate, zero accuracy
+    cost. Heuristic: run every sound cheap check, always; never route around
+    one. A learned router has nothing to choose between yet.
+  - THE ORACLE, NOT THE KERNEL, CAPS THE SCHEDULING DOMAIN. generate() ran an
+    exhaustive itertools.product over n_machines**n_jobs -- 53.1s on one 18-job
+    instance against milliseconds for the ASP kernel on the same world. Replaced
+    with a pruned EXACT search (same verdicts, 2,721,429x faster); the brute
+    force is kept as an executable specification and tests bind the two. Domain
+    now reaches 80 jobs / 6 machines at 0.5ms/case. STILL THE BINDING
+    CONSTRAINT at 40 jobs/5 machines and at slack exactly 0, where the capacity
+    bound goes tight and the problem becomes exact partition.
   - MILESTONE (V=4, non-empty), CORRECTED: oracle world 1.000 task acc at
     $1.97e-08/correct; signature reader ALSO 1.000 at $2.03e-08 -- a 3% cost
     premium and ZERO reader loss. rules/lexical/template all 0.000. Kernel
@@ -115,6 +133,30 @@ measured:
     32, so lifts across different n_eval are not comparable
 
 theory:
+  - name: cheap_kernel_is_a_complement
+    status: empirical_two_domains
+    formula: "aim = (share of expensive cost removed) / (share of instances removed)"
+    consequence: >
+      The escalation model c_total = c0 + p*L*(escalate?) assumes the cheap arm
+      SUBSTITUTES for the expensive one. Measured, it complements it: c1 is a
+      function of whether c0 ran. Flood aim is undefined because removing the
+      cheap kernel RAISES total cost (1.78x); scheduling aim = 1.75 with a
+      sound gate. A cheap sound check earns its place when it performs an
+      inference the expensive kernel cannot express LOCALLY, and its value
+      concentrates where that kernel's local propagation is weakest -- not in
+      proportion to its fire rate.
+    mechanism: >
+      Scheduling cost peaks at BARELY infeasible (slack -0.03, 62.9% of all
+      solver time), not at deep infeasibility (0.2%) nor on the feasible side.
+      There no single machine's #sum is violated by any partial assignment: the
+      contradiction exists only in the sum ACROSS machines, and clingo's
+      propagators are per-constraint. The gate computes that cross-machine sum
+      in O(n).
+    predicts: >
+      A sound cheap check is worth most where the expensive kernel's
+      constraints are LOCAL and the contradiction is GLOBAL. Testable on any
+      new kernel by asking which scope the cheap check's inference spans.
+    evidence: runs/routing_traces.json, runs/where_the_gate_fires.json
   - name: mixed_evidence_corruption
     status: derived_model_unfitted
     formula: "P(True|p) = prod_j [1 - (1-p)^2 (1-(1-p)^2)^m_j]"
@@ -268,11 +310,17 @@ next_actions:
   - A THIRD ANSWER TYPE (a number, a ranking) would test whether "one shared
     check per answer type" is a real decomposition or an artefact of having
     only boolean and set.
-  - Routing (directive 13) is now the last untouched directive item, and its
-    precondition is met: three domains with kernel ablations give execution
-    traces where valid strategies genuinely differ. Collect cost/latency/
-    success/confidence per path before learning anything -- explicit
-    heuristics until the traces exist.
+  - Routing is ANSWERED and the answer is negative -- see measured. What would
+    reopen it: an UNSOUND cheap arm whose error rate is predictable from
+    pre-run world features, or a cost spread beyond the 2.14x max measured.
+    Neither exists in these three domains today, so building a router now would
+    be optimising a choice that does not exist.
+  - The oracle is still the scaling wall on scheduling. Reaching 40 jobs /
+    5 machines needs either a bound that survives near-exact fit (the capacity
+    bound goes dead there and memoisation bought nothing -- real-valued
+    durations mean states never repeat) or ground truth from a source other
+    than exhaustive-with-pruning. This gates any experiment wanting the
+    phase transition at scale.
   - Grounding now has three levels -- token, route adjacency, and CONTRADICTION
     against the structured answer -- and the renderer passes all three 40/40.
     The remaining hole is a real quantity attached to the wrong entity when no
