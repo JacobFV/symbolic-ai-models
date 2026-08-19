@@ -40,6 +40,22 @@ measured:
     because the atom rule that keeps a pronoun with its antecedent -- required
     for the document to stay true -- preserves the demand binding; a property of
     the task, not a leak.
+  - A CHECK THAT READS PART OF THE WORLD INHERITS THAT PART'S ERRORS. Tried
+    replacing the role flag with ENUMERATION -- emit the candidate assignments,
+    refuse only when they disagree. It recovers coverage (48% of unforced
+    assignments are inert; 0.885 -> 0.940 alone, 0.476 -> 0.516 paired, at 1.19
+    solves/case) and BREAKS the pair's soundness: 0 wrong -> 1 wrong.
+    Seed 83: needs read correctly, the TRUE assignment IS among the candidates,
+    all agree on a wrong answer because the error is the PHANTOM LINK they all
+    share -- and certifies_insensitive returned True because it was computed on
+    the collapsed world with the wrong depot. IT READS THE ROLES TO BUILD ITS
+    GRAPH, so with a wrong depot it answers about the wrong graph.
+    So the two detectors are NOT independent, correcting last cycle's "roughly
+    the product, so close to independent": the numbers multiply, the logic does
+    not. THE ROLE FLAG IS THE CERTIFICATE'S PRECONDITION.
+    Same shape as the grounding scope result -- third time this pipeline has
+    produced it. Enumeration measured and REJECTED; the version worth building
+    if coverage matters is a certificate that does NOT consume the roles.
   - TWO DETECTORS, NEITHER SOUND ALONE, SOUND TOGETHER. At 400 seeds on the
     hard-distractor interleaved surface (252 non-empty): answer everything 81
     wrong (0.679); role flag only 75 wrong (0.664) at 88.5% coverage;

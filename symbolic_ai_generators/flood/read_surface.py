@@ -33,13 +33,14 @@ them only by finding every crossing and reproducing that ordering.
 from __future__ import annotations
 
 import re
+from dataclasses import replace
 
 from symbolic_ai_core.world import (Claim, Entity, EntityRef, Facet, Quantity,
                                     WorldSnapshot)
 
 __all__ = ["read_surface", "read_lexical", "read_signature",
            "read_signature_roles", "read_content_roles",
-           "read_content_roles_checked",
+           "read_content_roles_checked", "read_content_roles_worlds",
            "VALUE_REGISTRY", "ROLE_ANCHORS"]
 
 #: A value vocabulary per claim kind -- **external knowledge**, and ablatable.
@@ -684,6 +685,68 @@ def read_content_roles(text: str, *, anchors: dict | None = None
                        ) -> WorldSnapshot:
     """The reading alone. See `read_content_roles_checked` for the whole story."""
     return read_content_roles_checked(text, anchors=anchors)[0]
+
+
+def read_content_roles_worlds(text: str, *, anchors: dict | None = None,
+                              cap: int = 8) -> list:
+    """Every world the reading leaves open, rather than one guess.
+
+    `read_content_roles_checked` reports *whether* the lone-region assignment was
+    forced. When it was not, refusing is **ten times more conservative than the
+    failure** -- 29 refusals to remove 3 errors, measured over 252 cases -- because
+    an unforced assignment is usually still inert: which of two regions is called
+    the depot often does not change which vehicles can deliver.
+
+    So this emits the alternatives instead. A caller that solves each and finds
+    them in agreement can answer safely; one that finds them disagreeing has
+    learned the ambiguity is load-bearing, which is the only case worth refusing.
+
+    The candidate count is small because the unresolved set is what the reader
+    genuinely could not settle -- typically two regions, so two worlds. That is
+    what makes this cheap where the earlier unbounded role permutation was
+    vacuous: it enumerates what is open, not what is conceivable.
+
+    Returns ``[world]`` when the assignment was forced.
+
+    **Measured, and it does not replace the flag.** Enumerating recovers coverage
+    -- 48% of unforced assignments turn out inert, taking coverage 0.885 -> 0.940
+    alone and 0.476 -> 0.516 paired with the certificate -- but the pair then
+    admits a wrong answer. The reason is structural: `certifies_insensitive`
+    **reads the roles to build its graph**, so on a world whose depot is wrong it
+    certifies insensitivity of the wrong question. The role flag's
+    over-conservatism is what guarantees the certificate is asked about the right
+    graph, which makes it a **precondition** rather than an independent check.
+    """
+    import itertools
+
+    base, forced = read_content_roles_checked(text, anchors=anchors)
+    if forced:
+        return [base]
+
+    lone = [c.roles["where"].id for c in base.claims
+            if c.predicate in ("depot", "flooded", "needs")]
+    if len(lone) < 2:
+        return [base]
+
+    keep = tuple(c for c in base.claims
+                 if c.predicate not in ("depot", "flooded", "needs"))
+    needs = next((c.roles["where"].id for c in base.claims
+                  if c.predicate == "needs"), None)
+    # `needs` is pinned by adjacency in practice; the open question is which of
+    # the rest is the depot. Enumerate exactly that.
+    candidates = [r for r in lone if r != needs]
+    if len(candidates) > cap:
+        return [base]
+
+    out = []
+    for depot in candidates:
+        made = [Claim("depot", {"where": EntityRef(depot)})]
+        if needs:
+            made.append(Claim("needs", {"where": EntityRef(needs)}))
+        made += [Claim("flooded", {"where": EntityRef(r)})
+                 for r in candidates if r != depot]
+        out.append(replace(base, claims=keep + tuple(made)))
+    return out or [base]
 
 
 def read_content_roles_checked(text: str, *, anchors: dict | None = None
