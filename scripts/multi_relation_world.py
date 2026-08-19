@@ -195,9 +195,37 @@ def main() -> None:
     # when d < 1. A threshold decision hides most single-claim errors inside the
     # margin; a UNION enumerates, so every contributing claim shows. Measure d
     # rather than assume it.
-    infl = {"parent": [], "country": []}
-    for c in [s["country"] for s in scored[:6]]:
-        gold = groups_in(c, "gold")
+    # THREE QUERY SHAPES OVER ONE WORLD. Same claims, same reader; only the
+    # aggregation changes, so any movement in d is the query's and not the
+    # corpus's. That is the controlled version of "d belongs to the query".
+    def counts_in(country: str) -> dict:
+        out: dict[str, int] = {}
+        for x in read:
+            if x["country"] and norm(x["country"]) == norm(country) and x["parent"]:
+                k = norm(x["parent"])
+                out[k] = out.get(k, 0) + 1
+        return out
+
+    def union_q(country: str):
+        return frozenset(groups_in(country, "read"))
+
+    def argmax_q(country: str):
+        c = counts_in(country)
+        if not c:
+            return None
+        top = max(c.values())
+        return frozenset(k for k, v in c.items() if v == top)
+
+    def exists_q(country: str, group: str):
+        return group in groups_in(country, "read")
+
+    shapes = {"union": lambda c, g: union_q(c),
+              "argmax": lambda c, g: argmax_q(c),
+              "existence": lambda c, g: exists_q(c, g)}
+    infl = {k: {"parent": [], "country": []} for k in shapes}
+    for srow in scored[:6]:
+        c = srow["country"]
+        probe = next(iter(sorted(groups_in(c, "gold"))), "")
         for x in read:
             if not (x["country"] and norm(x["country"]) == norm(c)):
                 continue
@@ -205,22 +233,26 @@ def main() -> None:
                 if not x[rel]:
                     continue
                 saved = x[rel]
-                x[rel] = None
-                changed = groups_in(c, "read") != groups_in(c, "read")
-                x[rel] = saved
-                # recompute properly: drop the claim, compare the answer set
-                x[rel] = None
-                after = groups_in(c, "read")
-                x[rel] = saved
-                before = groups_in(c, "read")
-                infl[rel].append(after != before)
-    print("\nINFLUENCE ON THE UNION QUERY -- share of read claims whose removal")
-    print("changes the answer set (this is d, and the law says weighting buys")
-    print("separation only when d < 1):")
-    for rel, v in infl.items():
-        if v:
-            print(f"   {rel:<10} {len(v):>5} claims   d = {statistics.mean(v):.3f}")
-    out_infl = {k: (statistics.mean(v) if v else None) for k, v in infl.items()}
+                for shape, fn in shapes.items():
+                    before = fn(c, probe)
+                    x[rel] = None
+                    after = fn(c, probe)
+                    x[rel] = saved
+                    infl[shape][rel].append(after != before)
+
+    print("\nd BY QUERY SHAPE -- one world, one reader, one set of claims;")
+    print("only the aggregation changes, so any movement is the QUERY's:")
+    print(f"   {'shape':<12} {'parent d':>10} {'country d':>11} {'claims':>8}")
+    print("   " + "-" * 43)
+    out_infl = {}
+    for shape in ("union", "argmax", "existence"):
+        pv, cv = infl[shape]["parent"], infl[shape]["country"]
+        out_infl[shape] = {"parent": statistics.mean(pv) if pv else None,
+                           "country": statistics.mean(cv) if cv else None,
+                           "n": len(pv) + len(cv)}
+        print(f"   {shape:<12} {statistics.mean(pv):>10.3f} "
+              f"{statistics.mean(cv):>11.3f} {len(pv) + len(cv):>8}")
+    print("\n   flood, a selection over a redundant graph, sits at d = 0.236.")
 
     out = {"n": len(rows), "per_relation": stats, "queries": scored,
            "macro": macro, "union_influence": out_infl}

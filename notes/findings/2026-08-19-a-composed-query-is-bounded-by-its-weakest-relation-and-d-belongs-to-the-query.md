@@ -67,17 +67,43 @@ Against flood's **0.236**. So:
 | sum against a threshold (solvency revenue) | ≈ 1 | nothing |
 
 **A selection query hides most single-claim errors; an enumeration query shows
-nearly all of them.** That extends the law with its controlling variable, and it
-has a blunt practical corollary: **for enumeration queries, plain extraction
+nearly all of them.**
+
+### The controlled version, because the cross-corpus comparison proves nothing
+
+Flood at 0.236 against this corpus at 0.57–0.87 could be two worlds rather than
+two query shapes. So: **three queries over one world, one reader, one set of
+claims** — only the aggregation changes.
+
+| shape | `parent` d | `country` d |
+|---|---:|---:|
+| **union** — every group in X | **0.866** | **0.574** |
+| **argmax** — the largest group in X | 0.493 | 0.327 |
+| **existence** — does group G appear in X | **0.015** | **0.010** |
+
+**`d` spans 0.010 to 0.866 — a factor of sixty — on identical claims.** Nothing
+about the corpus, the reader or the world moved. `d` is the query's.
+
+(Predicted union 0.87 → argmax 0.15–0.35 → existence < 0.10. The monotonicity and
+the endpoints hold; argmax came in higher than predicted at 0.49.)
+
+> **The value of task-weighted reading is ≈ 1/d, and `d` is set by the query's
+> aggregation shape — knowable before a word is read.** At `d ≈ 0.01` an existence
+> query makes 99% of reading effort irrelevant to its answer; at `d ≈ 0.7` a union
+> query makes plain extraction accuracy nearly the right objective already.
+
+That is the blunt practical corollary: **for enumeration queries, plain extraction
 accuracy *is* the right objective.** Task-weighted reconstruction is not
 universally the better target — it is better exactly where the query is
 insensitive, which is what `d` measures.
 
 ## What would refute this
 
-- One join, one direction. A query with a selective filter (*groups controlling
-  companies founded after 2010 in X*) should push `d` back down, and that is the
-  cheap test of the claim that `d` tracks the query rather than the corpus.
+- The three shapes share a corpus and a reader, which is what makes them a
+  control — but they also share a *relation pair*. A join over relations with
+  different redundancy might move `d` for reasons that are not the aggregation.
+- `existence` is measured against one probe group per country, the largest in the
+  gold set. A rare group would raise its `d`, since fewer claims support it.
 - The headquarters reader is weak enough (0.401 answered) that it contributes
   little; the composed query uses only two of the three relations.
 - Ground truth is Wikidata's, which is incomplete for `P749` in ways the gold set

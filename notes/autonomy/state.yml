@@ -1526,13 +1526,17 @@ theory:
       d -> 1 collapses critical mass onto the ordinary metrics and weighting buys
       nothing (solvency revenue: every filing moves the sum). d -> 0 makes every
       claim inert. Weighting separates exactly on 0 < d < 1.
-      AND d BELONGS TO THE QUERY, NOT THE DOMAIN -- measured on the real-text
-      composed query, a UNION over a join gives d = 0.866 for parent and 0.574
-      for country against flood's 0.236. A SELECTION query hides most
-      single-claim errors; an ENUMERATION query shows nearly all of them. Blunt
-      corollary: for enumeration queries plain extraction accuracy IS the right
-      objective, and task-weighted reconstruction is better exactly where the
-      query is insensitive.
+      AND d BELONGS TO THE QUERY, NOT THE DOMAIN -- established by a CONTROLLED
+      experiment, three queries over ONE world with one reader and one set of
+      claims, only the aggregation changing:
+        union (every group in X)        parent d 0.866   country d 0.574
+        argmax (largest group in X)              0.493            0.327
+        existence (is G in X at all)             0.015            0.010
+      d SPANS A FACTOR OF SIXTY ON IDENTICAL CLAIMS. Flood, a selection over a
+      redundant graph, sits at 0.236. THE VALUE OF TASK-WEIGHTED READING IS ~1/d,
+      AND d IS SET BY THE QUERY'S AGGREGATION SHAPE -- knowable before a word is
+      read. At d ~ 0.01 an existence query makes 99% of reading effort irrelevant;
+      at d ~ 0.7 plain extraction accuracy is already nearly the right objective.
     unifies: >
       The certificate is a proof that critical mass is zero WITHOUT knowing W.
       render.uncorroborated works because the complete renderer cites the
