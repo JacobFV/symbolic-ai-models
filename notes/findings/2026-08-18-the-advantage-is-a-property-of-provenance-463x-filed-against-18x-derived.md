@@ -178,6 +178,31 @@ uncertain; the bridge is certain and partial. A federated substrate needs both
 plus a policy, and that policy's `f` is the **product** of the two failure rates,
 not the smaller of them.
 
+## "Cross-source" is not one number either
+
+The ladder above reports **cross-source filed → 7×**, taken from the SEC-filer→GLEIF
+**name** join at `f = 14.7%`. But the ISIN bridge is *also* a cross-source filed
+join, and its `f` depends entirely on how the workload weights the things being
+joined:
+
+| join | weighting | `f` | advantage |
+|---|---|---:|---:|
+| SEC filer → GLEIF, by **name** | per filer | 14.7% | **6.8×** |
+| 13F security → GLEIF, by **ISIN** | per distinct security | 77.7% | 1.3× |
+| 13F security → GLEIF, by ISIN | per position held | 41.2% | 2.4× |
+| 13F security → GLEIF, by ISIN | per dollar, **aggregate** | 20.9% | **4.8×** |
+| 13F security → GLEIF, by ISIN | per dollar, **median filer** | 42.0% | 2.4× |
+
+**The same regime spans 1.3× to 6.8×** — a factor of five — from nothing but the
+choice of join and denominator. And the aggregate-dollar row describes the whole
+market (a handful of giant filers holding large caps); **a typical filer sits at
+2.4×, not 4.8×**, which is the fourth appearance of that denominator trap in one
+session.
+
+> This is *match the question to the data's shape* made quantitative. Same data,
+> same join, three weightings, three answers. **A regime label is not an
+> advantage; a question is.**
+
 ## Two caveats that belong next to the number
 
 - **Quality 1.0 in the filed regime is relative to the filing.** The task's

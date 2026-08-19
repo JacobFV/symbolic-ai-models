@@ -33,6 +33,12 @@ crosses** (§3j):
 is exactly where a federated substrate has to operate. Quoting any of these
 without naming the regime is the error, and this file did it for months.
 
+**And "cross-source" is not one number either.** The same regime spans **1.3× to
+6.8×** on the choice of join and denominator alone — the ISIN bridge gives `f` =
+77.7% per distinct security, 41.2% per position, 20.9% per aggregate dollar and
+**42.0% for the median filer**. *A regime label is not an advantage; a question
+is* (§3j).
+
 **The capability question is where the live work is.** The first federated query
 runs — three filed sources, two identifier joins, ~260 µs per portfolio — and its
 answer is necessarily an **interval** (§3k). The arc there ends somewhere useful:
