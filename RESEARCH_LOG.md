@@ -370,6 +370,36 @@ almost nothing: report fabrication against coverage or not at all. The condition
 to carry is that values which **gate** qualification silence, and values which
 **feed** the computation fabricate — and there the marker would miss them.
 
+### And an explanation's error rate is not bounded by the answer's
+
+Flood's values **gate** — a mis-slotted mass disqualifies a vehicle, so nothing is
+cited and the explanation stays honest. Solvency's **feed**: revenue figures are
+summed and the renderer states the consolidated total as its central sentence.
+200 seeds, rendered from the read reading:
+
+| surface | verdict wrong | **stated total wrong** | mean \|error\| | `ungrounded` |
+|---|---:|---:|---:|---:|
+| clean | 0.000 | 0.000 | 0.000 | 0.000 |
+| **hard filing** | **0.485** | **1.000** | **0.398** | **0.000** |
+| hard both | 0.550 | **1.000** | **0.999** | **0.000** |
+
+**The stated total is wrong on every case while the verdict is wrong on 0.485**,
+because a wrong sum only flips a threshold test when it crosses the threshold. So
+**more than half of all cases carry the right verdict justified by a false
+number** — flood's version was 1 in 13, solvency's is 1 in 2, and the falsehood is
+the sentence the answer is *about*.
+
+Nothing here flags it. `ungrounded` fires 0.000 and is right not to: the spurious
+figure **is** in the world as read. And the uncorroborated marker cannot either —
+solvency's revenue channel is the one cell above admitting **neither** a second
+reading nor insensitivity.
+
+> **An explanation's error rate is not bounded by the answer's.** A derived figure
+> is wrong whenever *any* of its inputs is; the answer is wrong only when the
+> error crosses a decision boundary. The gap grows with how much aggregation sits
+> between the claims and the verdict, so **inspectability is a free property of a
+> symbolic pipeline only when the kernel uses claims directly.**
+
 ### What each channel admits, and what it costs
 
 Two responses to a claim the reader may have got wrong, and they are gated by

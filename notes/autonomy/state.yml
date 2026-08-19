@@ -40,6 +40,29 @@ measured:
     because the atom rule that keeps a pronoun with its antecedent -- required
     for the document to stay true -- preserves the demand binding; a property of
     the task, not a leak.
+  - THE EXPLANATION IS WRONG MORE OFTEN THAN THE ANSWER. The conditional tested
+    where it bites. Solvency's values FEED (summed) where flood's GATE, and its
+    renderer states the consolidated total as its central sentence. 200 seeds,
+    rendered from the READ reading:
+      surface       verdict wrong  stated total wrong  mean |err|  ungrounded
+      clean                 0.000               0.000       0.000       0.000
+      hard filing           0.485               1.000       0.398       0.000
+      hard both             0.550               1.000       0.999       0.000
+    THE STATED TOTAL IS WRONG ON EVERY CASE while the verdict is wrong on 0.485,
+    because a wrong sum only flips a threshold test when it crosses the
+    threshold. MORE THAN HALF OF ALL CASES CARRY THE RIGHT VERDICT JUSTIFIED BY A
+    FALSE NUMBER -- flood's version was 1 in 13, solvency's is 1 in 2, and the
+    falsehood is the sentence the answer is ABOUT.
+    NOTHING CAN FLAG IT. ungrounded fires 0.000 and is right not to: the spurious
+    figure IS in the world as read. render.uncorroborated cannot either --
+    solvency revenue is the one cell admitting NEITHER a second reading
+    (multi-valued) NOR insensitivity (a sum). This is what that cell costs when
+    someone reads the explanation.
+    GENERAL: AN EXPLANATION'S ERROR RATE IS NOT BOUNDED BY THE ANSWER'S. A
+    derived figure is wrong whenever ANY input is; the answer is wrong only when
+    the error crosses a decision boundary. The gap GROWS with how much
+    aggregation sits between the claims and the verdict. Inspectability is free
+    only when the kernel uses claims DIRECTLY.
   - A VALUE ERROR SILENCES RATHER THAN FABRICATES, and the registry is worth
     EVERYTHING. Tested the limit I stated on my own marker by overlapping flood's
     VALUE_REGISTRY, whose docstring already called its sets "unusually clean".
