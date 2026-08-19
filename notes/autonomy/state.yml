@@ -268,7 +268,62 @@ last_cycle:
     repo now say the cheap half of a problem is the useful half.
 
 next:
-  preferred_action: make-the-delta-a-by-product-of-the-update-not-a-pass
+  preferred_action: the-delta-type-now-has-two-motivations-find-it-a-producer
+  why_now: >
+    Soundness is priced and the answer is better than the first framing implied.
+    The XOR bound reaches aim 16.1x; a |delta count| bound, equally SOUND,
+    reaches 57.5x of an available 131.6x. So of the 8.2x looseness, 3.6x was the
+    XOR over-counting a count and only 2.3x is what no sound bound removes
+    without computing the answer. And the tighter sound bound BEATS every
+    unsound arm up to alpha=8 (which serves 0.44% of answers wrong) while
+    serving nothing wrong. You do not trade soundness for aim; you stop using a
+    loose bound.
+
+    Both of this cycle's results now point at the same missing piece. |delta
+    count| is not deployable from two snapshots -- computing len(new[k]) IS the
+    recompute it was meant to avoid -- so it needs signed adds and removes from
+    an update stream. That is the Delta type parked earlier today for having no
+    producer. It now has TWO independent motivations: flattening the 36.4
+    queries-per-key crossover (worth 2.91x flat) and closing 3.6x of bound
+    looseness. The blocker is unchanged and it is a PRODUCER, not a design.
+  the_producer_question: >
+    SEC publishes 13F filings as individual documents; the repo holds them only
+    as quarterly aggregates. A per-filing loader would emit adds and removes per
+    key naturally and would give the Delta type a real producer. That is a data
+    plumbing task, not a research one, and it is the first time this session
+    that the highest-value next step is plumbing.
+  do_not: >
+    Do not read aim x without the rate column. Do not put a bound in a ledger of
+    systems. Do not quote "soundness costs 8.2x" -- it costs 2.3x and the rest
+    was engineering.
+  previous_preferred_action: close-the-8x-with-a-tighter-sound-bound-not-by-giving-up-soundness
+  why_now: >
+    Soundness is now priced: the sound derived margin reaches 16.1x of an
+    available 131.6x, so it costs 8.2x of aim on this workload. Giving it up
+    recovers 4.77x at 0.62% of answers served wrong -- which is undetectable
+    from inside the answer, so the repo's answer to that trade stays no.
+
+    But 8.2x is NOT the price of soundness in general. It is the price of ONE
+    sound bound: moved_elements uses the symmetric difference, and an add and a
+    remove cancel in a count while not cancelling in a XOR. A sound bound that
+    tracked signed movement -- adds minus removes, which an update stream gives
+    directly -- would be exactly tight for a count and would reach the oracle's
+    131.6x while staying sound. The 8.2x is the looseness of the bound, not the
+    cost of exactness, and I conflated the two in framing the question.
+  the_specific_increment: >
+    Counted currently pairs a value with a Lipschitz constant. For a count the
+    honest bound is |adds - removes| rather than |adds + removes|, which needs
+    the delta to arrive SIGNED. That is the same Delta type parked in
+    notes/decisions/2026-08-18-not-building-a-delta-type-..., and it now has a
+    second reason to exist worth 8.2x rather than the 2.91x-flattening the first
+    reason was worth. Two independent motivations may be enough to reverse that
+    decision -- but the blocker is unchanged: nothing in this repo emits an
+    update stream.
+  do_not: >
+    Do not read aim x without the rate column. Do not put a bound in a ledger of
+    systems -- the oracle row suppressed the very warning it should have
+    triggered.
+  previous_preferred_action: make-the-delta-a-by-product-of-the-update-not-a-pass
   why_now: >
     The derived margin is the first arm in the certificate programme to exceed
     1.0x on a real corpus update -- ceiling 2.91x against the read set's 1.05x --

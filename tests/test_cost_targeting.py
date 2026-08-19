@@ -157,3 +157,57 @@ class TestTheTable:
                                    price=Price())])
         assert "aim x" in out
         assert " -" in out
+
+
+class TestTheTargetingColumnsHaveTheirOwnPerverseRegime:
+    """`scripts/what_soundness_costs.py` measured a sound margin at 16.1x aim
+    and a relaxed, UNSOUND one at 76.8x while serving 0.62% of answers wrong.
+    aim x rises with unsoundness because the flagged share falls faster than the
+    quality does, so the column can be gamed and the table must say so."""
+
+    @staticmethod
+    def _row(name: str, flagged: float, rate: float, base: float = 0.9924):
+        from symbolic_ai_core.cost import Targeting
+        blind = base + flagged * (1.0 - base)
+        return ledger(
+            System(name=name, components=(cpu_component("r", 1e7,
+                                                        source="t"),)),
+            Capability(unit="answer", rate=rate, floor=base, n=5000,
+                       tokens_per_attempt=1.0, source="t"),
+            targeting=Targeting(escalated=flagged, rate_base=base,
+                                rate_targeted=rate, rate_blind=blind,
+                                escalated_usd_per_attempt=1e-12))
+
+    def test_aim_really_does_prefer_the_unsound_arm(self):
+        sound = self._row("sound", 0.0622, 1.0)
+        unsound = self._row("relaxed", 0.0024, 0.9938)
+        assert unsound.targeting_lift > sound.targeting_lift
+        assert unsound.rate < sound.rate
+
+    def test_the_table_names_the_pair_rather_than_letting_it_pass(self):
+        from symbolic_ai_core.cost import ledger_table
+        out = ledger_table([self._row("sound", 0.0622, 1.0),
+                            self._row("relaxed", 0.0024, 0.9938)])
+        assert "TARGETING REGIME" in out
+        assert "aiming better by answering worse" in out
+        assert "SAME rate" in out
+
+    def test_no_warning_when_the_aim_winner_is_also_the_most_accurate(self):
+        from symbolic_ai_core.cost import ledger_table, targeting_regime
+        rows = [self._row("oracle", 0.0076, 1.0),
+                self._row("margin", 0.0622, 1.0)]
+        assert targeting_regime(rows) is None
+        assert "TARGETING REGIME" not in ledger_table(rows)
+
+    def test_a_single_targeting_row_cannot_be_a_regime(self):
+        from symbolic_ai_core.cost import targeting_regime
+        assert targeting_regime([self._row("only", 0.0622, 1.0)]) is None
+
+    def test_rows_without_a_targeting_claim_are_ignored_by_the_check(self):
+        from symbolic_ai_core.cost import targeting_regime
+        plain = ledger(
+            System(name="plain", components=(cpu_component("r", 1e7,
+                                                           source="t"),)),
+            Capability(unit="answer", rate=1.0, floor=0.5, n=10,
+                       tokens_per_attempt=1.0, source="t"))
+        assert targeting_regime([plain, self._row("aimed", 0.0622, 1.0)]) is None

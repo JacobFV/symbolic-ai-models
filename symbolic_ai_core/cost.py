@@ -78,6 +78,7 @@ from typing import Any, Iterable, Literal, Sequence
 __all__ = [
     "Price", "Component", "System", "Capability", "Targeting", "Ledger",
     "cpu_component", "api_component", "capability_from_summary", "ledger",
+    "targeting_regime",
     "ledger_table", "cheapest_above", "perverse_regime",
 ]
 
@@ -603,6 +604,32 @@ def perverse_regime(rows: Iterable[Ledger]) -> tuple[Ledger, Ledger] | None:
     return (winner, better) if better.rate > winner.rate else None
 
 
+def targeting_regime(rows: Iterable[Ledger]) -> tuple[Ledger, Ledger] | None:
+    """The targeting columns' own perverse regime: aiming better by answering worse.
+
+    ``aim×`` is ``(rate_targeted - base) / (blind - base)``. Relaxing a
+    certificate until it is **unsound** cuts the denominator linearly in the
+    flagged share while the numerator loses only the answers that moved inside
+    the relaxed band -- so aim× *rises* with unsoundness. Measured on the 13F
+    update, a sound margin reaches **16.1×** and a relaxed one reaches **76.8×**
+    while serving 0.62% of answers wrong.
+
+    So aim× and ``$/pt`` compare policies **at a fixed quality** and must not be
+    read across rows whose ``rate`` differs -- the same rule this repo already
+    learned for cost ratios across extractors, rebuilt here in a new column.
+    This returns the offending pair so the table can say so rather than leaving
+    a reader to notice.
+    """
+    rows = [r for r in rows if r.targeting_lift is not None]
+    if len(rows) < 2:
+        return None
+    winner = max(rows, key=lambda r: r.targeting_lift or 0.0)
+    better = max(rows, key=lambda r: r.rate)
+    if better.rate > winner.rate:
+        return winner, better
+    return None
+
+
 def ledger_table(rows: Iterable[Ledger], *, min_rate: float | None = None) -> str:
     """Render ledger rows, sorted by the column that cannot be gamed -- and say
     so when that column is nevertheless preferring a worse system.
@@ -672,6 +699,17 @@ def ledger_table(rows: Iterable[Ledger], *, min_rate: float | None = None) -> st
             f"more than the lift it costs, so the ratio prefers the LESS "
             f"capable system. Do not read the top row as the answer -- ask for "
             f"the cheapest arm above an accuracy bar instead.")
+    aimed_pair = targeting_regime(rows)
+    if aimed_pair is not None:
+        w, b = aimed_pair
+        lines.append("")
+        lines.append(
+            f"  !! TARGETING REGIME: aim x ranks {w.system} (rate {w.rate:.4f}) "
+            f"above {b.system} (rate {b.rate:.4f}) -- aiming better by "
+            f"answering worse. Relaxing a certificate until it is UNSOUND "
+            f"raises aim x, because the flagged share falls faster than the "
+            f"quality does. Compare aim x only across rows at the SAME rate.")
+
     if min_rate is not None:
         pick = cheapest_above(rows, min_rate)
         lines.append("")

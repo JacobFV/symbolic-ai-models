@@ -1128,6 +1128,50 @@ update stream (§3b's own margin arm assumed this silently, via a precomputed
 `delta_size`) and each key must be read ~36 times. A one-pass analysis does not
 meet it; a service that re-serves answers meets it easily.
 
+## 3s. Soundness costs 2.3×, not 8.2× — the rest was a loose bound
+
+`notes/findings/2026-08-18-soundness-costs-2-3x-not-8-2x-...md`. Every
+certificate here is sound and that had never been priced. Over 5,000 securities
+where **0.76%** of answers actually moved, relaxing the derived margin by `alpha`
+— flag iff `delta >= alpha × slack`:
+
+| policy | flagged | wrong served | rate | **aim×** | sound |
+|---|---:|---:|---:|---:|:--:|
+| margin, α=1 (symmetric difference) | 6.22% | 0.000% | 1.0000 | 16.1× | ✅ |
+| margin, α=8 | 0.64% | 0.440% | 0.9956 | 65.8× | |
+| margin, α=16 | 0.24% | 0.620% | 0.9938 | **76.8×** | |
+| **`\|Δcount\|` bound** | **1.74%** | **0.000%** | **1.0000** | **57.5×** | ✅ |
+| **ORACLE** (a bound, not a system) | 0.76% | 0.000% | 1.0000 | **131.6×** | ✅ |
+
+`moved_elements` bounds movement by the **symmetric difference**, where an add
+and a remove cancel in a count and do not cancel in a XOR. Bounding by `|Δcount|`
+is **equally sound** and much tighter:
+
+> **Of the 8.2× looseness, 3.6× is the XOR over-counting a count and only 2.3× is
+> what no sound bound removes without computing the answer.** And the trade
+> reverses: **the tighter sound bound reaches 57.5×, beating every unsound arm up
+> to α=8 — which serves 0.44% wrong — while serving nothing wrong.** You do not
+> give up soundness to get the aim; you stop using a loose bound.
+
+**The instrument had a hole.** `aim×` still ranks the unsound α=16 arm above the
+sound α=1 arm by 4.77×. The accuracy column catches it ($7.31e-11 against
+$3.97e-10) and **nothing said the two columns disagreed**.
+`symbolic_ai_core/cost.py` now carries `targeting_regime()`, mirroring
+`perverse_regime()`, and prints *"aiming better by answering worse … compare
+aim× only across rows at the SAME rate."* **Third instance of one rule** — §3i's
+*"advantage at fixed quality"*, `perverse_regime`, now this.
+
+**A bound is not a system.** The oracle initially sat in the ledger and
+*suppressed* the warning, having both the best `aim×` and a perfect rate. It is
+printed as a bound now and excluded from the rows.
+
+**The catch:** `|Δcount|` is not deployable from two snapshots — computing
+`len(new[k])` *is* the recompute. It needs signed adds and removes from an update
+stream, i.e. the `Delta` type parked in
+`notes/decisions/2026-08-18-not-building-a-delta-type-...`. **That decision now
+has a second independent motivation worth 3.6×**, and the blocker is unchanged:
+nothing here emits an update stream.
+
 ## 4. Believed, not measured. Do not inherit as fact.
 
 Recorded deliberately, with mechanisms, so a later contradiction is a finding
