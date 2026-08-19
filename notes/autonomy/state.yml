@@ -40,6 +40,33 @@ measured:
     because the atom rule that keeps a pronoun with its antecedent -- required
     for the document to stay true -- preserves the demand binding; a property of
     the task, not a leak.
+  - INSENSITIVITY RESCUES THE ARM DETECTION CANNOT SEE -- AND GROWS CONFIDENT AS
+    IT FAILS. Today's declared floor was the UNCUED divested-filer distractor:
+    multi-valued role so detection is 0.000 by construction, no declared cue so
+    the gate is silent, 0.485 unmoved by everything built.
+    SHIPPED solvency/certificate.py certifies_membership_insensitive -- is the
+    verdict the same after removing ANY single member?
+      clean                                 acc 1.000  cov 0.550  a|c 1.000   0 wrong
+      hard owns UNCUED (published)              0.485      0.485      1.000   0 wrong
+      hard owns UNCUED (consolidated)           0.485      0.485      1.000   0 wrong
+      hard owns+filing UNCUED (consolidated)    0.450      0.935      0.481  97 wrong
+    On the arm nothing else could touch, CERTIFIED <=> CORRECT exactly: 0.485
+    accuracy with 103 SILENT errors becomes 0.485 coverage with ZERO.
+    IT IS THE MONOTONE HALF. I predicted coverage would be driven by the MARGIN,
+    P(|sum-threshold| > largest filing) = 0.080, against a measured 0.550. Real
+    driver is ONE-SIDEDNESS: removing a member can only LOWER the sum, so a False
+    verdict survives every deletion free. Fires on 1.000 of false verdicts and
+    0.000 of true ones; clean coverage 0.550 IS the false-verdict share. FOURTH
+    appearance of "what is cheap to prove is the negative".
+    THE WARNING, SECOND INSTANCE TODAY: add a spurious FILING and coverage RISES
+    0.485 -> 0.935 while accuracy among certified falls to 0.481. It rises
+    BECAUSE the corruption is larger -- the spurious figure pushes the sum clear
+    of the threshold so no member deletion flips it. Flood's certificate did the
+    same (0.056 clean -> 0.127 hard, phantom links adding 2-edge-connectivity).
+    A CERTIFICATE THAT ASKS "WOULD A SMALL PERTURBATION CHANGE THE ANSWER" READS
+    A LARGE ERROR AS STABILITY. Coverage is not reliability; never compare it
+    across surfaces; a RISING coverage is a signal to look for a second channel.
+    Lesson written.
   - EVERY READER NUMBER HERE WAS MEASURED AGAINST DISTRACTORS THAT COULD NOT
     BITE. Promoted to RESEARCH_LOG.md. Three domains, and the refuter SHARPENED
     it: there are TWO kinds of defanging, not one.
@@ -926,11 +953,16 @@ theory:
       something WAS withdrawn, and flood's `flooded` is a cancellation. Property
       of the predicate, not of the cue list.
     floor: >
-      A semantically stale sentence carrying NO lexical cue defeats everything
-      built: solvency's uncued arm is 0.450 under every combination. Closing it
-      needs verb semantics (a past change-of-state whose result contradicts the
-      claim), which is the first place an external lexical resource is the only
-      mechanism rather than a shortcut.
+      A semantically stale sentence carrying NO lexical cue defeats every
+      DETECTOR: solvency's uncued arm is 0.450 under every combination of them.
+      Closing it by detection needs verb semantics (a past change-of-state whose
+      result contradicts the claim), the first place an external lexical resource
+      is the only mechanism rather than a shortcut.
+      PARTLY LIFTED, and by the OTHER response rather than by a better detector:
+      an insensitivity certificate on the uncued owns arm gives certified <=>
+      correct exactly, 0.485 coverage and 0 wrong. It is the MONOTONE HALF (fires
+      on 1.000 of false verdicts, 0.000 of true) and it is blind across channels,
+      growing MORE confident as the corruption grows.
     evidence: runs/contradicting_evidence.json, runs/scheduling_hard_distractors.json, runs/solvency_hard_distractors.json, runs/staleness_gate.json
   - name: enumeration_soundness
     status: derived_premise_measured
