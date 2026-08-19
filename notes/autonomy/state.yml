@@ -14,6 +14,10 @@ bottleneck: >
   world is still RECEIVED from a generator rather than READ.
 
 measured:
+  - reader arm zero: the template reader scores claim P/R 1.000 on the OLD
+    report and 0.000 on the NEW surface, over the same worlds. On the pooled
+    metric it scores 0.450, identical to having no reader at all; on non-empty
+    cases it scores 0.000. Oracle world is 1.000/1.000.
   - flood flow: 3 kernels, world->reach->world2->routes->loads->fused, agrees
     with a brute-force oracle that shares no code with the kernels
   - flood reader (regex template): 300/300 worlds round-trip exactly, and its
@@ -69,16 +73,28 @@ unknowns:
     domain.
   - Precision failures (invented/misread claims) are unswept; MISREADS exists.
 
-active_work: none -- turn ended after the theory pass
+active_work: >
+  Reader arms. The surface and the scoring harness are BUILT; arm zero is
+  measured. Next is arms 1-N.
+
+built:
+  - symbolic_ai_generators/flood/surface.py -- five-paragraph observation
+    surface, exact span->claim alignment, distance/references/distractors/
+    indirect statements. 12 tests in tests/test_flood_surface.py.
+  - scripts/reader_arms.py -- the harness every arm plugs into. A reader is a
+    case -> WorldSnapshot. Scores claim P/R, dependency-weighted recall against
+    the ablation-measured dependency set, and end-to-end accuracy split by
+    population, with oracle-world as ceiling.
 
 next_actions:
-  - Build the multi-paragraph observation surface with exact span->claim
-    alignment (5 paragraphs: actors, infrastructure, events, quantities, query).
-  - Then 3-5 cheap reader arms measured at WORLD level plus end-to-end, with
-    oracle-world as the ceiling and the gap decomposed into reader/kernel/
-    renderer loss.
-  - Test fitted k against measured dependency size (cheap, kills or promotes
-    the law).
+  - Build reader arms 1-N as case -> WorldSnapshot and run them through
+    scripts/reader_arms.py. Candidates: deterministic rules written for THIS
+    surface; the repo's parser machinery (categorical/regex/chunker/induced);
+    omegaclaw; lexical/registry retrieval; a hybrid. Do not polish the first.
+  - Then: identify the dominant failure mode and pursue it.
+  - Renderer: structured answer -> grounded answer paragraph, kept separate from
+    the canonical answer so generation quality cannot contaminate reasoning
+    evaluation.
 
 blockers:
   - Paid API credentials for any accuracy comparison against a language model
