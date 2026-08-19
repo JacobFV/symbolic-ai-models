@@ -15,6 +15,20 @@ reader cannot do without being handed both documents.
 grandparents), so the query is scored against Wikidata rather than judged.
 `runs/multi_hop_world.json`.
 
+> **Corrected the next day, and the headline is withdrawn.** The two-hop rates
+> below are **6 successes (learned) and 11 (hand) out of 191**. A 95% Wilson
+> interval on the learned reader's 0.031 is **[0.014, 0.067]**, so "within 0.001
+> of `p₁²`" was 6 observed against 6.1 expected inside a band that admits ratios
+> from roughly 0.4 to 2.1. **It was agreement at a resolution this sample does
+> not have**, and calling it "the cleanest confirmation the composition law has
+> had" was wrong. What survives: the learned reader is *consistent with*
+> independence, and the hand reader's clumping is significant **only just** — its
+> interval [0.032, 0.100] excludes the independence prediction of 0.030 by 0.002.
+> A third reader (logistic, one-hop 0.183) gives two-hop 0.021, k=4, which is
+> consistent with independence too and would have supported the opposite story
+> had it been measured first. The title of this note overstates it and is left
+> unchanged so the overstatement is on the record.
+
 ## 1. The composition law, with both factors identical
 
 Earlier arms measured that a composed query multiplies reader error — `parent` at
@@ -27,13 +41,16 @@ independence prediction is unambiguous.
 | learned reader | 0.178 | **0.031** | 0.032 | **0.97** |
 | hand patterns | 0.173 | **0.058** | 0.030 | **1.93** |
 
-**The learned reader lands within 0.001 of `p₁²`.** Its two hops are independent
-to the precision this sample can measure, which is the cleanest confirmation the
-composition law has had — and the strongest statement of the cost of composition:
-a reader at 0.18 answers a two-hop question 3 times in 100.
+The learned reader lands near `p₁²` — **6 successes against 6.1 expected** — which
+is consistent with independence and is *not* a precise confirmation of it; see the
+correction above. The statement that survives the sample size is the blunt one:
+**a reader at 0.18 answers a two-hop question about 3 times in 100**, and that
+follows from composition whatever the exact ratio.
 
-**The hand reader is nearly twice its independent prediction.** Its hops are
-positively correlated, and the mechanism is legible: four patterns succeed on
+**The hand reader is above its independent prediction, marginally.** 11 successes
+against 5.7 expected, interval [0.032, 0.100] against a prediction of 0.030 — it
+clears it by 0.002, which is significance at the edge and not a headline. The
+mechanism it suggests is legible, and is a hypothesis rather than a result: four patterns succeed on
 canonically-phrased articles, and a canonically-phrased article tends to name a
 parent whose own article is also canonically phrased. A pattern reader does not
 sample the corpus uniformly, so its errors clump — which makes it *better* at
