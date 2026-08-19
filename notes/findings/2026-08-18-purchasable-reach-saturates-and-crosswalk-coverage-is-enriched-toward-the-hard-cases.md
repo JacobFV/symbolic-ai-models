@@ -156,3 +156,20 @@ uv run python -u scripts/curated_vs_filed_crosswalk.py
 `runs/wikidata_bridge_cik_lei.json`, `runs/curated_vs_filed_crosswalk.json`;
 predictions and outcomes in `notes/autonomy/predictions.jsonl` under
 `wikidata-bridge-cik-lei` and `curated-vs-filed-crosswalk`.
+
+## AMENDMENT: the refuter named above was run, and it fires
+
+`notes/findings/2026-08-18-saturation-is-not-a-law-it-is-a-property-of-the-workload-and-it-spans-3-5x.md`.
+Share of mass in the top 7.5% of entities, over six workloads on this repo's
+disk: **13F by dollar 96.9%**, patent assignees 85.6%, 13F by position count
+77.7%, caselaw citations 56.1%, patent citations 55.6%, **GitHub events per repo
+27.3%**. A **3.5× span**.
+
+> **"Purchasable reach saturates" is not a law — it is conditional on the
+> workload's concentration.** The mechanism section above survives untouched
+> (both crosswalks attain ~2/3 of achievable at their own k); the *generality* of
+> the economic advice does not.
+
+The replacement is a decision rule: **measure the workload's top-7.5% mass share
+before acquiring anything.** 96.9% means buy the small file; 27.3% means a small
+acquisition buys almost nothing.

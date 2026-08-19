@@ -268,7 +268,38 @@ last_cycle:
     repo now say the cheap half of a problem is the useful half.
 
 next:
-  preferred_action: acquire-form-adv-and-close-the-filer-column
+  preferred_action: leave-the-finance-workload-and-test-the-arc-elsewhere
+  why_now: >
+    The reach arc is RESOLVED and it resolved into a conditional, which is the
+    right shape. advantage = 1/f; f is set by reach; reach is purchasable
+    (saturates ONLY where the workload concentrates -- 96.9% for 13F dollars,
+    27.3% for GitHub events, a 3.5x span), derivable from recorded structure
+    (81.3% where recorded, 22.4% of hard cases), or absent. The tiers are not
+    independent: tiers 2 and 3 are gated by tier-1 identity coverage, which is
+    asymmetric in the DIRECTION of the query -- 66.3% of held value toward the
+    security, 23.2% toward the holder.
+
+    Six arms have now run on one SEC/GLEIF workload. The filer column is blocked
+    on data that is not on disk and that Form ADV does not supply (it carries
+    CRD, not LEI, and neither SEC nor the vendored GLEIF file has addresses to
+    join on). Grinding it further is the failure mode CLAUDE.md names.
+  what_to_do_instead: >
+    The arc produced three claims that are stated generally and measured on one
+    domain: (1) coverage is asymmetric in the direction of the query, (2)
+    crosswalk coverage is enriched toward the entities names cannot settle, (3)
+    closure settles ambiguity where structure was recorded. Each is a claim about
+    knowledge graphs, not about finance. patentsview (patent -> assignee),
+    openalex (work -> institution) and courtlistener all have the same bipartite
+    shape with an identity join and a name fallback. Porting the measurement is
+    cheap and turns three finance observations into three general findings -- or
+    kills them, which is worth more.
+  blocked_and_recorded: >
+    Filer-side identity coverage is 23.2% by AUM and cannot be improved from
+    anything on disk. Form ADV was considered and REJECTED before download: it
+    keys on CRD and SEC file number, carries no LEI, and the vendored GLEIF file
+    has no address column to fall back on -- so it cannot close the join it was
+    proposed for. Recorded here rather than tried.
+  previous_preferred_action: acquire-form-adv-and-close-the-filer-column
   why_now: >
     The reach arc is now resolved and it ends on an asymmetry: over the SAME 13F
     edge, questions pointed at the security are 66.3% addressable by value and

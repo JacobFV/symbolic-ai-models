@@ -878,6 +878,39 @@ advisers with no encyclopaedic existence at any AUM.
 **Strongest available refuter, and it is cheap:** Form ADV covers exactly the
 registered advisers wikidata misses, is public, and is not on disk.
 
+## 3o. Saturation is a property of the workload, not a law — and one statistic decides it
+
+`notes/findings/2026-08-18-saturation-is-not-a-law-...md`. §3l's headline
+("purchasable reach saturates") named its own refuter; it was run and it fires.
+Share of mass in the **top 7.5% of entities** — the count-coverage of the curated
+crosswalk, so it answers "could a small acquisition have covered this?":
+
+| workload | entities | **top 7.5%** | gini |
+|---|---:|---:|---:|
+| 13F holdings, by **$ held** | 33,656 | **96.9%** | 0.976 |
+| patent assignees | 572,495 | 85.6% | 0.892 |
+| 13F holdings, by **position count** | 33,656 | 77.7% | 0.894 |
+| caselaw citations | 4,513,529 | 56.1% | 0.716 |
+| patent citations | 8,407,184 | 55.6% | 0.723 |
+| **github events, per repo** | 3,902,511 | **27.3%** | **0.373** |
+
+**3.5× span.** The GitHub outlier was verified directly because it carries the
+conclusion: 7,730,712 events over 3,902,511 repos, mean 1.98, median 1, 57.3%
+with exactly one event, max 1,043. There is no head to concentrate in.
+
+> **THE DECISION RULE:** before acquiring a crosswalk, measure the workload's
+> top-7.5% mass share. At **96.9%** buy the small file and stop — 957× more rows
+> bought 6.2 more points. At **27.3%** a small acquisition buys almost nothing
+> and breadth is the only lever.
+
+**What survives:** the *mechanism* — both crosswalks attain ~2/3 of the value
+achievable at their own k, so the raw dollar/count ratio is still an artefact.
+**What does not:** the generality of the economic advice.
+
+**And the denominator trap fires inside one edge set**: the same 13F holdings are
+96.9% concentrated by dollar and 77.7% by position count. Fourth time in this
+repo. *"The workload" is not defined until the mass is.*
+
 ## 4. Believed, not measured. Do not inherit as fact.
 
 Recorded deliberately, with mechanisms, so a later contradiction is a finding
