@@ -40,6 +40,22 @@ measured:
     because the atom rule that keeps a pronoun with its antecedent -- required
     for the document to stay true -- preserves the demand binding; a property of
     the task, not a leak.
+  - A BIG RATIO ON A TINY NUMBER IS STILL A TINY NUMBER. Computed the missing
+    half with development cost left as a PARAMETER: break-even episodes at
+    $1,000 of engineering are 0.9M-2.2M against a frontier model, 18M-44M
+    against a cheap hosted one. Scaled by reader size vs frontier: scheduling
+    1.0M (63 lines), solvency 3.1M (89), flood 9.7M (666 -- CONFOUNDED, that
+    file holds five research arms where the others hold one; read the ordering).
+    THE RANKINGS INVERT: solvency has the LARGEST per-answer multiple
+    (1,334,849x) and needs the MOST episodes, because its saving is 150 tokens
+    against a decision costing nothing. The multiple is the figure that
+    flatters; the threshold is the one that decides whether to build.
+    UNIFICATION: scheduling pays back soonest because its reader is 63 lines,
+    and it is 63 lines because prefixes fix the predicate -- which the audit
+    measures OFFLINE at 0.000 ambiguity mass before any reader exists. The same
+    quantity now predicts reader difficulty, error concentration, AND payback.
+    UNPRICED: maintenance. A reader revised whenever the surface changes never
+    finishes amortising, and this repo has changed its surfaces repeatedly.
   - NO ACCURACY CLOSES THE PRICE GAP, and the comparison was only half
     blocked. Credentials block a model's ACCURACY, not its published PRICE, and
     cost.py has api_component for that. Break-even accuracy -- what a model
