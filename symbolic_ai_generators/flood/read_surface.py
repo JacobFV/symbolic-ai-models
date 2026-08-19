@@ -681,7 +681,8 @@ def _anchor_role(sent: str, anchors: dict) -> str:
     return hit.pop() if len(hit) == 1 else ""
 
 
-def _scan(text: str, anchors: dict) -> dict:
+def _scan(text: str, anchors: dict,
+          registry: dict | None = None) -> dict:
     """The raw evidence, before any role is resolved.
 
     Extracted from `read_content_roles_checked` so a second consumer can see the
@@ -690,6 +691,7 @@ def _scan(text: str, anchors: dict) -> dict:
     claimed that role. Behaviour of the reader is unchanged; this is a pure
     extraction, pinned by the reader's own tests.
     """
+    reg = VALUE_REGISTRY if registry is None else registry
     links: list[tuple[str, str]] = []
     crossings: dict[tuple[str, str], float | None] = {}
     vehicles: dict[str, list] = {}
@@ -735,17 +737,17 @@ def _scan(text: str, anchors: dict) -> dict:
                 else:
                     unresolved.append(regions[0])
             elif len(trucks) == 1 and nums:
-                slot = 0 if nums[0] in VALUE_REGISTRY["mass"] else 1
+                slot = 0 if nums[0] in reg["mass"] else 1
                 vehicles.setdefault(trucks[0], [None, None])[slot] = nums[0]
                 last_vehicle = trucks[0]
             elif len(trucks) == 1 and not nums:
                 last_vehicle = trucks[0]
             elif not regions and not trucks and len(nums) == 1:
-                if nums[0] in VALUE_REGISTRY["demand"]:
+                if nums[0] in reg["demand"]:
                     demand = nums[0]
                     if order:
                         adjacent = order[-1]
-                elif nums[0] in VALUE_REGISTRY["capacity"] and last_vehicle:
+                elif nums[0] in reg["capacity"] and last_vehicle:
                     vehicles.setdefault(last_vehicle, [None, None])[1] = nums[0]
 
     return {"links": links, "crossings": crossings, "vehicles": vehicles,
@@ -816,10 +818,11 @@ def evidence_conflict(text: str, *, anchors: dict | None = None) -> dict:
     return out
 
 
-def read_content_roles(text: str, *, anchors: dict | None = None
-                       ) -> WorldSnapshot:
+def read_content_roles(text: str, *, anchors: dict | None = None,
+                       registry: dict | None = None) -> WorldSnapshot:
     """The reading alone. See `read_content_roles_checked` for the whole story."""
-    return read_content_roles_checked(text, anchors=anchors)[0]
+    return read_content_roles_checked(text, anchors=anchors,
+                                      registry=registry)[0]
 
 
 def read_content_roles_worlds(text: str, *, anchors: dict | None = None,
@@ -901,7 +904,8 @@ def read_content_roles_worlds(text: str, *, anchors: dict | None = None,
     return out or [base]
 
 
-def read_content_roles_checked(text: str, *, anchors: dict | None = None
+def read_content_roles_checked(text: str, *, anchors: dict | None = None,
+                               registry: dict | None = None
                                ) -> tuple[WorldSnapshot, bool]:
     """``(world, role_assignment_forced)``.
 
@@ -941,7 +945,7 @@ def read_content_roles_checked(text: str, *, anchors: dict | None = None
     group is already pinned, which is what lets partial anchor coverage cascade.
     """
     anchors = ROLE_ANCHORS if anchors is None else anchors
-    ev = _scan(text, anchors)
+    ev = _scan(text, anchors, registry)
     links = ev["links"]
     crossings = ev["crossings"]
     vehicles = ev["vehicles"]

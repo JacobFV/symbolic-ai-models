@@ -134,3 +134,47 @@ def test_the_marker_catches_every_fabrication_in_a_small_slice():
     assert false > 0, "no fabrication to catch"
     assert caught == false, f"{caught}/{false} false citations flagged"
     assert flagged / total < 0.2, flagged / total
+
+
+def test_a_value_error_silences_rather_than_fabricates():
+    """The limit stated on the marker, tested. Overlapping the value registry --
+    every capacity also a possible mass -- takes accuracy 0.673 -> 0.189 and
+    produces NO mass or capacity falsehood: a mis-slotted value disqualifies a
+    vehicle, so nothing is cited about it. Citations fall with it."""
+    from symbolic_ai_generators.flood.read_surface import (
+        VALUE_REGISTRY, read_content_roles_checked)
+
+    noisy = {"mass": frozenset(VALUE_REGISTRY["mass"]
+                               | VALUE_REGISTRY["capacity"]),
+             "capacity": VALUE_REGISTRY["capacity"],
+             "demand": VALUE_REGISTRY["demand"]}
+    cites = {"clean": 0, "noisy": 0}
+    value_false = 0
+    for s in range(SEEDS):
+        case = generate(s)
+        if not solve(case.world)[0]:
+            continue
+        obs = render_observation(case, variants=4, hard_distractors=True)
+        text = interleave(unsaturate(obs, drop_headings=True,
+                                     shuffle=False)).text
+        true_keys = {_key(c) for c in case.world.claims}
+        for label, reg in (("clean", None), ("noisy", noisy)):
+            try:
+                world, _ = read_content_roles_checked(text, registry=reg)
+                got, outputs, _ = solve(world)
+            except Exception:
+                continue
+            answer = render_complete(replace(case, world=world), got, outputs)
+            for c in answer.citations:
+                if not c.source.startswith("claim:"):
+                    continue
+                ref = c.source.split(":", 1)[1]
+                if not ref.isdigit() or not (0 <= int(ref) < len(world.claims)):
+                    continue
+                cites[label] += 1
+                claim = world.claims[int(ref)]
+                if (label == "noisy" and claim.predicate in ("mass", "capacity")
+                        and _key(claim) not in true_keys):
+                    value_false += 1
+    assert cites["noisy"] < cites["clean"], cites
+    assert value_false == 0, f"{value_false} value fabrications appeared"
