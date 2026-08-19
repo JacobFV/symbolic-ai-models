@@ -1500,6 +1500,55 @@ measured:
     32, so lifts across different n_eval are not comparable
 
 theory:
+  - name: query_relative_reconstruction
+    status: derived_one_direction_exact
+    formula: "W1 ~_K W2 iff K(W1)=K(W2);  critical(W_hat) = |{c in W_hat XOR W : K(W \\ c) != K(W)}|"
+    consequence: >
+      The reader owes W_hat ~_K W, not W_hat = W. Measured on 130 flood cases:
+      claim recall AUC 0.506, precision 0.473, symmetric-difference size 0.506 --
+      ALL THREE AT CHANCE for predicting whether the answer is right -- against
+      CRITICAL ERROR MASS at 0.946. And one direction is exact: critical mass 0
+      on 82 cases, correct on 1.000 of them. The converse fails on 10.4%, which
+      is error CANCELLATION, invisible to single-claim intervention.
+    scaling: >
+      critical ~ d * |symmetric difference|, where d is the deletion dependency
+      of the error mix. audit.deletion_dependency measures d OFFLINE on true
+      worlds with no reader: it says 0.138 for flood links against 0.169 observed
+      through the reader's actual errors, and depot at 1.000 matches "a
+      misassigned role is never inert". So the audit predicts how much influence
+      weighting buys BEFORE a reader is written.
+    limits: >
+      d -> 1 collapses critical mass onto the ordinary metrics and weighting buys
+      nothing (solvency revenue: every filing moves the sum). d -> 0 makes every
+      claim inert. Weighting separates exactly on 0 < d < 1.
+    unifies: >
+      The certificate is a proof that critical mass is zero WITHOUT knowing W.
+      render.uncorroborated works because the complete renderer cites the
+      load-bearing set, i.e. the influential claims. And the explanation/answer
+      divergence is the same quantity at a different aggregation depth.
+    evidence: runs/influence_weighted.json
+  - name: explanation_decision_divergence
+    status: derived_and_checked
+    formula: "P(explanation wrong) -> 1 as any input errs;  P(decision wrong) ~ f_M(0) * E|delta|"
+    derivation: >
+      For an aggregate z = g(x_1..x_n) and a decision y = 1[z > tau], a single
+      perturbed input makes z_hat != z with probability 1 REGARDLESS OF
+      MAGNITUDE, because z is a function of every input. The decision flips only
+      when the perturbation crosses the margin M = z - tau, so for small
+      perturbations P(flip) ~ f_M(0) * E|delta|, with f_M the margin density at
+      zero. The two are therefore governed by different quantities and the ratio
+      DIVERGES as delta -> 0 rather than being merely greater than one.
+    checked: >
+      Solvency, relative perturbation delta of one filing: verdict-wrong 0.000 /
+      0.020 / 0.075 / 0.285 / 0.445 at delta = 0.001 / 0.01 / 0.05 / 0.2 / 1.0,
+      against a stated-total-wrong rate FLAT at 0.985 throughout. Error/delta is
+      roughly constant at 1.4-2.0 for delta <= 0.2 -- the predicted linear regime
+      -- and saturates near the base rate at delta = 1. AT 0.1% THE ANSWER IS
+      PERFECT AND THE EXPLANATION IS WRONG 985 TIMES IN 1,000.
+    deletes: >
+      Another magnitude sweep in another domain. The law fixes the shape from the
+      margin density, so a second domain needs only f_M(0) and the aggregation
+      depth, not a five-point curve.
   - name: packing_ambiguity
     status: derived_and_measured
     formula: "ambiguity_mass >= share of sentences realising more than one claim kind"
