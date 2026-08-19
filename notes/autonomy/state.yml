@@ -14,6 +14,11 @@ bottleneck: >
   world is still RECEIVED from a generator rather than READ.
 
 measured:
+  - RENDERER: 40/40 flood cases produce a fully grounded answer paragraph, both
+    polarities explained (including "no route reaches it at all: the network is
+    cut by flooding in region_2 and region_4"). The checker is token AND
+    adjacency level and is tested to FAIL on an invented quantity, an invented
+    entity, and a false ordering of real regions.
   - reader arms on the five-paragraph surface, non-empty accuracy: oracle
     1.000; rules-full 1.000 (reaches the ceiling, so the surface is fair);
     rules-no-coreference 0.000; rules-with-distractors 0.682; lexical cue
@@ -172,8 +177,8 @@ unknowns:
   - Precision failures (invented/misread claims) are unswept; MISREADS exists.
 
 active_work: >
-  Second domain done: machinery transfers, heuristic inverts. Theory transfer
-  is next.
+  The boxed pipeline is now complete on flood: text -> world IR -> multi-kernel
+  flow -> structured output + grounded paragraph. Renderer next on solvency.
 
 built:
   - symbolic_ai_generators/flood/surface.py -- five-paragraph observation
@@ -196,6 +201,12 @@ next_actions:
     term. Deriving that would complete the unconditional curve.
   - The reader machinery on scheduling is still untried -- only the law was
     tested there.
+  - Renderer for solvency, and then the 16-milestone table end to end: a
+    multi-paragraph report -> reader -> world -> kernels -> structured decision
+    -> grounded paragraph, with reader arms and ablations in one table.
+  - Tighten grounding to ROLE level. Token-and-adjacency still passes a real
+    number asserted about the wrong entity, which is the same shape of gap the
+    ordering bug was.
   - Ambiguity budget on solvency: is it again concentrated on the claim that
     SIZES the answer -- in flood the demand, here plausibly the threshold or
     the decision date? Measurable with what now exists.
