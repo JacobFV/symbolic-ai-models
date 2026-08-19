@@ -40,6 +40,23 @@ measured:
     because the atom rule that keeps a pronoun with its antecedent -- required
     for the document to stay true -- preserves the demand binding; a property of
     the task, not a leak.
+  - TASK DRIFT IS INVISIBLE TO EVERY WORLD-LEVEL CHECK. A weight restriction
+    the world CANNOT express (admits light vehicles, refuses heavy) makes
+    answers wrong 22/22, and is caught by role_assignment_forced 0/22, the
+    certificate 0/22, omits_load_bearing 0/22 -- and by UNCONSUMED SENTENCES
+    22/22. Catches counted only where the check is silent without the drift.
+    Mechanism: every world-level check inspects the READ WORLD and a kind with
+    no branch never enters it. Fourth appearance of "a check that reads part of
+    the world inherits that part's errors", now at the TASK level.
+    SHIPPED audit.unconsumed(text, reader): sentences whose removal leaves the
+    read world unchanged. NOT entity familiarity (caught 0/22 -- the region is
+    already known from link claims) and NOT a presence test (clean text has
+    inert distractors, so the signal is an INCREASE). Cheaper than solving once.
+    A DRIFT ALARM, NOT A CORRECTNESS ORACLE, said in the docstring.
+    FOUR MEASUREMENT TRAPS in this one experiment, lesson written: the first
+    "task change" was expressible and so was not one; firing was counted as
+    catching on correct answers; no baseline arm; and the detector compared
+    paragraph-structured against sentence-joined reads.
   - MAINTENANCE IS THE FOURTH THING THE AUDIT PREDICTS. Testing each domain
     with the reader that EXISTED FIRST against four surface events: flood breaks
     on 2 of 4 (shuffle paragraphs and interleave sentences, both 1.000 -> 0.000)

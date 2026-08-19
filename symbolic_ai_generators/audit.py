@@ -27,7 +27,7 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import Any
 
-__all__ = ["Signature", "Audit", "audit_surface"]
+__all__ = ["Signature", "Audit", "audit_surface", "unconsumed"]
 
 _ENTITY = re.compile(r"\b([a-z][a-z_]*?)_(\d+)\b")
 _NUMBER = re.compile(r"(?<![\d-])\d+(?:\.\d+)?(?![\d-])")
@@ -360,3 +360,56 @@ def deletion_dependency(cases, solve, kind: str, *, world_of=None) -> float:
             hits.append(solve(trimmed)[0] != base)
         out.append(sum(hits) / len(hits))
     return sum(out) / len(out) if out else 0.0
+
+
+def unconsumed(text: str, reader) -> int:
+    """Sentences whose removal leaves the reader's world unchanged.
+
+    The task-drift detector. Every other check in this repo inspects the **read
+    world**, so a claim kind the reader has no branch for is invisible to all of
+    them -- it never enters the world to be checked. The text still contains the
+    sentence.
+
+    Measured 2026-08-19 on flood, against a weight restriction the world cannot
+    express (it admits light vehicles and refuses heavy ones, where flooding
+    refuses everything): answers wrong **22 of 22**, caught by
+    ``role_assignment_forced`` 0/22, by the role-independent certificate 0/22, by
+    ``omits_load_bearing`` 0/22, and by this **22/22**.
+
+    Two things this is not:
+
+    - **Not entity familiarity.** A first version asked whether a sentence's
+      entities were known and caught nothing: the restricted region appears in
+      the link claims, so the sentence looked read while contributing nothing.
+      Consumption is not familiarity.
+    - **Not a presence test.** Clean text already contains distractors that
+      consume to nothing, so the signal is an **increase** over the document's
+      own baseline, not a non-zero count.
+
+    Costs ``len(sentences)`` reads. A read is 0.2 ms against a 9 ms answer, so
+    the whole check is cheaper than solving once.
+    """
+    sents = [s for s in re.split(r"(?<=[.?])\s+", text.replace("\n\n", " "))
+             if s.strip()]
+    if not sents:
+        return 0
+
+    def world_of(t: str):
+        try:
+            w = reader(t)
+        except Exception:
+            return None
+        return {(c.predicate, tuple(sorted(c.entities()))) for c in w.claims}
+
+    # Compare like with like: reading the paragraph-structured original against
+    # sentence-joined variants makes every world differ for an unrelated reason,
+    # and nothing ever looks unconsumed.
+    base = world_of(" ".join(sents))
+    if base is None:
+        return 0
+    out = 0
+    for i in range(len(sents)):
+        got = world_of(" ".join(s for j, s in enumerate(sents) if j != i))
+        if got == base:
+            out += 1
+    return out
