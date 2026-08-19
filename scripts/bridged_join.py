@@ -4,7 +4,9 @@
 found the 68× cliff at the first identity boundary and then found it
 **irreducible by modelling**: SEC and GLEIF each carry a rich identifier
 (CIK; LEI plus a *state* company-register number — NVIDIA is Delaware 2862596),
-neither carries the other's, and the only attribute both hold is the name. Its
+neither carries the other's. (The "only attribute both hold is the name"
+clause is now RETRACTED — wikidata bridges both namespaces; see
+`scripts/wikidata_bridge_cik_lei.py`. It does not change this script.) Its
 closing sentence was that fixing this is a **data acquisition** problem.
 
 So this acquires the data. GLEIF publishes a free daily **ISIN → LEI** mapping,

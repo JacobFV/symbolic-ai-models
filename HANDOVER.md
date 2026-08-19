@@ -619,6 +619,36 @@ the large caps that carry LEIs. *(A "bridge-then-name" row first published here
 was invalid: it multiplied one join's coverage by a different join's ambiguity.
 See §3k.)*
 
+> **RETRACTION, measured 2026-08-18.** *"No file on disk links a CIK to an
+> LEI"* is **false**, and I asserted it after searching for the *mechanism* (a
+> `same_as` column) rather than for the *name*. A file called
+> `data/sources/wikidata/.../idbridges_full_p0.parquet` was invisible to that
+> search: 69,679 `same-as` edges out of the wikidata namespace, targeting
+> **lei 53,198 / isin 9,936 / sec 3,660 / asx 2,846 / ticker 39**. Any wikidata
+> entity carrying both a `sec` and a `lei` edge is a CIK→LEI bridge joined on
+> identifiers at both ends, and there are **2,113** of them.
+> `scripts/wikidata_bridge_cik_lei.py`:
+>
+> | | | |
+> |---|---:|---|
+> | coverage, all SEC filers | 15.3% | 1,226/8,021 |
+> | coverage, **matched** filers | **24.9%** | 1,015/4,078 — the denominator that composes |
+> | ambiguity among **bridged** | **19.5%** | vs 13.1% unbridged, 14.7% base |
+> | enrichment | **1.33×** | z = 5.03, p = 4.8e-07 |
+> | composite `f`, independence | 11.01% | 9.1× — what the arithmetic above would predict |
+> | composite `f`, **measured joint** | **9.81%** | **10.2×**, a **1.49× gain** over names alone |
+>
+> **Crosswalk coverage is not independent of join difficulty — it is enriched
+> toward exactly the entities names cannot settle**, so `(1 − coverage) × f_name`
+> *underprices* a crosswalk, here by 10.9% of itself. And the bridge and the name
+> join agree **93.0%** of the time on which LEI a filer is (**90.4%** on the
+> ambiguous subset, where the bridge actively picks) — the first time two
+> independent joins in this repo have been checked against each other.
+>
+> **What survives unchanged:** 1.49× of a 68× cliff is not closing it. The
+> paragraph's conclusion — that the cliff is about coverage of the workload, not
+> the absence of an identifier — stands. Only the flat negative was wrong.
+
 
 Two caveats belong next to it. Quality 1.0 in the filed regime is relative to
 **the filing** — a better anchor than an automated extractor, still not truth.

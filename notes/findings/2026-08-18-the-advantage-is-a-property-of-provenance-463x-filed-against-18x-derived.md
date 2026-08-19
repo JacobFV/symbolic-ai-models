@@ -101,7 +101,7 @@ country to the join key and `f` should roughly halve — 14.7% → ~7.2%, advant
 - **`same_as` is not a bridge.** It is populated 100% and points at
   `kg:company:name:*` — a *name-derived* canonical key. It is the same name join
   materialised, not an independent identifier.
-- **No file on disk links a CIK to an LEI.**
+- ~~**No file on disk links a CIK to an LEI.**~~ **FALSE — see the retraction at the end of this note.** I checked SEC's columns and GLEIF's columns and concluded from their absence there; a *third* source bridges them, and I never looked because I was searching for a `same_as` column rather than for a file named after what it does.
 - **GLEIF does carry the discriminator** — `jurisdiction`, `legalAddress`,
   `headquartersAddress` — so the 51.3% country signal sits on exactly **one side**
   of the join.
@@ -115,6 +115,9 @@ country to the join key and `f` should roughly halve — 14.7% → ~7.2%, advant
 > number because it files *who the legal entity is*. Each is rich, neither
 > carries the other's key, and the only attribute both sides hold is the **name**
 > — which is exactly why `f` is 14.7%, and why it is not a matcher problem.
+
+*(The two clauses in bold survive; the "only attribute both sides hold is the
+name" clause does not — a curated third party holds both keys. Retraction below.)*
 
 So the 68× cliff is **irreducible by modelling**. Closing it is a **data
 acquisition** problem — a crosswalk — and that is a different kind of task from
@@ -237,3 +240,70 @@ uv run python -u scripts/regime_dichotomy.py     # instant; arithmetic on publis
 
 `runs/regime_dichotomy.json`; prediction and outcome in
 `notes/autonomy/predictions.jsonl` under `the-regime-dichotomy`.
+
+## RETRACTION: a file on disk does link a CIK to an LEI, and it is enriched toward the hard cases
+
+`scripts/wikidata_bridge_cik_lei.py`, 2026-08-18.
+
+`data/sources/wikidata/commandagi-r2-2026-08-15/wikidata/idbridges_full_p0.parquet`
+is 69,679 `same-as` edges out of the wikidata namespace. Target namespaces:
+**lei 53,198 / isin 9,936 / sec 3,660 / asx 2,846 / ticker 39**. A wikidata
+entity carrying both a `sec` and a `lei` edge is a CIK→LEI bridge joined on
+identifiers at both ends, and **2,113** entities carry both.
+
+| | | |
+|---|---:|---|
+| coverage, all SEC filers | 15.3% | 1,226/8,021 |
+| coverage, **matched** filers | **24.9%** | 1,015/4,078 |
+| ambiguity among **bridged** filers | **19.5%** | 198/1,015 |
+| ambiguity among **unbridged** filers | 13.1% | |
+| **enrichment** | **1.33×** | z = 5.03, p = 4.8e-07 |
+
+The denominator matters and cost a near-miss: the published 14.7% is over
+**matched** filers (598/4,078), so coverage has to be measured over matched
+filers too. The 15.3% over all 8,021 is a different denominator and composing
+the two would have been this repo's oldest arithmetic trap in a new place.
+
+### The correction that generalises
+
+`scripts/bridged_join.py` priced the obvious composite as
+`f = (1 − coverage) × f_name` — the **product of the marginals**. That assumes
+crosswalk coverage is independent of join difficulty. It is not:
+
+| policy | `f` | advantage |
+|---|---:|---:|
+| name join alone | 14.66% | 6.8× |
+| independence estimate (what was published) | 11.01% | 9.1× |
+| **measured joint** | **9.81%** | **10.2×** |
+
+> **Crosswalk coverage is enriched toward exactly the entities a name join
+> cannot settle, so `(1 − coverage) × f_name` underprices a crosswalk** — here by
+> 10.9% of itself. The mechanism is that a crosswalk's entities are selected for
+> prominence, and prominent corporations are precisely the ones with many GLEIF
+> entities sharing a canonical name.
+
+### Two joins, checked against each other
+
+Both routes answer "which LEI is this filer?", by construction independently —
+one through identifiers via a third party, one through canonical names.
+
+| | agreement |
+|---|---:|
+| all bridged **and** name-matched | **93.0%** (944/1,015) |
+| the **ambiguous** subset, where the bridge *picks* | **90.4%** (179/198) |
+
+This is the first cross-validation of either join in this repo, and it is the
+strongest evidence yet that the name join is doing real work rather than
+producing plausible noise — its failure mode is over-generation, not
+mis-identification. The residual 7% is unexplained and is a real open question:
+one of the two routes is wrong there, and which one is not known.
+
+### What survives, and what does not
+
+**Does not:** the flat negative, and the "only attribute both hold is the name"
+clause. **Does:** everything the section concluded. 1.49× of a 68× cliff is not
+closing it, and the cliff really is about **coverage of the workload** rather
+than the absence of an identifier. The sentence *"Closing the 68× cliff looked
+like a data-acquisition problem — one crosswalk file — and that has now been
+tried and is mostly wrong"* is, ironically, confirmed by the very file that
+refutes the sentence above it.
