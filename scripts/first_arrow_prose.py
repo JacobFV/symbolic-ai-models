@@ -38,6 +38,7 @@ Run: uv run python -u scripts/first_arrow_prose.py
 from __future__ import annotations
 
 import json
+import os
 import random
 import re
 import time
@@ -46,7 +47,13 @@ from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Any
 
-SRC = Path("data/sources/openalex-prose/openalex-prose-2026-08-18/works_p0.jsonl")
+#: Which snapshot to read. The default is the one today's published numbers came
+#: from, so they stay reproducible; ``SYMBOLIC_AI_PROSE_SNAPSHOT`` selects
+#: another. The `-authorship` snapshot groups an author's raw strings instead of
+#: flattening them, which is the difference between a reachable label and one no
+#: string-only method can reach.
+_SNAP = os.environ.get("SYMBOLIC_AI_PROSE_SNAPSHOT", "openalex-prose-2026-08-18")
+SRC = Path(f"data/sources/openalex-prose/{_SNAP}/works_p0.jsonl")
 OUT = Path("runs/first_arrow_prose.json")
 SEED = 20260818
 TRAIN_FRAC = 0.7

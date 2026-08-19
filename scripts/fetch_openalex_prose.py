@@ -45,7 +45,12 @@ import urllib.request
 from pathlib import Path
 from typing import Any, Iterator
 
-OUT_DIR = Path("data/sources/openalex-prose/openalex-prose-2026-08-18")
+#: New snapshot beside the old one, never in place of it. The 2026-08-18
+#: snapshot flattened authorships -- one example per raw string, labelled with
+#: every institution its author listed -- which put an unreachable ceiling on
+#: the task built from it. That snapshot stays on disk so the numbers published
+#: from it remain reproducible; this one preserves the authorship boundary.
+OUT_DIR = Path("data/sources/openalex-prose/openalex-prose-2026-08-18-authorship")
 MAILTO = "jjunkmail1234567890@gmail.com"
 BASE = "https://api.openalex.org/works"
 PER_PAGE = 200
@@ -117,14 +122,20 @@ def main() -> None:
             abstract = reconstruct(w.get("abstract_inverted_index"))
             if not abstract:
                 continue
+            # Grouped by AUTHORSHIP, not flattened per string. OpenAlex
+            # attaches institutions to an author, so an author who listed two
+            # affiliations gives both to each of their raw strings — and asking
+            # one string to predict an institution it does not mention is a
+            # ceiling nothing can reach. The unit of the task is the authorship.
             affils = []
             for a in (w.get("authorships") or []):
-                for raw in (a.get("raw_affiliation_strings") or []):
-                    affils.append({
-                        "raw": raw,
-                        "rors": sorted({i["ror"] for i in (a.get("institutions") or [])
-                                        if i.get("ror")}),
-                    })
+                raws = [r for r in (a.get("raw_affiliation_strings") or []) if r]
+                rors = sorted({i["ror"] for i in (a.get("institutions") or [])
+                               if i.get("ror")})
+                if not raws:
+                    continue
+                affils.append({"raws": raws, "rors": rors,
+                               "raw": " | ".join(raws)})
             rows.append({
                 "id": w.get("id"), "title": w.get("title") or "",
                 "year": w.get("publication_year"), "language": w.get("language"),
@@ -144,10 +155,12 @@ def main() -> None:
 
     chars = sum(len(r["abstract"]) for r in rows)
     n_aff = sum(len(r["affiliations"]) for r in rows)
+    n_raw = sum(len(a["raws"]) for r in rows for a in r["affiliations"])
     linked = sum(1 for r in rows for a in r["affiliations"] if a["rors"])
+    print(f"  authorships carry {n_raw/max(1,n_aff):.2f} raw strings each")
     print(f"\nwrote {out} — {len(rows):,} works, {out.stat().st_size/1e6:.1f} MB")
     print(f"  abstracts: {chars:,} chars, mean {chars/max(1,len(rows)):,.0f}")
-    print(f"  affiliation strings: {n_aff:,}, of which {linked:,} "
+    print(f"  authorships: {n_aff:,}, of which {linked:,} "
           f"({linked/max(1,n_aff):.1%}) resolve to at least one ROR id")
     print(f"  distinct ROR ids: "
           f"{len({r for w in rows for a in w['affiliations'] for r in a['rors']}):,}")

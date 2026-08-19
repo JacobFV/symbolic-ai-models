@@ -1,5 +1,5 @@
 ---
-title: The first arrow is cheap and bad — symbolic extraction from prose wins $/correct-fact by at least 1.77 million times and reaches 53% of a ceiling the task itself imposes, after three attempts to do better bought +0.077
+title: The first arrow is cheap and bad — symbolic extraction from prose reaches 48.9% of an achievable ceiling and wins $/correct-fact by at least 1.77 million times; the 0.717 ceiling I first published was my own task construction, and correcting it makes the shortfall worse
 date: 2026-08-18
 author: lead
 status: provisional
@@ -119,7 +119,64 @@ That is the honest state of the bet, and it is what the morning's finding
 predicted would be found: the advantage is real where structure is **already
 filed**, and this is the first measurement of what happens when it is not.
 
-## D. The floor was tested, and it barely moved
+## D bis. CORRECTION — the ceiling was mine, not the task's
+
+**Published earlier today and wrong:** *"F1 0.717 is a ceiling on what any
+string-only extractor can reach, because OpenAlex assigns institutions per author
+rather than per string, so the label is not a function of the input."*
+
+The mechanism was right about OpenAlex and wrong about whose fault it was. My
+**fetcher** flattened authorships — for each authorship, for each of its raw
+strings, it emitted one example labelled with **every** institution that author
+listed. So "University of Tokyo" was labelled `{Tokyo, RIKEN}` whenever its
+author also listed RIKEN, and no string-only method could ever recover RIKEN
+from it. 61.9% of label groups carried more than one raw string; the mean label
+had 1.94 institutions.
+
+Re-fetched preserving the authorship boundary — new snapshot beside the old, so
+every number published from the first stays reproducible — the same measurement
+gives:
+
+| | flattened (what I published) | **authorship (correct)** |
+|---|---:|---:|
+| ceiling, exact set match | 58.1% | **98.2%** |
+| ceiling, F1 | 0.717 | **0.988** |
+| held-out strings seen verbatim | 15.9% | 8.4% |
+
+**The label *is* a function of the input, to within 1.2%.** There is essentially
+no irreducible noise in this task.
+
+**The correction makes this finding harsher, not softer.** Re-running the whole
+ladder on the correct construction:
+
+| rung | F1 unseen | **% of ceiling** | precision | recall |
+|---|---:|---:|---:|---:|
+| v0 component vote | 0.378 | 38.2% | 30.2% | 50.5% |
+| v1 + IDF | 0.470 | 47.6% | 42.8% | 52.1% |
+| v2 + word-overlap fallback | 0.465 | 47.0% | 41.2% | 53.3% |
+| **v3 + specificity-first** | **0.483** | **48.9%** | **61.0%** | 40.0% |
+| *ceiling (measured, not assumed)* | *0.988* | *100%* | *98.4%* | *99.2%* |
+
+Every rung scores **higher** in absolute F1 and **lower** as a fraction of what
+is achievable: best is 48.9%, down from the 52.9% reported against the inflated
+ceiling. **The extractor is not missing 47% of a noisy target. It is missing 51%
+of an achievable one, and every point of that residual is genuine extraction
+failure.**
+
+The ladder now **measures** the ceiling from the data instead of carrying it as a
+constant, which is what would have caught this on the first run.
+
+### And it localises the problem exactly
+
+**91.6% of held-out authorship strings were never seen verbatim, and the
+memoriser is near-perfect on the 8.4% that were.** So the whole task is
+generalising to an unseen *wording* of an institution — not disambiguation, not
+multi-label, not noise. That is a **knowledge** problem before it is an algorithm
+problem: the dictionary only knows institutions that turned up in 3,500 training
+works, and ROR publishes every institution there is, with aliases, acronyms and
+multilingual labels, CC0 and unauthenticated. That is the next arm.
+
+## D. The floor was tested, and it barely moved (on the flattened snapshot)
 
 The claim above that 0.303 is a floor was the obvious thing to attack, so it was
 attacked immediately — `scripts/first_arrow_ladder.py`, same split, same seed,

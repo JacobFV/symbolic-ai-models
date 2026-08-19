@@ -40,11 +40,26 @@ from pathlib import Path
 from typing import Any, Callable
 
 from scripts.first_arrow_prose import (SEED, SRC, TRAIN_FRAC, components, load,
-                                       norm, score)
+                                       norm, score)  # noqa: F401
 
 OUT = Path("runs/first_arrow_ladder.json")
-#: From the finding. Reachable maxima for any string-only method.
-CEILING = {"f1": 0.717, "precision": 0.728, "recall": 0.707}
+def measure_ceiling(ix: "Index", pairs) -> dict[str, float]:
+    """The reachable maximum, measured rather than assumed.
+
+    A memoriser evaluated on held-out strings it has seen **verbatim** is being
+    handed the answer, so whatever it fails to score is label noise the input
+    cannot explain. Computing it from the data rather than pinning a constant is
+    what caught the error this script's first version inherited: the published
+    0.717 was not a property of affiliation linking, it was a property of a
+    snapshot that flattened authorships and asked one string to predict every
+    institution its author listed. On the authorship snapshot the same
+    measurement gives 0.988.
+    """
+    seen = [(ix.full.get(norm(raw), set()), truth) for raw, truth in pairs
+            if norm(raw) in ix.full]
+    s = score(seen)
+    return {"f1": s["f1"], "precision": s["precision"], "recall": s["recall"],
+            "n": s["n"], "exact": s["exact_set_match"]}
 
 
 class Index:
@@ -189,6 +204,9 @@ def main() -> None:
     pairs = [(a["raw"], set(a["rors"])) for w in test for a in w["affiliations"]
              if a["rors"]]
     unseen = [p for p in pairs if norm(p[0]) not in ix.full]
+    CEILING = measure_ceiling(ix, pairs)
+    print(f"ceiling measured on {CEILING['n']:,} verbatim-seen strings: "
+          f"F1 {CEILING['f1']:.3f}, exact {CEILING['exact']:.1%}", flush=True)
     print(f"{len(pairs):,} held-out strings, {len(unseen):,} never seen "
           f"({len(unseen)/len(pairs):.1%})\n", flush=True)
 
@@ -219,8 +237,13 @@ def main() -> None:
 
     v0f = rows["v0  component vote (published floor)"]["unseen"]["f1"]
     best = max(rows.items(), key=lambda kv: kv[1]["unseen"]["f1"])
-    print(f"\nv0 reproduces the published floor at {v0f:.3f} "
-          f"({'OK' if abs(v0f - 0.303) < 0.01 else 'MISMATCH — the ladder is not measuring the same thing'})")
+    # The floor to reproduce depends on which snapshot is loaded, and the two
+    # are different TASKS rather than different samples: the flattened snapshot
+    # asks one raw string to predict every institution its author listed.
+    expect = 0.378 if "authorship" in str(SRC) else 0.303
+    print(f"\nv0 reproduces this snapshot's published floor at {v0f:.3f} "
+          f"(expected {expect:.3f}: "
+          f"{'OK' if abs(v0f - expect) < 0.01 else 'MISMATCH — the ladder is not measuring the same thing'})")
     print(f"best rung: {best[0].strip()} at F1 {best[1]['unseen']['f1']:.3f}, "
           f"{best[1]['frac_of_ceiling']:.1%} of the ceiling, "
           f"a lift of {best[1]['unseen']['f1'] - v0f:+.3f} over the floor")
