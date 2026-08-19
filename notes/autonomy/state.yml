@@ -21,6 +21,14 @@ measured:
     KERNEL losses dominate. Grounded paragraphs 1.000 everywhere.
     The earlier "reader loss 0.682 exceeds every kernel loss" headline was
     caused by a missing branch in my own reader and is WITHDRAWN.
+  - STREAMING closed end to end: generating EPISODES (not just keys) from a
+    6e12-address split peaks at 271 KiB against 473 KiB from a 24-address one
+    (0.57x), and 10x the episodes costs +13%. Tokenizer now fits from a bounded
+    deterministic prefix -- 1024 ids from 64 episodes -- with two fits of the
+    same prefix required to agree. Cursor round-trips through a checkpoint dict.
+    train() is deliberately UNTOUCHED: floors and one-pass rule induction want
+    the whole training set, and only the batch-consuming neural control
+    benefits.
   - SCHEDULING (third domain): reader claim precision and recall exactly 1.000
     at V=1..4 with NO coreference -- entity prefixes carry the type so the
     signatures separate outright. Renderer 40/40 grounded and distinguishes a
@@ -260,6 +268,11 @@ next_actions:
   - A THIRD ANSWER TYPE (a number, a ranking) would test whether "one shared
     check per answer type" is a real decomposition or an artefact of having
     only boolean and set.
+  - Routing (directive 13) is now the last untouched directive item, and its
+    precondition is met: three domains with kernel ablations give execution
+    traces where valid strategies genuinely differ. Collect cost/latency/
+    success/confidence per path before learning anything -- explicit
+    heuristics until the traces exist.
   - Grounding now has three levels -- token, route adjacency, and CONTRADICTION
     against the structured answer -- and the renderer passes all three 40/40.
     The remaining hole is a real quantity attached to the wrong entity when no
