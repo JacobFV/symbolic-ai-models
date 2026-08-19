@@ -16,6 +16,11 @@ every number a lower bound. That is testable.
 | flood | 12 | 11.2 | **30** | **2.50** |
 | solvency | 24 | 5.0 | **0** | 0.00 |
 
+**And they are concentrated, not spread.** Only **5 of 14** non-empty flood
+cases have any; the affected ones have up to ten each. "2.50 per case" is an
+average over a skewed distribution and a six-seed scan finds nothing — which is
+how the test written for this finding first failed.
+
 **Joint dependencies exist**, and one is enough: a paragraph can cite every
 singly-load-bearing claim and still omit a pair the answer depends on.
 `omits_load_bearing` is a **lower bound, not a guarantee** — the fourth check in

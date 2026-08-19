@@ -193,8 +193,10 @@ def test_completeness_is_bought_with_length_not_magic() -> None:
 def test_omits_load_bearing_is_a_lower_bound() -> None:
     """It tests SINGLE-claim deletion, so a jointly-critical pair is invisible.
 
-    flood has 2.5 such pairs per case -- most often two parallel links, where
-    deleting either leaves the other carrying the traffic. Asserting they EXIST
+    flood has them in 5 of 14 non-empty cases -- most often two parallel links,
+    where deleting either leaves the other carrying the traffic. They are
+    CONCENTRATED, not spread: most cases have none and the affected ones have
+    up to ten, which is why a six-seed scan finds nothing. Asserting they EXIST
     keeps the check's name honest: it reports what it computes, and what it
     computes is a bound.
     """
@@ -202,7 +204,7 @@ def test_omits_load_bearing_is_a_lower_bound() -> None:
     from dataclasses import replace
 
     found = 0
-    for seed in range(6):
+    for seed in range(24):
         case = generate(seed)
         base = solve(case.world)[0]
         if not base:

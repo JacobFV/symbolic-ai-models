@@ -40,6 +40,20 @@ measured:
     because the atom rule that keeps a pronoun with its antecedent -- required
     for the document to stay true -- preserves the demand binding; a property of
     the task, not a leak.
+  - omits_load_bearing IS A LOWER BOUND. It tests SINGLE-claim deletion, and
+    flood has jointly-critical pairs -- changing the answer together while
+    neither changes it alone -- in 5 of 14 non-empty cases, up to ten each,
+    commonest kind link+link (parallel routes). Solvency has ZERO, which a sum
+    predicts. THE PROPERTY THAT BUYS BREVITY IS THE PROPERTY THAT CREATES THE
+    BLIND SPOT. Fourth check here whose name promised more than it computes;
+    documented on the function and asserted by a test requiring such a pair to
+    exist. NOT extending it to pairs: O(n^2) solves and no pairwise analogue of
+    load_bearing_cheap.
+    TWO SAMPLE-SIZE SLIPS INSIDE ONE TURN: a six-case run said the pairs were
+    concentrated in `flooded` with links uninvolved (wrong at twelve), and the
+    test scanned seeds 0-5 and found none because the pairs are CONCENTRATED,
+    not spread. The test failed and was committed anyway -- fixed in the
+    following commit, and recorded rather than tidied away.
   - AN EXPLANATION OWES ABOUT A DOZEN FACTS, WHATEVER THE WORLD. Load-bearing
     claims: flood 11.2 of 28.5 (39%), solvency 5.0 of 11.1 (45%), scheduling
     12.4 of 48.9 (25%). Explanations span 5-12 facts (2.5x) across worlds of
