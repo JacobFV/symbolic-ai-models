@@ -171,12 +171,24 @@ class Unit:
     tokens: list[Token] = field(default_factory=list)
     claim: Claim | None = None
     index: int = 0
+    #: The whole document this unit came from. A role is often decided by
+    #: document-level facts a sentence cannot see -- which entity the document is
+    #: ABOUT is never the one a relation points at -- and a feature function
+    #: that only receives the sentence cannot ask. Set by `_units`, so training
+    #: and inference see the same thing.
+    doc_text: str = ""
+    #: What the reading is FOR. `P(Y | Z, Q)` has a `Q` in it, and a role
+    #: decision is one of the places it earns its keep: an article about Sony
+    #: Music states a parent, and the parent is not Sony Music. Carried on the
+    #: unit so a feature function can ask, and set identically at fit time and
+    #: at inference so the two never diverge.
+    query: str = ""
 
 
 def _units(text: str) -> list[Unit]:
     out = []
     for k, (s, e) in enumerate(segment(text)):
-        u = Unit(s, e, text[s:e], tokenize(text[s:e], s), None, k)
+        u = Unit(s, e, text[s:e], tokenize(text[s:e], s), None, k, text)
         out.append(u)
     return out
 
@@ -847,6 +859,7 @@ class LearnedSpanReader:
                 "aligned units first. An unfitted reader that returned an empty "
                 "reading would look like a document with nothing in it.")
         started = time.perf_counter()
+        q = (query or "").strip()
         # Earlier documents contribute MENTIONS and never claims. That is the
         # whole of the cross-document state this reader needs: an antecedent is
         # a name that was written down, and re-deriving the claims around it
@@ -857,6 +870,8 @@ class LearnedSpanReader:
             for pu in _units(prior):
                 recent.extend(t.text for t in self.mentions.find(pu))
         units = _units(text)
+        for u in units:
+            u.query = q
         claims: list[Claim] = []
         belief: dict[int, float] = {}
         aligns: list[Alignment] = []

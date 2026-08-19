@@ -42,9 +42,11 @@ Run: uv run python -u scripts/real_text_reader.py
 
 from __future__ import annotations
 
+import functools
 import json
 import statistics
 import sys
+from collections import Counter
 from collections import defaultdict
 from pathlib import Path
 
@@ -151,6 +153,21 @@ def frame_features(u, mentions) -> list[str]:
     return out
 
 
+@functools.lru_cache(maxsize=512)
+def _doc_mentions(doc_text: str) -> tuple[tuple[str, int], ...]:
+    """Every mention in the document with its count, most frequent first.
+
+    Cached on the document text because the ranker asks once per candidate per
+    role, and re-scanning a 2 kB intro for each would be the dominant cost.
+    """
+    cm = CapitalisedMentions()
+    c: Counter = Counter()
+    for u in _units(doc_text):
+        for m in cm.find(u):
+            c[m.text] += 1
+    return tuple(c.most_common())
+
+
 def role_frame_features(pred, role, cands, j, u) -> list[str]:
     """What sits between this candidate and the mention before it.
 
@@ -182,6 +199,27 @@ def role_frame_features(pred, role, cands, j, u) -> list[str]:
     # Content words anywhere to the left, not only the last -- a relation stated
     # early in a long sentence is otherwise invisible to an adjacency feature.
     out += [f"cwany={w}" for w in dict.fromkeys(content[-4:])]
+
+    # Document-level. A Wikipedia intro is ABOUT an entity, and the entity a
+    # relation points at is never that one -- the subject is the most frequent
+    # mention and usually the first. Measured as the binding factor: with the
+    # classifier at 0.395 on the scale corpus the ranker sat at 0.400, capping
+    # the product at 0.238 however much text arrives.
+    doc = _doc_mentions(u.doc_text) if u.doc_text else ()
+    if doc:
+        counts = dict(doc)
+        # The article's own title when it is known, and the commonest mention
+        # otherwise. Guessing the subject from frequency picks `India` over
+        # `India Post`; the title is document metadata, not an annotation, and
+        # any document has one.
+        subject = u.query or doc[0][0]
+        n = counts.get(t.text, 0)
+        out += [f"is.subject={int(t.text == subject)}",
+                f"in.subject={int(t.text in subject or subject in t.text)}",
+                f"docfreq={min(n, 4)}",
+                f"rank={min(([i for i, (m, _) in enumerate(doc)
+                              if m == t.text] or [9])[0], 9)}",
+                f"hapax={int(n <= 1)}"]
     return out
 
 
@@ -276,6 +314,8 @@ def supervise_distant(doc: dict) -> list[Unit]:
     """
     units = _units(doc["intro"])
     for u in units:
+        u.query = doc.get("title", "")
+    for u in units:
         hit = label(u.text, doc)
         if hit is None:
             continue
@@ -317,7 +357,7 @@ def prune_to_best(reader, units_by_doc):
 
 def answers(reader, doc: dict) -> dict[str, str]:
     """One answer per relation: the claim the reader believes most."""
-    res = reader.run(doc["intro"])
+    res = reader.run(doc["intro"], query=doc.get("title", ""))
     best: dict[str, tuple[float, str]] = {}
     for i, c in enumerate(res.claims):
         v = c.roles.get("value")
