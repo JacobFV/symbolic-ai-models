@@ -18,16 +18,18 @@ Wikidata's `P749` (*parent organization*) plus the English Wikipedia intro is
 parent the company *used to* have, and Wikidata keeps both — so this is a
 labelled **staleness** set, not merely a labelled ownership set.
 
-148 companies, fetched through CirrusSearch and the entity API because WDQS was
-rate-limiting to one request a minute.
+168 companies, fetched through CirrusSearch and the entity API because WDQS was
+rate-limiting to one request a minute. *(An earlier draft of this note quoted the
+numbers at n=148, mid-fetch; the table below is the completed set and the
+conclusion is unchanged.)*
 
 ## The context, before any arm
 
 - **The current parent is named in the intro on only 0.696 of articles.** Nearly a
   third are unanswerable from the text given, whatever reads them.
-- Wikidata lists a **former** parent for 0.149, and the intro actually names one
-  on **0.115**.
-- **`stale_by_cancellation` flags a sentence on 0.338 of these articles** —
+- Wikidata lists a **former** parent for 0.155, and the intro actually names one
+  on **0.113**.
+- **`stale_by_cancellation` flags a sentence on 0.339 of these articles** —
   against 0.004 of scientific abstracts. Company prose is *dense* in cancellation
   language, which is exactly the condition under which a sentence-level gate is
   dangerous.
@@ -36,12 +38,12 @@ rate-limiting to one request a minute.
 
 | arm | answers | correct | precision | picks a **former** parent |
 |---|---:|---:|---:|---:|
-| naive patterns | 0.622 | **0.392** | 0.630 | 0.027 |
-| **+ sentence gate** | **0.568** | **0.351** | 0.619 | **0.027** |
-| **+ clause gate** | 0.615 | 0.378 | 0.615 | **0.020** |
+| naive patterns | 0.589 | **0.369** | 0.626 | 0.024 |
+| **+ sentence gate** | **0.542** | **0.327** | 0.604 | **0.024** |
+| **+ clause gate** | 0.583 | 0.357 | 0.612 | **0.018** |
 
 **The sentence gate loses coverage and accuracy and removes no staleness at all.**
-It costs eight answers and 0.041 accuracy, and the former-parent error does not
+It costs eight answers and 0.042 accuracy, and the former-parent error does not
 move. The clause gate keeps the coverage and is the only arm that reduces the
 error the gates exist for.
 
@@ -77,15 +79,15 @@ assumption has never been tested against text nobody here wrote.
 
 ## And the proportion is the sobering part
 
-The former-parent error is **2.7% of articles**. Precision among answered
+The former-parent error is **2.4% of articles**. Precision among answered
 articles is **0.63** against a ceiling of 0.696. So on real text, the staleness
 problem that took a day is a **small slice** of the error and the dominant one is
 that extraction is simply hard. Getting staleness perfectly right here would move
-accuracy 0.392 → 0.419.
+accuracy 0.369 → 0.393.
 
 ## What would refute this
 
-- 148 articles, one relation, one language, one encyclopedia's register.
+- 168 articles, one relation, one language, one encyclopedia's register.
   Wikipedia intros are unusually well-structured prose.
 - The naive extractor is four regex patterns and its 0.63 precision bounds every
   arm. A better extractor could change which gate helps.
