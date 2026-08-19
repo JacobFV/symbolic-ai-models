@@ -225,3 +225,43 @@ def test_a_kind_the_answer_ignores_reads_zero() -> None:
             moved += decide_reading(read_signature(text)) != full
     assert checked > 20, checked
     assert moved == 0, f"{moved}/{checked} owns deletions moved the verdict"
+
+
+def test_decidedness_matches_the_derived_identity() -> None:
+    """Carrying at-most-one-spurious-of-kind-K decides exactly when no single
+    deletion is load-bearing, so under independence ``decided = (1-d)^n``.
+
+    No free parameter -- ``d`` and ``n`` are both measured -- so this is a test
+    of independence, not a fit. **Non-empty cases only**: pooled, an
+    already-empty answer makes almost every deletion inert and five kinds read
+    exactly the empty-answer share, which inverts the conclusion.
+    """
+    from dataclasses import replace
+
+    from symbolic_ai_generators.flood import generate
+    from symbolic_ai_generators.flood.flow import solve
+
+    for kind, tol in (("bridge_on", 0.15), ("flooded", 0.15)):
+        ds, ns, decided = [], [], []
+        for seed in range(30):
+            case = generate(seed)
+            base = solve(case.world)[0]
+            if not base:
+                continue
+            idx = [i for i, c in enumerate(case.world.claims)
+                   if c.predicate == kind]
+            if not idx:
+                continue
+            hits = []
+            for i in idx:
+                trimmed = replace(case.world, claims=tuple(
+                    c for j, c in enumerate(case.world.claims) if j != i))
+                hits.append(solve(trimmed)[0] != base)
+            ds.append(sum(hits) / len(hits))
+            ns.append(len(idx))
+            decided.append(not any(hits))
+        d = sum(ds) / len(ds)
+        n = sum(ns) / len(ns)
+        predicted = (1.0 - d) ** n
+        observed = sum(decided) / len(decided)
+        assert abs(observed - predicted) < tol, (kind, predicted, observed)

@@ -75,8 +75,23 @@ measured:
     (carried vacuous), solvency owns deletion 0.000 (inert -- every member is
     recoverable from its own filing). Separation 3.4x. Note roles are NOT always
     load-bearing as I claimed: 0.467, not 1.0.
-    STILL NOT ESTABLISHED: any functional form. Two real carrying measurements
-    only. Same thinness that sank versions one and two, stated up front.
+    THE FORM IS NOW DERIVED AND MEASURED: decided = (1-d)^n, since carrying
+    at-most-one-spurious-of-kind-K decides exactly when no single deletion is
+    load-bearing. NO FREE PARAMETER -- d and n are both measured -- so it tests
+    INDEPENDENCE rather than fitting. Mean absolute residual 0.036 over nine
+    kinds, signs both ways; the three singleton kinds are exact by construction
+    and test nothing, the six multi-claim rows carry it at +0.006 mean signed.
+    POOLED IT SAYS THE OPPOSITE (+0.131, "independence fails"), and that was
+    the answer I predicted with a mechanism. Artefact of the case mix: on an
+    already-empty answer almost every deletion is inert. THE TELL was five kinds
+    reading exactly 0.433 -- flood's empty share -- with different n and d.
+    Re-checked the earlier carrying result for the same trap: the decided ==
+    correct identity holds WITHIN each population and non-empty reads 0.588, so
+    pooling UNDERSTATED it. Check run, answer went the other way.
+    SCOPE: measured on TRUE worlds, so it characterises the DOMAIN, not a
+    reader. The enumeration in a real policy runs over the READ world whose d
+    and n differ; the true-world link row is 0.059 while the read-world carrying
+    experiment is 0.588, and comparing them would be the next mistake.
     GUARD: collision_cost and deletion_dependency sit beside each other in
     audit.py documenting that they are NOT the same number, with a test
     asserting both.
