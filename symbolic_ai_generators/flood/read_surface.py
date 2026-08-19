@@ -306,6 +306,10 @@ def signature_readings(text: str) -> tuple[dict, dict]:
     lone_region: list[str] = []
     veh_numbers: dict[str, list[float]] = {}
     bare_numbers: list[float] = []
+    #: document order, so a bare quantity can be bound to the lone region that
+    #: immediately precedes it -- the same recency mechanism that resolves the
+    #: capacity pronoun, applied to the demand
+    order: list[tuple[str, object]] = []
     for sent in _sentences(text.replace("\n\n", " ")):
         regions = list(dict.fromkeys(_REGION.findall(sent)))
         trucks = list(dict.fromkeys(_TRUCK_ID.findall(sent)))
@@ -316,10 +320,12 @@ def signature_readings(text: str) -> tuple[dict, dict]:
             links.append((regions[0], regions[1]))
         elif len(regions) == 1 and not nums and not trucks:
             lone_region.append(regions[0])
+            order.append(("region", regions[0]))
         elif len(trucks) == 1 and nums:
             veh_numbers.setdefault(trucks[0], []).append(nums[0])
         elif not regions and not trucks and nums:
             bare_numbers.append(nums[0])
+            order.append(("bare", nums[0]))
     # link vs bridge_on resolves STRUCTURALLY: a bridge is a pair carrying a
     # limit, and every bridge in this generator carries one.
     for pair in crossings:
@@ -328,7 +334,8 @@ def signature_readings(text: str) -> tuple[dict, dict]:
     fixed = {"links": links, "crossings": crossings}
     open_ = {"vehicle_roles": veh_numbers,      # which number is mass, which cap
              "region_roles": lone_region,       # flooded / depot / needs
-             "bare_numbers": bare_numbers}      # pronoun capacity / demand
+             "bare_numbers": bare_numbers,      # pronoun capacity / demand
+             "order": order}                    # for adjacency binding
     return fixed, open_
 
 
@@ -410,6 +417,7 @@ def signature_worlds(text: str, *, cap: int = 512,
                      open_groups: frozenset[str] = frozenset(
                          {"vehicle", "region", "bare"}),
                      registry: dict | None = None,
+                     adjacency: bool = False,
                      truth=None) -> list[WorldSnapshot]:
     """Every world consistent with what the signature could determine.
 
@@ -494,6 +502,25 @@ def signature_worlds(text: str, *, cap: int = 512,
             dv = float(by["demand"].roles["value"].value)
             demand_choices = [i for i in demand_choices
                               if i is not None and bare[i] == dv]
+    # ADJACENCY: once the registry says which bare quantity is the demand, the
+    # needs site is the lone region immediately preceding it in the document.
+    # Structural, not lexical -- the same recency binding that resolves the
+    # capacity pronoun, applied to a second referent.
+    if adjacency and bare and len(demand_choices) == 1 and demand_choices[0] is not None:
+        want = bare[demand_choices[0]]
+        seq = open_.get("order", [])
+        pinned = None
+        for kind, val in seq:
+            if kind == "region":
+                last_region = val
+            elif kind == "bare" and val == want:
+                pinned = locals().get("last_region")
+                break
+        if pinned is not None and pinned in regions:
+            ni = regions.index(pinned)
+            narrowed = [(d, n) for d, n in region_choices if n == ni]
+            region_choices = narrowed or region_choices
+
     if not (veh_choices and region_choices and demand_choices):
         return []
     total = (len(veh_choices) * len(region_choices) * max(1, len(demand_choices)))
