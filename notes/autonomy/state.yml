@@ -40,6 +40,26 @@ measured:
     because the atom rule that keeps a pronoun with its antecedent -- required
     for the document to stay true -- preserves the demand binding; a property of
     the task, not a leak.
+  - THE EMPTY CELL IS FILLED, BY ONE VOCABULARY. read_content_roles -- type
+    signature for everything it determines, a declared anchor vocabulary for the
+    one group it cannot -- scores 1.000 in ALL FOUR cells of phrasing x
+    arrangement. First reader here invariant to both. Anchors were written into
+    predictions.jsonl BEFORE the phrasing variants were read.
+    Control: emptying the anchors costs 1.000 -> 0.618 interleaved, so content is
+    load-bearing (+0.382). Which content: FLOODING ONLY. Removing flooded
+    anchors costs most (0.853), removing needs costs NOTHING (1.000), depot
+    between (0.941) -- because needs is pinned by adjacency (1.000 claim recall,
+    no content) and depot is single-valued so elimination reaches it, while
+    flooding is the MANY-VALUED role and elimination cannot pin a set whose size
+    it does not know.
+    CORRECTION TO MY OWN EARLIER NOTE: the content-free floor is 0.618, not the
+    0.000 published for "the empty cell". Two of the new arm's gains are
+    content-free and were simply missing before -- adjacency for needs, and
+    never defaulting an unresolved region to flooded (which CUTS THE NETWORK).
+    The closure finding is unaffected: it is claim-level, and depot/flooded sit
+    at 0.471/0.632 recall with content removed.
+    WORDNET IS NOT ON DISK -- ~/nltk_data/corpora holds only `words` and nltk is
+    not installed. It was also not needed: five concept words closed the cell.
   - STRUCTURE IS LOAD-BEARING EXACTLY WHERE THE SIGNATURE DOES NOT FIX THE
     PREDICATE -- confirmed by manipulation, not only by correlation. Renaming
     flood's regions so the prefix carries the role (depot_3, flooded_1, site_2),
@@ -361,10 +381,13 @@ next_actions:
     of the 2x2 is CLOSED to content-free reading -- see measured -- so the two
     candidate content-free mechanisms are struck: they would be built against a
     proof. What remains, in order:
-      (a) a reader that reads CONTENT for the residual only -- depot vs flooded
-          -- and keeps the type signature for everything else. WordNet is on
-          disk. The measurement to beat is 32.4% decided at 2.5 worlds, and the
-          honest target is decidedness at soundness 1.000, not accuracy.
+      (a) DONE -- read_content_roles, 1.000 in all four cells. What is left is
+          the ADVERSARIAL variant test: the four flooding phrasings happen to be
+          reachable by five declared words, and "{w} went under overnight"
+          already dodges them and survives only through elimination. A fifth
+          phrasing built ADVERSARIALLY against the declared anchors would find
+          the true floor. That is the honest next measurement and it is cheap.
+          Note WordNet is NOT on disk (only `words`), and was not needed.
       (b) DONE for scheduling, and the answer reframed the question -- see
           measured. Solvency is still open and now has a sharper form: it has
           no committed reader module (its 1.000 came from a script), so the

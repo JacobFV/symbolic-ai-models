@@ -38,7 +38,8 @@ from symbolic_ai_core.world import (Claim, Entity, EntityRef, Facet, Quantity,
                                     WorldSnapshot)
 
 __all__ = ["read_surface", "read_lexical", "read_signature",
-           "read_signature_roles", "VALUE_REGISTRY"]
+           "read_signature_roles", "read_content_roles",
+           "VALUE_REGISTRY", "ROLE_ANCHORS"]
 
 #: A value vocabulary per claim kind -- **external knowledge**, and ablatable.
 #:
@@ -634,6 +635,136 @@ def read_signature_roles(text: str) -> WorldSnapshot:
                     vehicles.setdefault(last_vehicle, [None, None])[1] = nums[0]
 
     # A bridge is a region pair carrying a limit; every bridge here carries one.
+    for pair in crossings:
+        if pair not in links and (pair[1], pair[0]) not in links:
+            links.append(pair)
+    return _assemble(links, flooded, crossings,
+                     {k: tuple(v) for k, v in vehicles.items()},
+                     depot, needs, demand)
+
+
+#: A concept vocabulary per role -- **external knowledge**, declared and
+#: ablatable, exactly like `VALUE_REGISTRY`.
+#:
+#: These are the words someone told the task but not the generator would name:
+#: a depot is a base you start from, flooding is water, a need is a request.
+#: They were fixed and written into ``notes/autonomy/predictions.jsonl``
+#: **before** the phrasing variants were read, because choosing them afterwards
+#: would be memorising the generator -- this repo's oldest trap, and the reason
+#: the rules arm's 1.000 at V=1 means nothing.
+#:
+#: They exist because the alternative is impossible, not because it is hard:
+#: depot, flooded and needs are all realised as one region with no number and no
+#: vehicle, and the 2026-08-19 closure finding shows no content-free observable
+#: separates them (21/21 role-slots ambiguous). Content is the only route.
+ROLE_ANCHORS = {
+    "depot": ("depot", "base", "warehouse", "staging", "start", "origin"),
+    "flooded": ("flood", "water", "submerged", "impassable", "inundated",
+                "underwater"),
+    "needs": ("need", "require", "deliver", "supply", "request"),
+}
+
+
+def _anchor_role(sent: str, anchors: dict) -> str:
+    """Which role's vocabulary this sentence hits, or "" if none or several.
+
+    Matching is **token-prefix**: an anchor matches a token that starts with it,
+    so ``base`` reaches *based*, ``start`` reaches *starts* and ``request``
+    reaches *requested*, while ``supply`` does not reach *resupply*. A single
+    declarable rule, rather than a per-word decision made to fit the data.
+    """
+    tokens = re.findall(r"[a-z]+", sent.lower())
+    hit = {role for role, words in anchors.items()
+           if any(t.startswith(w) for t in tokens for w in words)}
+    return hit.pop() if len(hit) == 1 else ""
+
+
+def read_content_roles(text: str, *, anchors: dict | None = None
+                       ) -> WorldSnapshot:
+    """Signature for what the signature fixes, **content** for what it cannot.
+
+    Everything the type signature determines -- links, crossings, masses,
+    capacities, the demand -- is read exactly as `read_signature_roles` reads it,
+    with no content word consulted. The one group the signature leaves open is
+    depot / flooded / needs, and that group is *provably* unreachable without
+    content, so it and only it is read lexically.
+
+    Unmatched lone regions are settled by **elimination** where the rest of the
+    group is already pinned, which is what lets partial anchor coverage cascade.
+    """
+    anchors = ROLE_ANCHORS if anchors is None else anchors
+    links: list[tuple[str, str]] = []
+    crossings: dict[tuple[str, str], float | None] = {}
+    vehicles: dict[str, list] = {}
+    flooded: list[str] = []
+    unresolved: list[str] = []
+    order: list[str] = []
+    depot = needs = adjacent = ""
+    demand = None
+
+    paras = [[s for s in _sentences(p)] for p in text.split("\n\n")]
+    pairs = [sum(1 for s in ss
+                 if len(set(_REGION.findall(s))) == 2 and not _NUM.findall(s)
+                 and not _TRUCK_ID.findall(s)) for ss in paras]
+    network = max(range(len(paras)), key=lambda i: pairs[i]) if paras else -1
+
+    for pi, sents in enumerate(paras):
+        last_vehicle = ""
+        for sent in sents:
+            regions = list(dict.fromkeys(_REGION.findall(sent)))
+            trucks = list(dict.fromkeys(_TRUCK_ID.findall(sent)))
+            nums = [float(n) for n in _NUM.findall(sent)]
+            if len(regions) == 2 and nums:
+                crossings[(regions[0], regions[1])] = nums[-1]
+            elif len(regions) == 2 and not nums and not trucks:
+                if pi == network:
+                    links.append((regions[0], regions[1]))
+            elif len(regions) == 1 and not nums and not trucks:
+                role = _anchor_role(sent, anchors)
+                order.append(regions[0])
+                if role == "depot" and not depot:
+                    depot = regions[0]
+                elif role == "flooded":
+                    flooded.append(regions[0])
+                elif role == "needs" and not needs:
+                    needs = regions[0]
+                else:
+                    unresolved.append(regions[0])
+            elif len(trucks) == 1 and nums:
+                slot = 0 if nums[0] in VALUE_REGISTRY["mass"] else 1
+                vehicles.setdefault(trucks[0], [None, None])[slot] = nums[0]
+                last_vehicle = trucks[0]
+            elif len(trucks) == 1 and not nums:
+                last_vehicle = trucks[0]
+            elif not regions and not trucks and len(nums) == 1:
+                if nums[0] in VALUE_REGISTRY["demand"]:
+                    demand = nums[0]
+                    if order:
+                        adjacent = order[-1]
+                elif nums[0] in VALUE_REGISTRY["capacity"] and last_vehicle:
+                    vehicles.setdefault(last_vehicle, [None, None])[1] = nums[0]
+
+    # --- resolve what the anchors did not reach ---------------------------
+    # Adjacency first: the demand quantity names its site by sitting next to it,
+    # which is content-free and survives interleaving because the atom rule
+    # keeps a pronoun with its antecedent. This is the mechanism that lifted the
+    # enumerating arm from 0.147 to 0.324 decided.
+    if not needs and adjacent and adjacent in unresolved:
+        needs = adjacent
+        unresolved.remove(adjacent)
+    # Then elimination, but only into a role that is actually open. An
+    # unresolved region must NEVER default to flooded while depot or needs is
+    # still open: marking a region impassable cuts the network and destroys the
+    # answer, where leaving it unassigned merely fails to help. The first
+    # version of this defaulted to flooded and scored 0.000 for that reason.
+    for r in list(unresolved):
+        if not depot and needs:
+            depot = r
+        elif not needs and depot:
+            needs = r
+        elif depot and needs:
+            flooded.append(r)
+
     for pair in crossings:
         if pair not in links and (pair[1], pair[0]) not in links:
             links.append(pair)

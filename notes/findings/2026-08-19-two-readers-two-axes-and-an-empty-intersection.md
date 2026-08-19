@@ -117,3 +117,27 @@ and reported 72 worlds / 0.000 decided as though it were the arm's number. It is
 the number with the arm's declared external knowledge switched off. The ladder is
 now reported in full, which is the only honest form for an arm whose knowledge is
 a declared input.
+
+---
+
+## Correction (same day): the cell was empty for the arms that existed
+
+This note says "no arm survives both axes" and quotes 0.000 in the V=4
+interleaved cell. That is true of the arms measured here and **overstates the
+task**. See
+[[2026-08-19-the-empty-cell-is-filled-by-five-words-of-flooding]].
+
+A reader combining the signature with a small declared content vocabulary for the
+residual scores **1.000 in all four cells**. More pointedly, emptying that
+vocabulary still leaves **0.618**, not 0.000, because two of the newer arm's
+improvements are **content-free** and were simply absent from `read_signature_roles`:
+
+- binding `needs` by **adjacency** to the demand quantity rather than by
+  paragraph membership — worth 1.000 claim recall on that role with no content;
+- never defaulting an unresolved region to **flooded**, which cuts the network
+  and destroys the answer where leaving it unassigned merely fails to help.
+
+So the honest statement is that the *intersection of the two mechanisms measured
+here* was empty, not that the cell was unreachable. The neighbouring closure
+finding is unaffected: it is about claim-level identifiability of depot vs
+flooded, which still sits at 0.471 and 0.632 recall with content removed.

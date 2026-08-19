@@ -32,7 +32,8 @@ from pathlib import Path
 
 from symbolic_ai_generators.flood import generate
 from symbolic_ai_generators.flood.flow import solve
-from symbolic_ai_generators.flood.read_surface import (read_lexical,
+from symbolic_ai_generators.flood.read_surface import (read_content_roles,
+                                                       read_lexical,
                                                        read_signature,
                                                        read_signature_roles,
                                                        read_surface,
@@ -48,6 +49,7 @@ VARIANTS = (1, 4)
 READERS = (
     ("signature/index", read_signature),
     ("signature/roles", read_signature_roles),
+    ("signature+content", read_content_roles),
     ("rules", read_surface),
     ("lexical", read_lexical),
 )
