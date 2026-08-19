@@ -135,7 +135,8 @@ def render_observation(case: Any, *, seed: int | None = None,
                        variants: int = 1,
                        hard_distractors: bool | str = False,
                        cue: str = "cued", hard_scale: float = 0.5,
-                       packed: bool = False) -> Observation:
+                       packed: bool = False,
+                       stale_clause: bool = False) -> Observation:
     """Render a :class:`SolvencyCase` as four aligned paragraphs.
 
     ``hard_distractors`` points the distractors at entities that **matter**. The
@@ -148,6 +149,14 @@ def render_observation(case: Any, *, seed: int | None = None,
     Pass ``True`` for both hard forms, or ``"owns"`` / ``"filing"`` for one.
     ``cue`` selects the phrasing: ``"cued"`` carries a declared cancellation
     word, ``"uncued"`` carries none and is the floor for the staleness gate.
+
+    ``stale_clause`` prefixes a **real** member's filing with a former-parent
+    clause -- *"sub_0, formerly a subsidiary of sub_97, reported 105.87 USD,
+    filed 29 May 2026"*. The clause is irrelevant and the filing is needed, so a
+    sentence-level staleness gate deletes both and a clause-level one deletes
+    only the first. That is the Wikipedia *Miramax* failure in miniature, made
+    reproducible without leaving the repo; see
+    ``notes/findings/2026-08-19-on-real-prose-the-sentence-is-the-wrong-unit.md``.
 
     ``packed`` renders **two claims in one sentence** -- the ownership and the
     child's first filing -- with a span for each over the same text. Real prose
@@ -233,11 +242,20 @@ def render_observation(case: Any, *, seed: int | None = None,
 
     doc.glue("\n\n")
     doc.add("AS FIRST REPORTED.")
+    stale_target = sorted(first)[0] if (stale_clause and first) else None
     for m, (v, k) in sorted(first.items()):
         if m in packed_children:
             continue                      # already stated inside its owns line
         doc.glue(" ")
         ci = rev_index.get((m, round(v, 2)))
+        if m == stale_target:
+            # sub_97 rather than a bare name, so the clause really does put a
+            # SECOND entity in the sentence -- with an unmatched word the reader
+            # sees one entity and the case is not packed at all.
+            doc.add(f"{m}, formerly a subsidiary of sub_97, reported {v:.2f} "
+                    f"USD, filed {_date(k, style)}.", claim=ci, kind="revenue",
+                    entities=(m,))
+            continue
         doc.add(pick("filed").format(m=m, n=v, d=_date(k, style)),
                 claim=ci, kind="revenue", entities=(m,))
 

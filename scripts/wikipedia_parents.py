@@ -27,7 +27,8 @@ import re
 import statistics
 from pathlib import Path
 
-from symbolic_ai_generators.staleness import stale_by_cancellation
+from symbolic_ai_generators.staleness import (filter_stale,
+                                              stale_by_cancellation)
 
 SRC = Path("data/artifacts/wikipedia_parents.jsonl")
 OUT = Path("runs/wikipedia_parents.json")
@@ -91,17 +92,10 @@ def hit(guess: str, gold: str) -> bool:
 
 
 def read(text: str, mode: str) -> str:
-    if mode == "sentence":
-        text = " ".join(s for s in sentences(text)
-                        if not stale_by_cancellation(s))
-    elif mode == "clause":
-        kept = []
-        for s in sentences(text):
-            if stale_by_cancellation(s):
-                kept += [c for c in clauses(s) if not stale_by_cancellation(c)]
-            else:
-                kept.append(s)
-        text = ". ".join(kept)
+    """The shipped filter, so there is one implementation of the gate."""
+    if mode in ("sentence", "clause"):
+        text = filter_stale(re.sub(r"\s+", " ", text), stale_by_cancellation,
+                            unit=mode)
     cands = candidates(text)
     return cands[0] if cands else ""
 

@@ -127,17 +127,46 @@ def stale_by_cancellation(sentence: str, *, cues=CANCELLING) -> bool:
     return _has(sentence, cues) or _habitual_past(sentence.lower())
 
 
-def filter_stale(text: str, gate) -> str:
-    """Drop every sentence the gate marks, keeping paragraph structure.
+#: Where a clause ends. A comma, a semicolon, a colon, or a contrastive
+#: conjunction -- crude next to a parser and enough to separate *"sub_0, formerly
+#: a subsidiary of holdco, reported 105.87 USD"* into a dead clause and a live
+#: one.
+_CLAUSE = re.compile(r"[,;:]|\s+(?:but|although|though)\s+")
 
-    Reader-agnostic on purpose: this is the first component here meant to be
-    shared across domains unchanged, so it operates on the text rather than on
-    anything a particular reader builds.
+
+def filter_stale(text: str, gate, *, unit: str = "sentence") -> str:
+    """Drop the flagged text, keeping paragraph structure.
+
+    ``unit="sentence"`` drops a whole flagged sentence. That is free on every
+    generated surface here, because each puts **one claim in one sentence** --
+    and it is **wrong on real prose**, which does not. Measured on 168 Wikipedia
+    company intros: the sentence gate loses coverage 0.589 -> 0.542 and accuracy
+    0.369 -> 0.327 while removing **no** staleness at all, because a sentence
+    routinely carries a dead owner and a live one and the gate deletes both. The
+    worked case is *Miramax*, where it answers with a **former** parent because it
+    kept the sentence naming the dead owner and deleted the one naming the live
+    one.
+
+    ``unit="clause"`` drops only the clause the flag sits in. On the same corpus
+    it keeps the coverage (0.583) and is the only arm that reduces the
+    former-parent error (0.024 -> 0.018).
+
+    The default stays ``"sentence"`` so every number measured before this keeps
+    its meaning. ``"clause"`` is the honest setting for text nobody here wrote.
     """
     out = []
     for para in text.split("\n\n"):
         sents = [s for s in re.split(r"(?<=[.?])\s+", para) if s.strip()]
-        kept = [s for s in sents if not gate(s)]
+        kept: list[str] = []
+        for sent in sents:
+            if not gate(sent):
+                kept.append(sent)
+            elif unit == "clause":
+                parts = [c.strip().rstrip(".") for c in _CLAUSE.split(sent)
+                         if c.strip()]
+                live = [c for c in parts if not gate(c)]
+                if live:
+                    kept.append(" ".join(live) + ".")
         out.append(" ".join(kept))
     return "\n\n".join(out)
 
