@@ -463,6 +463,19 @@ answer-everything certificates are unchanged.)*
 > which real prose does not supply; corroboration needs only repetition, which it
 > supplies abundantly.
 
+**But corroboration is a threshold, not a ranker.** Answering with the
+*most-mentioned* candidate instead of the first is **worse** — precision 0.535
+against 0.626 at the same coverage — because it selects nationality adjectives and
+the subject's own abbreviation (*French*, *Italian*, *CPR*), which an article
+repeats precisely because they are what it is about. **Corroboration counts
+mentions of a string, not of an entity.**
+
+That is the third independent route to one gap: agreement fails because names are
+not **resolved**, ranking fails because non-entities are not **filtered**, and the
+signature discipline works at all only because entities are named `region_0`.
+**Entity resolution and entity typing are the missing capability for real text**,
+now named from three directions rather than argued from one.
+
 The enumeration theorem is untouched — its premise is that wrong candidates give a
 **different answer**, and that is the half real text breaks. **Emission needs an
 equivalence relation on answers, and on real prose that relation is entity

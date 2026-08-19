@@ -40,6 +40,29 @@ measured:
     because the atom rule that keeps a pronoun with its antecedent -- required
     for the document to stay true -- preserves the demand binding; a property of
     the task, not a leak.
+  - CORROBORATION COUNTS STRINGS, NOT ENTITIES -- so it is a threshold and not a
+    ranker. Spending the same information better should have worked and does not:
+      policy                            coverage  correct  precision
+      first match (published)              0.589    0.369      0.626
+      first match, corroborated only       0.423    0.304      0.718
+      RANKED by corroboration              0.589    0.315      0.535
+    RANKING IS WORSE THAN FIRST-MATCH, not equal. And not for the predicted
+    reason: I expected it to prefer FORMER parents (history is verbose). Of the
+    14 disagreeing articles each picks a former parent exactly ONCE and
+    first-match wins them 10 to 2. The ranker actually picks NATIONALITY
+    ADJECTIVES AND THE SUBJECT'S OWN ABBREVIATION -- "French", "Italian", "CPR" --
+    regex noise, repeated often precisely because it is what an article about a
+    French company repeats.
+    As a THRESHOLD it removes candidates too rare to be real, which is real
+    information. As a RANKING it selects for whatever the document repeats most,
+    all of which the extractor mistook for owners. The filter survives because it
+    only REMOVES and still takes the first candidate, and an intro leads with the
+    current owner.
+    THREE ROUTES, ONE GAP: agreement fails because names are not RESOLVED (Sony
+    Music Entertainment vs Sony Music Group); ranking fails because non-entities
+    are not FILTERED (French, CPR); and the signature discipline works only
+    because entities are named region_0. ENTITY RESOLUTION AND ENTITY TYPING ARE
+    THE MISSING CAPABILITY, named from three directions rather than argued once.
   - CORROBORATION TRANSFERS WHERE AGREEMENT DOES NOT. Same family in the notes,
     completely different on real prose. 168 Wikipedia intros, answered cases
     split by whether the candidate's core token appears ELSEWHERE in the intro:
