@@ -71,6 +71,31 @@ narrows from 3.5x to **2.2x**.
 
 ## 3. Where the crossover is, and it is not close
 
+> **Verified on a curve, and it holds.** The 1.54x figure below is a **two-point
+> fit** between two different files, the smaller of which is a relevance-ordered
+> prefix — every reason to distrust it. Measured properly instead: four corpus
+> sizes x three shuffles of the closed corpus, reader fitted and cross-validated
+> *within* each subsample, twelve points in one code path.
+>
+> | articles | seed 11 | seed 12 | seed 13 | mean | events |
+> |---|---|---|---|---|---|
+> | 200 | 0.160 | 0.043 | 0.084 | 0.096 | 6–23 |
+> | 500 | 0.128 | 0.084 | 0.111 | 0.108 | 29–48 |
+> | 1,000 | 0.144 | 0.123 | 0.127 | 0.131 | 87–104 |
+> | 2,502 | 0.148 | 0.145 | 0.161 | 0.151 | 260–288 |
+>
+> Fitted: `rate = 0.0347 · n^0.189`, which is **1.54x per decade** — the
+> two-point figure to two decimals — and puts the crossover at **384,874
+> articles**, inside the published 10⁵–10⁶ band.
+>
+> **Predicted the exponent would come out lower**, on the theory that a
+> relevance-ordered small corpus is easier than a random one and makes growth
+> look steeper. Wrong: it is the same. The seed spread at n=200 is wide (0.043 to
+> 0.160 on 6 to 23 events) and closes to 0.145–0.161 by n=2,502, which is where
+> the fit gets its leverage.
+
+
+
 Classifier recall grew 0.256 → 0.395 over 9.9x the data, a factor of **1.54 per
 decade**. Extrapolating that rate, matching four hand-written patterns needs
 roughly **10⁵–10⁶ articles** — two to three more decades of text to recover what

@@ -2759,8 +2759,10 @@ decimals across a tenfold change in corpus size. It is **not** a constant of
 relation extraction: `country` comes out at 0.921, because a country is written
 *adjacent* to a city and has no lexical trigger at all.
 
-Extrapolating classifier recall at 1.54x per decade of text, matching four hand
-patterns needs roughly **10⁵–10⁶ articles** — which is the knowledge-acquisition
+Extrapolating at **1.54x per decade of text** — a two-point fit that was then
+**verified on twelve points**, four corpus sizes by three shuffles inside one
+code path, giving `rate = 0.0347·n^0.189` and a crossover at **384,874
+articles** — matching four hand patterns needs roughly **10⁵–10⁶ articles** — which is the knowledge-acquisition
 bottleneck restated as an exchange rate, and it cuts both ways: the patterns cap
 out at 68% of the corpus ceiling.
 
