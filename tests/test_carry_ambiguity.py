@@ -126,3 +126,42 @@ def test_early_exit_does_not_change_the_decided_set() -> None:
                 early = False
                 break
         assert early == full, seed
+
+
+def test_the_certificate_agrees_with_the_enumeration() -> None:
+    """Proving insensitivity must match checking it, in both directions.
+
+    Sufficiency is proved: deleting a link is monotone, so a vehicle that cannot
+    qualify cannot be made to qualify by removing a road, and a qualifying one
+    survives iff its admissible subgraph keeps depot and site connected after any
+    single edge removal.
+
+    Necessity is measured -- exact over 95 non-empty cases -- and rests on the
+    flow's answer coinciding with the graph condition, which ASP's route cap
+    could in principle break. A failure here is information about that gap, not
+    a flaky test.
+    """
+    import sys
+    sys.path.insert(0, "scripts")
+    from insensitivity_certificate import certifies_insensitive
+
+    for seed in range(N):
+        case = generate(seed)
+        if not solve(case.world)[0]:
+            continue
+        world = _read(case)
+        decided = len(_answers(world)) == 1
+        assert certifies_insensitive(world) == decided, seed
+
+
+def test_the_certificate_needs_no_flow_solve() -> None:
+    """Its whole value is being cheap: claims in, verdict out, no kernel call."""
+    import inspect
+    import sys
+    sys.path.insert(0, "scripts")
+    import insensitivity_certificate as ic
+
+    src = inspect.getsource(ic.certifies_insensitive) + \
+        inspect.getsource(ic._read_world) + inspect.getsource(ic._connected)
+    for forbidden in ("solve(", "get_kernel", "evaluate("):
+        assert forbidden not in src, forbidden

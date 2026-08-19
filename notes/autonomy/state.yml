@@ -60,12 +60,20 @@ measured:
     every candidate on a DECIDED case, since agreement must be proven, and
     decided cases are the majority (20/34). 13.7 -> 10.2 mean solves, 13.4x ->
     10.0x. Should have computed that bound before writing a proxy.
-    THE REAL DIRECTION: the cost is that PROVING AGREEMENT REQUIRES EXHAUSTING
-    THE CANDIDATES. A CERTIFICATE that no single deletion can change the answer
-    would settle a decided case in ONE solve instead of sixteen.
-    symbolic_ai_core/runtime/certificate.py already carries Sensitivity and
-    slack machinery for exactly that question. UNTRIED, and it is the highest
-    remaining lever on the price of soundness.
+    DONE, AND IT MAKES SOUNDNESS FREE. The certificate: deleting a link is
+    MONOTONE, so a vehicle that cannot qualify cannot be made to qualify -- free
+    -- and a qualifying one survives iff depot and site stay connected in its
+    admissible subgraph after ANY single edge removal (2-edge-connectivity, one
+    DFS per edge, no kernel call). 95 non-empty cases over 150 seeds: 50
+    decided, fires 50, 0 unsound, 0 incomplete.
+    PRICE OF SOUNDNESS 13.4x -> 6.0x (trusting only the PROVED sufficiency) ->
+    1.0x (trusting the MEASURED converse): one solve for the answer plus a DFS
+    to decide whether to give it is exactly what the collapsing reader spends,
+    for the same twenty correct answers. The difference between 13.4x and 1.0x
+    is the difference between CHECKING every candidate and PROVING none matters.
+    GENERALITY: needs a MONOTONE perturbation and a STRUCTURAL INVARIANT
+    standing in for the expensive computation. Covers DELETIONS only -- a
+    corrupted limit is not monotone and the free half of the argument goes.
   - REFUSING TO COLLAPSE COSTS NOTHING HERE AND FLAGS EVERY ERROR. Nothing
     downstream of a reader can catch an invented claim, so the remaining
     response is directive 19's. The audit says offline that flood's (2 regions,
