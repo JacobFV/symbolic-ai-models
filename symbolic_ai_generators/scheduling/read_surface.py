@@ -24,14 +24,34 @@ from symbolic_ai_core.world import (Claim, Entity, EntityRef, Quantity,
 
 from .surface import CAPABILITIES
 
-__all__ = ["read_signature"]
+__all__ = ["read_signature", "read_signature_accumulating"]
 
 _MACHINE = re.compile(r"\bmachine_\d+\b")
 _JOB = re.compile(r"\bjob_\d+\b")
 _NUM = re.compile(r"\b(\d+\.\d{2})\b")
 
 
+def read_signature_accumulating(text: str, *, capabilities=CAPABILITIES
+                                ) -> WorldSnapshot:
+    """Every claim in a sentence, not one branch per sentence.
+
+    `read_signature` uses an ``elif`` chain, so *"machine_0 is set up for cut and
+    has 5.51 hours available"* matches the capacity branch and the capability is
+    **silently dropped** -- seed 0 loses two of four capabilities and the whole
+    surface falls to its floor.
+
+    Same claims, same signatures; the only difference is that a machine sentence
+    yields its quantity **and** its capability words rather than one of them.
+    """
+    return _scan(text, capabilities, accumulate=True)
+
+
 def read_signature(text: str, *, capabilities=CAPABILITIES) -> WorldSnapshot:
+    """Type every sentence by its shape, one branch per sentence."""
+    return _scan(text, capabilities, accumulate=False)
+
+
+def _scan(text: str, capabilities, *, accumulate: bool) -> WorldSnapshot:
     machines: dict[str, float] = {}
     jobs: dict[str, float] = {}
     has: list[tuple[str, str]] = []
@@ -41,7 +61,20 @@ def read_signature(text: str, *, capabilities=CAPABILITIES) -> WorldSnapshot:
         js = list(dict.fromkeys(_JOB.findall(sent)))
         ns = [float(x) for x in _NUM.findall(sent)]
         caps = [c for c in capabilities if re.search(rf"\b{c}\b", sent)]
-        if len(ms) == 1 and ns and not js:
+        if accumulate:
+            if len(ms) == 1 and not js:
+                if ns:
+                    machines[ms[0]] = ns[0]
+                for c in caps:
+                    if (ms[0], c) not in has:
+                        has.append((ms[0], c))
+            elif len(js) == 1 and not ms:
+                if ns:
+                    jobs[js[0]] = ns[0]
+                for c in caps:
+                    if (js[0], c) not in needs:
+                        needs.append((js[0], c))
+        elif len(ms) == 1 and ns and not js:
             machines[ms[0]] = ns[0]
         elif len(js) == 1 and ns and not ms:
             jobs[js[0]] = ns[0]

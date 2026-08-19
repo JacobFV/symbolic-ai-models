@@ -24,7 +24,8 @@ import re
 from dataclasses import dataclass, field
 
 __all__ = ["Reading", "read_signature",
-           "read_signature_consolidated", "decide_reading"]
+           "read_signature_consolidated", "read_signature_accumulating",
+           "decide_reading"]
 
 _ENTITY = re.compile(r"\bsub_\d+\b|\bgroup\b")
 #: The parent is named ``group``, with NO number -- it does not follow the
@@ -124,6 +125,60 @@ def read_signature_consolidated(text: str) -> Reading:
     are complementary and neither covers the other.
     """
     return _scan(text, filing_enrols=False)
+
+
+def read_signature_accumulating(text: str, *,
+                                filing_enrols: bool = False) -> Reading:
+    """Every claim in a sentence, not one branch per sentence.
+
+    `read_signature` selects a branch by the sentence's shape, so a **packed**
+    sentence -- *"group owns sub_0, which reported 105.87 USD, filed 29 May
+    2026"* -- matches no branch at all and **both** claims are lost. Measured:
+    packing takes that reader from 1.000 to 0.567, its floor exactly.
+
+    This scans for each pattern independently, which is the rule flood's reader
+    already obeyed by accident:
+
+    - two or more entities enrol members;
+    - a money value with a date files a figure, attached to the entity **nearest
+      the money**. That binding is positional and content-free -- the same signal
+      flood uses to attach a demand to its site -- and it is what a packed
+      sentence needs, since the filer is the entity beside the number rather than
+      the subject of the sentence.
+
+    ``filing_enrols`` keeps the published reader's rule available: a filing makes
+    its filer a member. Default ``False``, the consolidated rule, because the
+    ownership paragraph is otherwise decorative -- see
+    `read_signature_consolidated`.
+    """
+    r = Reading()
+    for sent in re.split(r"(?<=\.)\s+|(?<=\?)\s+", text.replace("\n\n", " ")):
+        if not sent.strip():
+            continue
+        ents = [(m.group(0), m.start()) for m in _ENTITY.finditer(sent)]
+        names = list(dict.fromkeys(e for e, _ in ents))
+        dates = _dates(sent)
+        money = [(float(m.group(1)), m.start()) for m in _MONEY.finditer(sent)]
+
+        if len(names) >= 2:
+            r.members.update(names)
+        if money and dates and names:
+            value, at = money[0]
+            filer = min(ents, key=lambda e: abs(e[1] - at))[0]
+            if filing_enrols:
+                r.members.add(filer)
+            elif len(names) == 1:
+                # an unpacked filing line names only its filer, and the
+                # consolidated rule takes membership from ownership alone
+                pass
+            r.filings.append((filer, value, dates[0]))
+        elif money and dates and not names:
+            pass
+        if not names and money and not dates:
+            r.threshold = money[0][0]
+        if not names and dates and not money:
+            r.decision_date = dates[0]
+    return r
 
 
 def decide_reading(reading: Reading) -> bool | None:
