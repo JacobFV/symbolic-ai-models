@@ -11,6 +11,63 @@ were each paid for), `APPROACH.md` (the argument), then this, then `ROADMAP.md`.
 
 ---
 
+## 0. Added 2026-08-19 — routing is answered, and the harness was the cost
+
+Two things a cold reader should have before §1.
+
+**Directive 13's routing question is answered, negatively, with numbers.** The
+escalation rule `p·L > c₁ − c₀` prices the cheap kernel as a *substitute* for
+the expensive one. In both domains measured it is a **complement** — `c₁` is a
+function of whether `c₀` ran:
+
+- **Flood.** Removing datalog reachability made the flow **1.78× more expensive
+  and less accurate**. Its escalation threshold is *negative*: no loss `L`,
+  however small, makes skipping it pay. The two arms that genuinely are cheaper
+  need a wrong answer to cost under 9.37e-09 / 2.63e-09 USD before they are
+  worth taking, and per-case spread is p50 1.08×, max 2.14×.
+- **Scheduling.** The sound one-sided capacity gate removes **87.7% of solver
+  time on 50.0% of instances** — 1.75× its fire rate, at zero accuracy cost.
+  Cost peaks at *barely* infeasible, where no single machine's constraint is
+  violated by any partial assignment and the contradiction lives only in the sum
+  **across** machines. clingo's propagators are per-constraint; the gate does
+  that cross-machine sum in O(n).
+
+So: **run every sound cheap check, always, and never route around one.** A
+learned router has nothing to choose between yet. What would reopen it: an
+*unsound* cheap arm whose error rate is predictable from pre-run world features,
+or a cost spread beyond 2.14×. Neither exists in these three domains.
+See `notes/findings/2026-08-19-the-cheap-kernel-is-not-an-escalation-tier.md`.
+
+**The largest cost in the scheduling domain was not in the system.** `generate()`
+called an exhaustive `itertools.product` over `n_machines ** n_jobs` to fix
+ground truth — **53.1 s on one 18-job instance**, against milliseconds for the
+ASP kernel on the same world. It was written for the default `n_jobs=6`, where
+3⁶ = 729, and nobody had run it elsewhere. Replaced with a pruned *exact* search:
+same verdicts, **2,721,429× faster**, domain now reaches 80 jobs / 6 machines.
+
+Three traps in that, all still live:
+
+1. **The oracle still binds.** At 40 jobs / 5 machines and at slack exactly 0
+   (capacity = demand, the bound goes tight, the problem becomes exact
+   partition) it is *again* the wall. Memoising failed states was tried and
+   bought nothing — real-valued durations mean partial states never repeat.
+   Any experiment wanting the phase transition at scale is gated on this.
+2. **A test pinned the implementation, not the property.** It asserted
+   `"itertools.product" in src` as evidence of exhaustiveness, which made the
+   oracle unimprovable. See
+   `notes/lessons/2026-08-19-a-test-that-pins-the-implementation-makes-the-code-unimprovable.md`.
+3. **The neighbouring test `test_the_expensive_kernel_really_is_the_expensive_part`
+   passed throughout and was never wrong.** It measures cost *inside the flow*;
+   the runaway cost was in the harness outside it. A correct test whose scope
+   stops short of the problem reads exactly like a clean bill of health.
+
+Four hypotheses died before the real cause was found — `budget_ns` not binding
+(it binds, to the millisecond), grounding unbounded (it is unbounded, but fast),
+`SCALE=100`'s weights (innocent). All wrong the same way: **looking inside the
+system for a cost that was in the harness.**
+
+---
+
 ## 1. Where the live edge is
 
 The programme pivoted on 2026-08-18 from *model zoo + language curriculum* to a
