@@ -150,3 +150,28 @@ def test_a_common_word_does_not_become_an_entity_by_sharing_a_shape():
     assert lex.is_entity(toks["group"])
     assert lex.is_entity(toks["sub_4"])
     assert not lex.is_entity(toks["owns"])
+
+
+def test_sensitivity_weights_scale_the_update_and_change_the_fit():
+    """The weighted objective is wired to the classifier, not decoration.
+
+    It is not asserted to be BETTER -- it measurably is not, see
+    `notes/findings/2026-08-19-the-sensitivity-weighted-objective-over-predicts-
+    exactly-the-claims-it-protects.md`. What is asserted is that the weights
+    reach the fit at all, so the negative result is about the idea rather than
+    about a weight that was silently ignored.
+    """
+    data = corpus("flood", range(6))
+    docs = [supervise(o.text, o.spans, c.world.claims) for c, o in data]
+    flat = LearnedSpanReader().fit(docs)
+    tilted = LearnedSpanReader(weights={"needs": 8.0, "link": 0.1}).fit(docs)
+    assert flat.clf.w != tilted.clf.w
+
+
+def test_an_absent_weight_is_one_and_none_is_the_mean():
+    r = LearnedSpanReader(weights={"a": 2.0, "b": 4.0})
+    from symbolic_ai_core.reader.learned import NONE
+    assert r._weight("a") == 2.0
+    assert r._weight("zzz") == 1.0
+    assert r._weight(NONE) == 3.0
+    assert LearnedSpanReader()._weight("anything") == 1.0

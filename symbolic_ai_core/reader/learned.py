@@ -49,6 +49,7 @@ from __future__ import annotations
 
 import math
 import re
+import statistics
 import time
 from collections import Counter, defaultdict
 from dataclasses import dataclass, field
@@ -239,13 +240,22 @@ class Perceptron:
         last[y] = self._t
         w[y] = w.get(y, 0.0) + d
 
-    def update(self, feats: Sequence[str], gold: str, pred: str) -> None:
+    def update(self, feats: Sequence[str], gold: str, pred: str,
+               weight: float = 1.0) -> None:
+        """``weight`` is how much this confusion costs downstream.
+
+        A perceptron update of size ``w`` is the mistake-driven form of a
+        weighted loss: the decision boundary moves ``w`` times as far for an
+        error the kernels are ``w`` times as sensitive to. This is where
+        ``L_reader = sum_i s_i L_i`` enters, and it needs nothing
+        differentiable on the other side of the boundary.
+        """
         self._t += 1
         if gold == pred:
             return
         for f in feats:
-            self._bump(f, gold, 1.0)
-            self._bump(f, pred, -1.0)
+            self._bump(f, gold, weight)
+            self._bump(f, pred, -weight)
 
     def average(self) -> None:
         for f, w in self.w.items():
@@ -433,9 +443,23 @@ class _RoleSpec:
 class LearnedSpanReader:
     """`text -> ReadResult`, with every domain fact induced from alignments."""
 
-    def __init__(self, id: str = "learned.span@1", *, epochs: int = 8) -> None:
+    def __init__(self, id: str = "learned.span@1", *, epochs: int = 8,
+                 weights: Mapping[str, float] | None = None) -> None:
+        """``weights`` maps a predicate to its downstream sensitivity.
+
+        Measured by intervention, not by correlation --
+        ``scripts/sensitivity_weights.py`` deletes one gold claim and re-runs the
+        kernels, so the number is a property of the task and survives any change
+        to the reader. Absent, every claim costs the same, which is claim F1's
+        assumption and is false in every domain measured: flood spans 6.6x.
+
+        The per-example weight is `s_p` and the per-document contribution
+        `n_p s_p` follows, because a predicate with `n_p` claims contributes
+        `n_p` examples.
+        """
         self.id = id
         self.epochs = epochs
+        self.weights = dict(weights or {})
         self.lex = Lexicon()
         self.clf = Perceptron()
         self.rankers: dict[str, _Ranker] = defaultdict(_Ranker)
@@ -531,8 +555,20 @@ class LearnedSpanReader:
         for _ in range(self.epochs):
             for feats, gold in data:
                 pred, _ = self.clf.predict(feats)
-                self.clf.update(feats, gold, pred)
+                # Priced at the MAX of the two labels' sensitivities: missing a
+                # load-bearing claim and inventing one are both errors against
+                # it, and a cost that only looked at the gold label would leave
+                # false positives on critical predicates unpriced.
+                w = max(self._weight(gold), self._weight(pred))
+                self.clf.update(feats, gold, pred, w)
         self.clf.average()
+
+    def _weight(self, label: str) -> float:
+        if not self.weights:
+            return 1.0
+        if label == NONE:
+            return statistics.mean(self.weights.values())
+        return self.weights.get(label, 1.0)
 
     def _fit_rankers(self, units: Sequence[Unit]) -> None:
         examples = []
