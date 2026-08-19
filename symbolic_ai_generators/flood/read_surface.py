@@ -37,7 +37,8 @@ import re
 from symbolic_ai_core.world import (Claim, Entity, EntityRef, Facet, Quantity,
                                     WorldSnapshot)
 
-__all__ = ["read_surface", "read_lexical", "read_signature", "VALUE_REGISTRY"]
+__all__ = ["read_surface", "read_lexical", "read_signature",
+           "read_signature_roles", "VALUE_REGISTRY"]
 
 #: A value vocabulary per claim kind -- **external knowledge**, and ablatable.
 #:
@@ -549,3 +550,93 @@ def signature_worlds(text: str, *, cap: int = 512,
                     fixed["links"], flooded_r, dict(fixed["crossings"]),
                     dict(vehicles), depot_r, needs_r, demand))
     return out
+
+
+def read_signature_roles(text: str) -> WorldSnapshot:
+    """``text -> WorldSnapshot`` by signature and paragraph **co-occurrence**.
+
+    `read_signature` branches on ``pi == 0``, ``pi == 1``, ``pi == 2``,
+    ``pi == 3``: it knows this generator's five-paragraph template by index. That
+    is why it scores 1.000, and it is why the surface is saturated -- the number
+    measures the harness as much as the reading.
+
+    This arm keeps the one structural fact that survives reordering: **which
+    sentences share a paragraph**. Paragraph *roles* are then read off content
+    rather than position, and they resolve exactly the groups
+    `signature_readings` has to leave open:
+
+    - ``region_roles`` -- depot, flooded and needs are all one region, no
+      number, no vehicle, and the type signature cannot separate them. The
+      paragraph carrying the **demand** quantity owns the needs site; the
+      paragraph carrying the **masses** owns the depot; every other lone region
+      is flooded.
+    - ``bare_numbers`` -- resolved by the value registry, with the vehicle taken
+      from the nearest preceding naming sentence in the same paragraph.
+
+    No content word is consulted: only entity types, membership of a value
+    vocabulary, and paragraph co-membership. The link paragraph is the one with
+    the most region-pair sentences, which is what keeps the "districts X and Y
+    lie outside the affected area" distractor from entering as a road.
+    """
+    paras: list[list[tuple[list[str], list[str], list[float]]]] = []
+    for para in text.split("\n\n"):
+        sents = []
+        for sent in _sentences(para):
+            sents.append((list(dict.fromkeys(_REGION.findall(sent))),
+                          list(dict.fromkeys(_TRUCK_ID.findall(sent))),
+                          [float(n) for n in _NUM.findall(sent)]))
+        paras.append(sents)
+
+    def carries(sents, kind: str) -> bool:
+        reg = VALUE_REGISTRY[kind]
+        if kind == "demand":
+            return any(not r and not t and len(n) == 1 and n[0] in reg
+                       for r, t, n in sents)
+        return any(len(t) == 1 and n and n[0] in reg for r, t, n in sents)
+
+    pairs = [sum(1 for r, t, n in s if len(r) == 2 and not n and not t)
+             for s in paras]
+    network = max(range(len(paras)), key=lambda i: pairs[i]) if paras else -1
+
+    links: list[tuple[str, str]] = []
+    crossings: dict[tuple[str, str], float | None] = {}
+    vehicles: dict[str, list] = {}
+    flooded: list[str] = []
+    depot = needs = ""
+    demand = None
+
+    for pi, sents in enumerate(paras):
+        has_demand, has_mass = carries(sents, "demand"), carries(sents, "mass")
+        last_vehicle = ""
+        for regions, trucks, nums in sents:
+            if len(regions) == 2 and nums:
+                crossings[(regions[0], regions[1])] = nums[-1]
+            elif len(regions) == 2 and not nums and not trucks:
+                if pi == network:
+                    links.append((regions[0], regions[1]))
+            elif len(regions) == 1 and not nums and not trucks:
+                if has_demand:
+                    needs = needs or regions[0]
+                elif has_mass:
+                    depot = depot or regions[0]
+                else:
+                    flooded.append(regions[0])
+            elif len(trucks) == 1 and nums:
+                slot = 0 if nums[0] in VALUE_REGISTRY["mass"] else 1
+                vehicles.setdefault(trucks[0], [None, None])[slot] = nums[0]
+                last_vehicle = trucks[0]
+            elif len(trucks) == 1 and not nums:
+                last_vehicle = trucks[0]          # the naming sentence
+            elif not regions and not trucks and len(nums) == 1:
+                if nums[0] in VALUE_REGISTRY["demand"]:
+                    demand = nums[0]
+                elif nums[0] in VALUE_REGISTRY["capacity"] and last_vehicle:
+                    vehicles.setdefault(last_vehicle, [None, None])[1] = nums[0]
+
+    # A bridge is a region pair carrying a limit; every bridge here carries one.
+    for pair in crossings:
+        if pair not in links and (pair[1], pair[0]) not in links:
+            links.append(pair)
+    return _assemble(links, flooded, crossings,
+                     {k: tuple(v) for k, v in vehicles.items()},
+                     depot, needs, demand)
