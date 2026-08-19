@@ -30,6 +30,10 @@ measured:
     recall 0.946, non-empty accuracy 0.318 at V=1,2,3,4. At V>=2 it is the only
     reader above zero. Regime crossover: hand-authored wins 1.000 vs 0.318 on a
     fixed surface, signature wins the moment the surface varies.
+  - THEORY TRANSFER: the survival law holds on solvency with both parameters
+    predicted in advance -- F 0.583 predicted / 0.590 fitted (1.1%), k 8.25
+    predicted / 9.92 fitted (20.2%), rmse 0.0070. Trivial population dependency
+    is exactly 0.00. Flood k = 8.31, solvency k = 9.92.
   - TRANSFER: the reader machinery works unchanged on solvency, a structurally
     opposite task (no routing, no subset answer, trivial kernel, bitemporal
     core). Signature reader 1.000 at every V; flood's "take the latest value"
@@ -96,6 +100,15 @@ theory:
       ~30%, not 1%. Pooled ablation vs fit agrees to 0.9% but that is two
       component errors cancelling; on non-empty cases mean d = 11.05 and
       k_eff = 10.91 against a fitted 8.31.
+    transfers: >
+      CONFIRMED out of domain on solvency, with BOTH parameters predicted from
+      structure before the sweep. F = P(truth == the degenerate answer), read
+      off an empty world with no corruption: predicted 0.583, fitted 0.590,
+      1.1% error. k = ablation dependency on the NON-TRIVIAL population:
+      predicted 8.25, fitted 9.92, 20.2% error -- better than flood's own 31%.
+      The trivial population has dependency EXACTLY 0.00 on all 35 cases.
+      So required reader recall is computable for a new domain with no sweep:
+      empty world -> F; ablate the non-trivial cases -> k.
     superseded_by: "S = prod_kind q_kind^d_kind, d_kind from ablation"
     when_it_works: >
       Confirmed where the loss is PURE RECALL. One pattern set against V
@@ -146,11 +159,12 @@ next_actions:
     pattern arm did. This is the first place a lexical resource (WordNet is on
     disk) or a learned component is the only mechanism available, not a
     shortcut. Build it as an arm and measure at V=4.
-  - Transfer the THEORY, not just the machinery. On solvency: is F again the
-    trivial-answer share (cases whose verdict is identical under every
-    reading)? Is the ambiguity budget again concentrated on the claim that
+  - Third domain: scheduling is built and untried, and it has an expensive
+    kernel AND a tunable margin, so it is the natural next test of the law and
+    of the reader machinery together.
+  - Ambiguity budget on solvency: is it again concentrated on the claim that
     SIZES the answer -- in flood the demand, here plausibly the threshold or
-    the decision date? Both are measurable with what now exists.
+    the decision date? Measurable with what now exists.
   - The temporal policy is hand-written per domain, which argues the reader
     should EMIT the time and let a kernel decide rather than resolve it. That
     is testable against the ambiguity machinery already built.
