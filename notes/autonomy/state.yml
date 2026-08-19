@@ -67,6 +67,23 @@ measured:
     32, so lifts across different n_eval are not comparable
 
 theory:
+  - name: mixed_evidence_corruption
+    status: derived_model_unfitted
+    formula: "P(True|p) = prod_j [1 - (1-p)^2 (1-(1-p)^2)^m_j]"
+    variables:
+      p: claim drop rate
+      m_j: machines carrying job j's capability, counted from the claims
+    consequence: >
+      Where claims are opposite-signed evidence the corruption curve is U-shaped
+      and DERIVABLE with no free parameter: a job is a constraint only if both
+      its claims survive, a machine is usable only if both of its do. Mean |err|
+      0.070 and 0.069 at two slack settings on originally-feasible cases, both
+      endpoints exact. Modelling only the capability channel gives the right
+      shape at half the depth (0.234 / 0.172), so the second exponent is worth
+      2.5x and was predicted rather than fitted.
+    scope: >
+      Predicts how corruption moves a FEASIBLE instance, not which instances are
+      feasible. The unconditional curve needs a capacity term as well.
   - name: ambiguity_value
     status: empirical_regime
     formula: "decided% is not a function of |worlds|; it depends on WHICH group"
@@ -173,11 +190,10 @@ next_actions:
     pattern arm did. This is the first place a lexical resource (WordNet is on
     disk) or a learned component is the only mechanism available, not a
     shortcut. Build it as an arm and measure at V=4.
-  - A two-sided form for mixed-evidence tasks: the scheduling curve is the
-    superposition of a demand term rising to 1 and a supply term falling to 0,
-    both monotone alone. Nothing says the curve is unmodellable, only that a
-    one-parameter monotone decay is the wrong family. Fit a two-term form and
-    see whether its parameters have referents too.
+  - The two-sided form is DERIVED and unfitted (see theory ledger). What it
+    does not cover is which instances are feasible at p=0 -- capacity as a
+    binding constraint on the original instance is a separate, co-dominant
+    term. Deriving that would complete the unconditional curve.
   - The reader machinery on scheduling is still untried -- only the law was
     tested there.
   - Ambiguity budget on solvency: is it again concentrated on the claim that
