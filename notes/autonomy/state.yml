@@ -40,6 +40,20 @@ measured:
     because the atom rule that keeps a pronoun with its antecedent -- required
     for the document to stay true -- preserves the demand binding; a property of
     the task, not a leak.
+  - THE LEDGER WAS PRICING 4% OF SOLVENCY. CLAUDE.md says cost is charged to
+    the SYSTEM and cost.py's System exists because "sum is not optional" -- and
+    every milestone priced KERNEL ARTIFACTS ONLY. Charging a reader component
+    too: flood 8.480e-08 -> 8.684e-08 (1.02x), scheduling 4.048e-07 ->
+    4.089e-07 (1.01x), SOLVENCY 2.161e-11 -> 7.218e-10 (33.4x). Ordering
+    unchanged (solvency < flood < scheduling), so cross-domain comparisons are
+    INCOMPLETE rather than WRONG, and flood/scheduling conclusions stand.
+    WHY IT LASTED: two of three barely move. A METRIC IS NOT VALIDATED BY THE
+    CASES WHERE ITS MISSING TERM IS NEGLIGIBLE -- and the non-negligible case is
+    the one the thesis is about, since if reasoning is cheap then READING is
+    what you pay for.
+    cost.py's docstring now carries the rule and the numbers (the omission was
+    never a bug in that module but in every caller). System still cannot detect
+    it: sum is not optional over the components it is GIVEN.
   - TIME AND ERROR LIVE IN DIFFERENT PLACES. Solvency's milestone completes the
     set: filing recall 1.000, task acc 1.000, grounded 1.000 on all three
     surfaces including interleaved, reader loss 0.000 (bounded 1.50% at n=200).

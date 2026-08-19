@@ -45,6 +45,19 @@ a vendor's published per-token price. The system's cost per token is the *sum*.
 There is no way to express "our part is free" without also expressing what the
 other parts cost, which is the exact misreading this module was written after.
 
+**The reader is a component.** A :class:`System` that prices only the kernel is
+not a cheaper system, it is an incomplete ledger, and this module cannot detect
+the omission -- ``sum`` is not optional over the components it is *given*.
+Measured 2026-08-19 across the three domains, reading is 1.9% of flood's wall
+clock, 0.9% of scheduling's and **96.1% of solvency's**, so charging the kernel
+alone moves flood and scheduling by 1.02x and 1.01x and **solvency by 33.4x**.
+
+Two of three barely moving is exactly why that omission survived for months. A
+metric is not validated by the cases where its missing term is negligible, and
+the case where it is not negligible is the one this repo's thesis is about --
+if symbolic reasoning is cheap, then reading is what you are paying for. See
+``scripts/reader_in_the_ledger.py``.
+
 **The floor divides the numerator.** ``usd_per_solved_episode_above_floor``
 divides by ``accuracy - floor``, not by ``accuracy``. A system that scores at or
 below its fitted floor has bought nothing, and the ledger reports its cost per
