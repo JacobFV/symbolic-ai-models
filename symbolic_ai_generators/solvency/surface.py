@@ -114,9 +114,47 @@ class _Doc:
         return "".join(self.parts)
 
 
+#: A divested subsidiary that **does** file, and a withdrawn figure. Both are
+#: written twice: a ``cued`` form carrying a declared cancellation word, and an
+#: ``uncued`` form carrying none. The uncued pair is the honest floor for
+#: `symbolic_ai_generators.staleness` -- writing only cued distractors would
+#: decide the experiment, which is the trap
+#: `notes/lessons/2026-08-19-a-verification-that-uses-the-mechanisms-own-predicate-decides-the-experiment.md`
+#: is about.
+HARD_OWNS = {
+    "cued": "sub_98 is a former subsidiary of {g}, divested before the period.",
+    "uncued": "sub_98 left the {g} in April.",
+}
+HARD_FILING = {
+    "cued": "sub_0's earlier draft of {n:.2f} USD, dated {d}, was withdrawn.",
+    "uncued": "An unaudited memorandum from sub_0 on {d} shows {n:.2f} USD.",
+}
+
+
 def render_observation(case: Any, *, seed: int | None = None,
-                       variants: int = 1) -> Observation:
-    """Render a :class:`SolvencyCase` as four aligned paragraphs."""
+                       variants: int = 1,
+                       hard_distractors: bool | str = False,
+                       cue: str = "cued", hard_scale: float = 0.5
+                       ) -> Observation:
+    """Render a :class:`SolvencyCase` as four aligned paragraphs.
+
+    ``hard_distractors`` points the distractors at entities that **matter**. The
+    default one is inert twice over: ``sub_99`` names one entity so it matches no
+    reader branch, and it has no filings, so admitting it would sum to nothing.
+    That is the third instance of the same defect -- flood's disused track drew
+    its endpoints from outside the network, scheduling's withdrawn machine
+    carried no capability.
+
+    Pass ``True`` for both hard forms, or ``"owns"`` / ``"filing"`` for one.
+    ``cue`` selects the phrasing: ``"cued"`` carries a declared cancellation
+    word, ``"uncued"`` carries none and is the floor for the staleness gate.
+
+    ``hard_scale`` is the spurious figure as a fraction of the threshold, and it
+    sets how much damage the distractor does. **Quote it with any number taken
+    from this surface** -- at 0.5 the sum clears the covenant on every case, so
+    the accuracy that produces is a property of the injection, not of the
+    reader. A realistic size is one member's share, roughly 1/len(members).
+    """
     world = case.world
     rng = random.Random(case.seed if seed is None else seed)
 
@@ -148,6 +186,11 @@ def render_observation(case: Any, *, seed: int | None = None,
     doc.glue(" ")
     doc.add("A former subsidiary, sub_99, was divested before the period and "
             "does not consolidate.")
+    _sides = ({"owns", "filing"} if hard_distractors is True
+              else {hard_distractors} if hard_distractors else set())
+    if "owns" in _sides:
+        doc.glue(" ")
+        doc.add(HARD_OWNS[cue].format(g=case.group))
 
     # ---- 2. filings as first reported ---------------------------------
     first: dict[str, tuple[float, str]] = {}
@@ -165,6 +208,19 @@ def render_observation(case: Any, *, seed: int | None = None,
         ci = rev_index.get((m, round(v, 2)))
         doc.add(pick("filed").format(m=m, n=v, d=_date(k, style)),
                 claim=ci, kind="revenue", entities=(m,))
+
+    if "owns" in _sides:
+        # sub_98 must FILE, or admitting the ownership claim costs nothing --
+        # which is exactly what makes sub_99 inert. Dated inside the window and
+        # large enough to move a threshold.
+        doc.glue(" ")
+        doc.add(pick("filed").format(m="sub_98",
+                                     n=case.threshold * hard_scale,
+                                     d=_date(case.decision_date, style)))
+    if "filing" in _sides:
+        doc.glue(" ")
+        doc.add(HARD_FILING[cue].format(n=case.threshold * hard_scale,
+                                        d=_date(case.decision_date, style)))
 
     # ---- 3. revisions --------------------------------------------------
     doc.glue("\n\n")

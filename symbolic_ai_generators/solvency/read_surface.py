@@ -23,7 +23,8 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 
-__all__ = ["Reading", "read_signature", "decide_reading"]
+__all__ = ["Reading", "read_signature",
+           "read_signature_consolidated", "decide_reading"]
 
 _ENTITY = re.compile(r"\bsub_\d+\b|\bgroup\b")
 #: The parent is named ``group``, with NO number -- it does not follow the
@@ -68,7 +69,7 @@ class Reading:
     decision_date: str | None = None
 
 
-def read_signature(text: str) -> Reading:
+def _scan(text: str, *, filing_enrols: bool) -> Reading:
     """Type every sentence by its shape. No content word is consulted."""
     r = Reading()
     for sent in re.split(r"(?<=\.)\s+|(?<=\?)\s+", text.replace("\n\n", " ")):
@@ -80,13 +81,49 @@ def read_signature(text: str) -> Reading:
         if len(ents) == 2 and not money and not dates:
             r.members.update(ents)
         elif len(ents) == 1 and money and dates:
-            r.members.add(ents[0])
+            if filing_enrols:
+                r.members.add(ents[0])
             r.filings.append((ents[0], money[0], dates[0]))
         elif not ents and money and not dates:
             r.threshold = money[0]
         elif not ents and dates and not money:
             r.decision_date = dates[0]
     return r
+
+
+def read_signature(text: str) -> Reading:
+    """The published reader. **A filing enrols its filer as a member.**
+
+    That is not what "consolidated" means, and it makes the entire ownership
+    paragraph decorative: deleting it changes the answer on **0 of 200** cases.
+    The reader reported 1.000 accuracy and 1.000 filing recall in all six cells
+    of V x arrangement without ever reading the group structure, because the
+    generator never files a figure for a non-member -- the same
+    inert-by-construction pattern as flood's disused track and scheduling's
+    withdrawn machine, one level up, in the reader's own logic rather than in a
+    distractor.
+
+    Point a filing at a divested subsidiary and it consolidates: accuracy
+    1.000 -> 0.485 with 103 of 200 answers **false-TRUE**. Kept registered
+    unchanged so its published numbers keep their meaning; see
+    `read_signature_consolidated` for the reader that reads the paragraph.
+    """
+    return _scan(text, filing_enrols=True)
+
+
+def read_signature_consolidated(text: str) -> Reading:
+    """Membership comes from the **ownership** claims and nothing else.
+
+    A filing is evidence about a figure, not about who is in the group. This is
+    the whole difference from `read_signature`, and it costs nothing on the
+    published surface -- every filer there is a member -- while removing the
+    entire false-TRUE failure the divested-filer distractor creates.
+
+    It does **not** make the reader safe. An ownership sentence for a divested
+    subsidiary still enrols it, which is what the staleness gate is for; the two
+    are complementary and neither covers the other.
+    """
+    return _scan(text, filing_enrols=False)
 
 
 def decide_reading(reading: Reading) -> bool | None:
