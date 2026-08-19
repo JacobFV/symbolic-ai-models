@@ -54,11 +54,23 @@ measured:
     real prose supplies abundantly. The generated surfaces made agreement look
     powerful because their candidates were ROLE ASSIGNMENTS -- exactly one can be
     right by construction.
-    PRICED: break_even_wrong_cost(0.369, 0.423, 1.0, 0.718) = 0.103. A wrong
-    answer need only cost ONE TENTH of a right one for the filter to pay -- the
-    lowest break-even measured today (flood's certificate 0.60, scheduling's
-    2.95). No extra compute, and THE FIRST COMPONENT HERE THAT IMPROVES A
-    REAL-TEXT NUMBER.
+    THE SIGNAL IS GRADED, NOT BINARY: precision by mention count is
+    1 -> 0.375 (n=24), 2 -> 0.500 (20), 3 -> 0.857 (14), 4+ -> 0.784 (37). Roughly
+    DOUBLES from one mention to three or more; the dip at 4+ is not resolvable at
+    these n. So corroboration is a CALIBRATED CONFIDENCE, the first graded signal
+    this repo has on real text -- every other check it owns is yes/no. It does
+    NOT compose with the clause gate (0.718 -> 0.700).
+    PRICED, AND THE METRIC ITSELF WAS WRONG: break_even_wrong_cost was written for
+    systems that ANSWER EVERYTHING, so its denominator is (1 - rate). The
+    Wikipedia baseline abstains on 42%, and using it unchanged counted every
+    abstention as a WRONG ANSWER. THE FIRST VERSION OF THIS NOTE REPORTED 0.103;
+    THE HONEST FIGURE IS 0.242, a 2.3x understatement, found by computing the raw
+    utilities by hand and getting a different number. The function now takes
+    `answer_rate` (default 1.0) and the three answer-everything figures are
+    UNCHANGED: flood 0.595, scheduling 2.948, solvency free. Raising the
+    threshold to >=3 mentions costs 0.512, so >=2 is the better operating point
+    unless a wrong answer is expensive. Still the lowest of the day, still the
+    FIRST COMPONENT HERE THAT IMPROVES A REAL-TEXT NUMBER, at no extra compute.
   - AGREEMENT IS A TEST FOR EXCLUSIVE ALTERNATIVES, AND REAL PROSE DOES NOT
     SUPPLY THEM. The repo's most distinctive idea, on text nobody here wrote.
       arm                          answers  correct  precision

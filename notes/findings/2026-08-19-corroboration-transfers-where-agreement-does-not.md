@@ -43,15 +43,44 @@ where exactly one can be right by construction. Nothing in real text is built th
 way, and the repo's notes had been treating the two mechanisms as
 interchangeable.
 
-## What it costs, in the metric built this morning
+## The signal is graded, not binary
 
-`break_even_wrong_cost(rate=0.369, coverage=0.423, m=1.0, certified_rate=0.718)`
-= **0.103**.
+Splitting further by mention count:
 
-A wrong answer need only cost **one tenth** of a right one for the corroboration
-filter to pay — the lowest break-even measured today, against 0.60 for flood's
-certificate and 2.95 for scheduling's. It costs no extra compute and it is the
-first component in this repo that improves a **real-text** number.
+| mentions | n | precision |
+|---:|---:|---:|
+| 1 | 24 | 0.375 |
+| 2 | 20 | 0.500 |
+| 3 | 14 | **0.857** |
+| 4+ | 37 | 0.784 |
+
+Precision roughly **doubles** from one mention to three or more. The dip at 4+ is
+14 cases against 37 and is not resolvable here. So corroboration is a **calibrated
+confidence** rather than a gate — the first graded signal this repo has on real
+text; every check it owns is otherwise yes/no.
+
+It does **not** compose with the clause gate: corroborated-only goes 0.718 → 0.700
+with the gate on. They address different failures and neither helps the other.
+
+## What it costs — and a correction to the metric itself
+
+`break_even_wrong_cost` was written for systems that **answer everything**, so its
+denominator is `1 - rate`. The Wikipedia baseline abstains on 42% of cases, and
+using the function unchanged counted every abstention as a wrong answer:
+
+> **The first version of this note reported 0.103. The honest figure is 0.242** —
+> a 2.3× understatement. Found by computing the raw utilities by hand and getting
+> a different number.
+
+The function now takes `answer_rate`, defaulting to 1.0. The three
+answer-everything figures are unchanged: flood's certificate **0.595**,
+scheduling's **2.948**, solvency's membership certificate **free**.
+
+So a wrong answer need cost about **a quarter** of a right one for the
+corroboration filter to pay — still the lowest of the day, and the first component
+in this repo that improves a **real-text** number, at no extra compute. Raising
+the threshold to ≥3 mentions costs **0.512**, so ≥2 is the better operating point
+unless a wrong answer is expensive.
 
 ## What would refute this
 
@@ -63,3 +92,5 @@ first component in this repo that improves a **real-text** number.
   0.346 bucket argues against that reading but does not exclude it: 26 cases.
 - The precision figures are over answered cases only; the ceiling — the gold
   parent named in the intro at all — is 0.696 and neither arm approaches it.
+- The mention-count buckets hold 24, 20, 14 and 37 cases. The 1-vs-3+ contrast is
+  the claim; the shape between 3 and 4+ is not.

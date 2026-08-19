@@ -330,7 +330,8 @@ class Targeting:
 
 def break_even_wrong_cost(rate: float, coverage: float,
                           compute_multiple: float,
-                          certified_rate: float = 1.0) -> float:
+                          certified_rate: float = 1.0,
+                          answer_rate: float = 1.0) -> float:
     """What a wrong answer must cost, relative to a right one, for refusing to pay.
 
     ``usd_per_solved_above_floor`` counts **answers**, so a check that refuses
@@ -341,11 +342,20 @@ def break_even_wrong_cost(rate: float, coverage: float,
     is visible in the north star.
 
     The fix is not another denominator; it is to make the caller's decision a
-    **number**. Answering everything earns ``rate - W(1 - rate)`` per case at
-    compute ``c0``. Certifying earns ``coverage * certified_rate`` at ``c1``,
-    refusing the rest for nothing. Equating cost per unit of earned utility:
+    **number**. The baseline earns ``rate`` correct answers and gets
+    ``answer_rate - rate`` wrong, at compute ``c0``. Certifying earns
+    ``coverage * certified_rate`` at ``c1``, refusing the rest for nothing.
+    Equating cost per unit of earned utility:
 
-        W  >  [rate - coverage * certified_rate / m] / (1 - rate),   m = c1/c0
+        W  >  [rate - coverage * certified_rate / m] / (answer_rate - rate)
+
+    ``answer_rate`` is **how often the baseline answers at all**, and it defaults
+    to 1 because the systems this was written for answer everything. Passing it
+    matters: applied to a baseline that abstains on 42% of cases with
+    ``answer_rate=1``, this returned 0.103 where the honest figure is 0.241 --
+    a 2.3x understatement, because ``1 - rate`` counts every abstention as a
+    wrong answer. Found by computing the raw utilities by hand and getting a
+    different number.
 
     Returns that threshold. **Zero or below means the certificate is free** --
     it earns at least as much utility per unit of compute even when a wrong
@@ -360,10 +370,13 @@ def break_even_wrong_cost(rate: float, coverage: float,
         raise ValueError("rate and coverage are fractions in [0, 1]")
     if compute_multiple <= 0:
         raise ValueError("compute_multiple must be > 0")
-    if rate >= 1.0:
+    if not 0.0 <= answer_rate <= 1.0 or answer_rate < rate:
+        raise ValueError("answer_rate is a fraction in [0, 1] and cannot be "
+                         "below the rate of correct answers")
+    if answer_rate <= rate:
         return float("inf")               # never wrong; refusal only loses
     earned = coverage * certified_rate / compute_multiple
-    return (rate - earned) / (1.0 - rate)
+    return (rate - earned) / (answer_rate - rate)
 
 
 @dataclass(frozen=True)

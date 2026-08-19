@@ -446,9 +446,17 @@ same corporate group at different granularities — *Sony Music Entertainment* /
 answered cases by whether the candidate's core token appears elsewhere in the
 intro: **0.718** precision for corroborated candidates against **0.346** for
 single mentions, a 2.1× gap, and a policy of answering only when corroborated
-gives 0.423 coverage at 0.718 — against the naive 0.589 at 0.626. Priced at
-`break_even_wrong_cost` = **0.103**, the lowest of the day, and the first
-component here to improve a **real-text** number.
+gives 0.423 coverage at 0.718 — against the naive 0.589 at 0.626. And the signal
+is **graded**: precision by mention count runs 0.375 / 0.500 / 0.857 / 0.784 for
+1 / 2 / 3 / 4+, so it is a calibrated confidence rather than a gate — the first
+this repo has on real text.
+
+Priced at `break_even_wrong_cost` = **0.242**, the lowest of the day, and the
+first component here to improve a **real-text** number. *(That figure was
+published as 0.103 and is corrected: the function was written for systems that
+answer everything, and this baseline abstains on 42% of cases, so `1 - rate`
+counted every abstention as a wrong answer. It now takes `answer_rate`; the three
+answer-everything certificates are unchanged.)*
 
 > The two come apart because **agreement is a property of the relation *between*
 > candidates and corroboration a property *of one*.** Agreement needs exclusivity,

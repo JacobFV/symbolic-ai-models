@@ -47,3 +47,31 @@ def test_it_refuses_nonsense_inputs():
             break_even_wrong_cost(*bad)
     with pytest.raises(ValueError):
         break_even_wrong_cost(0.5, 0.5, 0.0)
+
+
+def test_an_abstaining_baseline_needs_its_answer_rate():
+    """The default `answer_rate=1.0` counts every abstention as a wrong answer.
+    Applied to a baseline that answers 57.7% of cases at 35.7% correct, that
+    returned 0.103 where the honest figure is 0.242 -- a 2.3x understatement,
+    and a published number until the raw utilities were computed by hand."""
+    naive_rate, naive_answers = 0.357, 0.577
+    wrong = break_even_wrong_cost(naive_rate, 0.423, 1.0, 0.718)
+    right = break_even_wrong_cost(naive_rate, 0.423, 1.0, 0.718,
+                                  answer_rate=naive_answers)
+    assert right == pytest.approx(0.242, abs=0.005)
+    assert right > wrong * 2.5
+
+
+def test_answering_everything_is_unchanged():
+    """The three certificates measured today all answer every case, so the fix
+    must not move them: flood 0.595, scheduling 2.948, solvency free."""
+    assert break_even_wrong_cost(0.679, 0.488, 1.0) == pytest.approx(0.595,
+                                                                     abs=0.005)
+    assert break_even_wrong_cost(0.790, 0.525, 3.07) == pytest.approx(2.948,
+                                                                      abs=0.01)
+    assert break_even_wrong_cost(0.485, 0.485, 1.0) == pytest.approx(0.0)
+
+
+def test_it_refuses_an_answer_rate_below_the_correct_rate():
+    with pytest.raises(ValueError):
+        break_even_wrong_cost(0.6, 0.4, 1.0, answer_rate=0.5)
