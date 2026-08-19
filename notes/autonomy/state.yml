@@ -40,6 +40,22 @@ measured:
     because the atom rule that keeps a pronoun with its antecedent -- required
     for the document to stay true -- preserves the demand binding; a property of
     the task, not a leak.
+  - AN EXPLANATION OWES ABOUT A DOZEN FACTS, WHATEVER THE WORLD. Load-bearing
+    claims: flood 11.2 of 28.5 (39%), solvency 5.0 of 11.1 (45%), scheduling
+    12.4 of 48.9 (25%). Explanations span 5-12 facts (2.5x) across worlds of
+    11-49 (4.4x). THE ABSOLUTE COUNT IS FLAT; THE SHARE IS NOT, and the share
+    varies mostly because denominators do.
+    TWO STRUCTURAL PREDICTIONS, BOTH WRONG: that exact fit would make scheduling
+    need the MOST (lowest by share), and that its obstruction was a small local
+    witness (touches 10 of 20 jobs). What drives its low share is the
+    DENOMINATOR -- 48.9 claims, mostly inert has_capability facts -- and its
+    explanation is the LARGEST in absolute terms.
+    CARRY: the complete renderer is not flood-specific; and EXPLANATION LENGTH
+    DOES NOT TRACK DECISION DIFFICULTY -- NP-hard scheduling explains in the
+    same space as flood's widest path. A third axis, independent of the two
+    already measured. Quote the ABSOLUTE count; the share is a ratio to a
+    generator artefact. Recorded as a description, NOT a law: three points, two
+    dead hypotheses, single-claim deletion so all numbers are lower bounds.
   - STAGE ACCOUNTING CLOSED. Priced the third stage nobody had measured:
     render share is 0.2% (flood), 0.1% (scheduling), 9.4% (solvency). MINOR
     EVERYWHERE -- I predicted it would rival reading in solvency and it is a
