@@ -102,9 +102,23 @@ widest-first, the 5 widest carry **57.5%** of the width and:
 | **10** | **6.9%** | **77.5%** | **$0.045** |
 | 20 | 2.0% | 92.8% | $0.091 |
 
-**Ten escalations move one-in-four to three-in-four for four and a half cents.**
-The bound was never merely honest — it came with the list of what to resolve, and
-that list is short because portfolio value is concentrated.
+**Ten escalations move one-in-four to three-in-four for four and a half cents** —
+on **usability**. **They do not preserve truth.** Tested on the bridged subset,
+the narrowed band still contains the truth only:
+
+| lookup accuracy | k=0 | **k=10** | k=20 |
+|---:|---:|---:|---:|
+| 1.00 | 100% | 100% | 100% |
+| **0.95** | 100% | **63.3%** | 42.3% |
+| 0.90 | 100% | 40.7% | 17.1% |
+
+**Coverage ≈ `a^k`**: any single wrong lookup breaks the band, because the policy
+resolves *widest-first* and one error displaces it by that position's full
+weight. The concentration that makes the product cheap makes it fragile.
+
+> **You can have a bound that is always true and rarely usable, or one that is
+> usually usable and often false.** A narrowed band must be quoted with `a^k`,
+> and `a` for a real model on this task is unmeasured — §6.
 
 The advantage is a property of the domain's **structure-provenance**, not of the
 technology — and this reconciles the two

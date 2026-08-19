@@ -205,6 +205,42 @@ produces nothing, not where it is unsure* (1.00 quality per unit against 0.48).
 Here every candidate produces nothing, so the ordering that remains is
 **magnitude** — escalate the silent, **widest-first**.
 
+### CORRECTION: the tightened band is only as true as the lookups, and coverage is `a^k`
+
+The table above reports how many filers become **usable**. It does not report
+whether the narrowed bands are still **true** — and those are different axes.
+
+Tested on the bridged subset where truth is known: hide 42%, resolve the `k`
+widest hidden positions with a simulated lookup of accuracy `a`, and check
+whether the true share still lies inside the narrowed band.
+
+| lookup accuracy | k=0 | k=5 | **k=10** | k=20 |
+|---:|---:|---:|---:|---:|
+| **1.00** | 100.0% | 100.0% | **100.0%** | 100.0% |
+| **0.95** | 100.0% | 77.9% | **63.3%** | 42.3% |
+| **0.90** | 100.0% | 60.3% | **40.7%** | 17.1% |
+| 0.80 | 100.0% | 35.9% | 14.6% | 4.7% |
+
+*(a = 1.00 gives 100% everywhere and k = 0 gives 100% at every accuracy — the two
+sanity checks that would have shown a bug.)*
+
+**Coverage tracks `a^k` almost exactly** — 0.95¹⁰ = 59.9% against an observed
+63.3%; 0.90¹⁰ = 34.9% against 40.7%. **Essentially any single wrong lookup breaks
+the band**, because the policy resolves *widest-first* and one error displaces the
+band by that position's full weight, past the truth. **The concentration that made
+the product cheap is exactly what makes it fragile.**
+
+> **So the product above is largely illusory.** Ten lookups move filers with a
+> usable band from 23.7% to 77.5% — and at a 95%-accurate lookup only **63.3%**
+> of those bands still contain the truth, where the wide, unactionable bound
+> contained it **100%** of the time.
+
+**You can have a bound that is always true and rarely usable, or one that is
+usually usable and often false.** Escalation converts the first into the second,
+and faster than the lookup's error rate suggests. A narrowed band has to be
+quoted with its reliability `a^k` — and nobody has `a` for a real model on this
+task, because that comparison is still blocked on credentials (`ROADMAP.md` 0b).
+
 ### A bug caught by an impossible shape
 
 The first version of this curve was **non-monotone**: 28.6% median band at 1
