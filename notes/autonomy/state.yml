@@ -178,6 +178,15 @@ blockers:
     strongest version of the programme's weakest measurement.
 
 research_debt:
+  - assumption: "HANDOVER.md section 3 is a complete-enough view of what is already measured."
+    load_bearing_for: ["every novelty claim an arriving agent makes"]
+    reason_to_revisit: >
+      FALSE, and it cost this session three mis-attributed findings. The two
+      prior witness findings were absent from section 3 and grep on
+      notes/findings/ would have found them in two seconds. The handover is a
+      CURATED view and curation is lossy; it says where the edge is, not what is
+      known. Restored to section 3 on 2026-08-18.
+
   - assumption: "Every advantage ratio assumes the world already exists."
     load_bearing_for: ["the ~5e7 constant", "every row of the cost table", "the certificate arm's maintenance advantages"]
     reason_to_revisit: >

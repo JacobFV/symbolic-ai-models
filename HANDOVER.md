@@ -100,6 +100,31 @@ against 4.08M for the corpus. Retrieval over-fetches **46x**. Four query classes
 spanning five orders of magnitude of naive advantage land within **1.2x** of
 each other once both sides pay for the dependency.
 
+**Inspectability is asymmetric — and this was measured BEFORE the certificate
+arm, and was missing from this section until 2026-08-18.** Its omission caused
+three findings in one session to claim an axis as new that the repo had already
+established twice, and caused a decision note to re-derive analytically a number
+that was on disk. See
+`notes/lessons/2026-08-18-i-claimed-an-axis-was-new-and-the-repo-had-measured-it-twice.md`.
+
+`notes/findings/2026-08-18-inspectability-is-asymmetric-the-witness-is-247x-cheaper-and-optimality-costs-double.md`,
+on the route network, 400 solvable pairs, mean 5.19 hops:
+
+| | per query | vs solving |
+|---|---:|---:|
+| solve (BFS with parents) | 274.8 µs | — |
+| **verify witness** | **1.1 µs** | **247x cheaper** |
+| **verify optimality certificate** | **542.4 µs** | **2.0x MORE expensive** |
+
+An existential answer is its own witness; the universal half has none, and its
+standard certificate — a distance labelling — quantifies over every edge and
+cannot stop early where the solver can. Companion result in
+`notes/findings/2026-08-18-a-datalog-witness-verifies-flat-while-solving-grows-and-most-of-the-ratio-was-my-engine.md`,
+and `symbolic_ai_kernels/datalog/proof.py` carries the **stated open question**
+that §3b's witness finding later answered: *whether that shape is a property of
+shortest path or of the existential/universal distinction itself.* It is the
+latter — §3b, §3h.
+
 **Topology** — GLEIF ownership is a wide shallow forest: 92.2% leaves, chain
 length p50 2 / max 10, amplification **1.0x**. Exposure spans **1 to 3,848**
 inside one relation, so the cost of a conflict is a property of *the node*, not
@@ -502,6 +527,7 @@ both fell** — see §5. What is parked now:
 | "scoping buys little on a dense graph" (parked prediction) | **false on the filed-real mixture**: read p50 1, max 8, **0 refusals** in 250 queries, anchor 179/179. What breaks is **wall time** — 48.3 ms/query against GLEIF's 2.8 µs, 17,000x — and the governing variable is `conflict rate x read footprint`, not topology. GLEIF's 2.8 µs was a property of a two-fact query, never of a forest |
 | "the corpus has no genuine two-source property conflict" (three findings) | **false**: four airports where openflights and geonames disagree on country and the disagreement survives ICAO agreement, name agreement and a self-incoherence filter — EUN, SMW, VIL (Western Sahara) and PRN (Kosovo). Broadest defensible count 8 |
 | "make dependency-certification a substrate-wide contract" (this handover's own §7 item 1, previous revision) | the **lower-value half** of the right idea. Every kernel reporting its read set is worth **0.3x–1.0x** per quarter, and the read set over-reads the actual dependency by up to **6,591x**. What pays is a **witness** plus a **minimal** dependency, and neither is producible by the generic mechanism |
+| "two unrelated arms, one axis — now worth treating as a property of the substrate rather than two observations" (mine) | **four**, and two of them **predate the session**. The existential/universal asymmetry was measured on this same route network before the certificate arm began (§3, 247x / 2.0x). What this session added is the *maintenance* economics and the appearance of the axis in plain set queries with no proof machinery at all — which is the better claim, and the one that answers `datalog/proof.py`'s stated open question |
 | "the lever is the logical form of the claim" (mine, two hours later) | **wrong.** The lever is the *true dependency* of the claim. The 95x NP/coNP gap on set cover is real; the 8,932x version of it on shortest path collapses to **1.4x** once the optimality certificate is hand-derived, and the rest was the BFS over-reading |
 
 ## 6. Blocked, and it needs a human

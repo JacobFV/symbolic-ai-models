@@ -94,10 +94,20 @@ the note that corrected it, for a reason neither note had.
   claim.** It is the excluded search space, it grows, and on a real graph it is
   a third of the corpus. Returning the recorded read set *instead* is worse than
   returning nothing, because it is up to 6,591x wrong and looks right.
-- **Maintaining a bound is the product.** Three separate results in this repo now
-  say the cheap half of a problem is the useful half — `additive_bounds`, the
-  solver rung where the maximum is closed-form and the minimum NP-hard, and this.
-  That is no longer a coincidence worth noting; it is the design.
+- **Maintaining a bound is the product.** Results in this repo now say the cheap
+  half of a problem is the useful half — `additive_bounds`, the solver rung where
+  the maximum is closed-form and the minimum NP-hard, and this. That is no longer
+  a coincidence worth noting; it is the design.
+
+  **ATTRIBUTION, corrected after the fact.** Two findings that **predate this
+  session** measured this asymmetry directly and neither was cited here:
+  `2026-08-18-inspectability-is-asymmetric-...` (witness 247x cheaper to verify
+  than to solve; optimality certificate 2.0x *more* expensive than re-solving,
+  on this same route network) and
+  `2026-08-18-a-datalog-witness-verifies-flat-...`. `datalog/proof.py` states the
+  open question this finding answers. What is new here is the **maintenance**
+  economics — the asymmetry priced per corpus update rather than per verification
+  — not the asymmetry.
 
 ## What would refute this
 

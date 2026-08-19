@@ -88,8 +88,26 @@ a small stable certificate, and its universal complement (`no smaller cover
 exists`) had none, and the gap was 95x. Here: monotone queries survive a
 half-wrong world, and the antitone one does not.
 
-Two unrelated arms, one axis. That is now worth treating as a property of the
-substrate rather than as two observations.
+**ATTRIBUTION, corrected after the fact.** I wrote here that this was "two
+unrelated arms, one axis … now worth treating as a property of the substrate
+rather than as two observations". It is **four**, and two of them **predate this
+session**:
+
+- `2026-08-18-inspectability-is-asymmetric-the-witness-is-247x-cheaper-and-optimality-costs-double.md`
+  — same route network, same framing: witness verification **247x cheaper** than
+  solving, optimality certificate **2.0x more expensive** than re-solving.
+- `2026-08-18-a-datalog-witness-verifies-flat-while-solving-grows-and-most-of-the-ratio-was-my-engine.md`
+
+And `symbolic_ai_kernels/datalog/proof.py` poses as its **stated open question**
+exactly what the witness finding answered: *"whether that shape is a property of
+shortest path or of the existential/universal distinction itself"*.
+
+So the axis is not new here and this finding does not discover it. What is new
+is that it shows up **in a place with no proof and no certificate at all** —
+plain set queries over a noisy world — which is evidence that it is a property of
+the *claims*, not of the verification machinery. That is the better claim and it
+is the one that answers the question `proof.py` asked. Lesson recorded at
+`notes/lessons/2026-08-18-i-claimed-an-axis-was-new-and-the-repo-had-measured-it-twice.md`.
 
 **The design consequence, sharpened twice in two days:**
 

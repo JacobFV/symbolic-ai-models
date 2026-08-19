@@ -60,6 +60,16 @@ There is also a pleasing consistency check: optimal hub labelling is NP-complete
 and is a special case of **set cover** — the same problem whose witness /
 optimality split gave the 95x in the first place.
 
+## Already measured, and I did not check
+
+`notes/findings/2026-08-18-inspectability-is-asymmetric-the-witness-is-247x-cheaper-and-optimality-costs-double.md`
+**had already run this**, on this same route network, before this session began:
+a distance-labelling optimality certificate verifies in **542.4 µs** against
+**274.8 µs** to solve — **2.0x more expensive than re-solving**, for exactly the
+reason argued above, that it cannot stop early and must scan every levelled
+node's out-edges. The argument here is sound and it re-derives a number that was
+on disk. `HANDOVER.md` did not mention it; `notes/findings/` did.
+
 ## What I am therefore claiming, and not claiming
 
 **Claiming:** neither candidate beats the ball as a *maintenance* certificate,
