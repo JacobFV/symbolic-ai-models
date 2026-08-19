@@ -53,6 +53,8 @@ from scripts.cert_maintenance_13f import (BASE, NEW_FILE, OLD_FILE, load_store,
                                           q_overlap, q_widely_held)
 from symbolic_ai_core.cost import (Capability, System, Targeting,
                                    cpu_component, ledger, ledger_table)
+from symbolic_ai_core.runtime.certificate import (Counted, Sensitivity,
+                                                  moved_elements)
 
 OUT = Path("runs/cert_answer_stability.json")
 SEED = 20260818
@@ -68,10 +70,19 @@ def read_set(kind: str, keys: tuple[Hashable, ...]) -> tuple[Hashable, ...]:
 
 
 def measure(name: str, cases: list[tuple[tuple[Hashable, ...], Callable]],
-            old: Mapping, new: Mapping, changed: set) -> dict[str, Any]:
-    """f_flagged, f_stale, and what the gap costs in targeting terms."""
+            old: Mapping, new: Mapping, changed: set,
+            sensitivity: Callable[[tuple, Mapping], Sensitivity] | None = None,
+            ) -> dict[str, Any]:
+    """f_flagged, f_stale, and what the gap costs in targeting terms.
+
+    ``sensitivity`` adds the third arm: a margin **derived from the numeric
+    intermediate the computation already produced**, rather than from equality
+    of the inputs. Its false survivals are checked and must be zero -- a loose
+    margin costs money, an unsound one silently serves a wrong answer.
+    """
     t0 = time.perf_counter()
     flagged = stale = both = 0
+    sens_flagged = sens_false = 0
     for keys, compute in cases:
         f = any(k in changed for k in keys)
         s = compute(old) != compute(new)
@@ -83,6 +94,12 @@ def measure(name: str, cases: list[tuple[tuple[Hashable, ...], Callable]],
                 f"{name}: an answer moved with no key change -- the read set is "
                 "UNSOUND, which is a different and worse failure than being "
                 "loose, and it must stop the run")
+        if sensitivity is not None:
+            survives = sensitivity(keys, old).survives(
+                moved_elements(keys, old, new))
+            sens_flagged += not survives
+            if survives and s:
+                sens_false += 1
     n = len(cases)
     ff, fs = flagged / n, stale / n
     row = {"query_class": name, "n": n,
@@ -92,9 +109,25 @@ def measure(name: str, cases: list[tuple[tuple[Hashable, ...], Callable]],
            "aim_realised": (1.0 / ff) if ff else float("inf"),
            "aim_ceiling": (1.0 / fs) if fs else float("inf"),
            "seconds": time.perf_counter() - t0}
+    if sensitivity is not None:
+        if sens_false:
+            raise AssertionError(
+                f"{name}: the derived margin survived {sens_false} answers that "
+                "MOVED. An unsound margin is worse than no margin and this must "
+                "stop the run.")
+        sf = sens_flagged / n
+        row.update(derived_flagged=sf, derived_false_survivals=0,
+                   derived_over=(sf / fs) if fs else float("inf"),
+                   derived_aim=(1.0 / sf) if sf else float("inf"),
+                   recovered=(ff / sf) if sf else float("inf"))
+    tail = ""
+    if sensitivity is not None:
+        tail = (f"  | DERIVED flagged {row['derived_flagged']:>7.2%}  over "
+                f"{row['derived_over']:>6.1f}x  recovers "
+                f"{row['recovered']:>5.1f}x")
     print(f"{name:<26} flagged {ff:>7.2%}  stale {fs:>7.2%}  "
-          f"precision {row['precision']:>6.1%}  over {row['over_approximation']:>7.1f}x  "
-          f"aim {row['aim_realised']:>6.2f}x of {row['aim_ceiling']:>8.2f}x",
+          f"over {row['over_approximation']:>7.1f}x  "
+          f"aim {row['aim_realised']:>5.2f}x of {row['aim_ceiling']:>7.2f}x{tail}",
           flush=True)
     return row
 
@@ -115,13 +148,26 @@ def main() -> None:
 
     rows = []
     pick = [rng.choice(secs) for _ in range(N)]
+    def count_margin(keys: tuple, store: Mapping) -> Sensitivity:
+        """A raw count has slack 0 -- every change moves it -- so the derived
+        margin degrades to exactly the read-set certificate. That is the
+        correct answer for this query, not a failure to find one."""
+        return Counted(len(store.get(keys[0], frozenset()))).raw()[1]
+
     rows.append(measure("holder_count",
                         [((("holders", s),), q_holder_count(s)) for s in pick],
-                        old, new, changed))
+                        old, new, changed, sensitivity=count_margin))
+    def widely_held_margin(keys: tuple, store: Mapping) -> Sensitivity:
+        """The margin, DERIVED. `q_widely_held` computes `len(holders) >= 100`,
+        so the count is an intermediate it already produced; only the discarding
+        of it was ever the problem."""
+        n = len(store.get(keys[0], frozenset()))
+        return Counted(n).at_least(100)[1]
+
     rows.append(measure("is_widely_held(k=100)",
                         [((("holders", s),), q_widely_held(s, 100))
                          for s in pick],
-                        old, new, changed))
+                        old, new, changed, sensitivity=widely_held_margin))
     pairs = [(rng.choice(filers), rng.choice(filers)) for _ in range(N)]
     rows.append(measure("portfolio_overlap",
                         [((("portfolio", a), ("portfolio", b)),
@@ -161,6 +207,12 @@ def main() -> None:
     sysm = System(name="read-set certificate", components=(
         cpu_component("revalidation", 1e7, source="digest comparison"),))
     ledgers = []
+    arms = []
+    for r in rows:
+        arms.append((r["query_class"][:22], r["f_flagged"], r))
+        if "derived_flagged" in r and r["derived_flagged"] < r["f_flagged"]:
+            arms.append((("+margin " + r["query_class"])[:22],
+                         r["derived_flagged"], r))
     for r in rows:
         base = 1.0 - r["f_stale"]
         blind = base + r["f_flagged"] * (1.0 - base)
@@ -170,13 +222,17 @@ def main() -> None:
         # f_stale -- the answers maintenance actually had to save. Passing the
         # same number as rate and floor, as a first version did, makes the
         # column read inf by construction rather than by measurement.
+        pass
+    for label, flagged, r in arms:
+        base = 1.0 - r["f_stale"]
+        blind = base + flagged * (1.0 - base)
         ledgers.append(ledger(
-            System(name=r["query_class"][:22], components=sysm.components),
+            System(name=label, components=sysm.components),
             Capability(unit="maintained answer", rate=1.0, floor=base,
                        n=r["n"], tokens_per_attempt=1.0,
                        source="scripts/cert_answer_stability.py"),
             targeting=Targeting(
-                escalated=r["f_flagged"], rate_base=base, rate_targeted=1.0,
+                escalated=flagged, rate_base=base, rate_targeted=1.0,
                 rate_blind=blind,
                 escalated_usd_per_attempt=COMPUTE_NS[r["query_class"]]
                 / 1e9 / 3600.0 * 0.02,

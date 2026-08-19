@@ -268,7 +268,33 @@ last_cycle:
     repo now say the cheap half of a problem is the useful half.
 
 next:
-  preferred_action: can-answer-sensitivity-be-computed-rather-than-hand-supplied
+  preferred_action: extend-derived-sensitivity-past-counts-and-thresholds
+  why_now: >
+    Answered, and BUILT. The stability margin 3b called "the rung the recording
+    mechanism cannot produce" is derivable from the numeric intermediate the
+    computation already had. is_widely_held's invalidation rate falls 62.22% ->
+    6.16%, recovering 10.1x of the measured 79.8x over-approximation; aim_x
+    1.61x -> 16.23x and $/quality-point $8.67e-10 -> $3.46e-11, 25x cheaper.
+    The derived margin (6.16%) is TIGHTER than the hand-written rule (6.38%).
+    Zero false survivals, 78 parametrised soundness cases.
+
+    Counted covers counts and thresholds. Whether the approach reaches min/max,
+    top-k, ratios and set-size comparisons is unmeasured, and each needs its own
+    Lipschitz argument -- some will not have a cheap one. min_filers_covering is
+    the honest hard case: no cheap sound bound for a set cover's optimum, so it
+    stays at 100% flagged.
+  the_residual: >
+    7.9x remains and its cause is known: moved_elements uses the symmetric
+    difference, and an add and a remove cancel in a count but not in a XOR.
+    Closing it needs the query to declare its aggregate is a COUNT rather than a
+    general function of the set -- a strictly larger contract, and the next
+    obvious increment if it is worth 7.9x.
+  contract_update: >
+    HANDOVER 7 item 2's kernel contract -- "return a witness where your answer
+    has one, a minimal dependency where you can derive one" -- should now carry
+    a third clause: "and the slack your answer has, which you already computed".
+    Worth 10.1x on the one class here that has any, and it costs one integer.
+  previous_preferred_action: can-answer-sensitivity-be-computed-rather-than-hand-supplied
   why_now: >
     The certificate arm's open question is answered. What a certificate wastes is
     a property of the ANSWER'S SENSITIVITY, not of compute cost or read-set size,

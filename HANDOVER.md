@@ -1053,6 +1053,52 @@ correct; floor is recomputing nothing, so `above_floor` is exactly `f_stale`):
 answers needed saving. `min_filers_covering` flags 100% of queries, so aiming and
 spreading are the same policy and its `$/pt` is `inf`.
 
+## 3r. The rung §3b said could not be produced is derivable, and it is built
+
+`notes/findings/2026-08-18-the-rung-the-recording-mechanism-cannot-produce-is-derivable.md`.
+§3b called the stability margin *"the rung the recording mechanism cannot
+produce"* and treated it as **query-supplied**. It is **derivable**, and the
+derived version is slightly tighter than the hand-written one.
+
+`q_widely_held` computes `len(holders) >= 100`, so **the count is an intermediate
+it already produced** and `|count − 100|` is the distance to the flip. Only the
+*discarding* of that number was ever the problem.
+`symbolic_ai_core/runtime/certificate.py` now carries `Sensitivity`, `Counted`
+and `revalidate_sensitive`; revalidation is
+`Σ lipschitz_k × |old_k XOR new_k| < slack`, with **no per-query delta rule**.
+
+| query class | read-set flagged | **derived** | over-approx | **recovers** |
+|---|---:|---:|---:|---:|
+| `is_widely_held(k=100)` | 62.22% | **6.16%** | 79.8× → **7.9×** | **10.1×** |
+| `holder_count` | 62.22% | 62.22% | 1.1× | 1.0× |
+
+| arm | aim× | **$/quality point** |
+|---|---:|---:|
+| `is_widely_held`, read set | 1.61× | $8.67e-10 |
+| **`+margin is_widely_held`** | **16.23×** | **$3.46e-11** |
+
+> **25× cheaper per quality point, from recording one extra number per answer.**
+> The derived margin flags **6.16%** against the hand-written rule's **6.38%** —
+> tighter, and it needed no rule.
+
+**Zero false survivals on every arm**, checked by an assertion that stops the run;
+78 parametrised soundness cases sweep counts and deltas across the boundary.
+
+**The residual 7.9×** is the symmetric-difference bound: an add and a remove
+cancel in a count and do not cancel in a XOR. That is the price of a mechanism
+that does not know what the query does with its inputs.
+
+**What it does not do:** nothing for `holder_count` or `portfolio_overlap` (slack
+0 — the answer really does move on any change), nothing for
+`min_filers_covering` (no cheap sound Lipschitz bound for a set cover's optimum).
+**It pays exactly where the answer is coarse, which is exactly where the waste
+was.**
+
+**Consequence for the contract in §7 item 2.** *"Return a witness where your
+answer has one, a minimal dependency where you can derive one"* should now read
+**"and the slack your answer has, which you already computed"**. That third
+clause is worth 10.1× on the one class here that has any, and costs one integer.
+
 ## 4. Believed, not measured. Do not inherit as fact.
 
 Recorded deliberately, with mechanisms, so a later contradiction is a finding

@@ -39,10 +39,11 @@ certificate silently fails to notice an *addition*, which is 411,122 of the
 
 from __future__ import annotations
 
+import math
 import time
 from collections.abc import Mapping as MappingABC
 from dataclasses import dataclass, field
-from typing import Any, Callable, Hashable, Iterator, Mapping
+from typing import (Any, Callable, Hashable, Iterable, Iterator, Mapping)
 
 __all__ = ["MISSING", "FullScan", "RecordingStore", "Certificate",
            "Revalidation", "certify", "revalidate", "digest_all",
@@ -240,6 +241,133 @@ def revalidate(cert: Certificate,
     return Revalidation(valid=not changed, checked=len(cert.digests),
                         changed=tuple(sorted(changed, key=repr)),
                         revalidate_ns=ns)
+
+
+# ---------------------------------------------------------------------------
+# sensitivity: the rung a read set cannot reach, derived rather than supplied
+# ---------------------------------------------------------------------------
+#
+# `notes/findings/2026-08-18-over-approximation-is-a-property-of-the-answer-...md`
+# measured two queries with byte-identical read sets, the same inputs and 9ns of
+# cost between them over-approximating 1.1x and 79.8x. What a certificate wastes
+# is a property of the ANSWER's sensitivity, and a mechanism that records reads
+# cannot see it -- the read sets are the same.
+#
+# But the slack is not hidden. `is_widely_held` computes `len(holders) >= 100`,
+# so `|count - 100|` is an intermediate the computation already produced and the
+# recording mechanism discards. Record it instead, together with how far the
+# answer can move per element of input change, and revalidation becomes
+#
+#     sum_k  lipschitz_k * |old_k XOR new_k|   <   slack
+#
+# which is sound for any query whose answer is Lipschitz in the symmetric
+# difference of its inputs, with no per-query delta rule.
+
+
+@dataclass(frozen=True)
+class Sensitivity:
+    """How far an answer can move, per element of input change.
+
+    ``slack`` is the distance to the nearest input change that would move the
+    reported answer *observably*. For a threshold it is the gap to the boundary;
+    for a raw count it is zero, because every change moves the count -- and zero
+    slack is the correct entry, not a failure to find one.
+
+    ``lipschitz`` is an upper bound on answer movement per element added to or
+    removed from any one key. ``math.inf`` says no bound is known, which makes
+    the certificate degrade exactly to the read-set behaviour rather than
+    silently claiming more than it can.
+    """
+
+    slack: float
+    lipschitz: float = 1.0
+
+    def __post_init__(self) -> None:
+        if self.slack < 0:
+            raise ValueError(
+                f"slack={self.slack!r} must be >= 0: a negative distance to the "
+                "boundary means the answer has already moved")
+        if self.lipschitz < 0:
+            raise ValueError("lipschitz must be >= 0")
+
+    def survives(self, moved: float) -> bool:
+        """Whether the answer provably cannot have moved.
+
+        Nothing moving always survives -- that is the read-set certificate's
+        own guarantee, and a zero-slack answer degrades to exactly it rather
+        than to something weaker. The strict inequality elsewhere is what makes
+        a threshold sound at the boundary: a count of 140 against a threshold of
+        100 has slack 41 and tolerates a fall of 40.
+        """
+        if moved == 0:
+            return True
+        if self.lipschitz == 0.0:
+            return True
+        if math.isinf(self.lipschitz):
+            return False
+        return self.lipschitz * moved < self.slack
+
+
+@dataclass(frozen=True)
+class Counted:
+    """A count carried alongside its sensitivity, so a threshold gets slack free.
+
+    This is the whole trick and it is three lines: compare a count to a constant
+    and the distance to that constant is the margin. The value was computed
+    anyway; only the discarding of it was ever the problem.
+    """
+
+    value: int
+    lipschitz: float = 1.0
+
+    def at_least(self, k: int) -> tuple[bool, Sensitivity]:
+        """``value >= k``, with the distance to the flip.
+
+        Above the threshold the answer flips once the count drops to ``k - 1``,
+        so it tolerates a fall of ``value - k`` and the strict slack is one
+        more. Below it, the answer flips once the count reaches ``k``, so the
+        slack is ``k - value``. Both are at least 1, which is what makes a
+        threshold survivable at all and a raw count not.
+        """
+        held = self.value >= k
+        slack = (self.value - k + 1) if held else (k - self.value)
+        return held, Sensitivity(slack=float(slack), lipschitz=self.lipschitz)
+
+    def raw(self) -> tuple[int, Sensitivity]:
+        """The count itself: any change moves it, so the slack is zero."""
+        return self.value, Sensitivity(slack=0.0, lipschitz=self.lipschitz)
+
+
+def moved_elements(keys: Iterable[Hashable],
+                   old: Mapping[Hashable, Any],
+                   new: Mapping[Hashable, Any]) -> int:
+    """Elements added or removed across ``keys``, as a symmetric difference.
+
+    This over-estimates the movement of a *count*, because an add and a remove
+    cancel in the count and do not cancel here. That looseness is the price of
+    not knowing what the query does with its inputs, and it is bounded and
+    measurable rather than unknown.
+    """
+    total = 0
+    for k in keys:
+        a, b = old.get(k), new.get(k)
+        if a is None and b is None:
+            continue
+        if a is None or b is None:
+            total += len(b or a or ())
+            continue
+        if isinstance(a, (frozenset, set)) and isinstance(b, (frozenset, set)):
+            total += len(a ^ b)
+        elif a != b:
+            total += 1
+    return total
+
+
+def revalidate_sensitive(cert: Certificate, sens: Sensitivity,
+                         old: Mapping[Hashable, Any],
+                         new: Mapping[Hashable, Any]) -> bool:
+    """Whether the answer provably survives, using slack rather than equality."""
+    return sens.survives(moved_elements(cert.keys, old, new))
 
 
 def changed_keys(old: Mapping[Hashable, Any],
