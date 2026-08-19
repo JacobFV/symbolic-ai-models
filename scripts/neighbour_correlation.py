@@ -45,6 +45,15 @@ FOLDS = 4
 #: nationality adjectives applied uniformly, not on phrasing style, so if the
 #: clumping story is right -- patterns succeed on a KIND of article -- it should
 #: clump least here.
+#: A third reader with a genuinely different inductive bias. It does not read at
+#: all: among the capitalised mentions that are not the article's subject, it
+#: names the one with the highest corpus-wide document frequency. A pure prior on
+#: entity fame, no phrasing, no supervision, no features shared with anything
+#: else here. If clumping is a property of PATTERN readers it should be absent;
+#: if it is a property of the graph -- fame inherited up an ownership chain -- it
+#: should be present, and the "patterns clump" story becomes "readers whose
+#: success depends on an inherited entity property clump".
+FAME = "fame"
 RELATIONS = {"parent": (read_parent, "current"),
              "country": (read_country, "country"),
              "headquarters": (read_hq, "headquarters")}
@@ -61,6 +70,28 @@ def main() -> None:
     R.RELATIONS = Path("data/artifacts/company_relations_scale.jsonl")
     docs = R.corpus()
     gold = {d["qid"]: d for d in docs}
+
+    # Corpus-wide document frequency of every proposed mention, for the fame
+    # reader. Built once from the same proposer the learned reader uses, so the
+    # two differ in what they DO with a mention and not in what counts as one.
+    from collections import Counter as _C
+    from symbolic_ai_core.reader.learned import _units as _u
+    cm = CapitalisedMentions()
+    df: _C = _C()
+    for d in docs:
+        seen = {m.text for un in _u(d["intro"]) for m in cm.find(un)}
+        df.update(seen)
+
+    def fame_read(d) -> str | None:
+        subject = (d.get("title") or "").lower()
+        best = None
+        for un in _u(d["intro"]):
+            for m in cm.find(un):
+                if m.text.lower() in subject or subject in m.text.lower():
+                    continue
+                if best is None or df[m.text] > df[best]:
+                    best = m.text
+        return best
     read: dict[str, dict[str, str | None]] = {}
     for fold in range(FOLDS):
         te = [d for i, d in enumerate(docs) if i % FOLDS == fold]
@@ -89,6 +120,9 @@ def main() -> None:
     for d in docs:
         for rel, (fn, _) in RELATIONS.items():
             read.setdefault(d["qid"], {})[f"hand:{rel}"] = fn(d["intro"])
+            # The fame reader names one entity per article, so it answers every
+            # relation with the same guess -- which is the point of a prior.
+            read[d["qid"]][f"{FAME}:{rel}"] = fame_read(d)
 
     def ok(arm: str, rel: str, q: str) -> bool:
         a = read.get(q, {}).get(f"{arm}:{rel}")
@@ -104,7 +138,7 @@ def main() -> None:
           f"{'| child bad':>13}{'odds':>7}{'chi2 p':>9}{'n both':>8}")
     out = {}
     for rel in RELATIONS:
-      for arm in ("learned", "hand"):
+      for arm in ("learned", "hand", FAME):
         a = b = c = d = 0
         for q, p in pairs:
             ci, pi = ok(arm, rel, q), ok(arm, rel, p)
