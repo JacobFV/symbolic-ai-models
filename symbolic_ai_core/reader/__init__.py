@@ -37,11 +37,15 @@ The contract here forces the opposite. A reader returns a
 - ``cost`` -- because reading is 96.1% of solvency's wall clock and the ledger
   priced 4% of it for months.
 
-A learned reader implements the same protocol. Nothing downstream changes.
+A learned reader implements the same protocol. Nothing downstream changes --
+:class:`~symbolic_ai_core.reader.learned.LearnedSpanReader` is the demonstration,
+and it reads all three generated domains with no domain lexicon in its source.
 """
 
 from .abi import (READER_RUN, Alignment, Factor, Mention, Reader, ReadResult,
                   get_reader, list_readers, register_reader)
+from .learned import LearnedSpanReader, Unit, supervise
 
 __all__ = ["ReadResult", "Reader", "Factor", "Mention", "Alignment",
-           "register_reader", "get_reader", "list_readers", "READER_RUN"]
+           "register_reader", "get_reader", "list_readers", "READER_RUN",
+           "LearnedSpanReader", "Unit", "supervise"]
