@@ -613,6 +613,15 @@ class LearnedSpanReader:
                 "aligned units first. An unfitted reader that returned an empty "
                 "reading would look like a document with nothing in it.")
         started = time.perf_counter()
+        # Earlier documents contribute MENTIONS and never claims. That is the
+        # whole of the cross-document state this reader needs: an antecedent is
+        # a name that was written down, and re-deriving the claims around it
+        # would be re-reading, which is the cost a persistent world exists to
+        # avoid. Cost here is a lexicon lookup per token, not a parse.
+        recent: list[str] = []          #: every mention, in order of reading
+        for prior in context:
+            recent.extend(t.text for t in tokenize(prior)
+                          if self.lex.is_entity(t))
         units = _units(text)
         claims: list[Claim] = []
         belief: dict[int, float] = {}
@@ -620,7 +629,6 @@ class LearnedSpanReader:
         mentions: list[Mention] = []
         factors: list[Factor] = []
         unresolved: list[str] = []
-        recent: list[str] = []          #: every mention, in order of reading
         for u in units:
             here: list[str] = []
             for t in u.tokens:

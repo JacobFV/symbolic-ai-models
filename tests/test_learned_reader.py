@@ -175,3 +175,25 @@ def test_an_absent_weight_is_one_and_none_is_the_mean():
     assert r._weight("zzz") == 1.0
     assert r._weight(NONE) == 3.0
     assert LearnedSpanReader()._weight("anything") == 1.0
+
+
+def test_reading_sentence_by_sentence_with_context_equals_reading_the_whole():
+    """The persistent-world property: ingest incrementally, get the same world.
+
+    Without context the pronoun sentences lose their antecedent and the claims
+    they carry are dropped; with it, the two readings are claim-for-claim
+    identical. Earlier text contributes MENTIONS only -- never claims -- which is
+    what makes the cheap arm cheap.
+    """
+    from symbolic_ai_core.reader.learned import segment
+    reader = fit(corpus("flood", range(60)))
+    c, o = corpus("flood", [1_000_000])[0]
+    whole = {key(x) for x in canonical(reader.run(o.text).delta().claims, o.text)}
+    sents = [o.text[a:b] for a, b in segment(o.text)]
+
+    blind, ctxd = [], []
+    for i, s in enumerate(sents):
+        blind.extend(reader.run(s).delta().claims)
+        ctxd.extend(reader.run(s, context=tuple(sents[:i])).delta().claims)
+    assert {key(x) for x in canonical(tuple(ctxd), o.text)} == whole
+    assert {key(x) for x in canonical(tuple(blind), o.text)} != whole
