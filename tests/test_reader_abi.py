@@ -34,13 +34,15 @@ def test_the_reader_is_registered_and_the_op_exists():
     assert get_op("reader.run@1").family == "parse"
 
 
-def test_migration_changes_no_claim():
-    """The acceptance criterion: same claims as the direct call, every case."""
+def test_migration_changes_no_decision():
+    """The acceptance criterion. The reader now returns a candidate POOL, so the
+    comparison is against what it collapses to -- and that must be exactly what
+    the direct call decided, on every document, on both surfaces."""
     reader = get_reader("flood.content@1")
     for hard in (False, True):
         for text in _texts(hard):
             direct = read_content_roles(text)
-            got = reader.run(text)
+            got = reader.run(text).delta()
             assert [c.to_dict() for c in got.claims] == \
                    [c.to_dict() for c in direct.claims]
 
@@ -53,11 +55,14 @@ def test_what_was_not_settled_is_reported_rather_than_guessed():
     open_cases = [r for r in (reader.run(t) for t in _texts(True))
                   if not r.settled()]
     assert open_cases, "expected unsettled readings on the honest surface"
-    with_alts = [r for r in open_cases if r.candidates]
+    with_alts = [r for r in open_cases if r.factors]
     assert with_alts
     for r in with_alts:
-        assert r.candidates[0].exclusive        # exactly one region is the depot
-        assert len(r.candidates[0].claims) > 1
+        f = r.factors[0]
+        assert f.kind == "xor" and f.exclusive   # exactly one region is the depot
+        assert len(f.claims) > 1
+        # a belief over the alternatives, not an enumeration of worlds
+        assert all(0.0 < r.confidence_of(i) < 1.0 for i in f.claims)
 
 
 def test_the_flow_op_carries_the_unresolved_port():
@@ -74,6 +79,15 @@ def test_the_flow_op_carries_the_unresolved_port():
     assert world is not None
 
 
-def test_a_read_result_is_not_a_world():
-    """A snapshot is a settled world; handing one back hides every guess."""
+def test_a_read_result_is_neither_a_world_nor_one_delta():
+    """A snapshot hides every guess; a single delta still forces one reading.
+    The representation is a pool, a belief and constraints -- `A: 0.62,
+    B: 0.38, A XOR B` without materialising two worlds."""
+    from symbolic_ai_core.reader import Factor
+    from symbolic_ai_core.world import Claim, EntityRef
     assert not hasattr(ReadResult(), "entities")
+    r = ReadResult(claims=(Claim("depot", {"where": EntityRef("region_0")}),
+                           Claim("depot", {"where": EntityRef("region_3")})),
+                   belief={0: 0.62, 1: 0.38}, factors=(Factor("xor", (0, 1)),))
+    assert not r.settled()
+    assert len(r.delta().claims) == 1        # collapsing is an explicit decision

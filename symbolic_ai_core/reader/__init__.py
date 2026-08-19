@@ -19,10 +19,14 @@ The contract here forces the opposite. A reader returns a
 :class:`ReadResult`, and the things this repo spent a session learning are
 **ports on it rather than private behaviour**:
 
-- ``delta`` -- what it is prepared to assert, as a `WorldDelta`;
-- ``candidates`` -- claim alternatives it is *not* prepared to collapse, which is
-  directive 19 made structural. Measured: on flood's honest surface, collapsing
-  costs 0.679 accuracy with silent errors where carrying gives soundness 1.000;
+- ``claims`` + ``belief`` + ``factors`` -- a candidate pool, a belief over it and
+  the constraints among them, so the reader can say *A: 0.62, B: 0.38, A XOR B*
+  without materialising two worlds. Enumeration is one reading of a factor set
+  and is exponential in the open choices; the factor is what is actually known.
+  Collapsing to a delta is a decision `ReadResult.delta` takes explicitly;
+- ``mentions`` -- spans with candidate entities, identity left open, because
+  relation semantics disambiguate identity and a reader that resolves at the
+  mention stage discards the evidence that would have settled it;
 - ``unresolved`` -- distinctions left open, so a caller that ignores them has
   visibly ignored something rather than never been told;
 - ``alignments`` -- span to claim, which the generated surfaces supply exactly and
@@ -36,8 +40,8 @@ The contract here forces the opposite. A reader returns a
 A learned reader implements the same protocol. Nothing downstream changes.
 """
 
-from .abi import (READER_RUN, Alignment, Candidate, Reader, ReadResult,
+from .abi import (READER_RUN, Alignment, Factor, Mention, Reader, ReadResult,
                   get_reader, list_readers, register_reader)
 
-__all__ = ["ReadResult", "Reader", "Candidate", "Alignment", "register_reader",
-           "get_reader", "list_readers", "READER_RUN"]
+__all__ = ["ReadResult", "Reader", "Factor", "Mention", "Alignment",
+           "register_reader", "get_reader", "list_readers", "READER_RUN"]

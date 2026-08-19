@@ -11,7 +11,7 @@ from symbolic_ai_core.flow.port import Port
 from symbolic_ai_core.flow.registry import OpDef, register_op
 from symbolic_ai_core.world import Claim, WorldDelta, WorldSnapshot
 
-__all__ = ["ReadResult", "Reader", "Candidate", "Alignment",
+__all__ = ["ReadResult", "Reader", "Factor", "Mention", "Alignment",
            "register_reader", "get_reader", "list_readers", "READER_RUN"]
 
 
@@ -31,60 +31,121 @@ class Alignment:
 
 
 @dataclass(frozen=True)
-class Candidate:
-    """One alternative reading the reader declined to collapse.
+class Mention:
+    """A surface span and the entities it *might* denote. Identity stays open.
 
-    ``exclusive`` says whether the alternatives are mutually exclusive. That flag
-    is not decoration: agreement across candidates is a sound and complete error
-    detector when they *are* -- and carries no information when they are not.
-    Measured on real prose, where multi-candidate cases are 1.2% same-entity and
-    agreement precision (0.603) is no better than taking the first (0.626).
+    Candidate identity belongs early and **collapse belongs late**, because
+    relation semantics disambiguate identity -- *Mercury* plus *orbits the Sun*
+    is resolved by the predicate, not before it. A reader that resolves
+    irrevocably at the mention stage throws away the evidence that would have
+    settled it.
     """
 
-    slot: str
-    claims: tuple[Claim, ...]
-    exclusive: bool = True
+    start: int
+    end: int
+    text: str
+    entities: tuple[str, ...] = ()      #: candidate ids, best first
+    belief: tuple[float, ...] = ()
     detail: str = ""
 
 
 @dataclass(frozen=True)
-class ReadResult:
-    """What a reader produces. Deliberately not a `WorldSnapshot`.
+class Factor:
+    """A constraint over candidate claims, compact rather than enumerated.
 
-    A snapshot is a settled world. Handing one back means every distinction the
-    reader could not make has already been guessed, and the guess is invisible.
+    The point of not returning a settled world is to be able to say
+
+        claim A: 0.62,  claim B: 0.38,  A XOR B
+
+    without materialising two worlds. Enumeration is one *reading* of a factor
+    set and is exponential in the number of open choices; the factor is what the
+    reader actually knows.
+
+    ``kind`` is ``"xor"`` (exactly one holds), ``"at_most_one"``, ``"implies"``
+    (the first entails the rest) or ``"requires"`` (the first is only assertable
+    with the rest). ``exclusive`` kinds are the ones for which agreement across
+    readings is a sound *and complete* error detector -- measured, and measured
+    not to hold when the alternatives are merely different facts.
+    """
+
+    kind: str
+    claims: tuple[int, ...]             #: indices into ``ReadResult.claims``
+    detail: str = ""
+
+    @property
+    def exclusive(self) -> bool:
+        return self.kind in ("xor", "at_most_one")
+
+
+@dataclass(frozen=True)
+class ReadResult:
+    """What a reader produces. Deliberately not a `WorldSnapshot`, and
+    deliberately not a single `WorldDelta`.
+
+    A snapshot is a settled world: handing one back means every distinction the
+    reader could not make has already been guessed, invisibly. A single delta is
+    barely better -- it still forces one reading. What a reader actually knows is
+    **a pool of candidate claims, a belief over them, and constraints among
+    them**, which is what these fields are.
+
+    Collapsing to a delta is a *decision*, taken by :meth:`delta` and by nobody
+    implicitly.
     """
 
     claims: tuple[Claim, ...] = ()
-    candidates: tuple[Candidate, ...] = ()
+    belief: Mapping[int, float] = field(default_factory=dict)
+    factors: tuple[Factor, ...] = ()
+    mentions: tuple[Mention, ...] = ()
     unresolved: tuple[str, ...] = ()
     alignments: tuple[Alignment, ...] = ()
-    confidence: Mapping[int, float] = field(default_factory=dict)
     provenance: str = ""
     cost_s: float = 0.0
-    detail: Mapping[str, Any] = field(default_factory=dict)
+    diagnostics: Mapping[str, Any] = field(default_factory=dict)
 
-    def delta(self) -> WorldDelta:
-        return WorldDelta(claims=self.claims)
+    def confidence_of(self, i: int) -> float:
+        return float(self.belief.get(i, 1.0))
+
+    def delta(self, *, threshold: float = 0.5) -> WorldDelta:
+        """One reading, chosen here rather than assumed upstream.
+
+        Takes every claim believed at or above ``threshold``, then honours the
+        exclusive factors by keeping only each factor's best-believed member.
+        That is a *policy*; a caller with a better one should write it, and the
+        fact that it has to is the point.
+        """
+        keep = {i for i in range(len(self.claims))
+                if self.confidence_of(i) >= threshold}
+        for f in self.factors:
+            if not f.exclusive:
+                continue
+            members = [i for i in f.claims if i < len(self.claims)]
+            if len(members & keep if isinstance(members, set)
+                   else set(members) & keep) <= 1:
+                continue
+            best = max(members, key=self.confidence_of)
+            keep -= set(members) - {best}
+        return WorldDelta(claims=tuple(self.claims[i] for i in sorted(keep)))
 
     def settled(self) -> bool:
         """True when nothing was left open. The caller may still be wrong."""
-        return not self.candidates and not self.unresolved
+        return not self.factors and not self.unresolved
 
     def to_dict(self) -> dict:
         return {
             "claims": [c.to_dict() for c in self.claims],
-            "candidates": [
-                {"slot": c.slot, "exclusive": c.exclusive, "detail": c.detail,
-                 "claims": [x.to_dict() for x in c.claims]}
-                for c in self.candidates],
+            "belief": {str(k): v for k, v in self.belief.items()},
+            "factors": [{"kind": f.kind, "claims": list(f.claims),
+                         "detail": f.detail} for f in self.factors],
+            "mentions": [{"start": m.start, "end": m.end, "text": m.text,
+                          "entities": list(m.entities),
+                          "belief": list(m.belief), "detail": m.detail}
+                         for m in self.mentions],
             "unresolved": list(self.unresolved),
             "alignments": [{"start": a.start, "end": a.end, "claim": a.claim,
                             "detail": a.detail} for a in self.alignments],
-            "confidence": {str(k): v for k, v in self.confidence.items()},
             "provenance": self.provenance,
             "cost_s": self.cost_s,
-            "detail": dict(self.detail),
+            "diagnostics": dict(self.diagnostics),
         }
 
 
@@ -148,7 +209,8 @@ def _reader_run(inputs: Mapping[str, Artifact], params: Mapping[str, Any],
                            schema="sai.world@1"),
         "unresolved": Artifact(type="json", value={
             "unresolved": list(result.unresolved),
-            "candidates": result.to_dict()["candidates"]}),
+            "factors": result.to_dict()["factors"],
+            "mentions": result.to_dict()["mentions"]}),
         "report": Artifact(type="json", value=result.to_dict()),
     }
 
