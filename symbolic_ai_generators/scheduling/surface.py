@@ -130,7 +130,8 @@ def _hard_pairs(world):
 
 def render_observation(case: Any, *, seed: int | None = None,
                        variants: int = 1,
-                       hard_distractors: bool | str = False) -> Observation:
+                       hard_distractors: bool | str = False,
+                       packed: bool = False) -> Observation:
     """Render the works order.
 
     ``hard_distractors`` points the distractors at **real** entities with
@@ -146,6 +147,12 @@ def render_observation(case: Any, *, seed: int | None = None,
     spurious ``has_capability`` cannot. And the uncatchable one is the
     **unsound** one -- an extra machine capability makes an infeasible instance
     read as feasible.
+
+    ``packed`` renders **two claims in one sentence** -- a machine's capacity and
+    one of its capabilities -- with a span for each over the same text. Real prose
+    does this constantly and none of the generated surfaces did; see
+    ``notes/findings/2026-08-19-on-real-prose-the-sentence-is-the-wrong-unit.md``.
+    Default ``False`` so published numbers keep their meaning.
 
     Pass ``True`` for both, or ``"machine"`` / ``"job"`` for one side, so the
     two can be priced apart. Default ``False``, so every published number keeps
@@ -172,9 +179,22 @@ def render_observation(case: Any, *, seed: int | None = None,
 
     doc = _Doc()
     doc.add("WORKS ORDER. The floor is being scheduled for a single shift.")
+    cap_of: dict[str, int] = {}
+    for i in by.get("has_capability", []):
+        cap_of.setdefault(role(i, "machine"), i)
+    packed_machines = set()
     for i in sorted(by.get("capacity", []), key=lambda i: role(i, "of")):
         m = role(i, "of")
         doc.glue(" ")
+        if packed and m in cap_of:
+            j = cap_of[m]
+            c = role(j, "capability")
+            start = doc._n
+            doc.add(f"{m} is set up for {c} and has {qty(i):.2f} hours "
+                    "available.", claim=i, kind="capacity", entities=(m,))
+            doc.spans.append(Span(start, doc._n, j, "has_capability", (m,)))
+            packed_machines.add(m)
+            continue
         doc.add(pick("capacity").format(m=m, n=qty(i)), claim=i,
                 kind="capacity", entities=(m,))
     doc.glue(" ")
@@ -188,6 +208,8 @@ def render_observation(case: Any, *, seed: int | None = None,
     for i in sorted(by.get("has_capability", []),
                     key=lambda i: (role(i, "machine"), role(i, "capability"))):
         m, c = role(i, "machine"), role(i, "capability")
+        if m in packed_machines and cap_of.get(m) == i:
+            continue                      # already stated inside its capacity line
         doc.glue(" ")
         doc.add(pick("has_capability").format(m=m, c=c), claim=i,
                 kind="has_capability", entities=(m,))

@@ -134,8 +134,8 @@ HARD_FILING = {
 def render_observation(case: Any, *, seed: int | None = None,
                        variants: int = 1,
                        hard_distractors: bool | str = False,
-                       cue: str = "cued", hard_scale: float = 0.5
-                       ) -> Observation:
+                       cue: str = "cued", hard_scale: float = 0.5,
+                       packed: bool = False) -> Observation:
     """Render a :class:`SolvencyCase` as four aligned paragraphs.
 
     ``hard_distractors`` points the distractors at entities that **matter**. The
@@ -148,6 +148,12 @@ def render_observation(case: Any, *, seed: int | None = None,
     Pass ``True`` for both hard forms, or ``"owns"`` / ``"filing"`` for one.
     ``cue`` selects the phrasing: ``"cued"`` carries a declared cancellation
     word, ``"uncued"`` carries none and is the floor for the staleness gate.
+
+    ``packed`` renders **two claims in one sentence** -- the ownership and the
+    child's first filing -- with a span for each over the same text. Real prose
+    does this constantly and none of the generated surfaces did, which is why a
+    sentence-level staleness gate reads as free here and loses the answer on
+    Wikipedia. Default ``False`` so published numbers keep their meaning.
 
     ``hard_scale`` is the spurious figure as a fraction of the threshold, and it
     sets how much damage the distractor does. **Quote it with any number taken
@@ -179,8 +185,32 @@ def render_observation(case: Any, *, seed: int | None = None,
     # ---- 1. group structure -------------------------------------------
     doc.add("COVENANT REVIEW. The obligor group is assessed on a consolidated "
             "basis.")
+    packed_children = set()
     for (p, c), ci in sorted(owns_index.items()):
         doc.glue(" ")
+        if packed:
+            # One sentence, two claims. Real prose does this constantly and the
+            # generated surfaces never did, which is why a sentence-level
+            # staleness gate looked free here and lost the answer on Wikipedia.
+            # See notes/findings/2026-08-19-on-real-prose-the-sentence-is-the-
+            # wrong-unit.md.
+            first = next(((m, v, k) for m, v, k in sorted(case.filings,
+                                                          key=lambda f: (f[0],
+                                                                         f[2]))
+                          if m == c), None)
+            if first is not None:
+                _, v, k = first
+                ri = rev_index.get((c, round(v, 2)))
+                start = doc._n + 0
+                doc.add(f"{p} owns {c}, which reported {v:.2f} USD, filed "
+                        f"{_date(k, style)}.", claim=ci, kind="owns",
+                        entities=(p, c))
+                # a SECOND span over the SAME text: the sentence realises two
+                # claim kinds with one signature, which is exactly what the
+                # audit is built to count.
+                doc.spans.append(Span(start, doc._n, ri, "revenue", (c,)))
+                packed_children.add(c)
+                continue
         doc.add(pick("owns").format(p=p, c=c), claim=ci, kind="owns",
                 entities=(p, c))
     doc.glue(" ")
@@ -204,6 +234,8 @@ def render_observation(case: Any, *, seed: int | None = None,
     doc.glue("\n\n")
     doc.add("AS FIRST REPORTED.")
     for m, (v, k) in sorted(first.items()):
+        if m in packed_children:
+            continue                      # already stated inside its owns line
         doc.glue(" ")
         ci = rev_index.get((m, round(v, 2)))
         doc.add(pick("filed").format(m=m, n=v, d=_date(k, style)),
