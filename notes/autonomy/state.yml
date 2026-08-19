@@ -268,7 +268,29 @@ last_cycle:
     repo now say the cheap half of a problem is the useful half.
 
 next:
-  preferred_action: can-structural-reach-be-manufactured-from-closure
+  preferred_action: what-share-of-real-demand-is-group-level
+  why_now: >
+    Reach is now measured on all three tiers. Purchasable SATURATES (2,383 rows
+    reach 68.8% of $51.4T; 2,281,221 reach 75.0%; 1.06x apart normalised at each
+    crosswalk's own k). Derivable-from-recorded-structure WORKS at 81.3% and
+    reaches 22.4% of the hard cases. ABSENT is 90% of GLEIF entities and is not
+    a procurement problem. The two levers are near-orthogonal -- 1.49x and 1.22x
+    compose to 1.80x -- and the residual f of 8.17% lives in tier 3.
+
+    Everything in that paragraph is priced for a GROUP-LEVEL question. The 1.22x
+    from closure is earned only by queries that can be asked about the group
+    rather than the legal entity, and NOTHING measures what share of a real
+    workload those are. That single unmeasured fraction is what stands between
+    the three-tier result and a product claim, and it is the load-bearing
+    unknown of the whole reach arc.
+  blocked_note: >
+    The honest version needs a real question distribution, which the repo does
+    not have and cannot synthesise without assuming the answer. The tractable
+    proxy: 13F-derived questions that a fund manager actually asks (exposure by
+    group, by country, by sector) versus ones that require the legal entity
+    (regulatory filing obligations, jurisdiction of incorporation). Classify the
+    queries the vertical slice already answers before inventing new ones.
+  previous_preferred_action: can-structural-reach-be-manufactured-from-closure
   why_now: >
     Reach was split into PURCHASABLE and STRUCTURAL, and the purchasable half is
     now measured and closed: it SATURATES. 2,383 curated crosswalk rows reach

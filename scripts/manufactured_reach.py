@@ -176,7 +176,6 @@ def main() -> None:
                   if len({shuf[c.entity]
                           for c in r.candidates}) == 1) / len(amb)
 
-        real = det - {f for f in det if False}
         rows[label] = {"determined": len(det), "share": share,
                        "control_share": ctl, "degenerate_singletons": no_edge,
                        "roots": len(set(root.values())),
@@ -250,12 +249,7 @@ def main() -> None:
 
     # --- what it does to f. A filer is escalated only if it is ambiguous AND
     # unbridged AND its candidates disagree at group level.
-    det_all = det_all_pre
-    for f, r in []:
-        if len({root.get(c.entity, c.entity)
-                for c in r.candidates}) == 1:
-            det_all.add(f)
-    residual_names = set(amb) - det_all
+    residual_names = set(amb) - det_all_pre
     residual_both = residual_names - bridged
     f_name = len(amb) / len(results)
     f_bridge = len(set(amb) - bridged) / len(results)
