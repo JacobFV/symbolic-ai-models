@@ -40,6 +40,24 @@ measured:
     because the atom rule that keeps a pronoun with its antecedent -- required
     for the document to stay true -- preserves the demand binding; a property of
     the task, not a leak.
+  - THE KERNELS EARN THEIR KEEP PROVING NEGATIVES. A two-sided POLYNOMIAL
+    procedure -- capacity gate proves infeasible, greedy placement proves
+    feasible, both one-sided sound and both asserted by tests -- settles only
+    26.7% of scheduling at the default (6x3, slack 0.15) and 45.6% over a grid.
+    So scheduling GENUINELY EXERCISES SEARCH, unlike flood (widest path) and
+    solvency (sum vs threshold): two of three domains are decorative with
+    respect to kernel necessity, the third is not.
+    AND THE ASYMMETRY IS THE FINDING: only 15.5% of the inconclusive band is
+    FEASIBLE. Greedy exhibits an assignment for nearly every instance that has
+    one (0.27 proved of 0.28 feasible at the default), so what nothing
+    polynomial provides is a CERTIFICATE THAT NO ASSIGNMENT EXISTS.
+    Unifies three earlier results: ASP's UNSAT side being expensive, capacity
+    gate removing 87.7% of solver time by proving infeasibility cheaply, and the
+    certificate's monotone half making INFEASIBLE instances free. Same asymmetry
+    three times.
+    SAMPLE JUST ABOVE SLACK 0 to study search -- the band is 100% at 6x3/+0.02
+    and 98% at 20x5/+0.02, where capacity suffices but capabilities do not line
+    up. That is not the default.
   - FLOOD IS A POLYNOMIAL TASK WEARING THREE KERNELS. A max-min Dijkstra
     (maximise the minimum bridge limit from depot to site over non-flooded
     regions; a vehicle qualifies iff capacity >= demand and mass+demand <=
