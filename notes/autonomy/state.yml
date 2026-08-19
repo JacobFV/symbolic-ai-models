@@ -40,6 +40,21 @@ measured:
     because the atom rule that keeps a pronoun with its antecedent -- required
     for the document to stay true -- preserves the demand binding; a property of
     the task, not a leak.
+  - A FLAG THAT MEANS SOUND ON ONE SURFACE AND 0.664 ON ANOTHER. Built the
+    refusing reader named last cycle: read_content_roles_checked returns
+    (world, role_assignment_forced). On the published surface it removes 3 of 3
+    errors and accuracy among forced readings is 1.000 -- but it refuses 29 of
+    252, giving up 11.5% of coverage to remove 1.2% of error, TEN TIMES more
+    conservative than the failure. That was my stated condition for keeping the
+    guess, so refusal is NOT the default; reporting 0.988 honestly is cheaper.
+    THE WORSE HALF: on hard_distractors, accuracy among FORCED readings is
+    0.664. The phantom-link failure does not touch role assignment, so the flag
+    cannot see it and refuses the same 29 either way. Same scope error as
+    "grounded 1.000" -- a check built for one failure mode, verified against it,
+    then NAMED as though it covered more. Renamed for what it computes, both
+    numbers in the docstring, and a test ASSERTS forced-and-wrong cases exist.
+    The phantom-link mode is what the CERTIFICATE work addresses; neither
+    detector covers the other's failure.
   - STATE THE BOUND, NOT THE NUMBER. Rule of three: zero failures in N cases
     bounds the true rate at ~3/N, so "exact over 34" excludes only 8.8% and
     "exact over 400" excludes 0.75% -- and both read as 1.000 on the page.

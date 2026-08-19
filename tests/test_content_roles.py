@@ -116,3 +116,54 @@ def test_only_the_residual_is_read_lexically() -> None:
             b = {(c.predicate, tuple(sorted(c.entities()))) for c in none.claims
                  if c.predicate == pred}
             assert a == b, (seed, pred)
+
+
+def test_the_forced_flag_catches_every_role_failure() -> None:
+    """On the published surface the flag is a soundness guarantee for the one
+    failure mode it is about."""
+    from symbolic_ai_generators.flood.read_surface import \
+        read_content_roles_checked
+
+    wrong_when_forced = forced = n = 0
+    for seed in range(200):
+        case = generate(seed)
+        want = solve(case.world)[0]
+        if not want:
+            continue
+        n += 1
+        world, ok = read_content_roles_checked(_text(seed, 4, True))
+        if ok:
+            forced += 1
+            wrong_when_forced += solve(world)[0] != want
+    assert n > 100, n
+    assert forced > n * 0.7, (forced, n)
+    assert wrong_when_forced == 0, wrong_when_forced
+
+
+def test_the_flag_is_not_a_correctness_flag() -> None:
+    """The scope, asserted so it cannot be read as one.
+
+    On the hard-distractor surface the phantom link makes answers wrong without
+    touching role assignment, so the flag stays true and the answer is not.
+    """
+    from symbolic_ai_generators.flood.read_surface import \
+        read_content_roles_checked
+    from symbolic_ai_generators.flood.surface import render_observation
+    from symbolic_ai_generators.scramble import interleave, unsaturate
+
+    H = ("SITUATION REPORT.", "ROAD NETWORK.", "OVERNIGHT.",
+         "LOADING AND LIMITS.", "TASKING.")
+    wrong_when_forced = 0
+    for seed in range(120):
+        case = generate(seed)
+        want = solve(case.world)[0]
+        if not want:
+            continue
+        obs = render_observation(case, variants=4, hard_distractors=True)
+        text = interleave(unsaturate(obs, headings=H, shuffle=False)).text
+        world, ok = read_content_roles_checked(text)
+        if ok and solve(world)[0] != want:
+            wrong_when_forced += 1
+    assert wrong_when_forced > 5, (
+        wrong_when_forced,
+        "the flag must be demonstrably NOT a correctness guarantee")

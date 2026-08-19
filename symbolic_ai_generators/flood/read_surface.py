@@ -39,6 +39,7 @@ from symbolic_ai_core.world import (Claim, Entity, EntityRef, Facet, Quantity,
 
 __all__ = ["read_surface", "read_lexical", "read_signature",
            "read_signature_roles", "read_content_roles",
+           "read_content_roles_checked",
            "VALUE_REGISTRY", "ROLE_ANCHORS"]
 
 #: A value vocabulary per claim kind -- **external knowledge**, and ablatable.
@@ -681,6 +682,38 @@ def _anchor_role(sent: str, anchors: dict) -> str:
 
 def read_content_roles(text: str, *, anchors: dict | None = None
                        ) -> WorldSnapshot:
+    """The reading alone. See `read_content_roles_checked` for the whole story."""
+    return read_content_roles_checked(text, anchors=anchors)[0]
+
+
+def read_content_roles_checked(text: str, *, anchors: dict | None = None
+                               ) -> tuple[WorldSnapshot, bool]:
+    """``(world, role_assignment_forced)``.
+
+    The flag says **the lone-region roles were not guessed** -- nothing more. It
+    is true when no single-valued role is still open after the anchors and
+    adjacency, or when exactly one is open and exactly one region is unresolved.
+    Otherwise which region becomes the depot depends on document order, which
+    interleaving randomises.
+
+    **It is not a correctness flag, and must not be read as one.** Measured
+    2026-08-19 over 252 non-empty cases:
+
+    - on the published surface it catches every failure -- 3 of 3 -- and accuracy
+      among the forced readings is 1.000;
+    - on the ``hard_distractors`` surface accuracy among the forced readings is
+      **0.664**, because the phantom-link failure has nothing to do with role
+      assignment and this flag cannot see it.
+
+    A flag that means "sound" on one surface and 0.664 on another is the same
+    scope error as quoting "grounded 1.000" without saying what it certifies, so
+    it is named for the thing it actually checks.
+
+    It is also **10x more conservative than the failure it removes**: refusing
+    when it is false gives up 11.5% of coverage to remove 1.2% of error. Whether
+    that trade is worth taking depends on what a wrong answer costs, and is a
+    caller's decision rather than the reader's.
+    """
     """Signature for what the signature fixes, **content** for what it cannot.
 
     Everything the type signature determines -- links, crossings, masses,
@@ -757,6 +790,21 @@ def read_content_roles(text: str, *, anchors: dict | None = None
     # still open: marking a region impassable cuts the network and destroys the
     # answer, where leaving it unassigned merely fails to help. The first
     # version of this defaulted to flooded and scored 0.000 for that reason.
+    # Is what remains FORCED, or a choice the evidence does not make?
+    #
+    # Forced when no single-valued role is still open (everything left is
+    # flooding), or when exactly one is open and exactly one region is
+    # unresolved. Anything else -- two unresolved regions with the depot open,
+    # say -- is a guess, and which region becomes the depot then depends on
+    # document order, which interleaving randomises.
+    #
+    # Measured 2026-08-19: this arm is 0.988 interleaved over 252 non-empty
+    # cases, and **all three failures satisfy this condition**. The reader knows
+    # when it is guessing, so it can refuse instead.
+    open_single = (not depot) + (not needs)
+    role_assignment_forced = (open_single == 0
+                              or (open_single == 1 and len(unresolved) == 1))
+
     for r in list(unresolved):
         if not depot and needs:
             depot = r
@@ -770,4 +818,4 @@ def read_content_roles(text: str, *, anchors: dict | None = None
             links.append(pair)
     return _assemble(links, flooded, crossings,
                      {k: tuple(v) for k, v in vehicles.items()},
-                     depot, needs, demand)
+                     depot, needs, demand), role_assignment_forced
