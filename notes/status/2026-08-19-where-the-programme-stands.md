@@ -223,6 +223,13 @@ measured gain ratio of **16.0** against a predicted **5.45**.
    lever is the **typer's recall** — it rejects *BBC* and *Bertelsmann* — plus
    more ownership patterns. Two of the remaining errors are evaluation defects, so
    the 0.696 ceiling is itself slightly low.
+   **Patterns: done.** Naming the latent category — *state* of ownership versus
+   *event* of transfer — and ordering by it beats growing the list: state-first
+   with an event fallback is **strictly better on all three columns** than the
+   published reader (0.601 / **0.393** / 0.653 against 0.589 / 0.369 / 0.626), and
+   with corroboration reaches **0.750** precision. Event-only precision is 0.304
+   against state-only's 0.683, which is what earns the ordering. **The typer's
+   recall is the one remaining named build.**
 2. **A second real genre.** Every correction to the shared components came from
    *adding a genre*, never from thinking harder: the cue list was 85% false
    positives on real English and needed three passes, each surfacing a different

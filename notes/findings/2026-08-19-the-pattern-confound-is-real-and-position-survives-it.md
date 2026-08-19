@@ -54,6 +54,42 @@ So the real-text stack is now three ordered features, all of them cheap and none
 of them semantic: **take the first match, of a strong pattern, whose entity is
 mentioned twice.** 0.735 precision against a 0.696 ceiling on the answered set.
 
+## Naming the category beats growing the list
+
+The residual taxonomy asked for `bought by` and `purchased by`. Those are
+**transfer-of-ownership events**, and the split above already says events are the
+weak half — so the move is not *add patterns* but **name the category and order
+by it**: prefer a **state** of ownership, fall back to an **event** only where no
+state is stated.
+
+| policy | coverage | correct | **precision** |
+|---|---:|---:|---:|
+| state only (`subsidiary/division/unit of`, `owned/held/controlled by`) | 0.488 | 0.333 | **0.683** |
+| **event only** (`acquired/bought/purchased/taken over by`, `part of`) | 0.274 | 0.083 | **0.304** |
+| **state, event as fallback** | **0.601** | **0.393** | **0.653** |
+| *published four patterns* | *0.589* | *0.369* | *0.626* |
+
+**Event-only precision is 0.304 against state-only's 0.683** — a 2.2× gap that
+earns the ordering. And the fallback fires on **19 articles (11.3%)** where no
+state pattern matched, so it is additive rather than redundant.
+
+The ordered reader is **strictly better than the published one on all three
+columns**: more coverage, more correct answers, higher precision. Composing it
+with corroboration gives the best precision measured on this task:
+
+| policy | coverage | correct | precision | break-even `W` |
+|---|---:|---:|---:|---:|
+| state, event fallback | 0.601 | **0.393** | 0.653 | — |
+| + corroborated (≥2 mentions) | 0.429 | 0.321 | **0.750** | **0.343** |
+
+*(Precision is over answered articles; the 0.696 ceiling is over all articles, so
+the two are not directly comparable.)*
+
+> **The design rule: when a cue list wants to grow, name the latent category and
+> order by it.** Here the category is *state versus event*, and ordering converts
+> a request for two more patterns into a strict improvement — where simply adding
+> them to a flat list would have imported the weak half's 0.304 precision.
+
 ## What would refute this
 
 - `acquired by` at n=24 and the rank-2 bucket at n=14. The 1-vs-2 contrast within
