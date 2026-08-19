@@ -268,7 +268,31 @@ last_cycle:
     repo now say the cheap half of a problem is the useful half.
 
 next:
-  preferred_action: price-the-certificate-arms-own-economics-with-the-new-metric
+  preferred_action: can-answer-sensitivity-be-computed-rather-than-hand-supplied
+  why_now: >
+    The certificate arm's open question is answered. What a certificate wastes is
+    a property of the ANSWER'S SENSITIVITY, not of compute cost or read-set size,
+    and it is invisible to any mechanism that records reads -- proved by two
+    query classes with byte-identical read sets, the same securities and 9ns of
+    cost between them differing 73x in over-approximation (1.1x vs 79.8x).
+
+    That immediately raises the buildable question. 3b said the stability margin
+    is "the rung the recording mechanism cannot produce" and treated it as
+    query-supplied. But sensitivity is a property of the answer FUNCTION, and the
+    function is available -- it is the thing being computed. For len(holders)>=k
+    the margin is |count - k| and it is derivable, not supplied. The question is
+    how far that generalises: which answer functions admit a cheap, sound,
+    automatically derived margin?
+  why_it_matters: >
+    A derived margin turns the 79.8x waste into recoverable value without a
+    per-query rule, which is exactly what the recording mechanism was supposed to
+    give and did not. And the measured ceiling is known: even the hand-built
+    margin over-approximates by 8.2x, so a derived one has a floor AND a ceiling
+    to be scored against.
+  do_not: >
+    Do not price another query class against recompute-always. The ratio to
+    report now is f_flagged/f_stale, and aim_x beside it.
+  previous_preferred_action: price-the-certificate-arms-own-economics-with-the-new-metric
   why_now: >
     The north-star hole is CLOSED, not merely noted. symbolic_ai_core/cost.py
     now carries a Targeting denominator floored by blind escalation of the same

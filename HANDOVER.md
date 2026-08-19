@@ -1008,6 +1008,51 @@ See `notes/findings/2026-08-18-pricing-certification-...md`.
 `tests/test_cost_targeting.py`, 12 tests; the 41 existing cost tests are
 unchanged.
 
+## 3q. What a certificate wastes is a property of the ANSWER, and reads cannot see it
+
+`notes/findings/2026-08-18-over-approximation-is-a-property-of-the-answer-...md`.
+§3b measured soundness on every row and never measured **precision** — how many
+invalidations were unnecessary. Under the new `Targeting` denominator that is the
+whole value: for a sound certificate `aim× = 1/f_flagged`, against a minimal
+certificate's `1/f_stale`.
+
+| query class | compute | f_flagged | f_stale | **over-approx** | aim× |
+|---|---:|---:|---:|---:|---:|
+| `is_widely_held(k=100)` | 739 ns | 62.1% | **0.78%** | **79.8×** | 1.61× |
+| `holder_count` | 748 ns | 62.1% | 54.3% | **1.1×** | 1.61× |
+| `portfolio_overlap` | 6,048 ns | 99.0% | 62.1% | 1.6× | 1.01× |
+| `min_filers_covering(12)` | 6,745,104 ns | 100.0% | 40.7% | 2.5× | 1.00× |
+
+**The first two rows read the identical keys over the identical securities and
+cost 9 ns apart. They differ 73×.** The only variable is the answer function:
+`len(holders)` against `len(holders) >= 100`.
+
+> **Over-approximation is a property of the answer's SENSITIVITY — not of the
+> computation's cost, not of the read set's size — and it is invisible to any
+> mechanism that records reads**, because the two cases that differ 73× record
+> byte-identical read sets.
+
+That answers §3b's stated open question (*"nothing in the mechanism tells you
+which case you are in"*) with a mechanism, and it explains the 6,591× over-read:
+that is what happens when a coarse answer is certified by the fine inputs a
+search touched.
+
+**My pre-registered claim was that over-approximation would be worst where
+compute is dearest. Refuted** — worst at the cheapest class, **2.5×** at 9,000×
+the compute. An NP-hard set cover's answer moved **40.7%** of the time.
+
+**And the stability margin is loose too.** §3b called it *"the rung the recording
+mechanism cannot produce"* at 93.62% survival; since it is sound, its 6.38%
+flagged rate is an **upper bound** on `f_stale`, measured at **0.78%**. The best
+rung in the arm **over-approximates by 8.2×**.
+
+**In the ledger** (`rate` 1.0 because a sound certificate leaves every answer
+correct; floor is recomputing nothing, so `above_floor` is exactly `f_stale`):
+`is_widely_held` costs **$7.12e-11** per answer kept correct against
+`portfolio_overlap`'s **$8.95e-13** — 80× more, because almost none of its
+answers needed saving. `min_filers_covering` flags 100% of queries, so aiming and
+spreading are the same policy and its `$/pt` is `inf`.
+
 ## 4. Believed, not measured. Do not inherit as fact.
 
 Recorded deliberately, with mechanisms, so a later contradiction is a finding
