@@ -269,6 +269,49 @@ def _sentences(paragraph: str):
             yield raw
 
 
+def signature_readings(text: str) -> tuple[dict, dict]:
+    """Split a document into what the signature FIXES and what it leaves open.
+
+    Returns ``(fixed, open_)``. ``fixed`` holds the claims whose role the type
+    signature determines on its own; ``open_`` holds the groups where it does
+    not, each as ``{group: [candidate readings]}``.
+
+    Position resolves these groups in `read_signature`, but position is a
+    property of *this generator's five-paragraph template*. With it ablated the
+    ambiguity is real, and the critical invariant says the reader should hand it
+    on rather than guess.
+    """
+    links: list[tuple[str, str]] = []
+    crossings: dict[tuple[str, str], float | None] = {}
+    lone_region: list[str] = []
+    veh_numbers: dict[str, list[float]] = {}
+    bare_numbers: list[float] = []
+    for sent in _sentences(text.replace("\n\n", " ")):
+        regions = list(dict.fromkeys(_REGION.findall(sent)))
+        trucks = list(dict.fromkeys(_TRUCK_ID.findall(sent)))
+        nums = [float(n) for n in _NUM.findall(sent)]
+        if len(regions) == 2 and nums:
+            crossings[(regions[0], regions[1])] = nums[-1]
+        elif len(regions) == 2 and not nums and not trucks:
+            links.append((regions[0], regions[1]))
+        elif len(regions) == 1 and not nums and not trucks:
+            lone_region.append(regions[0])
+        elif len(trucks) == 1 and nums:
+            veh_numbers.setdefault(trucks[0], []).append(nums[0])
+        elif not regions and not trucks and nums:
+            bare_numbers.append(nums[0])
+    # link vs bridge_on resolves STRUCTURALLY: a bridge is a pair carrying a
+    # limit, and every bridge in this generator carries one.
+    for pair in crossings:
+        if pair not in links and (pair[1], pair[0]) not in links:
+            links.append(pair)
+    fixed = {"links": links, "crossings": crossings}
+    open_ = {"vehicle_roles": veh_numbers,      # which number is mass, which cap
+             "region_roles": lone_region,       # flooded / depot / needs
+             "bare_numbers": bare_numbers}      # pronoun capacity / demand
+    return fixed, open_
+
+
 def read_signature(text: str) -> WorldSnapshot:
     """``text -> WorldSnapshot`` by entity-type signature and section position."""
     paragraphs = text.split("\n\n")
@@ -329,3 +372,98 @@ def read_signature(text: str) -> WorldSnapshot:
     return _assemble(links, flooded, crossings,
                      {k: tuple(v) for k, v in vehicles.items()},
                      depot, needs, demand)
+
+
+def signature_worlds(text: str, *, cap: int = 512,
+                     open_groups: frozenset[str] = frozenset(
+                         {"vehicle", "region", "bare"}),
+                     truth=None) -> list[WorldSnapshot]:
+    """Every world consistent with what the signature could determine.
+
+    Position is not used. Each open group is enumerated: a vehicle's two numbers
+    may be (mass, capacity) or (capacity, mass); the three lone regions may take
+    the flooded/depot/needs roles in any order; a bare quantity may be the
+    pronoun capacity or the demand.
+
+    Returns ``[]`` if the product exceeds ``cap`` -- a refusal, not a guess,
+    which is what the ambiguity machinery elsewhere in this repo does when the
+    world's product is too large to name.
+    """
+    import itertools
+
+    fixed, open_ = signature_readings(text)
+    roles = open_["vehicle_roles"]
+    regions = open_["region_roles"]
+    bare = list(open_["bare_numbers"])
+    if len(regions) < 3 or not roles:
+        return []
+    # The generator can flood MORE THAN ONE region, so the lone-region
+    # sentences are not always exactly three. A first version enumerated
+    # permutations of the first three and could not reach the true assignment
+    # whenever a case had two floods -- unsound on seed 25, caught by the
+    # soundness check. Choose the depot and the needs site; everything else
+    # lone is flooded.
+    # Trucks named with TWO numbers have an ordering ambiguity. Trucks named
+    # with ONE have the other attribute stated as a bare quantity elsewhere --
+    # the pronoun capacity -- so a bare number is either the demand or the
+    # missing capacity of such a truck. A first version enumerated only which
+    # bare number was the demand and dropped the rest on the floor, which left
+    # one vehicle with no capacity in EVERY world and put the truth outside the
+    # enumeration on 19 of 22 cases. The soundness check caught it.
+    # A group not in `open_groups` is resolved from `truth` -- an ORACLE for
+    # that group only. That is how the ambiguity level is swept: it isolates
+    # "how wide is the bound when k groups are open" from "can the reader close
+    # them", which are different questions and only the first is asked here.
+    paired = sorted(v for v, n in roles.items() if len(n) == 2)
+    single = sorted(v for v, n in roles.items() if len(n) == 1)
+    if len(bare) < len(single):
+        return []
+    veh_choices = list(itertools.product([0, 1], repeat=len(paired)))
+    region_choices = [(d, n) for d in range(len(regions))
+                      for n in range(len(regions)) if d != n]
+    demand_choices = list(range(len(bare))) if bare else [None]
+    if truth is not None:
+        by = {c.predicate: c for c in truth.claims}
+        if "vehicle" not in open_groups:
+            want = {c.roles["of"].id: float(c.roles["value"].value)
+                    for c in truth.claims if c.predicate == "mass"}
+            veh_choices = [vc for vc in veh_choices
+                           if all(roles[n][1 if f else 0] == want.get(n)
+                                  for n, f in zip(paired, vc))]
+        if "region" not in open_groups:
+            dp = by["depot"].roles["where"].id
+            nd = by["needs"].roles["where"].id
+            region_choices = [rc for rc in region_choices
+                              if (regions[rc[0]], regions[rc[1]]) == (dp, nd)]
+        if "bare" not in open_groups:
+            dv = float(by["demand"].roles["value"].value)
+            demand_choices = [i for i in demand_choices
+                              if i is not None and bare[i] == dv]
+    if not (veh_choices and region_choices and demand_choices):
+        return []
+    total = (len(veh_choices) * len(region_choices) * max(1, len(demand_choices)))
+    if total > cap:
+        return []
+
+    out: list[WorldSnapshot] = []
+    for vc in veh_choices:
+        base = {}
+        for name, flip in zip(paired, vc):
+            a, b = roles[name]
+            base[name] = (b, a) if flip else (a, b)
+        for di in demand_choices:
+            demand = bare[di] if di is not None else None
+            leftover = [x for j, x in enumerate(bare) if j != di]
+            if len(leftover) < len(single):
+                continue
+            vehicles = dict(base)
+            for name, cap_kg in zip(single, leftover):
+                vehicles[name] = (roles[name][0], cap_kg)
+            for di_, ni_ in region_choices:
+                depot_r, needs_r = regions[di_], regions[ni_]
+                flooded_r = [r for j, r in enumerate(regions)
+                             if j not in (di_, ni_)]
+                out.append(_assemble(
+                    fixed["links"], flooded_r, dict(fixed["crossings"]),
+                    dict(vehicles), depot_r, needs_r, demand))
+    return out

@@ -30,6 +30,11 @@ measured:
     recall 0.946, non-empty accuracy 0.318 at V=1,2,3,4. At V>=2 it is the only
     reader above zero. Regime crossover: hand-authored wins 1.000 vs 0.318 on a
     fixed surface, signature wins the moment the surface varies.
+  - carrying ambiguity is ALWAYS SOUND (1.000 on every row) and rapidly
+    vacuous: 4 worlds decide 75.8% of the fleet, 72 worlds decide 0.0%, and
+    decidedness is NOT a function of world count -- 2 worlds of "bare" (which
+    number is the demand) decide 45.5% while 4 worlds of "vehicle" decide
+    75.8%. Collapsing instead scores 0.250 and cannot say when it is wrong.
   - its failure is ONE mechanism: capacity recall 0.725 because the pronoun
     attaches by recency while its antecedent is named by a SUPERLATIVE ("X is
     the lightest of them"). Every other kind is recall 1.000, zero spurious,
@@ -48,6 +53,16 @@ measured:
     32, so lifts across different n_eval are not comparable
 
 theory:
+  - name: ambiguity_value
+    status: empirical_regime
+    formula: "decided% is not a function of |worlds|; it depends on WHICH group"
+    consequence: >
+      Carrying ambiguity is free soundness and is actionable only in a narrow
+      regime -- half the fleet decided up to 4 worlds, nothing at 72. The bound
+      goes vacuous long before enumeration becomes hard, so "can we afford to
+      enumerate" is the wrong question. Spend reader effort on the distinctions
+      whose ambiguity is EXPENSIVE, which is measurable per group in advance.
+    evidence: runs/ambiguity_regime.json, 40 cases, soundness 1.000 on all rows
   - name: certification_ceiling
     status: exact_identity
     formula: "realised = recall/f_flagged; ceiling = 1/f_needed"
@@ -126,11 +141,9 @@ next_actions:
     pattern arm did. This is the first place a lexical resource (WordNet is on
     disk) or a learned component is the only mechanism available, not a
     shortcut. Build it as an arm and measure at V=4.
-  - The signature reader leans on paragraph POSITION, which is a property of
-    this generator's template. Test it on a surface with facts in arbitrary
-    order -- where the signature ambiguities do not resolve, the reader should
-    EMIT the ambiguity rather than guess, which is the critical invariant and
-    is untested.
+  - Ambiguity budget is measurable per GROUP before a reader is built, exactly
+    as dependency size is. Do that for a second domain and see whether the
+    expensive group is again the one the answer is sized by.
   - Then domain transfer (scheduling or solvency): does WORLD IR + FLOW +
     KERNEL survive a domain change, and does the F = trivial-answer-share
     decomposition reproduce?
