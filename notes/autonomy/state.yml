@@ -40,6 +40,21 @@ measured:
     because the atom rule that keeps a pronoun with its antecedent -- required
     for the document to stay true -- preserves the demand binding; a property of
     the task, not a leak.
+  - A CERTIFICATE THAT CONSUMES NO GUESS. Built the fix named last cycle:
+    require insensitivity for EVERY candidate role assignment rather than one
+    collapse. 0 wrong at 48.8% coverage (123 answers, error bounded 2.44%),
+    against flag+certificate 0 wrong at 47.6% and enumeration+certificate 1
+    wrong at 51.6%. Mean 1.19 candidate worlds.
+    Seed 83 shows the mechanism: three candidates all agreeing on a WRONG
+    answer, the two wrong-depot ones CERTIFY and the TRUE one does NOT, so
+    requiring all refuses what agreement alone admits.
+    THE +1.2 POINTS IS MARGINAL AND NOT THE REASON. The reason is structural:
+    flag+certificate works only because the flag is a PRECONDITION, an ordering
+    that cannot be checked locally. This is ONE CHECK WITH NO PRECONDITION.
+    CONSOLIDATED: certificate moved from scripts/ to
+    symbolic_ai_generators/flood/certificate.py (load-bearing across four
+    findings), both forms, three tests including one asserting the collapsed
+    form IS misled on seed 83 so the distinction cannot silently vanish.
   - A CHECK THAT READS PART OF THE WORLD INHERITS THAT PART'S ERRORS. Tried
     replacing the role flag with ENUMERATION -- emit the candidate assignments,
     refuse only when they disagree. It recovers coverage (48% of unforced

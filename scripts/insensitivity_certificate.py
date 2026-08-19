@@ -44,84 +44,8 @@ HEADINGS = ("SITUATION REPORT.", "ROAD NETWORK.", "OVERNIGHT.",
             "LOADING AND LIMITS.", "TASKING.")
 
 
-def _read_world(world):
-    """The pieces the certificate needs, straight off the claims."""
-    links, limits, flooded = [], {}, set()
-    mass, capacity, bridge_of = {}, {}, {}
-    depot = needs = None
-    demand = None
-    for c in world.claims:
-        p, q = c.predicate, c.roles.get("value")
-        if p == "link":
-            links.append(tuple(c.entities()))
-        elif p == "bridge_on":
-            bridge_of[c.roles["via"].id] = (c.roles["a"].id, c.roles["b"].id)
-        elif p == "load_limit" and isinstance(q, Quantity):
-            limits[c.roles["of"].id] = float(q.value)
-        elif p == "flooded":
-            flooded.add(c.roles["where"].id)
-        elif p == "mass" and isinstance(q, Quantity):
-            mass[c.roles["of"].id] = float(q.value)
-        elif p == "capacity" and isinstance(q, Quantity):
-            capacity[c.roles["of"].id] = float(q.value)
-        elif p == "depot":
-            depot = c.roles["where"].id
-        elif p == "needs":
-            needs = c.roles["where"].id
-        elif p == "demand" and isinstance(q, Quantity):
-            demand = float(q.value)
-    edge_limit = {}
-    for via, pair in bridge_of.items():
-        if via in limits:
-            edge_limit[frozenset(pair)] = limits[via]
-    return {"links": links, "edge_limit": edge_limit, "flooded": flooded,
-            "mass": mass, "capacity": capacity, "depot": depot,
-            "needs": needs, "demand": demand}
-
-
-def _connected(edges, a, b) -> bool:
-    if a is None or b is None:
-        return False
-    adj: dict = {}
-    for x, y in edges:
-        adj.setdefault(x, []).append(y)
-        adj.setdefault(y, []).append(x)
-    seen, stack = {a}, [a]
-    while stack:
-        cur = stack.pop()
-        if cur == b:
-            return True
-        for nxt in adj.get(cur, ()):
-            if nxt not in seen:
-                seen.add(nxt)
-                stack.append(nxt)
-    return False
-
-
-def certifies_insensitive(world) -> bool:
-    """True if no single link deletion can change any vehicle's status."""
-    w = _read_world(world)
-    if w["depot"] is None or w["needs"] is None or w["demand"] is None:
-        return False
-    if w["depot"] in w["flooded"] or w["needs"] in w["flooded"]:
-        return False
-    for vid, m in w["mass"].items():
-        cap = w["capacity"].get(vid)
-        if cap is None or cap < w["demand"]:
-            continue                      # cannot qualify; monotone, so safe
-        threshold = m + w["demand"]
-        usable = [e for e in w["links"]
-                  if e[0] not in w["flooded"] and e[1] not in w["flooded"]
-                  and w["edge_limit"].get(frozenset(e), float("inf"))
-                  >= threshold]
-        if not _connected(usable, w["depot"], w["needs"]):
-            continue                      # does not qualify; safe for free
-        # qualifies: every single edge removal must leave it connected
-        for i in range(len(usable)):
-            rest = usable[:i] + usable[i + 1:]
-            if not _connected(rest, w["depot"], w["needs"]):
-                return False
-    return True
+from symbolic_ai_generators.flood.certificate import (  # noqa: E402
+    certifies_insensitive, _read_world, _connected)
 
 
 def main() -> None:
