@@ -42,10 +42,15 @@ import scripts.real_text_reader as R
 from scripts.multi_relation_world import norm, read_country, read_hq, read_parent
 
 CORPUS = Path("data/artifacts/wikipedia_parents_closed.jsonl")
-RELS = Path("data/artifacts/company_relations_scale_v2.jsonl")
+RELS = Path("data/artifacts/company_relations_scale_v3.jsonl")
 OUT = Path("runs/oracle_classifier_headroom.json")
 FOLDS = 4
-RELATIONS = ("parent", "country", "headquarters", "founder", "industry")
+#: `owned_by` and `legal_form` are added to settle the one unresolved failure
+#: mode: both pass or fail the model-free screens in ways nothing explains, and
+#: an ORACLE classifier distinguishes "the reader cannot find it" from "the
+#: sentences containing the gold do not state the relation".
+RELATIONS = ("parent", "country", "headquarters", "founder", "industry",
+             "owned_by", "legal_form")
 HAND = {"parent": read_parent, "country": read_country, "headquarters": read_hq}
 
 
