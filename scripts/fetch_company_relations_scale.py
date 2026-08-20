@@ -24,13 +24,19 @@ from scripts.fetch_wikipedia_parents import labels
 from scripts.fetch_wikipedia_parents_batched import entities
 
 CORPUS = Path("data/artifacts/wikipedia_parents_closed.jsonl")
-OUT = Path("data/artifacts/company_relations_scale_v2.jsonl")
+OUT = Path("data/artifacts/company_relations_scale_v3.jsonl")
 #: Relations whose value is an ENTITY and which an intro plausibly states.
 #: `founder` and `industry` were added to give the frame-concentration/readability
 #: fit more than three points -- two of which were the relations it was derived
 #: from, which is not a fit.
+#: `legal_form` (P1454) and `owned_by` (P127) are added for a PROSPECTIVE test of
+#: the triage method: their statistics are computed and the predictions written
+#: down before any reader is fitted on them. They are chosen to contrast --
+#: legal_form takes lowercase common-noun values like `industry`, owned_by takes
+#: capitalised company names like `parent`.
 PROPS = {"country": "P17", "headquarters": "P159",
-         "founder": "P112", "industry": "P452"}
+         "founder": "P112", "industry": "P452",
+         "legal_form": "P1454", "owned_by": "P127"}
 
 
 def values(ent: dict, pid: str) -> list[str]:
