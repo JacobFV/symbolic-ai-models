@@ -2766,6 +2766,93 @@ articles** — matching four hand patterns needs roughly **10⁵–10⁶ article
 bottleneck restated as an exchange rate, and it cuts both ways: the patterns cap
 out at 68% of the corpus ceiling.
 
+## Reading is four components, and the one nobody measured had the headroom
+
+Sixteen findings, seven relations, one corpus of 2,502 Wikipedia company intros
+with Wikidata gold. Promoted because most of them were attacked — five claims
+from this arm are in the believed-and-false table below, and what remains is what
+survived.
+
+### The decomposition
+
+Every earlier account of the reader was **ceiling × classifier × ranker**. Adding
+the **proposer** — how often the candidate an answer needs is generated at all —
+gives four factors whose product reproduces the measured rate **within 0.019
+across ten rows**:
+
+| relation | containment | proposal | **classifier** | ranker | product | measured |
+|---|---|---|---|---|---|---|
+| `parent` | 0.592 | 0.782 | **0.338** | 0.782 | 0.122 | 0.116 |
+| `country` | 0.579 | 0.804 | **0.455** | 0.889 | 0.188 | 0.169 |
+| `headquarters` | 0.551 | 0.873 | **0.536** | 0.870 | 0.224 | 0.218 |
+| `founder` | 0.424 | 0.735 | **0.372** | 0.856 | 0.099 | 0.098 |
+| `industry` | 0.241 | **0.006** | 0.000 | 0.000 | 0.000 | 0.000 |
+
+**The classifier is the lowest factor in all seven relations measured**, 2.0x to
+51.4x below an oracle. The exception proves it: `industry` under a capitalised
+proposer is proposer-bound at 0.006 — the reader could not represent the answer,
+and every number for that relation described a component nobody had looked at.
+
+### What moved the numbers, and it was never a feature
+
+Twelve interventions on the classifier and its features — WordNet supersenses,
+distributional clusters, an *ideal* label-supervised lexical grouping, cheap
+argument structure, explicit conjunctions, class balancing, aggregation, position
+— moved `parent` by at most **seven articles in 1,788**. Four qualitatively
+different representations, one of them supervised with the labels themselves,
+none worth half a point. That is a statement about the **model class**: a linear
+model over indicators adds votes and cannot let one piece of evidence condition
+the use of another.
+
+What did move numbers were components outside the old decomposition:
+
+| change | effect |
+|---|---|
+| `PhraseMentions` — a proposer that normalises *automotive company* to `automotive industry` | `industry` 0.000 → 0.025 |
+| supervision routed **through** the proposer | 0.025 → **0.097** (3.9x) |
+| aliases induced by **label association** | 0.097 → **0.238**; `country` 0.182 → **0.390** |
+
+**The two halves are useless apart** — the alias proposer alone made `industry`
+*worse*, because the classifier had been trained on sentences selected by literal
+containment. And **half of `country`'s gain and four fifths of `industry`'s is
+genuine paraphrase reading**, measured where guessing is impossible: on articles
+that never state the answer literally, the base arm scores a structural **0.000**
+and the alias arm reaches 0.219 and 0.209.
+
+### Triage: a model-free screen rejects, and never accepts
+
+`containment < floor` **proves a relation cannot clear its floor**, whatever the
+model. It rejected `legal_form` (0.050 against 0.116) — and an oracle classifier
+later confirmed the rejection was right *for the stated reason*, reaching 0.034.
+One rejection in seven, no false alarms.
+
+A prospective test on two unseen relations, predictions registered before fitting,
+scored **four of seven**: every *negative* prediction was correct and two of three
+*positive* ones were wrong about size. And `owned_by` passes every screen and
+fails anyway.
+
+> **A model-free screen can prove a relation impossible, never feasible.** The
+> same one-sidedness holds for the lexicon-gap diagnostic: a large gap proves a
+> lexicon problem, a small one proves nothing, because suppletive derivations —
+> `French`/`France`, `Dutch`/`Netherlands` — are invisible to morphology.
+
+### Supervision is a fixed pool
+
+Relation competition is **zero-sum**. Of 936 articles carrying both `parent` and
+`owned_by` gold, **73.4% give them the same value**; the tie-break hands every one
+to whichever is listed first, and `owned_by` reads 0.005 jointly against 0.053
+alone. Making the sentence a positive for *both* rescues it 13.3x and **halves**
+`parent`, for a **0.91x** net. Fit jointly by default, fit a starved relation
+separately, and do not use multi-label.
+
+### Where it leaves the capability
+
+The composed query — *which groups control companies in X?*, stated in no
+article — is at **micro-F1 0.225** for the union of the learned reader and the
+hand patterns, its best figure. And charged for correctness, the pipeline is
+**5.7x–17.7x past one billion tokens per dollar on bounded tasks** and
+**0.35–0.90 Bt/$ on open prose**, which is the gap in one number.
+
 ## Awaiting independent challenge — the promotion queue
 
 `notes/` promotes into this file **only once something independent has tried to
