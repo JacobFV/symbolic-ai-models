@@ -62,7 +62,7 @@ from .abi import Alignment, Factor, Mention, ReadResult
 
 __all__ = ["LearnedSpanReader", "Unit", "Token", "segment", "tokenize",
            "shape", "supervise", "Lexicon", "LexiconMentions",
-           "CapitalisedMentions"]
+           "CapitalisedMentions", "PhraseMentions"]
 
 NONE = "∅"          #: the label for a unit that realises no claim
 
@@ -542,6 +542,86 @@ class CapitalisedMentions:
                 flush()
         flush()
         return out
+
+
+class PhraseMentions:
+    """Mentions are known phrases, matched longest-first, plus capitalised runs.
+
+    `CapitalisedMentions` can only propose proper nouns, which silently restricts
+    the reader to relations whose values are proper nouns. Measured: `industry`
+    values are lowercase 97.9% of the time -- `automotive industry`, `retail` --
+    so no candidate is ever proposed and the relation reads 0.000 with no error.
+
+    This proposes from a **learned phrase inventory** as well. The inventory is
+    induced the way the identifier lexicon is: from the fillers seen in training,
+    plus any *productive suffix* those fillers share (`... industry`,
+    `... services`), so an unseen `pharmaceutical industry` is proposable from a
+    suffix even though the phrase itself was never seen.
+
+    It is a different task from proper-noun extraction and worth saying so: a
+    relation whose values come from a bounded inventory is closer to
+    classification than to extraction, and the ceiling moves accordingly.
+    """
+
+    def __init__(self, phrases: Iterable[str] = (),
+                 suffixes: Iterable[str] = (), *, capitalised: bool = True) -> None:
+        self.phrases = sorted({p.lower() for p in phrases if p},
+                              key=lambda p: (-len(p), p))
+        self.suffixes = tuple(sorted({s.lower() for s in suffixes if s}))
+        self.caps = CapitalisedMentions() if capitalised else None
+
+    @classmethod
+    def induce(cls, fillers: Iterable[str], *, min_share: float = 0.15,
+               capitalised: bool = True) -> "PhraseMentions":
+        """Learn the inventory, and the suffixes that generalise beyond it."""
+        vals = [f.lower() for f in fillers if f]
+        tails: Counter[str] = Counter()
+        for v in vals:
+            parts = v.split()
+            if len(parts) > 1:
+                tails[parts[-1]] += 1
+        keep = [t for t, n in tails.items() if n >= min_share * max(1, len(vals))]
+        return cls(vals, keep, capitalised=capitalised)
+
+    def find(self, u: Unit) -> list[Token]:
+        text = u.text.lower()
+        out: list[Token] = []
+        taken: set[int] = set()
+
+        def claim(a: int, b: int) -> None:
+            if any(i in taken for i in range(a, b)):
+                return
+            taken.update(range(a, b))
+            out.append(Token(u.text[a:b], u.start + a, u.start + b))
+
+        for phrase in self.phrases:              # longest first
+            start = 0
+            while True:
+                i = text.find(phrase, start)
+                if i < 0:
+                    break
+                j = i + len(phrase)
+                before = text[i - 1] if i else " "
+                after = text[j] if j < len(text) else " "
+                if not before.isalnum() and not after.isalnum():
+                    claim(i, j)
+                start = j
+        # A determiner is not part of the value: gold says `pharmaceutical
+        # industry`, never `the pharmaceutical industry`, and an exact match is
+        # how these are scored.
+        det = r"(?:the|a|an|its|his|her|their|this|that)"
+        for suf in self.suffixes:
+            for m in re.finditer(
+                    rf"\b(?!{det}\b)([a-z][a-z-]*(?: (?!{det}\b)[a-z][a-z-]*)?\s+)?"
+                    rf"{re.escape(suf)}\b", text):
+                claim(m.start(), m.end())
+        if self.caps is not None:
+            for t in self.caps.find(u):
+                a, b = t.start - u.start, t.end - u.start
+                if not any(i in taken for i in range(a, b)):
+                    taken.update(range(a, b))
+                    out.append(t)
+        return sorted(out, key=lambda t: t.start)
 
 
 @dataclass
