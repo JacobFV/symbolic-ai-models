@@ -2288,3 +2288,18 @@ open_vocabulary_floor:
   self_caught: "my first floor scored 0.016 and was built to fail (non-greedy modifier group + 2-char window)"
   lesson: notes/lessons/2026-08-19-a-suspiciously-weak-floor-is-a-finding-about-the-floor.md
   next: "a floor that keeps the copular position and picks the head noun by suffix rather than length"
+
+# 2026-08-19 — floors, retraction, and the router
+floor_and_selector:
+  status: closed
+  retracted: "the reader's lift on NOVEL vocabulary: +0.266 -> +0.065 -> +0.022 [-0.072,+0.116], McNemar p=0.643"
+  stands: "the reader's lead on SEEN vocabulary: +0.092 [+0.045,+0.139], McNemar p<0.0001"
+  best_floor: "copular window + rightmost WordNet person-noun with an agentive suffix = 0.310 unseen / 0.444 seen"
+  new_capability: "router on reader confidence: AUC 0.880 discordant, 0.310 -> 0.370 unseen (+0.060), 57.9% of oracle headroom"
+  reframe: "the learned reader is a VOCABULARY model; its novel-value worth is knowing when to defer"
+  span_lesson: "3 of 5 floors failed for SPAN reasons, not signal reasons (2 too tight, 1 too loose)"
+  blocking_constraint: "n=184 unseen. Every interval here is wide. Wikidata search API rate-limits hard."
+  next:
+    - "bigger unseen slice; the fetch is rate-limited but repeatable"
+    - "held-out router threshold: the 0.370 is fitted in-sample and is optimistic"
+    - "second relation (educated_at, containment 0.119) to test the triage screen prospectively"

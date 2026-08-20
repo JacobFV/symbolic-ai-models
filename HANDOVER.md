@@ -71,6 +71,25 @@ at 0.706 on those unseen values. That is **open-vocabulary reading**, and it is
 the first result in the arm where the system answers correctly about a value it
 has never encountered in any form.
 
+**The lift on novel vocabulary is zero, and the system still wins.** A two-line
+rule — copular window, rightmost WordNet person-noun with an agentive suffix, no
+supervision — scores **0.310** against the reader's **0.288** on unseen values.
+McNemar **p=0.643** (19 discordant wins against 23): they are not
+distinguishable. On **seen** vocabulary the reader's lead is real — +0.092,
+McNemar **p<0.0001**. So the learned reader is a **vocabulary model**, and
+"open-vocabulary reading" belongs to WordNet plus two lines of morphology.
+
+But the two fail on *different* items (agreement 0.772), and the reader's own
+confidence separates the discordant ones at **AUC 0.880**. A trivial router takes
+novel-vocabulary reading **0.310 → 0.370**, capturing 57.9% of the oracle
+headroom. **As an answerer the reader adds nothing on novel values; as a judge of
+when to defer it is worth +0.060.** The router pays 57.9% on unseen and 3.5% on
+seen — it adds most where the learned component adds least.
+
+Caveats that matter: n=184 unseen, the AUC interval reaches 0.991 (too small a
+sample, not a huge effect), and the router's threshold is fitted in-sample so
+0.370 is optimistic. **Get a bigger unseen slice before promoting any of this.**
+
 **Read the lift, not the rate.** The 0.288 has a floor under it now: one regex
 — *is/was a*, longest WordNet person-noun in the next 60 characters — reaches
 **0.223** on the same unseen values, **77%** of the reader. The lift is
