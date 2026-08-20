@@ -2247,3 +2247,17 @@ calibration: >
   shading; that then produced three under-calls. Recent failures were not
   magnitude but SPECIFICATION -- predicting one number for a product of two,
   and building a validation whose rows reproduced their own definitions.
+
+# 2026-08-19 — second-domain arm, closed
+second_domain_people:
+  status: closed
+  question: "do the reading arm's three general claims survive off the corpus that produced them?"
+  data: data/artifacts/people_relations.jsonl  # 850 biographies, Wikidata gold
+  result: runs/people_decomposition.json
+  finding: notes/findings/2026-08-19-the-classifier-bound-the-corpus-not-the-reading.md
+  survives: "four-factor identity; max gap 0.028 vs 0.019 on companies"
+  refuted: "classifier binds 1/4 off-corpus vs 7/7 on it; containment binds 3/4"
+  headline: "occupation reads 0.615 end-to-end, 2.7x the best company relation"
+  unsettled: "no renaming control on the 0.615; closed-vocabulary effect is live"
+  next: "run the renaming control on occupation before 0.615 is quoted anywhere"
+session_closed: 2026-08-19

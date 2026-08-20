@@ -1,4 +1,4 @@
-# Handover — 2026-08-19 (fifth revision, after the reading arm)
+# Handover — 2026-08-19 (sixth revision, after the second domain)
 
 For the next agent picking this repo up cold. `ROADMAP.md` says what the work
 *is*; `CLAUDE.md` says how to work here; this says **where the live edge is, what
@@ -10,6 +10,57 @@ were each paid for), `APPROACH.md` (the argument), then this, then `ROADMAP.md`.
 `notes/lessons/` is the shortest path to not repeating six specific mistakes.
 
 ---
+
+## 0. The state after the second domain. Read this first of all.
+
+*Finding:
+`notes/findings/2026-08-19-the-classifier-bound-the-corpus-not-the-reading.md`.
+§0-below is the previous revision — still true about the four-factor
+decomposition, and its headline about the classifier turned out to be a fact
+about the corpus.*
+
+### The one paragraph that matters
+
+The reading arm's most-repeated sentence — **the classifier is the binding
+factor** — held **7/7** on company relations and holds **1/4** off them. On 850
+biographies **containment** binds in three of four: the gold value is not in the
+text at all. So the twelve failed feature interventions were pushing on a ceiling
+that was never the classifier's to raise, and the company relations were not hard
+because reading is hard. Their containment ran **0.241–0.592** and multiplied
+every factor downstream. Where containment is high — `occupation` at **0.825** —
+the same reader, unchanged, reads it end-to-end at **0.615**, which is **2.7×**
+the best number the company arm ever produced. **The arm's ceiling was
+annotation–text mismatch, not capability.**
+
+What *did* generalise is the identity itself: containment × proposal ×
+classifier × ranker reproduces the measured rate to a **max gap of 0.028** in a
+domain it was never fitted on. Two domains now. That is a property of the reader.
+
+### What this changes about what to do next
+
+The lever with the most headroom is **not** a better classifier — it is choosing
+relations whose gold the prose actually states, and the containment screen
+already measures that for free, before anything is fitted. The classifier fork
+that was left for the user is correspondingly **smaller** than it looked: its
+1.9×–6.6× was measured entirely inside the low-containment corpus.
+
+### Do not re-inherit
+
+- `birthplace` does **not** have the highest containment. It has the lowest of the
+  proper-noun relations (**0.223**; `educated_at` **0.119**) because Wikidata
+  records a municipality where the prose names a country. This was my registered
+  prediction and it was wrong.
+- `occupation` proposes at exactly **0.000** under `CapitalisedMentions` — the
+  second independent instance of `industry`'s structural zero, so it is a property
+  of the proposer, not an accident of one relation.
+
+### Unsettled, and it is the first thing to attack
+
+`occupation`'s **0.615** leans on a phrase proposer induced from training fillers,
+and its values are a small closed set of occupational categories. **The renaming
+control has not been run on it** — the control that killed ensemble-001's 1.14-bit
+headline. Until it has, 0.615 is a scouting number, and the finding says
+`status: provisional` for that reason.
 
 ## 0. The state after the reading arm. Read this first of all.
 
