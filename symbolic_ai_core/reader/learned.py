@@ -564,16 +564,31 @@ class PhraseMentions:
     """
 
     def __init__(self, phrases: Iterable[str] = (),
-                 suffixes: Iterable[str] = (), *, capitalised: bool = True) -> None:
+                 suffixes: Iterable[str] = (), *, capitalised: bool = True,
+                 aliases: Mapping[str, str] | None = None) -> None:
         self.phrases = sorted({p.lower() for p in phrases if p},
                               key=lambda p: (-len(p), p))
         self.suffixes = tuple(sorted({s.lower() for s in suffixes if s}))
+        #: surface form -> canonical value. A relation can be stated in a form
+        #: the gold never contains -- *automotive company* for `automotive
+        #: industry` -- and a proposer that only matches the canonical string
+        #: cannot see it. An alias proposes the surface span and **reports the
+        #: canonical value**, which is what scoring and the world both want.
+        self.aliases = {k.lower(): v for k, v in (aliases or {}).items()}
         self.caps = CapitalisedMentions() if capitalised else None
 
     @classmethod
     def induce(cls, fillers: Iterable[str], *, min_share: float = 0.15,
-               capitalised: bool = True) -> "PhraseMentions":
-        """Learn the inventory, and the suffixes that generalise beyond it."""
+               capitalised: bool = True, alias_heads: bool = False
+               ) -> "PhraseMentions":
+        """Learn the inventory, the suffixes, and optionally the head aliases.
+
+        ``alias_heads`` strips the shared head noun from a multi-word value and
+        maps the remainder back to it: `automotive industry` yields the alias
+        `automotive`. Nothing external is consulted -- the head is whatever the
+        gold values share -- and it is what turns *an automotive company* into a
+        candidate for `automotive industry`.
+        """
         vals = [f.lower() for f in fillers if f]
         tails: Counter[str] = Counter()
         for v in vals:
@@ -581,7 +596,20 @@ class PhraseMentions:
             if len(parts) > 1:
                 tails[parts[-1]] += 1
         keep = [t for t, n in tails.items() if n >= min_share * max(1, len(vals))]
-        return cls(vals, keep, capitalised=capitalised)
+        aliases: dict[str, str] = {}
+        if alias_heads:
+            for v in set(vals):
+                parts = v.split()
+                if len(parts) > 1 and parts[-1] in keep:
+                    stem = " ".join(parts[:-1])
+                    # An ambiguous stem is dropped rather than guessed: two gold
+                    # values sharing a modifier would make the alias a coin flip.
+                    if aliases.get(stem, v) == v:
+                        aliases[stem] = v
+                    else:
+                        aliases[stem] = ""
+            aliases = {k: v for k, v in aliases.items() if v}
+        return cls(vals, keep, capitalised=capitalised, aliases=aliases)
 
     def find(self, u: Unit) -> list[Token]:
         text = u.text.lower()
@@ -610,6 +638,23 @@ class PhraseMentions:
         # industry`, never `the pharmaceutical industry`, and an exact match is
         # how these are scored.
         det = r"(?:the|a|an|its|his|her|their|this|that)"
+        for surface in sorted(self.aliases, key=lambda a: (-len(a), a)):
+            canon = self.aliases[surface]
+            start = 0
+            while True:
+                i = text.find(surface, start)
+                if i < 0:
+                    break
+                j = i + len(surface)
+                before = text[i - 1] if i else " "
+                after = text[j] if j < len(text) else " "
+                if not before.isalnum() and not after.isalnum():
+                    if not any(k in taken for k in range(i, j)):
+                        taken.update(range(i, j))
+                        # The span is where it was read; the TEXT is the
+                        # canonical value, so downstream sees the gold form.
+                        out.append(Token(canon, u.start + i, u.start + j))
+                start = j
         for suf in self.suffixes:
             for m in re.finditer(
                     rf"\b(?!{det}\b)([a-z][a-z-]*(?: (?!{det}\b)[a-z][a-z-]*)?\s+)?"
