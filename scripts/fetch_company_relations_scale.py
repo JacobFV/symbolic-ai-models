@@ -24,8 +24,13 @@ from scripts.fetch_wikipedia_parents import labels
 from scripts.fetch_wikipedia_parents_batched import entities
 
 CORPUS = Path("data/artifacts/wikipedia_parents_closed.jsonl")
-OUT = Path("data/artifacts/company_relations_scale.jsonl")
-PROPS = {"country": "P17", "headquarters": "P159"}
+OUT = Path("data/artifacts/company_relations_scale_v2.jsonl")
+#: Relations whose value is an ENTITY and which an intro plausibly states.
+#: `founder` and `industry` were added to give the frame-concentration/readability
+#: fit more than three points -- two of which were the relations it was derived
+#: from, which is not a fit.
+PROPS = {"country": "P17", "headquarters": "P159",
+         "founder": "P112", "industry": "P452"}
 
 
 def values(ent: dict, pid: str) -> list[str]:
