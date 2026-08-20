@@ -74,10 +74,10 @@ And the size is not arbitrary — **it tracks how close the two systems are**:
 | employer unseen | 0.247 | 0.139 | **1.78** | +0.057 | **+0.019** |
 
 The router pays most where the two systems are nearest to parity and least where
-one dominates. That is not a surprise once stated, but it converts the router
-from a trick into something with a **precondition you can check before building
-it**: measure both systems, and if one is nearly twice the other, the routing is
-not worth the wiring.
+one dominates — and re-pairing against a different floor moves the gain in the
+predicted direction both ways (see the refuter below). The precondition is
+checkable before building anything: measure both systems, and if one is nearly
+twice the other, the routing is not worth the wiring.
 
 It also retires my earlier framing that "the router adds most where the learned
 component adds least". That was one observation read as a rule. It adds most
@@ -95,13 +95,33 @@ reader was weak and on `employer` is where the reader is strong.
   employer-unseen and +0.148 on employer-seen. Headroom is a property of the
   pairing, not a constant.
 
-## What would refute this
+## The refuter was named, run, and confirms the mechanism from both sides
 
 The router was paired with `prep_org`, chosen before the numbers landed, but
-**`prep` is the stronger floor on the unseen slice** (0.184 against 0.139).
-Pairing the router with the better floor is untested and could move the +0.019
-either way — a stronger partner raises the oracle but shrinks the reader's
-unique wins. That is the first thing to run.
+`prep` is the stronger floor on unseen (0.184 against 0.139). Re-pairing:
+
+| pairing | reader | floor | ratio | oracle headroom | router gain | captured |
+|---|---|---|---|---|---|---|
+| employer unseen, `prep_org` | 0.247 | 0.139 | 1.78 | +0.057 | +0.019 | 33% |
+| employer unseen, **`prep`** | 0.247 | 0.184 | **1.34** | +0.063 | **+0.025** | 40% |
+| employer seen, `prep_org` | 0.236 | 0.192 | **1.23** | +0.148 | **+0.060** | 41% |
+| employer seen, `prep` | 0.236 | 0.184 | 1.28 | +0.052 | +0.028 | 54% |
+
+A stronger partner on unseen moved the gain **up** (+0.019 → +0.025), and a
+weaker partner on seen moved it **down** (+0.060 → +0.028). The mechanism
+predicts both directions, which is more than the original four rows could show.
+
+**But the sharper statement is not about the ratio.** Capture sits in a narrow
+band — **33% to 63% across six pairings** — so the router reliably takes roughly
+**half of whatever oracle headroom exists**. The ratio matters only because it
+predicts the *headroom*: near-parity systems disagree more usefully. The honest
+law is therefore two-step and the second step is the shaky one — capture is
+stable and well-measured, while "parity produces headroom" rests on six points
+with one clear outlier (employer-seen at `prep_org`, ratio 1.23 but headroom
++0.148, more than twice its neighbours).
+
+So: **estimate the oracle headroom, halve it, and that is the router.** Whether
+parity is a reliable way to predict headroom in advance is not established here.
 
 ## Limits
 
