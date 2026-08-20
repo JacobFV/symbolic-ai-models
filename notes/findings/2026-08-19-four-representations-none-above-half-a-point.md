@@ -23,12 +23,27 @@ lexical grouping. It came in **below** it.
 
 ## Four representations, and the pattern is the result
 
-| what was added | on `parent` |
-|---|---|
-| WordNet supersenses (external, category) | **0.000** |
-| distributional clusters (corpus, context) | **−0.007** |
-| label-aware groups (corpus, *ideal* lexical) | **+0.005** |
-| cheap argument structure (corpus, order) | **+0.003** |
+| what was added | on `parent` | across hash seeds |
+|---|---|---|
+| WordNet supersenses (external, category) | 0.000 | — |
+| distributional clusters (corpus, context) | −0.007 | — |
+| label-aware groups (corpus, *ideal* lexical) | +0.005 | **+0.007, 4/4 seeds above baseline** |
+| cheap argument structure (corpus, order) | +0.003 | **noise: 206–213 straddling a fixed 207** |
+| **explicit conjunctions** (the model class's own conditioning) | — | **noise: 209–212** |
+
+> **Corrected.** The two arms that use the label-aware grouping were single draws
+> from a band this pipeline has because `induce()` sorts a dict built from a set
+> union of strings, and Python randomises string hashes per process. The baseline
+> is exactly deterministic at 207/1788; the grouped arms move ±3 with
+> `PYTHONHASHSEED`. See
+> `notes/lessons/2026-08-19-hash-randomisation-made-a-deterministic-looking-pipeline-vary.md`.
+>
+> **The conclusion strengthens.** Argument structure buys **nothing**, not +0.003.
+> And **explicit conjunctions** — added afterwards as the model class's own way of
+> saying *this evidence matters because that evidence holds*, which is the exact
+> operation this note claims is missing — also buy **nothing**, 209–212 against a
+> band that starts at 206. The one arm with a real effect is the purely lexical
+> one, at +12 articles in 1,788.
 
 Four qualitatively different feature families — external and internal, lexical
 and structural, one of them **supervised with the labels themselves and therefore
