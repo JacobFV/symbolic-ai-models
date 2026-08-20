@@ -48,9 +48,18 @@ FOLDS = 4
 RELATIONS = ("birthplace", "occupation", "employer", "educated_at")
 
 
+#: A second fetch added 1,970 more biographies. Both files are read when the
+#: extra one exists, because n was the binding constraint on every interval in
+#: the router arm and the fetch was run to relieve it.
+EXTRA = Path("data/artifacts/people_relations_more.jsonl")
+
+
 def corpus() -> list[dict]:
     docs = []
-    for line in CORPUS.read_text().splitlines():
+    text = CORPUS.read_text()
+    if EXTRA.exists():
+        text += "\n" + EXTRA.read_text()
+    for line in text.splitlines():
         if not line.strip():
             continue
         r = json.loads(line)
@@ -58,7 +67,12 @@ def corpus() -> list[dict]:
         for rel in RELATIONS:
             d[rel] = list(r.get(rel) or [])
         docs.append(d)
-    return docs
+    seen, out = set(), []
+    for d in docs:
+        if d["qid"] not in seen:
+            seen.add(d["qid"])
+            out.append(d)
+    return out
 
 
 def main() -> None:

@@ -71,6 +71,21 @@ at 0.706 on those unseen values. That is **open-vocabulary reading**, and it is
 the first result in the arm where the system answers correctly about a value it
 has never encountered in any form.
 
+**Read this before the paragraph below it — that paragraph is superseded in one
+place.** A second fetch tripled the corpus to 2,820 biographies and the unseen
+slice went 184 → **663**. On it, the claim that the reader is *indistinguishable*
+from a two-line rule on novel vocabulary **is false**: McNemar **p=0.013**, 78
+discordant wins against 49, reader ahead **+0.044**. It was a null from too small
+a sample, and the note that made it named that as its own limit. The floor also
+fell **0.310 → 0.259**, so most of the swing was the floor being optimistic on 184
+documents rather than the reader improving.
+
+Corrected position: the reader beats the rule on novel vocabulary (**+0.044**,
+p=0.013) and by more on familiar vocabulary (**+0.105**, p<0.0001). The router
+still adds on top: **0.356** held out on unseen, **+0.053**, capture **71.4%** —
+which also breaks the 33–63% capture band published the day before. See
+`notes/findings/2026-08-20-the-retraction-was-underpowered-at-3-6x-data-the-reader-does-beat-the-rule.md`.
+
 **The router is the arm's live capability, and it holds up.** Held out end to end
 — threshold swept on *training* documents, applied to test — it scores **0.375**
 on novel occupation vocabulary, *above* the in-sample 0.370, capturing **63.2%**

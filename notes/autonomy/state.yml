@@ -2319,3 +2319,19 @@ router_hardened:
   next:
     - "rerun the arm on the larger slice; n=184/158 is the binding constraint on every interval"
     - "a third relation from a DIFFERENT corpus -- both relations here share one 850-doc fetch"
+
+# 2026-08-20 — the arm re-run at 3.3x data; a retraction retracted
+router_at_scale:
+  status: closed
+  corpus: "2820 biographies (850 + 1970 second fetch); unseen slice 184 -> 663"
+  headline: "the 'indistinguishable' null was FALSE: McNemar p=0.013, reader +0.044 ahead on novel vocabulary"
+  floor_moved: "0.310 -> 0.259 -- most of the swing was the FLOOR being optimistic at n=184, not the reader"
+  router: "0.356 unseen held out (+0.053, 71.4% capture); 0.544 seen (+0.040, 48.3%)"
+  capture_band_broken: "71.4% is outside the 33-63% published the day before; band is now 33-71% over seven pairings"
+  agreement_only: "worse at scale: -53.1% unseen, -120.5% seen"
+  four_values_one_quantity: "+0.266 -> +0.065 -> +0.022 (null) -> +0.044 (p=0.013)"
+  lesson: "a null needs a power statement or it is not a result"
+  next:
+    - "employer at scale -- still n=158, and the second fetch added only 289 employer rows"
+    - "explain the floor's 0.05 drop between samples before promoting either number"
+    - "a genuinely different corpus: both fetches use the same Wikidata search and properties"
