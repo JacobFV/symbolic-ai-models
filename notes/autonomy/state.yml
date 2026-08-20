@@ -2277,3 +2277,14 @@ proposer_arm:
   died_this_arm: "my own 'a lexical proposer cannot generalise a long-tailed inventory', refuted in 3h"
   suite: "3824 passed, 10 skipped; no library code touched after"
   next: "second relation (educated_at, containment 0.119) and a floor audit on the unseen slice"
+
+# 2026-08-19 — floor audit on the open-vocabulary headline
+open_vocabulary_floor:
+  status: closed
+  headline_corrected: "0.288 unseen stands; the LIFT is +0.065 over a 0.223 floor, not +0.266"
+  best_floor: "copular_long: 'is/was a' + longest WordNet person-noun within 60 chars"
+  refuter_run: "sentence-one longest candidate = 0.082; did not fire"
+  positional: "dropping the copular position costs 0.223 -> 0.082; third measurement saying the signal is positional"
+  self_caught: "my first floor scored 0.016 and was built to fail (non-greedy modifier group + 2-char window)"
+  lesson: notes/lessons/2026-08-19-a-suspiciously-weak-floor-is-a-finding-about-the-floor.md
+  next: "a floor that keeps the copular position and picks the head noun by suffix rather than length"

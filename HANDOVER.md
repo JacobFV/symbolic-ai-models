@@ -71,6 +71,15 @@ at 0.706 on those unseen values. That is **open-vocabulary reading**, and it is
 the first result in the arm where the system answers correctly about a value it
 has never encountered in any form.
 
+**Read the lift, not the rate.** The 0.288 has a floor under it now: one regex
+— *is/was a*, longest WordNet person-noun in the next 60 characters — reaches
+**0.223** on the same unseen values, **77%** of the reader. The lift is
+**+0.065** on novel values and **+0.187** on familiar ones. Open-vocabulary
+reading is real and **the external standard is doing most of it, not the
+learning**. My first floor scored 0.016 and was built to fail; catching that cost
+0.201 of headline. See
+`notes/lessons/2026-08-19-a-suspiciously-weak-floor-is-a-finding-about-the-floor.md`.
+
 **One of my own findings died in between, in three hours.** I claimed a lexical
 proposer *cannot* generalise a long-tailed inventory, having measured two routes
 at zero. Both derived their inventory **from the supervision**; the honest claim
