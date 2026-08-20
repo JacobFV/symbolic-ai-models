@@ -1,7 +1,7 @@
 ---
 title: A suspiciously weak floor is a bug report, not evidence that the task is hard
 date: 2026-08-19
-cost: would have published a +0.266 lift that is +0.065
+cost: would have published a +0.266 lift that is +0.065, and then a null that was not one
 ---
 
 ## The mistake
@@ -53,6 +53,30 @@ Concretely, three cheap checks, in order of what they cost:
 3. **Build the floor to be embarrassing.** Give it the model's own candidate set,
    its own inventory, and the most generous decision rule you can defend. A floor
    you have tried to make win is a floor worth quoting.
+
+## It happened again the same day, in the opposite direction
+
+Hours after writing this file I built a floor for `employer` from a list of
+employment verbs — *worked for*, *joined*, *employed by*. It scored **0.025**,
+and the run printed *"the router does NOT generalise: it was a property of
+occupation."* I nearly recorded that as a finding.
+
+Applying the guard below — what is the largest score this code could produce? —
+the cue fired in **24%** of documents and put gold inside its window **3.6%** of
+the time. The floor scored 69% of its own structural ceiling. Real biographies
+say *"Senior Investigator **at** X"*, a bare preposition after a role noun, not
+an employment verb. A fair floor scores **0.139–0.192**, and with it **the router
+does generalise** — four positive slices across two relations.
+
+**So the same mechanism produced a false positive and a false negative within
+one session.** First it inflated a lift from +0.065 to +0.266; then it
+manufactured a null. This is the important half: a broken floor does not have a
+direction. It is not a conservative error you can discount, and "my floor was
+weak so the real effect is smaller" is as wrong as the reverse.
+
+The tell is identical both times — **a floor scoring near zero on formulaic
+text** — and both times the diagnosis took under five minutes and inverted the
+conclusion.
 
 ## The reusable half
 
