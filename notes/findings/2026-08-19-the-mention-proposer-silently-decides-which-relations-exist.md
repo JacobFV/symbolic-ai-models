@@ -60,15 +60,15 @@ Over the four valid relations:
 
 | statistic | r with `correct` |
 |---|---|
-| containment | −0.201 |
-| mean frame count | +0.508 |
-| top-5 frame share | +0.788 |
+| containment | +0.450 |
+| mean frame count | +0.750 |
+| **top-5 frame share** | **+0.871** |
 
-Top-5 share is the best of them and it is **four points with `parent` as an
-outlier** — high frame concentration would predict `parent` reads better than
-`country`, and it reads worse. Over five points (including the invalid rows) the
-same statistic reads −0.470, which is how much two broken rows move a
-correlation on this sample size.
+Top-5 share is the best of them and it is **four points**. Over five points —
+including the two invalid rows — the same statistic reads **−0.470**, so two
+broken rows flip the sign of the strongest correlate on this sample size. That is
+the whole reason the invalid rows had to be identified before any fit was
+attempted, and it is why four points cannot establish this.
 
 **Four points do not establish a predictor**, and this note does not claim one.
 What it establishes is that two of five relations were unmeasurable for reasons
