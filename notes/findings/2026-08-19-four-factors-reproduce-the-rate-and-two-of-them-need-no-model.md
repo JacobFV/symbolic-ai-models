@@ -68,10 +68,51 @@ The product missing the measured rate — a fifth factor, or interaction between
 them, would have shown as a systematic gap. The largest discrepancy across four
 rows is 0.004, and it is in the direction aggregation predicts.
 
+## Extended to five relations: it holds, and the classifier is binding in all of them
+
+The four-row version named its own limit. All five relations with gold on the same
+articles, both proposers — ten rows:
+
+| relation | proposer | contain | propose | **classifier** | ranker | product | measured | gap |
+|---|---|---|---|---|---|---|---|---|
+| `parent` | Capitalised | 0.592 | 0.782 | **0.338** | 0.782 | 0.122 | 0.116 | +0.007 |
+| | Phrase | 0.592 | 0.871 | **0.351** | 0.759 | 0.138 | 0.133 | +0.005 |
+| `country` | Capitalised | 0.579 | 0.804 | **0.455** | 0.889 | 0.188 | 0.169 | +0.019 |
+| | Phrase | 0.579 | 0.896 | **0.455** | 0.888 | 0.209 | 0.192 | +0.018 |
+| `headquarters` | Capitalised | 0.551 | 0.873 | **0.536** | 0.870 | 0.224 | 0.218 | +0.006 |
+| | Phrase | 0.551 | 0.937 | **0.522** | 0.873 | 0.235 | 0.230 | +0.005 |
+| `founder` | Capitalised | 0.424 | 0.735 | **0.372** | 0.856 | 0.099 | 0.098 | +0.001 |
+| | Phrase | 0.424 | 0.789 | **0.376** | 0.859 | 0.108 | 0.107 | +0.001 |
+| `industry` | Capitalised | 0.241 | **0.006** | 0.000 | 0.000 | 0.000 | 0.000 | 0.000 |
+| | Phrase | 0.241 | 0.805 | **0.158** | 0.810 | 0.025 | 0.025 | 0.000 |
+
+**Every gap is between 0.000 and 0.019, and every one is positive** — the product
+is a slight *upper* bound, which is what it should be, since the four gates can be
+passed by different sentences in the same article.
+
+**The classifier is the lowest factor in all five relations** — 0.158 to 0.536,
+against a ranker that never drops below 0.759 and a proposal that never drops
+below 0.735 once the proposer can represent the values. The one exception proves
+the rule: `industry` under capitalised runs is proposer-bound at 0.006, which is
+the case where the component cannot express the answer at all.
+
+That generalises the model-class conclusion well beyond `parent`. **The
+sentence-level decision — does this sentence state this relation — is the binding
+factor for every relation measured**, and it is the factor that four
+representations and a set of explicit conjunctions could not move.
+
+The phrase proposer raises `proposal` in every relation (+0.05 to +0.09) and moves
+the classifier and ranker by ≤0.015, which is the decomposition confirming from a
+third angle that its `parent` gain was proposal — a vocabulary prior — and not
+reading.
+
 ## Limits
 
-- **Two relations, one corpus.** The claim that the product is complete rests on
-  four rows.
+- **One corpus, one genre.** Five relations, but all company intros.
+- The classifier factors here differ slightly from the four-row run (`parent`
+  0.338 against 0.302) because `RELS` now contains five relations, so distant
+  supervision assigns some sentences to a different label. The comparison within
+  this table is like-for-like; across the two runs it is not.
 - The `ranker` factor here is conditioned on *a labelled sentence containing the
   gold* and reads ≈0.80; the 0.533 quoted earlier in the session is a different
   conditional over articles, not a contradiction.

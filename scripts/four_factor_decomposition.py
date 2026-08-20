@@ -46,7 +46,10 @@ CORPUS = Path("data/artifacts/wikipedia_parents_closed.jsonl")
 RELS = Path("data/artifacts/company_relations_scale_v2.jsonl")
 OUT = Path("runs/four_factor_decomposition.json")
 FOLDS = 4
-RELATIONS = ("parent", "industry")
+#: All five relations with gold on the same 2,502 articles. Four rows established
+#: that the product reproduces the rate; ten test whether it generalises, which is
+#: the limit that note names for itself.
+RELATIONS = ("parent", "country", "headquarters", "founder", "industry")
 
 
 def main() -> None:
