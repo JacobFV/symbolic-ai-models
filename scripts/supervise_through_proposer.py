@@ -38,7 +38,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 
 from symbolic_ai_core.reader.learned import (LearnedSpanReader, PhraseMentions,
-                                             _units)
+                                             Unit, _units)
 from symbolic_ai_core.world import Claim, EntityRef
 
 import scripts.real_text_reader as R
@@ -51,22 +51,44 @@ FOLDS = 4
 RELATIONS = ("industry", "parent")
 
 
-def supervise_via(doc, proposer, relations):
-    """Label a sentence when the PROPOSER can produce a gold value from it."""
+def supervise_via(doc, proposer, relations, *, multilabel: bool = False):
+    """Label a sentence when the PROPOSER can produce a gold value from it.
+
+    ``multilabel`` decides what happens when **one value serves two relations**.
+    The single-label rule keeps the longest gold string and breaks ties on the
+    order of ``relations``, which quietly starves whichever relation is listed
+    later: 73.4% of articles carrying both `parent` and `owned_by` gold give them
+    the **same** value, and `owned_by` -- listed second -- reads 0.007 jointly
+    against 0.051 fitted alone.
+
+    With ``multilabel`` the sentence becomes a positive for **every** relation
+    whose gold it produces, by emitting one unit per relation. That is the honest
+    reading: a sentence saying *X, a subsidiary of Y* really does state both that
+    Y is the parent and that Y is an owner.
+    """
     units = _units(doc["intro"])
+    extra = []
     for u in units:
         u.query = doc.get("title", "")
         produced = {m.text.lower() for m in proposer.find(u)}
-        best = None
+        hits = []
         for r_ in relations:
             for g in (doc.get(r_) or []):
                 if g and g.lower() in produced:
-                    if best is None or len(g) > len(best[1]):
-                        best = (r_, g)
-        if best:
-            u.claim = Claim(predicate=best[0],
-                            roles={"value": EntityRef(best[1])})
-    return units
+                    hits.append((r_, g))
+                    break
+        if not hits:
+            continue
+        hits.sort(key=lambda rg: (-len(rg[1]), relations.index(rg[0])))
+        u.claim = Claim(predicate=hits[0][0],
+                        roles={"value": EntityRef(hits[0][1])})
+        if multilabel:
+            for r_, g in hits[1:]:
+                dup = Unit(u.start, u.end, u.text, list(u.tokens), None,
+                           u.index, u.doc_text, u.query)
+                dup.claim = Claim(predicate=r_, roles={"value": EntityRef(g)})
+                extra.append(dup)
+    return units + extra
 
 
 def main() -> None:
