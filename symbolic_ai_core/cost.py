@@ -408,6 +408,32 @@ class Ledger:
     usd_per_quality_point: float | None = None
     notes: tuple[str, ...] = ()
 
+    @property
+    def tokens_per_usd(self) -> float:
+        """Raw throughput per dollar. **An input, never a headline.**
+
+        This repo led with a throughput number for months and it said nothing,
+        because a system can be arbitrarily fast and understand nothing. It is
+        computed here so that the honest version below can be computed beside
+        it, and so that nobody has to derive it ad hoc from a price sheet.
+        """
+        return _safe_div(1e9, self.usd_per_btok_in)
+
+    @property
+    def correct_tokens_per_usd(self) -> float:
+        """Tokens per dollar, **charged for being right**.
+
+        Throughput multiplied by the share of attempts that clear the floor.
+        A system reading a billion tokens a dollar at its floor earns **zero**
+        here, which is the property that makes "throughput is an input" an
+        enforceable rule rather than a preference.
+
+        Measured on this repo's own pipelines: the generated domains keep their
+        full 8.6-37.6 Btok/USD because their rate is 1.000, and real prose keeps
+        about a sixth of its 3.8 Btok/USD because `parent` reads at 0.144.
+        """
+        return self.tokens_per_usd * max(0.0, self.rate - self.floor)
+
     def as_dict(self) -> dict[str, Any]:
         d = {k: v for k, v in self.__dict__.items() if k != "price"}
         d["usd_per_core_hour"] = self.price.usd_per_core_hour

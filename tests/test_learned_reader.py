@@ -278,3 +278,23 @@ def test_a_logistic_score_is_a_probability_and_a_margin_is_not():
 def test_an_unknown_classifier_is_refused_rather_than_defaulted():
     with pytest.raises(ValueError, match="unknown model"):
         LearnedSpanReader(model="randomforest")
+
+
+def test_a_system_at_its_floor_earns_zero_correct_tokens_per_dollar():
+    """Throughput charged for being right, which is what makes the rule bite.
+
+    `CLAUDE.md` says a throughput number is an input and never a headline,
+    because a system can be arbitrarily fast and understand nothing. This is that
+    rule as arithmetic: the fast-and-empty system earns exactly zero.
+    """
+    from symbolic_ai_core.cost import (Capability, System, cpu_component,
+                                       ledger)
+    system = System(name="t").with_component(
+        cpu_component("reader", 210_000, source="test"))
+    good = ledger(system, Capability(unit="episode", rate=1.0, floor=0.5, n=10,
+                                     tokens_per_attempt=277))
+    empty = ledger(system, Capability(unit="episode", rate=0.5, floor=0.5, n=10,
+                                      tokens_per_attempt=277))
+    assert good.tokens_per_usd == empty.tokens_per_usd     # same throughput
+    assert good.correct_tokens_per_usd > 0
+    assert empty.correct_tokens_per_usd == 0.0
