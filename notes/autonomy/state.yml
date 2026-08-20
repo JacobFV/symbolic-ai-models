@@ -2261,3 +2261,19 @@ second_domain_people:
   unsettled: "no renaming control on the 0.615; closed-vocabulary effect is live"
   next: "run the renaming control on occupation before 0.615 is quoted anywhere"
 session_closed: 2026-08-19
+
+# 2026-08-19 — the proposer arm, four experiments, closed
+proposer_arm:
+  status: closed
+  chain: "control -> suffix -> wordnet -> union"
+  findings:
+    - notes/findings/2026-08-19-the-reader-reads-the-frame-and-the-proposer-is-the-whole-limit.md
+    - notes/findings/2026-08-19-the-lexical-proposer-cannot-generalise-a-long-tailed-inventory.md
+    - notes/findings/2026-08-19-the-limit-was-inventory-size-and-wordnet-buys-open-vocabulary-reading.md
+    - notes/findings/2026-08-19-the-inventory-trade-must-be-chosen-and-the-crossover-is-18-percent.md
+  headline: "open-vocabulary reading: unseen occupations 0.000 -> 0.288 via WordNet noun.person"
+  renaming_control: "98.6% retained (0.591 vs 0.600); strongest in repo history"
+  decision_rule: "f* = 0.182 novel-value share; below it keep induced, above it take external"
+  died_this_arm: "my own 'a lexical proposer cannot generalise a long-tailed inventory', refuted in 3h"
+  suite: "3824 passed, 10 skipped; no library code touched after"
+  next: "second relation (educated_at, containment 0.119) and a floor audit on the unseen slice"
