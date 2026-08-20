@@ -1964,6 +1964,38 @@ unknowns:
     domain.
   - Precision failures (invented/misread claims) are unswept; MISREADS exists.
 
+session_closed: >
+  CLOSED 2026-08-19 at the user's request. All arms wrapped, everything
+  committed, suite green. Read in this order: HANDOVER.md section 0 (fifth
+  revision), notes/status/2026-08-19-the-in-scope-path-was-larger-than-the-blocked-one.md,
+  then RESEARCH_LOG.md's believed-and-false table, which gained five rows today.
+
+  WHERE THE BET STANDS. The reasoning substrate is done and priced: $1.6e-08 to
+  $9.7e-08 per solved episode, 25,597x-112,395x against a PERFECT API, and in
+  tokens-per-dollar 5.7x-17.7x past 1 Bt/$ once throughput is charged for
+  clearing the floor. Open prose is at 0.35-0.90 Bt/$ charged -- under target --
+  and that gap is the whole remaining problem.
+
+  THE READING ARM, COMPLETE. The four-factor decomposition (containment x
+  proposal x classifier x ranker) reproduces the measured rate within 0.019
+  across ten rows, and the CLASSIFIER binds in all seven relations, 2.0x to
+  51.4x below an oracle. Everything that moved a number moved a component that
+  was not previously in the decomposition: a normalising proposer, supervision
+  routed through it, and aliases induced by label association took `industry`
+  from structurally impossible to 0.238 and `country` from 0.182 to 0.390.
+
+  WHAT IS BLOCKED, AND IT IS THE USER'S CALL. An oracle classifier is worth
+  1.9x-6.6x on every relation. Twelve interventions inside the scope failed to
+  move it, including the model class's own preferred escape (explicit
+  conjunctions). CLAUDE.md scopes the neural half as a control not to be invested
+  in; torch is installed and a local model cache exists, so it is RUNNABLE. It
+  was deliberately not started.
+
+  THE LAST ARM: relation competition is zero-sum. Fit jointly by default; fit a
+  starved relation -- identifiable in advance by shared gold values, 73.4% for
+  parent/owned_by -- separately; do not use multi-label, which is the intuitive
+  fix and a 9% net loss.
+
 active_work: >
   CRITICAL PATH STEPS 1-6 DONE. The learned reader exists
   (symbolic_ai_core/reader/learned.py): ONE implementation, NO domain lexicon in
