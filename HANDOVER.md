@@ -71,6 +71,28 @@ at 0.706 on those unseen values. That is **open-vocabulary reading**, and it is
 the first result in the arm where the system answers correctly about a value it
 has never encountered in any form.
 
+**The router is the arm's live capability, and it holds up.** Held out end to end
+— threshold swept on *training* documents, applied to test — it scores **0.375**
+on novel occupation vocabulary, *above* the in-sample 0.370, capturing **63.2%**
+of the oracle headroom. The threshold transfers from the seen regime to the
+unseen one. Correcting the flaw I flagged moved the number **up**, not down.
+
+It **generalises to a second relation**. `employer` changes the values
+(organisation names, no morphology), the frame (no obligatory opener), the
+proposer (capitalised runs) and the inventory (WordNet is useless there). Four
+positive slices across two relations: **+0.019 to +0.060** over the best single
+system.
+
+**The usable law: the router takes roughly half of whatever oracle headroom
+exists** — capture is **33–63% across six pairings**. Headroom is largest when
+the two systems are near parity, and re-pairing against a stronger or weaker
+floor moves the gain in the predicted direction both ways. But *"parity predicts
+headroom"* rests on six points with one clear outlier — do not quote it as a law.
+
+**Agreement-only routing is worthless** (0.0% of headroom on unseen, −0.087 on
+seen). The value is in the reader's **graded** confidence, not in the
+disagreement signal.
+
 **The lift on novel vocabulary is zero, and the system still wins.** A two-line
 rule — copular window, rightmost WordNet person-noun with an agentive suffix, no
 supervision — scores **0.310** against the reader's **0.288** on unseen values.

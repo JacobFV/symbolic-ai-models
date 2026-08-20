@@ -2303,3 +2303,19 @@ floor_and_selector:
     - "bigger unseen slice; the fetch is rate-limited but repeatable"
     - "held-out router threshold: the 0.370 is fitted in-sample and is optimistic"
     - "second relation (educated_at, containment 0.119) to test the triage screen prospectively"
+
+# 2026-08-19 — router hardened and generalised
+router_hardened:
+  status: closed
+  heldout: "threshold swept on TRAINING docs: 0.375 unseen (63.2% capture), 0.584 seen (47.7%) -- both ABOVE in-sample"
+  transfer: "threshold fitted on seen vocabulary transfers to unseen"
+  second_relation: "employer: +0.019 to +0.060 over best single, 4 positive slices across 2 relations"
+  law: "capture 33-63% across six pairings -- the router takes about HALF of whatever oracle headroom exists"
+  parity: "headroom is largest near parity; refuter moved the gain both directions as predicted. Six points, one outlier. NOT a law."
+  agreement_only: "worthless: 0.0% of headroom unseen, -0.087 seen. The graded confidence is the whole value."
+  floor_bug_twice: "same mechanism produced a false positive (+0.065 -> +0.266) and a false negative ('router does not generalise') in one session"
+  in_flight:
+    - "scripts/fetch_people_more.py -- larger biography fetch, background, Wikidata 429s throughout, log /tmp/symai-logs/more.log"
+  next:
+    - "rerun the arm on the larger slice; n=184/158 is the binding constraint on every interval"
+    - "a third relation from a DIFFERENT corpus -- both relations here share one 850-doc fetch"
