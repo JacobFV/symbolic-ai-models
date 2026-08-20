@@ -26,6 +26,32 @@ The result that was not predicted: **it now matches the hand patterns on the
 composed query — 0.092 against 0.089 — while remaining well behind on both
 individual relations** (0.099 against 0.143, 0.381 against 0.650).
 
+> **Corrected the same day: the explanation below is wrong.** It was flagged here
+> as an interpretation rather than a measurement, so it was measured. Per-country
+> concentration of correct (country, group) pairs:
+>
+> | arm | correct pairs | countries hit | Gini | top-10 share |
+> |---|---|---|---|---|
+> | learned | **118** | 26/53 | **0.694** | **0.661** |
+> | hand | **231** | 25/53 | 0.638 | 0.569 |
+> | union | 275 | 29/53 | 0.593 | 0.521 |
+>
+> **The learned reader is *more* concentrated, not less** — Gini 0.694 against
+> 0.638 — and the hand reader recovers **nearly twice as many** correct pairs
+> (231 against 118) across the same number of countries. Every clause of the
+> subgraph story is backwards.
+>
+> The tie is a property of the **metric**. Macro-F1 averages 53 countries
+> equally, so it treats Belgium like the United States: the learned reader's
+> higher per-country precision (0.255 against 0.140) offsets recovering half as
+> many pairs. On any micro-averaged measure the hand reader is clearly ahead,
+> **2:1 on recovered pairs**.
+>
+> So the claim that *"error topology has opposite signs for the two composed
+> shapes"* is **withdrawn**. The clumping result on two-hop chains stands on its
+> own measurement; extending it to the set-valued join was invention, and the
+> measurement that would have caught it took twenty minutes.
+
 ## How something behind on both parts ties on their join
 
 The join is **set-valued**: for each country, the set of groups controlling any
