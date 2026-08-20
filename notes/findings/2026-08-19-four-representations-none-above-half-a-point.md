@@ -41,9 +41,24 @@ lexical grouping. It came in **below** it.
 > **The conclusion strengthens.** Argument structure buys **nothing**, not +0.003.
 > And **explicit conjunctions** — added afterwards as the model class's own way of
 > saying *this evidence matters because that evidence holds*, which is the exact
-> operation this note claims is missing — also buy **nothing**, 209–212 against a
-> band that starts at 206. The one arm with a real effect is the purely lexical
-> one, at +12 articles in 1,788.
+> operation this note claims is missing — also buy almost nothing.
+>
+> **Settled numbers, after `induce()` was given a total order and verified
+> identical across three hash seeds:**
+>
+> | arm | correct | Δ vs baseline |
+> |---|---|---|
+> | baseline (frames) | **207/1788** | — |
+> | + argument structure | 209/1788 | **+2 articles** (+0.001) |
+> | + explicit conjunctions | 211/1788 | **+4 articles** (+0.002) |
+> | + label-aware lexical groups | 214/1788 | **+7 articles** (+0.004) |
+>
+> Every one of the four is now reproducible and every one is worth **between two
+> and seven articles in 1,788**. The ordering is mildly informative — lexis above
+> conjunctions above structure — and the magnitudes are the point: nothing in
+> this family reaches half a point. Note also that the settled lexical figure,
+> 214, sits *below* the entire hash-noise band it was first measured in
+> (216–223), so the noise had been flattering it.
 
 Four qualitatively different feature families — external and internal, lexical
 and structural, one of them **supervised with the labels themselves and therefore

@@ -84,7 +84,13 @@ def induce(train_docs) -> dict[str, int]:
         scores[w] = math.log(p_wp / p_w)
     if not scores:
         return {}
-    order = sorted(scores, key=lambda w: scores[w])
+    # Total order. Sorting on the score alone breaks ties by dict insertion
+    # order, which comes from `set(pos) | set(neg)` and therefore from Python's
+    # per-process string hash seed -- so the buckets, and every number computed
+    # from them, varied by +-3 articles between runs of identical code. See
+    # notes/lessons/2026-08-19-hash-randomisation-made-a-deterministic-looking-
+    # pipeline-vary.md.
+    order = sorted(scores, key=lambda w: (scores[w], w))
     per = max(1, len(order) // BUCKETS)
     return {w: min(i // per, BUCKETS - 1) for i, w in enumerate(order)}
 
