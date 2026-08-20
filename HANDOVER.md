@@ -1,4 +1,4 @@
-# Handover — 2026-08-19 (fourth revision, after the learned reader)
+# Handover — 2026-08-19 (fifth revision, after the reading arm)
 
 For the next agent picking this repo up cold. `ROADMAP.md` says what the work
 *is*; `CLAUDE.md` says how to work here; this says **where the live edge is, what
@@ -8,6 +8,92 @@ you do not inherit it as fact.**
 Read in this order: `CLAUDE.md` (working agreements — they are binding and they
 were each paid for), `APPROACH.md` (the argument), then this, then `ROADMAP.md`.
 `notes/lessons/` is the shortest path to not repeating six specific mistakes.
+
+---
+
+## 0. The state after the reading arm. Read this first of all.
+
+*Programme-level:
+`notes/status/2026-08-19-the-in-scope-path-was-larger-than-the-blocked-one.md`.
+§0-below is the previous revision — still true about the learned reader, and it
+concludes the ceiling would not move without the excluded component, which turned
+out **wrong**.*
+
+### The one paragraph that matters
+
+Every decomposition of the reader used **ceiling × classifier × ranker**. Adding
+the **proposer** — how often the candidate the answer needs is generated at all —
+gave a four-factor model whose product reproduces the measured rate within
+**0.019 across ten rows**, and showed `industry`'s proposal was **0.006**: the
+reader could not represent the answer, and every number for that relation
+described a component nobody had looked at. **The components that were not in the
+decomposition were the ones with headroom.**
+
+### What exists now that did not
+
+- **`PhraseMentions`** — proposes from a learned phrase inventory plus productive
+  suffixes, and **normalises**: seeing *automotive company* it reports the
+  canonical `automotive industry`. `CapitalisedMentions` can only propose proper
+  nouns and silently makes lowercase-valued relations unanswerable.
+- **`supervise_via`** (`scripts/supervise_through_proposer.py`) — labels a
+  sentence when **the proposer can produce a gold value from it**. Alone the
+  alias proposer made `industry` *worse*; with aligned supervision, **3.9x**.
+  The two halves are useless apart.
+- **`induce_aliases`** (`scripts/induced_aliases.py`) — aliases by label
+  association, which recovers what morphology cannot: `country` 0.182 → **0.390**.
+- **`Ledger.correct_tokens_per_usd`** — throughput charged for clearing the floor.
+  A system at its floor earns **zero**, which is a unit test.
+- **`scripts/corrected_triage.py`** — the model-free screen.
+
+### Numbers not to re-derive
+
+| | |
+|---|---|
+| `industry`, end to end | **0.000 → 0.025 → 0.097 → 0.238** (+0.177 above floor) |
+| `country` | 0.182 → **0.390** (floor **0.298** — only +0.092 above it) |
+| `headquarters` | **+0.235 above floor**, the strongest relation |
+| oracle classifier is worth | **1.9x–6.6x** on every relation |
+| composed query, union | **micro-F1 0.225** (macro 0.118) |
+| 1 Bt/$, charged for correctness | bounded **5.7–17.7x over**; prose **0.35–0.90 Bt/$**, under |
+
+### The triage rule, and its exact limit
+
+`containment < floor` **proves a relation cannot clear its floor**, model-free. It
+rejected 1 of 7 with no false alarms. But a prospective test on two unseen
+relations scored **four of seven**: every *negative* prediction was right and two
+of three *positive* ones were wrong about size. And `owned_by` passes every screen
+and still fails, because its gold values appear for reasons other than the
+relation — **false containment**, with no cheap detector. Frame concentration was
+tried twice and failed twice.
+
+> **A model-free screen can prove a relation impossible, never feasible.**
+
+### Claims withdrawn this arm — do not re-inherit them
+
+- *"The composition law holds to within 0.001"* — six events in 191 chains.
+- *"The union's gain grew sevenfold with scale"* — an ordering artefact; shuffled
+  it plateaus at 17–20%.
+- *"The Heaps exponent replicates to three decimals"* — prefix sampling; the
+  spread is ±0.03.
+- *"Error topology has opposite signs for the two composed shapes"* — measured
+  and **backwards in every clause**.
+- **Every composed-query figure was macro-averaged and none said so** — micro is
+  1.4x–2.3x higher and inverts the learned-vs-hand ranking.
+
+### Traps this arm added to the six below
+
+7. **A prefix is not a sample.** Corpus files carry their construction order.
+   Shuffle with a fixed seed before any prefix.
+8. **Hash randomisation varies a deterministic-looking pipeline.** A dict built
+   from `set(a) | set(b)` iterates differently per process; sort with a total
+   order and sweep two `PYTHONHASHSEED` values before quoting a delta.
+9. **A rate without its numerator is not a result.** Below ~20 events report the
+   interval, not the point.
+10. **Quote the floor.** `country` looked second-best on raw accuracy and is
+    weakest of five above floor, because *United States* is right 29.8% of the
+    time.
+11. **Say which averaging.** Macro and micro differed by 2x and disagreed on a
+    ranking here.
 
 ---
 
