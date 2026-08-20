@@ -101,12 +101,14 @@ def main() -> None:
 
     countries = sorted({norm(x) for d in docs for x in (d.get("country") or [])})
     print(f"{len(docs)} articles, {len(countries)} countries\n")
-    print(f"    {'arm':<9}{'correct pairs':>15}{'countries hit':>15}"
-          f"{'GINI':>8}{'top-10 share':>14}")
+    print(f"    {'arm':<9}{'correct':>9}{'hit':>8}{'GINI':>7}"
+          f"{'MACRO F1':>10}{'MICRO F1':>10}{'micro P':>9}{'micro R':>9}")
     out = {}
     for arm in ("learned", "hand", "union"):
         per: dict[str, float] = {}
         total = 0
+        f1s: list[float] = []
+        tp_all = got_all = gold_all = 0
         for c in countries:
             gold = set()
             got = set()
@@ -124,14 +126,28 @@ def main() -> None:
             hit = len(gold & got)
             per[c] = hit / len(gold)
             total += hit
+            tp_all += hit
+            got_all += len(got)
+            gold_all += len(gold)
+            pc = hit / len(got) if got else 0.0
+            rc = hit / len(gold)
+            f1s.append(2 * pc * rc / (pc + rc) if pc + rc else 0.0)
         vals = list(per.values())
         served = sum(1 for v in vals if v > 0)
-        top10 = sum(sorted(vals, reverse=True)[:10]) / max(1e-9, sum(vals))
-        print(f"    {arm:<9}{total:15d}{f'{served}/{len(vals)}':>15}"
-              f"{gini(vals):8.3f}{top10:14.3f}")
+        # Macro averages countries equally -- Belgium counts as much as the
+        # United States. Micro pools the pairs, which is the measure a user of
+        # the world experiences. Every composed-query number in this session was
+        # macro and none said so.
+        macro = statistics.mean(f1s) if f1s else 0.0
+        mp = tp_all / got_all if got_all else 0.0
+        mr = tp_all / gold_all if gold_all else 0.0
+        micro = 2 * mp * mr / (mp + mr) if mp + mr else 0.0
+        print(f"    {arm:<9}{total:9d}{f'{served}/{len(vals)}':>8}"
+              f"{gini(vals):7.3f}{macro:10.3f}{micro:10.3f}{mp:9.3f}{mr:9.3f}")
         out[arm] = {"correct_pairs": total, "countries_served": served,
                     "countries": len(vals), "gini": gini(vals),
-                    "top10_share": top10}
+                    "macro_f1": macro, "micro_f1": micro,
+                    "micro_precision": mp, "micro_recall": mr}
 
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(json.dumps(out, indent=2))
