@@ -54,13 +54,33 @@ that was left for the user is correspondingly **smaller** than it looked: its
   second independent instance of `industry`'s structural zero, so it is a property
   of the proposer, not an accident of one relation.
 
-### Unsettled, and it is the first thing to attack
+### Settled since, and it went further than the arm expected
 
-`occupation`'s **0.615** leans on a phrase proposer induced from training fillers,
-and its values are a small closed set of occupational categories. **The renaming
-control has not been run on it** — the control that killed ensemble-001's 1.14-bit
-headline. Until it has, 0.615 is a scouting number, and the finding says
-`status: provisional` for that reason.
+The renaming control **has** been run, and `occupation` **retains 98.6%** of its
+rate when every value is replaced by an invented token (0.591 against 0.600, all
+four factors flat). That is the strongest renaming survival in this repo's
+history, against the control that took ensemble-001 from 1.14 bits to 0.038. The
+closed-set worry was wrong on its own terms too: **494 distinct values across 847
+articles**.
+
+The reader reads **position in a syntactic frame**. Its vocabulary dependence
+lives entirely in the proposer, and that component is swappable — **WordNet's
+18,705 `noun.person` lemmas take values the system never saw in training from
+0.000 to 0.288 end-to-end**, with the classifier holding at 0.790 and the ranker
+at 0.706 on those unseen values. That is **open-vocabulary reading**, and it is
+the first result in the arm where the system answers correctly about a value it
+has never encountered in any form.
+
+**One of my own findings died in between, in three hours.** I claimed a lexical
+proposer *cannot* generalise a long-tailed inventory, having measured two routes
+at zero. Both derived their inventory **from the supervision**; the honest claim
+was that near-tautology, and WordNet refuted the strong one. The word that did
+the damage is *lexical*. Do not re-inherit it.
+
+Cost of the swap: the seen slice falls 0.600 → 0.536, most of it in the ranker,
+from a larger and noisier candidate set. `scripts/union_proposer.py` tests
+whether that is a real precision cost or an artefact of *replacing* rather than
+*adding* — and the union is the configuration that would ship.
 
 ## 0. The state after the reading arm. Read this first of all.
 
