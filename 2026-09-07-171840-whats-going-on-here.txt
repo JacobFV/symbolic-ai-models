@@ -1,0 +1,774 @@
+ ▐▛███▛█   Claude Code v2.1.263
+▝▜██████▀  Opus 5 · Claude Max
+  ▝▝ ▝▝    ~/Documents/symbolic-ai-models
+
+
+❯ whats going on here?                                                          
+
+  Searched for 1 pattern, listed 2 directories, ran 5 shell commands (ctrl+o to expand)
+
+● This is your symbolic-AI research repo, and it's sitting clean on master at
+  1c5ec21. Nothing in flight — working tree clean, though three stale agent
+  worktrees are still parked under .claude/worktrees/. Last commit is dated in
+  the 2026-08-20 notes; today is 2026-09-07, so it's been idle ~2.5 weeks.
+
+  The bet. Build a language-understanding substrate whose cost per correct
+  answer is an order of magnitude off neural inference and whose reasoning is
+  inspectable (APPROACH.md). North star is $ / solved episode above floor, not
+  throughput.
+
+  Where the programme stands (from HANDOVER.md §0–§1, all cited to
+  notes/findings/):
+
+  - The cost question is answered and closed. The advantage over an LM is 1/f,
+    where f is the fraction of queries the symbolic system can't settle — and
+    neither side has a lever on it. f is set by provenance and identity 
+    boundaries: filed single-source → 463×, filed cross-source → 7×, derived
+    from text → 1.8×. Quoting any of those without naming the regime is the
+    error the file itself made for months.
+  - The capability question is the live edge. Federated queries run over three
+    filed sources (~260 µs/portfolio), and the answer is necessarily an
+    interval; the arc ends on "an uncertain input must not collapse a certain
+    output" — widen for errors rather than escalate, 96.9% coverage at half the
+    width for $0.045.
+  - The programme-level result: three arms in a row ended with the symbolic
+    machinery correct and the data not reaching (extraction at 62% of ceiling,
+    identifier bridge exact but 22.3% reach, ownership closure 95.7% agreement
+    but 5.3% of issuers). Bottleneck is reach, not reasoning — and half of that
+    reach is structural, not purchasable.
+
+  The live arm as of the last five commits — the reading/router thread:
+
+  - The reader reads syntactic frame position, not vocabulary: occupation
+    retains 98.6% under full renaming (0.591 vs 0.600), the strongest renaming
+    survival in the repo, against the control that took ensemble-001 from 1.14
+    bits to 0.038.
+  - A retraction got retracted. At 3.6× the corpus (2,820 biographies, 663
+    unseen), "the reader is indistinguishable from two lines of morphology on
+    novel vocabulary" is false — McNemar p=0.013, +0.044 novel, +0.105 familiar.
+    The earlier null was underpowered, and most of the swing was an optimistic
+    floor (0.310 → 0.259), not the reader improving.
+  - The router is the capability and it survives hardening. Threshold swept on
+    train, applied to test: 0.375 on novel vocabulary, above in-sample,
+    capturing 63.2% of oracle headroom. Generalises to a second relation
+    (employer), +0.019 to +0.060 across four slices. Usable law: the router
+    takes ~half of whatever oracle headroom exists (33–63% over six pairings) —
+    but that rests on six points with an outlier, so it isn't a law yet.
+    Agreement-only routing is worthless; the value is in graded confidence.
+  - Earlier headline correction worth knowing: "the classifier is the binding
+    factor" held 7/7 on company relations and 1/4 off them. On biographies
+    containment binds — the gold value isn't in the text. Twelve failed feature
+    interventions were pushing on a ceiling that was never the classifier's.
+
+  One thing is blocked on you (§6): every accuracy comparison against a language
+  model is unrun and stamped NOT QUOTABLE for want of paid API access, and it
+  now bites a product claim, not just a cost row. Second, smaller: a free 
+  CourtListener API signup would unlock the strongest test of the text→structure
+  arrow (their 77M-edge citation map is already on disk as ground truth). Both
+  are outward-facing actions under your identity, so they're not mine to take.
+
+  Want me to pick up the router thread, or clean up those three stale worktrees
+  first?
+
+✻ Brewed for 54s · done 12:08 PM
+
+※ recap: You're building a symbolic language-understanding substrate that beats neural inference on cost per correct answer; the repo is clean and idle, with the confidence-router reading arm as the live edge. Next: pick up that router thread, or say otherwise. (disable recaps in /config)
+
+❯ get the worktres all merged in if not already and then delete                 
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● All three branches are fully merged (0 commits not in master). Checking for
+  uncommitted work before I delete anything.
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Nothing at risk — the only untracked content is .venv/ and __pycache__ (13.8
+  GB of it). Removing the worktrees and their merged branches.
+
+  Ran 4 shell commands (ctrl+o to expand)
+
+● All three worktrees are gone, and nothing was lost.
+
+  What I checked before deleting
+
+  worktree branch: worktree-agent-a7f1b566b1c37c528
+  head: 02e2055 two-source property conflict
+  commits not in master: 0
+  uncommitted work: none
+  ────────────────────────────────────────
+  worktree branch: worktree-agent-a941d327db2db2bdb
+  head: 4e2fee5 scoping survives the dense graph
+  commits not in master: 0
+  uncommitted work: none
+  ────────────────────────────────────────
+  worktree branch: worktree-agent-aeb57e6b1d0791636
+  head: 2b05168 seven IATA nodes are two airports
+  commits not in master: 0
+  uncommitted work: none
+
+  All three were already fully merged — master was 331–339 commits ahead of each
+  with zero commits flowing the other way, so there was nothing to merge.
+  Working trees were clean; the only untracked content was .venv/ and
+  __pycache__. Removed the worktrees, deleted the three merged branches, pruned.
+  13.8 GB reclaimed (542 GB free on /home now). .claude/worktrees/ is empty and
+  git worktree list shows only the main checkout.
+
+  One thing I did not touch, deliberately. There's a stray branch omegaclaw —
+  not a worktree, so outside what you asked, but it's the only other branch and
+  it does carry one commit not in master: 04c2dfd (2026-08-11) "Preserve the
+  symbolic_ai_agents package found uncommitted on this branch". It is
+  superseded, not lost — master has an independently-landed, richer version of
+  that package (37 files vs the branch's 29, including abstain/ and graphread/),
+  and every file on the branch exists on master. Merging it would risk
+  regressing master's version onto the older one, so I left it as-is. Say the
+  word if you want it deleted too; I'd rather you make that call since it's the
+  last record of that line and master is 733 commits past it.
+
+✻ Cogitated for 57s · done 12:21 PM
+
+※ recap: Goal is orienting you in the symbolic-AI repo; I've removed all three agent worktrees, which were already fully merged, reclaiming 13.8 GB. Next: tell me whether to delete the stale `omegaclaw` branch, or start work on the router thread. (disable recaps in /config)
+
+❯ - is it able to do text completion?                                           
+  - is it able to control agents?                                               
+  - did we get anything else interesting out of this programme?                 
+
+  Ran 13 shell commands (ctrl+o to expand)
+
+● Short answers: text completion — mechanically yes, capably no, and that's 
+  measured rather than assumed. Agents — yes in one sense, not at all in the 
+  other. Details, then the interesting residue.
+
+  1. Text completion
+
+  The machinery is there. symbolic_ai_models asks every architecture a
+  next-token prediction question, and symbolic-ai-models sample
+  (symbolic_ai_models/decode.py) decodes free-running continuations from any
+  model in the registry — rule-based or neural, same sampler, no KV cache. It's
+  deliberately outside the evaluation path: "a window, not a benchmark."
+
+  What the window shows is that generation is absent, and that finding survived 
+  its own refuter:
+
+  - exact_match 0.000 everywhere; 11 of 19 models cannot emit a token at all.
+  - The pre-registered claim was that this was a readout artefact — the same
+    fitted corefer-001 scores 0.508 read as a move and 0.085 read as text, so
+    generation should reduce to graph completion plus a deterministic render.
+    That was checked first because it could refute, and it did. On
+    runs/infill-ans, nine of twelve models land on the abstention row, and
+    ptrgen-001, vsa_perm-002 and both omegaclaw rows match "say nothing" to nine
+    decimal places.
+  - The cleanest number in the whole repo says why: acc | copyable 0.494 against
+    acc | not copyable 0.003. These models copy a symbol that is already
+    visible in the context. They do not produce one that isn't.
+  - Two controls ruled out the task design manufacturing the null (hiding only
+    the first copy takes corefer 0.001 → 0.072, sixty-fold, and still below its
+    floor; more supervision makes it worse).
+
+  Two scope caveats worth having: the "text" is the synthetic formal-language 
+  curriculum (179 procedurally generated lessons), not English — and where the
+  repo does touch real English (Wikipedia biographies, the live reading arm),
+  the capability is reading, not writing. Milestone E (raw LM perplexity) is
+  explicitly the far one; state.yml says a small learned decoder and
+  ResponsePlan are steps 7 of 9 and not yet built.
+
+  2. Agent control
+
+  In the "symbolic policies acting in environments" sense: yes, fully built and 
+  it produced the repo's biggest result. symbolic_ai_agents is a complete second
+  harness — four environments (choice, retry, repair, probe), eight agents, its
+  own registry, calibration, trajectories, rollouts, CLI, and a wrap that drops
+  any model from the other package straight into them. It shares episodes,
+  vocabulary, floors and calibrator with symbolic_ai_models deliberately, so the
+  two produce numbers you can discuss in one paragraph.
+
+  That harness is where the largest effect in the repo lives, and it isn't a
+  model difference. One fitted model, corefer-001, read two ways over 179
+  lessons and 2,632 scored fills:
+
+  ┌────────────────────────┬───────────┬─────────────────┐
+  │        reading         │ label_acc │ lift over floor │
+  ├────────────────────────┼───────────┼─────────────────┤
+  │ graphread — as a move  │    0.5080 │          +0.383 │
+  ├────────────────────────┼───────────┼─────────────────┤
+  │ floor (context)        │    0.2025 │               — │
+  ├────────────────────────┼───────────┼─────────────────┤
+  │ wrap — as text         │    0.0851 │          −0.147 │
+  ├────────────────────────┼───────────┼─────────────────┤
+  │ abstain — says nothing │    0.0866 │          −0.145 │
+  └────────────────────────┴───────────┴─────────────────┘
+
+  Models span ~0.1 of lift; one readout swap spans 0.43 — and the model was
+  registered and sweeping the whole time with no way for the harness to ask. An
+  agent that didn't write it attacked it, ran both named confounds plus a third
+  nobody had named, and the gap grew, 0.4229 → 0.4320. It also corrected its own
+  author: wrap 0.0851 vs abstain 0.0866 is identical on success to sixteen
+  figures, so "reading these models as text is actively bad" is unearned — the
+  honest version is that it is indistinguishable from saying nothing.
+
+  In the "orchestrate LLM/tool-use agents" sense: no, and not by omission.
+  Grepping the whole tree for anthropic|openai|api_key|tool_use|function_call
+  returns zero hits. The only adapter is openflights.py. The package docstring
+  is explicit: "There is no neural agent, by construction rather than by
+  omission — an agent here computes an action rather than learning one." This is
+  also exactly the §6 blocker: every accuracy comparison against a language
+  model is unrun for want of credentials.
+
+  3. What else came out of it
+
+  The pattern worth naming first: this programme's most valuable findings are 
+  about measurement, not architecture. Almost every large effect turned out to
+  live in the harness — the readout, the floor, the metric, the missing
+  component — while the models themselves cluster within 0.1. That's a real
+  result about where effort goes in symbolic systems, and it's the opposite of
+  what the task list kept assuming.
+
+  The ones I'd actually carry out of here:
+
+  - The cost law, and it's clean. Advantage over an LM is 1/f, f = the fraction
+    of queries the system can't settle, and neither side has a lever on it. f is
+    a property of provenance and identity boundaries: filed single-source 463×,
+    filed cross-source 7×, derived from text 1.8×. 68× of the collapse is the
+    first identity boundary.
+  - The correction that gutted six arms: determinacy is not accuracy. Every
+    advantage above came from a formula with no slot for accuracy, so "settled"
+    was silently read as "correct". Run properly through the ledger, the
+    federated symbolic resolver scores 0.873 against a 0.874 floor — $/solved 
+    above floor is infinite. Six arms had priced determinacy and published it as
+    capability.
+  - Certification is bounded by 1/(1−accuracy), analytically. The flagged share
+    cancels: value doesn't depend on how much you flag or how well. Ten models
+    all sit at or just under the bound. A model can only certify to the extent
+    it is usually right.
+  - A ranking is a property of a metric, never of a set of models. label_acc and
+    label_bits were both in every summary.json from day one; only accuracy was
+    ever quoted, and they rank close to inversely. grammar is 14th on accuracy
+    and 1st on bits; gru-001 31st on type accuracy and 4th on type bits — the
+    neural models are calibrated and inaccurate, the rule-based ones the mirror.
+  - The renaming control is the sharpest instrument here. ensemble-001 is the
+    best density estimator in the repo (4.77 bits, −1.14 vs its best member) and
+    the entire gain is vocabulary memorisation — permute all 340 symbols
+    without refitting and it goes 0.467 → 0.038. The correlated control ensemble
+    gains exactly nothing, which is what makes the diversity claim real.
+  - The one exact quantitative prediction. Mask rate is a supply knob, not a
+    difficulty knob — label_acc predicted from candidate supply alone matched
+    observation to +0.004 across three held-out rates.
+  - Reading decomposes into four factors and the unmeasured one had all the 
+    headroom. containment × proposal × classifier × ranker reproduces measured
+    rates to 0.028 in a domain it was never fitted on. On industry the proposer
+    was 0.006 — the reader couldn't represent the answer at all, and twelve
+    failed interventions had been pushing on the wrong component. Fixing it:
+    industry 0.000 → 0.238.
+  - The reader reads syntactic frame position, not vocabulary. occupation
+    retains 98.6% under total renaming — the strongest such survival here,
+    against the control that killed the ensemble above.
+  - Knowing when to defer beats answering. The reader's graded confidence
+    separates discordant items at AUC 0.880, and a trivial router takes roughly
+    half of whatever oracle headroom exists (33–63% over six pairings),
+    generalising across two relations. Agreement-only routing is worth zero.
+
+  If you want a pointer for the next session: the two capabilities that are
+  actually live and hardened are the router and the readout, and the two things
+  the repo cannot currently do are generate and talk to a language model. The
+  second is one signup away; the first is steps 7–9 of the critical path and has
+  never been attempted.
+
+✻ Brewed for 2m 25s · done 12:29 PM
+
+※ recap: Cleaned up the repo: all three agent worktrees were already merged, so I removed them and reclaimed 13.8 GB, then answered your questions on text completion, agents, and results. Next: pick up the router thread or leave it here. (disable recaps in /config)
+
+❯ when i began this repo i wanted us to build a system capable of               
+  recapitulating the underlying data generating structure that was being        
+  projected onto its inputs and outputs back into a low dimensional or even     
+  symbolic model inside the ai system. that was the true objective. now im      
+  begining to think it would be helpful to tackle this for separate domains     
+  independantly instead of a unified text predictor since text is only a        
+  projection of massively more complex and heterogenous systems generating the  
+  thing being predicted during next token completion. perhaps this could be     
+  reduced to                                                                    
+  - math                                                                        
+  - newtonion physics                                                           
+    uhh actually i dont want to writ this by hand but perhaps you can imagine a 
+  DAG cirriculum of isolated things to learn the underlying structure of. then  
+  once i have built a system with conceptual primitives in all these            
+  foundational domains, it may be much easier to build systems that parse,      
+  associate, predict, and process in other forms                                
+                                                                                
+  what are your thoughts. let's just talk                                       
+
+● Real thoughts, and I'll disagree with part of it.
+
+  Your instinct is right, and this repo already measured why
+
+  The single most-repeated result across the last month is "the symbolic 
+  machinery was correct and the data did not reach." Three arms in a row ended
+  that way. And when the reading arm finally decomposed properly, the binding
+  factor wasn't the classifier or the reader — it was containment: on 850
+  biographies, three times in four the gold value is not in the text at all.
+  Twelve feature interventions had been pushing on a ceiling that was never
+  theirs to raise.
+
+  That is your thesis, arrived at empirically and from the other direction. Text
+  is a lossy projection, and a large fraction of the work went into trying to
+  invert a projection that had already thrown the answer away.
+
+  The other number that says it: acc | copyable 0.494 against acc | not copyable
+  0.003. Every model here can re-emit a symbol that is visible in the context
+  and essentially none can produce one that isn't. There is no generative model
+  of the domain behind the text — there's a copier. That is precisely "failed to
+  recapitulate the generating structure," measured.
+
+  So: the pivot is evidence-supported, not a change of mood. Good.
+
+  But the nodes aren't the research. The edges are.
+
+  Here's my actual worry. "Build conceptual primitives in foundational domains,
+  then it becomes much easier to build systems that parse, associate, predict in
+  other forms" — that sentence is the classic symbolic-AI bet, and it is the
+  specific one that historically failed. Cyc had primitives. The
+  knowledge-acquisition bottleneck was never a shortage of primitives; it was
+  that the glue was where all the difficulty went, and the tail never closed.
+
+  Which means: building a math node and a Newtonian-physics node is the
+  well-trodden part. Symbolic regression, AI Feynman, SINDy, theorem provers,
+  physics-informed nets — recovering F=ma from trajectories has been done. If
+  you build the DAG's nodes and stop, you've spent a year confirming things that
+  were known, which CLAUDE.md names as the failure mode for this programme.
+
+  The unproven, frontier claim is the edge. Does structure recovered in domain A
+  measurably reduce the cost of recovering structure in domain B? Nobody has a
+  clean number on that. That's the thing worth a year.
+
+  So I'd invert the build order you implied: don't build all the nodes and then
+  test composition. Build two nodes and one edge, plus a control edge that must 
+  fail, and get the transfer number first. If transfer is ~1.0×, the DAG is a
+  taxonomy and not an architecture, and you want to know that in week three
+  rather than month nine.
+
+  And I'd reorganize the nodes
+
+  "Math" and "Newtonian physics" are subjects. If each is learned in isolation
+  you end up with N domain models and no shared substrate — which is the thing
+  you said you wanted to avoid. The interesting object is what's shared such
+  that physics is cheaper after math.
+
+  So make the nodes structural primitives, and let domains be the tasks that 
+  exercise them:
+
+  Layer 0 — no prerequisites
+  - Identity / equality — when are two observations the same object? (You
+    already have a sharp datapoint here: entity resolution bought nothing,
+    entity typing helped.)
+  - Order and cardinality — successor, counting, total order.
+  - Composition — application, associativity, sequencing.
+  - Invariance under a transformation — and note your renaming control is
+    already the degenerate case of this. You've been measuring a Layer-0
+    primitive for months without calling it one.
+
+  Layer 1
+  - Algebraic structure — recover a group from a partial operation table. Pure
+    recapitulation: you see products, you must return the structure.
+  - Quantity and dimension — recover units and scaling from raw numbers. Known
+    ground truth, genuine inverse problem.
+  - Conservation — a quantity invariant along a trajectory.
+  - Recursion / inductive definition — grammars, recursive sequences.
+
+  Layer 2
+  - Kinematics — geometry plus time, no forces. Frames of reference.
+  - Causation and intervention — mechanism vs correlation; needs identity +
+    invariance.
+  - Stochasticity — recovering a distribution's structure through sampling
+    noise.
+
+  Layer 3
+  - Newtonian dynamics — needs quantity, conservation, kinematics, causation.
+  - Cross-domain composition — a physics problem stated in prose; an algebraic
+    structure latent in a physical system. Where the transfer claim actually
+    gets tested.
+
+  The nice property of organizing this way: some edges are derivable and 
+  therefore falsifiable. Noether says conservation follows from symmetry. So
+  invariance → conservation is an edge the curriculum predicts. If a system that
+  learned invariance shows no advantage on conservation, either your primitives
+  aren't primitives or your transfer mechanism is fake — and you find out on a
+  case where theory told you the answer in advance. That's a much better first
+  experiment than picking two arbitrary domains.
+
+  The part that would make this stop being your objective
+
+  Here's the trap I'd guard hardest. Your original goal is about inverting a 
+  projection. If each node hands the system clean states and forces, you've
+  deleted the projection and posed a curve-fitting problem instead.
+
+  So every node needs a projection operator as part of its definition: what is
+  the generator, what is the observation channel, how lossy is it, and is the 
+  latent identifiable from that channel at all.
+
+  And you already have the instrument. Containment generalizes to 
+  identifiability, and it's computable before you fit anything. Containment
+  asked "is the answer even in the text." The general form asks "is the latent
+  even recoverable from this channel." The repo already proved the model-free
+  screen can prove a relation impossible (though never feasible) — that screen
+  is exactly what stops you spending three weeks on a node whose channel threw
+  the structure away. Run it on every node before building it. That single move
+  converts your most expensive historical mistake into a design tool.
+
+  Second guard, also already yours: hold out a generator, not samples. Renaming
+  invariance caught two headline claims here and killed ensemble-001's
+  best-in-repo 1.14 bits (0.467 → 0.038). The generalization is: perturb the
+  generator's parameters and symbols, don't refit, and check the recovered
+  structure tracks. A system that memorized instances dies; one that recovered
+  the law doesn't.
+
+  What I'd actually push back on hardest
+
+  Two things.
+
+  One — "primitive" has to mean something operational or transfer is just weight
+  reuse. If a primitive is a learned module and transfer is warm-starting, this
+  is ML-as-usual with a curriculum, and the inspectability claim evaporates. If
+  a primitive is a typed symbolic object the system can name, inspect and 
+  recompose — a kernel with a witness, a type in the world substrate — then it's
+  your differentiator and it's a thing you already have machinery for. I'd
+  insist on the second, and I'd express the primitives as entries in the
+  existing typed runtime rather than as a new project. That also means the pivot
+  reuses far more than it looks like: the cost ledger, the floors discipline,
+  the invariance controls, the kernels and their witnesses, the certificate
+  machinery, and the router are all domain-agnostic and all survive.
+
+  Two — the control edge is non-negotiable. If you measure invariance → 
+  conservation and see transfer, you have not shown structure transfer. You've
+  shown some transfer. You need an edge the DAG says should be absent, measured
+  the same way, that must come back ~1.0×. Without it, generic capacity or
+  generic warm-start explains your result and you'll believe it for months. This
+  repo's whole cost history is confident readings that lacked exactly that
+  control.
+
+  Where I'd start Monday
+
+  Smallest thing that poses the real problem and could embarrass the plan:
+
+  - Two nodes: invariance and conservation. Both have known ground truth, both
+    have a real projection (observe trajectories, recover the invariant), and
+    the edge between them is theoretically predicted, so a null is informative
+    rather than ambiguous.
+  - One control edge: invariance → something the DAG says it shouldn't help
+    (recursion, say).
+  - The metric is structure recovery, not task accuracy. You know the generator,
+    so compare recovered structure to true structure directly — and hold out
+    generator families, not samples.
+  - Run the identifiability screen on both channels first, and record what it
+    says before fitting anything.
+
+  That's maybe two weeks, and it tells you whether the DAG is an architecture or
+  a filing system. Everything else in the programme is downstream of that
+  number being greater than one.
+
+  One last note, since you've now pivoted twice in a month (model zoo → typed
+  world runtime → structure recapitulation). I think this one is right and
+  better-founded than the last, because it's the goal the evidence keeps
+  pointing back at rather than a new idea. But pivots are cheap in narrative and
+  expensive in apparatus, so it's worth writing down explicitly what carries
+  over — and the honest answer is: most of the rigour machinery, all of the cost
+  ledger, the kernels, and none of the curriculum. The 179 lessons were always
+  a development harness. This would finally be the benchmark.
+
+✻ Baked for 2m 0s · done 1:48 PM
+
+❯ ok but like im thinking big -- 2d world. objects of increasingly feature      
+  complexity, 3d worlds, increasing complexity, agentic interaction, code       
+  changes, terminal use, computer use, etc. think BIG                           
+
+● Okay. Big.
+
+  The thing that makes it one system instead of eleven benchmarks
+
+  If you write the ladder as "2D → 3D → agents → code → terminal → computer,"
+  every rung is already someone's research programme. Slot attention, NeRFs,
+  world models, DreamCoder, causal discovery, SWE-bench, computer-use agents.
+  Individually trodden, all of it.
+
+  What nobody has measured is the derivative. Not "can it do rung 7" but does 
+  rung 7 get cheaper because rungs 0–6 happened, and does it get cheaper 
+  superlinearly? That is your actual claim — "once I have conceptual primitives
+  in these domains it becomes much easier to build the rest" — and it is a
+  number, not a hope. The benchmark is not any rung. The benchmark is the slope 
+  of cost-to-criterion across the ladder.
+
+  That's also the one framing where a symbolic system can win outright. Neural
+  transfer across this ladder is diffuse and it is bought with scale. A symbolic
+  store of recovered primitives is inspectable, addressable, and reusable by 
+  name — so the prediction is that its cost curve bends and theirs doesn't.
+  Falsifiable, frontier, and nobody's run it. And you already have the ledger:
+  $/solved episode above floor becomes $/primitive recovered, plotted against
+  what's already in the store. The whole thesis fits in one plot.
+
+  Escalate along identifiability, not along vibes
+
+  Here's what turns your list into a curriculum rather than a wish. The rungs
+  should climb specific axes that make recapitulation provably harder:
+
+  - Observability — how much of the latent the channel reveals
+  - Latent dimensionality — independent generative factors
+  - Compositional depth — how many primitives make one observation
+  - Passive → interventional — the phase transition, not a step
+  - Stationarity — do the rules themselves move
+  - Reflexivity — do your actions modify the generator
+  - Discoverable vs. inventable — new parameters vs. genuinely new concepts
+
+  Your ladder maps onto these almost exactly, which is why the intuition is
+  good. Made explicit:
+
+  ┌──────┬──────────────────────────────┬───────────────────┬───────────────┐
+  │ rung │       what's recovered       │  axis that jumps  │ ground truth? │
+  ├──────┼──────────────────────────────┼───────────────────┼───────────────┤
+  │ 0    │ scene graph, attribute space │ dimensionality    │ yes           │
+  ├──────┼──────────────────────────────┼───────────────────┼───────────────┤
+  │ 1    │ 2D transition law            │ compositional     │ yes           │
+  │      │                              │ depth             │               │
+  ├──────┼──────────────────────────────┼───────────────────┼───────────────┤
+  │ 2    │ persistence under occlusion  │ observability     │ yes           │
+  │      │ + the observation model      │                   │               │
+  ├──────┼──────────────────────────────┼───────────────────┼───────────────┤
+  │ 3    │ the projection operator      │ observability,    │ yes           │
+  │      │ itself (3D→2D)               │ hard              │               │
+  ├──────┼──────────────────────────────┼───────────────────┼───────────────┤
+  │ 4    │ distribution family;         │ stochasticity     │ yes           │
+  │      │ aleatoric vs epistemic       │                   │               │
+  ├──────┼──────────────────────────────┼───────────────────┼───────────────┤
+  │      │ causal structure,            │ passive →         │               │
+  │ 5    │ affordances, which           │ interventional    │ yes           │
+  │      │ experiment to run            │                   │               │
+  ├──────┼──────────────────────────────┼───────────────────┼───────────────┤
+  │ 6    │ rule change vs. model error  │ stationarity      │ yes           │
+  ├──────┼──────────────────────────────┼───────────────────┼───────────────┤
+  │ 7    │ program semantics from       │ latent is         │ yes (you hold │
+  │      │ behavior                     │ symbolic          │  the AST)     │
+  ├──────┼──────────────────────────────┼───────────────────┼───────────────┤
+  │ 8    │ effect of an edit, before    │ reflexivity       │ yes           │
+  │      │ making it                    │                   │               │
+  ├──────┼──────────────────────────────┼───────────────────┼───────────────┤
+  │      │ tool semantics,              │ horizon + partial │ yes, if       │
+  │ 9    │ irreversibility, huge        │  obs              │ synthetic     │
+  │      │ discrete state               │                   │               │
+  ├──────┼──────────────────────────────┼───────────────────┼───────────────┤
+  │ 10   │ affordances designed by      │ everything        │ no            │
+  │      │ another mind, from pixels    │                   │               │
+  └──────┴──────────────────────────────┴───────────────────┴───────────────┘
+
+  Two things fall out of writing it this way that I didn't expect:
+
+  Rung 5 is a phase transition, not a difficulty increment. Passive observation
+  identifies causal structure only up to an equivalence class — that's a
+  theorem, not a limitation of your method. Intervention is what breaks the tie.
+  So "agentic interaction" isn't an application of the world models; it's the
+  only thing that makes a whole class of structure recoverable at all. It
+  belongs in the middle of the curriculum, and everything below it is knowingly
+  working under an identifiability ceiling you can compute in advance.
+
+  Ground truth survives much further up than intuition says. You author the 2D
+  and 3D generators, so you hold the latent. You hold the AST for code. You can
+  author a synthetic filesystem with authored tool semantics for the terminal.
+  Only rung 10 genuinely loses it. That means you can measure actual structure 
+  recovery — compare the recovered program to the true program — for ten of
+  eleven rungs, instead of measuring task accuracy and hoping it's a proxy.
+  Given that this repo's entire cost history is proxies read as the real thing
+  (determinacy read as accuracy, label_acc that was 72% a copy score), that
+  property is worth protecting at every design decision.
+
+  So: synthetic-but-scaling all the way up, real systems only as the final 
+  transfer test. The moment you reach for real video or a real OS as a training
+  rung you've traded away the only instrument that can tell you whether this is
+  working.
+
+  Where language goes now, and it's better than dropping it
+
+  Language stops being the target and becomes the highest-occlusion channel in 
+  the curriculum — a projection of another mind's world model, with an
+  observation function nobody designed to be invertible.
+
+  That retroactively explains the last month cleanly. Containment 0.241–0.592
+  isn't a fact about reading being hard; it's the measured observability of the
+  linguistic channel, and it's terrible. The reading arm was doing rung-3
+  inversion through the worst channel on the ladder without a single easier rung
+  to stand on. Same for acc | not copyable = 0.003 — of course it copies, it
+  was never given a generator to recover.
+
+  That's a continuous story, not a discarded one. It also predicts something
+  checkable: the same reader machinery pointed at a channel with high
+  containment should do much better — and it already did, occupation at 0.615
+  versus the company arm's best-ever number, 2.7×, same reader, unchanged.
+
+  The compounding claim needs its control, and it's the whole ballgame
+
+  If you measure "rung 5 was cheaper after rungs 0–4," you have shown some
+  transfer. Generic warm-starting shows that. Capacity shows that.
+
+  The control that must fail: a store of shuffled, irrelevant, or wrong 
+  primitives must not reduce cost. And a second one — an ablated store missing
+  exactly the primitive the theory says rung 5 depends on should cost more than
+  one missing an unrelated primitive of equal size. If both stores help equally,
+  you're measuring warm-start and the DAG's edges are decoration.
+
+  This is the same shape as the renaming control that took ensemble-001 from
+  1.14 bits to 0.038. That control is the reason you know the ensemble result
+  was memorisation. You need its analogue here or you will believe the
+  compounding story for a year.
+
+  What I'd actually do, given how big this is
+
+  The whole thing is multi-year. The decisive measurement is not.
+
+  The compounding slope is visible at rungs 0–3, and those are cheap because you
+  author the generators and the latents are small. Build four rungs of 2D
+  worlds with escalating factor count and occlusion, deposit recovered
+  primitives into one typed store, and plot cost-to-criterion against store
+  contents — with the shuffled-store control running alongside. Weeks, not
+  quarters.
+
+  If the curve is flat across rungs 0–3, it does not become steep at rung 9.
+  You'd have learned that the primitives don't compose, which is the exact thing
+  that killed the last symbolic programme, and you'd have learned it for the
+  price of four toy worlds instead of a career.
+
+  If it bends — you have the first measured evidence that inspectable recovered
+  structure compounds where neural transfer doesn't, and then the ladder above
+  it is worth every year it takes.
+
+  One more thing, because it's the part people skip: decide now what a 
+  "primitive" is, operationally. If it's a learned module and transfer is weight
+  reuse, this is curriculum learning with extra steps and the inspectability
+  claim quietly dies. If it's a typed symbolic object the system can name,
+  inspect, recompose, and hand to a kernel with a witness — then it's the
+  differentiator, and you already have the runtime for it. That choice
+  determines whether the plot at the end means what you want it to mean.
+
+✻ Cogitated for 1m 34s · done 2:08 PM
+
+※ recap: We're designing a curriculum where the system recovers the generating structure behind its inputs, escalating from 2D worlds up to computer use. Next: build four cheap 2D rungs and measure whether recovered primitives make each next rung cheaper.
+
+❯ and then like we shold be able to have 3d agents that move and interact in a  
+  3d world with objects that expose affordances when in nearby FoV including    
+  rasterized text, editable documents, and general computers and do so in       
+  relatively low dimensional structure                                          
+
+● Yes — and the phrase carrying all the weight is "relatively low dimensional 
+  structure." Everything else is surface escalation. That clause is the thesis,
+  and it's measurable.
+
+  Why low-dimensional is achievable in a big world: FoV is a quotient operator 
+  you don't have to learn
+
+  Your state.yml already has the right abstraction — persistent WorldSnapshot,
+  then a task quotient [W]_Q per query. The thing embodiment adds is that
+  proximity and field of view give you a quotient that's physical, correct, and 
+  free. The world can be enormous; the live latent at any instant is bounded by
+  what's near. Dimensionality then scales with locality, not with world size.
+
+  That's the actual mechanism by which the claim can be true, and it's not
+  hand-waving — it's a structural property of worlds built from objects with
+  local interaction.
+
+  And it lands directly on machinery you already have. The certificate/recording
+  trick computes a dependency set by running a computation against a store that
+  remembers what it read. In an embodied setting, the set of affordances the 
+  agent actually touched is the witness for its decision. Inspectability isn't
+  an added feature here; it falls out of the FoV quotient for free. Ask "why did
+  it open the drawer" and get back a dependency set of a dozen typed facts.
+
+  The number that makes or breaks it
+
+  You author the generator, so at every moment you know three quantities:
+
+  - |generator| — the world's true state
+  - |task-sufficient| — the minimum that preserves the answer
+  - |agent's live state| — what it actually maintains
+
+  The thesis is that the third tracks the second, sits far below the first, and
+  the ratio stays roughly constant as world complexity grows. If agent state
+  grows linearly with world size, it's dead — you've built a database, not a
+  model. Plot that ratio across the escalation and you have the whole argument
+  in one figure, in exactly the shape of the compounding slope from before.
+
+  There's a stronger version worth reaching for: the compressibility of a world
+  should be predictable in advance from computable properties of the generator —
+  interaction locality, factor sparsity, branching of the affordance graph.
+  That's the identifiability screen again, in a third form. "We can say before
+  training how low-dimensional this world's task statistic is, and the system
+  attains it" would be a much better result than any score.
+
+  Rasterized text is the sharpest thing in your list
+
+  I want to flag this because I think you may have thrown it in casually and
+  it's the best idea here.
+
+  Rasterized text in a 3D world is the entire ladder inside one observation:
+  pixels → glyphs → tokens → symbols → propositions → world facts, through
+  perspective projection, at an angle, partly occluded. And you authored the
+  document, so you have ground truth at every level of the chain simultaneously.
+  Nobody has that. It's also the point where "text is a projection of a richer
+  generative process" stops being a metaphor and becomes literally, physically
+  true — the document was produced by a process in the world, rendered onto a
+  surface, and the agent has to invert both the rendering and the authoring.
+
+  The reading arm's whole month becomes a special case: containment was
+  measuring the observability of the linguistic channel with the rendering
+  already inverted for free.
+
+  Nested generators — and the prediction that tests whether your primitives are 
+  real
+
+  A general computer inside the world is a generator nested inside a generator,
+  observed through a rasterized screen, which is itself an observation channel
+  inside another observation channel.
+
+  That gives you a sharp falsifier: the same inversion procedure that recovers 
+  the physics of the room should recover the semantics of the application on the
+  screen — different primitives, same machinery. If the screen needs a
+  fundamentally different mechanism, your primitives were never primitives, they
+  were domain hacks. That's a control you can run early and cheaply, and it
+  would tell you something real.
+
+  Editable documents give you the reflexive rung with full ground truth: act,
+  the document changes, you authored the transition, so "predict the effect of
+  the edit before making it" is scorable exactly.
+
+  Two cautions, and I'd hold both firmly
+
+  One — affordance exposure is scaffolding, and it's the same trap you already 
+  fell into. If objects announce their affordances truthfully and completely,
+  you've deleted the discovery problem, which is the thing you're trying to
+  study. The 179-lesson curriculum was 98.6% scaffolding and ended up a
+  development harness rather than a benchmark. This is that trap one level up,
+  wearing a nicer costume.
+
+  So build the affordance channel as a dial, and always report the dial position
+  the way containment is now always reported:
+
+  - announced, complete, truthful
+  - announced, incomplete
+  - announced, sometimes wrong — the door labeled push that pulls
+  - not announced — recoverable only by intervention
+
+  The real objective lives at the bottom. The top is for bootstrapping and
+  should be stamped the way NOT QUOTABLE is stamped.
+
+  Two — do not build the 3D simulator first. This repo has a runtime, kernels, a
+  cost ledger and 3,823 tests. It does not have a renderer, and a year spent on
+  one is a year not spent on the science. There are perfectly good embodied
+  sims already; none of them have your affordance dial, your rasterized-text
+  ground truth, or your nested computer, but all of that can be prototyped in a
+  2D grid world where rendering is free.
+
+  And here's the part that makes it more than pragmatism: the renderer swap is 
+  itself the experiment. Build the interfaces — affordance channel, FoV
+  quotient, nested-generator contract — against 2D. Prove the compression ratio
+  and the transfer slope there. Then port to 3D and measure what the port costs.
+  If the primitives are genuinely surface-independent, the port is cheap. If
+  it's expensive, your primitives were entangled with the surface and you've
+  learned that for the price of a port instead of a programme.
+
+  3D isn't different science. It's an escalation on the observability axis — and
+  the axis is the thing you're studying, not the polygons.
+
+✻ Churned for 1m 12s · done 2:21 PM
